@@ -1,47 +1,48 @@
 #ifndef BRILLIANTRUSSIAN_H
 #define BRILLIANTRUSSIAN_H
 
-/******************************************************************************
-*
-*            M4RI: Method of the Four Russians Inversion
-*
-*       Copyright (C) 2007 Gregory Bard <gregory.bard@ieee.org> 
-*
-*  Distributed under the terms of the GNU General Public License (GPL)
-*
-*    This code is distributed in the hope that it will be useful,
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*    General Public License for more details.
-*
-*  The full text of the GPL is available at:
-*
-*                  http://www.gnu.org/licenses/
-******************************************************************************/
-
+/**
+ *
+ *            M4RI: Method of the Four Russians Inversion
+ *
+ *       Copyright (C) 2007 Gregory Bard <gregory.bard@ieee.org> 
+ *
+ *  Distributed under the terms of the GNU General Public License (GPL)
+ *
+ *    This code is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    General Public License for more details.
+ *
+ *  The full text of the GPL is available at:
+ *
+ *                  http://www.gnu.org/licenses/
+ *
+ *  
+ * See http://eprint.iacr.org/2006/251.pdf for details of the used
+ * algorithm.
+ */
 
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 #include "packedmatrix.h"
 
-#define TWOPOW(i) (1<<(i))
-
-/** 
+/**
  * Finds a pivot row between xstart and xstop. The column where this
  * pivot is search is y. Returns YES if such a pivot row was
  * found. Also, the appropriate row is swapped to the top (== xstart).
  *
- * INPUT: 
- *     m -- matrix to operate on
- *     xstart -- start row
- *     xstop  -- stop row (including)
- *     y -- column to read
+ * 
+ * @param m matrix to operate on
+ * @param xstart start row
+ * @param xstop stop row (including)
+ * @param y column to read
  *
- * OUTPUT:
- *     YES if a pivot row was found
+ * @return True if a pivot row was found
  */
 
-int forceNonZero2PackedFlex(packedmatrix *m, int xstart, int xstop, int y);
+int forceNonZero(packedmatrix *m, int xstart, int xstop, int y);
 
 
 /***************************************************/
@@ -50,16 +51,14 @@ int forceNonZero2PackedFlex(packedmatrix *m, int xstart, int xstop, int y);
  * Performs Gaussian elimination on a submatrix of 3k x k starting at
  * point (homepoint, homepoint) of m.
  *
- * INPUT:
- *     m -- matrix to operate on
- *     homepoint -- row,col where to start
- *     k -- the parameter k of M4RI
+ * @param m matrix to operate on
+ * @param homepoint row,col where to start
+ * @param k
  *
- * OUTPUT:
- *     returns rank of 3k x k submatrix.
+ * @return rank of 3k x k submatrix.
  */
 
-int prepPackedFlex(packedmatrix *m, int ai, int k);
+int prep(packedmatrix *m, int ai, int k);
 
 /** Adds row1 of s1, starting with col1 to the end, to row2 of s2,
  *  starting with col2 to the end. This gets stored in dest, in row3,
@@ -69,87 +68,101 @@ int prepPackedFlex(packedmatrix *m, int ai, int k);
  * 
  */
 
-void combineFlex( packedmatrix * s1, int row1, int startblock1, 
+void combine( packedmatrix * s1, int row1, int startblock1, 
 	          packedmatrix * s2, int row2, int startblock2,
 	          packedmatrix * dest, int row3, int startblock3 );
 
-/* 
- * Constructs all possible 2^k row combinations using the gray code
+/**
+ * Constructs all possible $2^k$ row combinations using the gray code
  * table.
- *
- * INPUT:
- *     m -- matrix to operate on
- *     ai -- the starting position
- *     k -- the k parameter of M4RI
- *     tablepacked -- prealloced matrix of dimension 2^k x m->cols
- *     lookuppacked -- prealloced table of length 2^k
- *     full -- touch columns before ai?
+ * 
+ * @param m matrix to operate on
+ * @param ai the starting position
+ * @param k
+ * @param tablepacked prealloced matrix of dimension $2^k$ x m->ncols
+ * @param lookuppacked prealloced table of length $2^k$
+ * @param full touch columns before ai?
  *
  */
 
-void makeTablePackedFlex( packedmatrix *m, int ai, int k, packedmatrix *tablepacked, int *lookuppacked, int full);
+void makeTable( packedmatrix *m, int ai, int k, packedmatrix *tablepacked, int *lookuppacked, int full);
+
 
 /**
- * returns k bits/entries starting at m[x,y].
- *
- * WARNING: Precondition is k < RADIX
+ * Adds the correct row from tablepacked to the row 'row' in 'm'
+ * starting at homecol.
+ * 
+ * @param m matrix to operate on
+ * @param row the row which is operated on
+ * @param homecol starting column for addition
+ * @param k
+ * @param tablepacked contains the correct row to be added
+ * @param lookuptable contains row number to be addede
  */
 
-inline int getValueFlex(packedmatrix *m, int x, int y, int k);
+void processRow(packedmatrix *m, int row, int homecol, int k, packedmatrix *tablepacked, int *lookuppacked);
 
 /**
- * 
- * Adds the correct row from tablepacked to the row 'row' in 'm' starting at homecol.
- * 
- * INPUT:
- *     m -- matrix to operate on
- *     row -- the row which is operated on
- *     homecol -- starting column for addition
- *     k -- M4RI parameter, used for gray table lookup
- *     tablepacked -- contains the correct row to be added
- *     lookuptable -- contains row number to be addede
+ *  Iterates proccessRow from startrow to stoprow.
  */
 
-void processRowPackedFlex(packedmatrix *m, int row, int homecol, int k, packedmatrix *tablepacked, int *lookuppacked);
-
-/* 
- *  Iterates proccessPackedRowFlex from startrow to stoprow.
- */
-
-void processPackedFlex(packedmatrix *m, int startrow, int stoprow, int startcol, int k, packedmatrix *tablepacked, int *lookuppacked);
+void process(packedmatrix *m, int startrow, int stoprow, int startcol, int k, packedmatrix *tablepacked, int *lookuppacked);
 
 /**
  * This is the actual heart of the M4RI algorithm. 
  *
+ * @param m the matrix
+ * @param full perform full reduction
+ * @param k 
+ * @param ai start column
+ * @param tablepacked buffer
+ * @param lookuppacked buffer
  */
 
-int doAByteColumnFlex(packedmatrix *m, int full, int k, int ai, packedmatrix *tablepacked, int *lookuppacked);
-
-/* 
- *
- *
- */
-
-int fourRussiansPackedFlex(packedmatrix *m, int full, int k, packedmatrix *tablepacked, int *lookuppacked);
+int stepM4RI(packedmatrix *m, int full, int k, int ai, packedmatrix *tablepacked, int *lookuppacked);
 
 /**
- * Top level function to call for M4RI
+ * Perform matrix reduction using the 'Method of the Four Russians' or
+ * Kronrod-Method.
+ * 
+ * @param m the matrix to be reduced
+ * @param full return the reduced row echelon form, not only the row echelon form
+ * @param k
+ * @param tablepacked preallocated table, may be NULL for automatic creation
+ * @param lookuppacked preallocated lookup table, may be NULL for automatic creation
  */
 
-int simpleFourRussiansPackedFlex(packedmatrix *m, int full, int k);
-
+int reduceM4RI(packedmatrix *m, int full, int k, packedmatrix *tablepacked, int *lookuppacked);
 
 /**
- * Inverts the matrix m using the M4RI algorithm. To avoid recomputing
+ * Given a matrix in row echelon form compute the reduced row echelon
+ * form of that matrix.
+ * 
+ * @param m the matrix to be reduced
+ * @param full return the reduced row echelon form, not only the row echelon form
+ * @param k
+ * @param tablepacked preallocated table, may be NULL for automatic creation
+ * @param lookuppacked preallocated lookup table, may be NULL for automatic creation
+ */
+
+void topReduceM4RI(packedmatrix *m, int k, packedmatrix *tablepacked, int *lookuppacked);
+
+/**
+ * Inverts the matrix m using Konrod's method. To avoid recomputing
  * the identity matrix over and over again, I may be passed in as
  * identity parameter.
  */
 
-packedmatrix *invertPackedFlexRussian(packedmatrix *m, packedmatrix *identity, int k);
+packedmatrix *invertM4RI(packedmatrix *m, packedmatrix *identity, int k);
 
 
-packedmatrix *m4rmPacked(packedmatrix *A, packedmatrix *B, int k);
+/**
+ * Matrix multiplication using Gray tables.
+ *
+ */
 
-packedmatrix *m4rmTransposePacked(packedmatrix *A, packedmatrix *B, int k);
+packedmatrix *multiplyM4RM(packedmatrix *A, packedmatrix *B, int k, packedmatrix *tablepacked, int *lookuppacked);
+
+packedmatrix *multiplyM4RMTranspose(packedmatrix *A, packedmatrix *B, int k);
 
 #endif //BRILLIANTRUSSIAN_H

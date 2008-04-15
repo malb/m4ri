@@ -19,7 +19,7 @@
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
 
-#include "matrix.h"
+#include "misc.h"
 #include <stdio.h>
 
 #define RADIX 64
@@ -32,8 +32,8 @@ typedef unsigned long long word;
 struct packedmatrixstruct {
   word *values;
 
-  int rows;
-  int cols;
+  int nrows;
+  int ncols;
   int width; /* rounded as floor(rows/RADIX)+1. */
 
   int *rowswap;
@@ -46,28 +46,64 @@ extern word packingmask[RADIX];
 extern word bytemask[RADIX/8];
 extern word sixteenmask[RADIX/16];
 
-packedmatrix *createPackedMatrix(int r, int c);
+packedmatrix *createMatrix(int r, int c);
 
-void destroyPackedMatrix( packedmatrix *condemned );
+void destroyMatrix( packedmatrix *condemned );
 
-inline void rowSwapPacked( packedmatrix *m, int rowa, int rowb );
+static inline void rowSwap( packedmatrix *m, int rowa, int rowb ) {
+  int temp=m->rowswap[rowa];
+  m->rowswap[rowa]=m->rowswap[rowb];
+  m->rowswap[rowb]=temp;
+}
 
 /* Internal: do not call */
 void setupPackingMasks();
 
-inline bit readPackedCell( packedmatrix *m, int row, int col );
+static inline BIT readCell( packedmatrix *m, int row, int col ) {
+  int block=col/RADIX;
+  int spot=col % RADIX;
+  int truerow=m->rowswap[row];
+  
+  word entry=m->values[ block + truerow ];
+ 
+  word resolved=entry & ((ONE)<<(RADIX - spot - 1));
+  
+  return (resolved >> (RADIX - spot -1));
+}
 
-inline void writePackedCell( packedmatrix *m, int row, int col, bit value);
+static inline void writeCell( packedmatrix *m, int row, int col, BIT value) {
+  int block=col/RADIX;
+  int spot=col % RADIX;
+  int truerow=m->rowswap[row];
+
+  if (value==0) {
+    m->values[ block + truerow ] &= ~((ONE) <<(RADIX - spot - 1));
+  } else {
+    m->values[ block + truerow ] |= ((ONE)<<(RADIX - spot - 1));
+  }
+}
+
 
 /* Keep in mind that the row, col refer to a row and column (of bits), and
    you can address the block by any of the RADIX (usually 64) A_ijs there. */
+static inline void xorBlock( packedmatrix *m, int row, int col, word value) {
+  int block=col/RADIX;
+  int truerow=m->rowswap[row];
 
-inline void xorPackedBlock( packedmatrix *m, int row, int col, word value);
+  word *entry=m->values + block + truerow;
+  *entry ^= value;
+}
 
 /* Keep in mind that the row, col refer to a row and column (of bits), and
    you can address the block by any of the RADIX (usually 64) A_ijs there. */
+static inline void writeBlock( packedmatrix *m, int row, int col, word value) {
+  int block=col/RADIX;
+  int truerow=m->rowswap[row];
 
-inline void writePackedBlock( packedmatrix *m, int row, int col, word value);
+  m->values[ block + truerow] = value;
+}
+
+
 
 word fetchByte( word data, int which );
 
@@ -89,79 +125,105 @@ void wordToStringComma( char *destination, word data);
   
 /* Important note: You can specify any of the RADIX bits (64 bits usually),
    inside of the block, and it will still return the correct entire block */
-inline word readPackedBlock( packedmatrix *m, int row, int col );
+/* Important note: You can specify any of the RADIX bits (64 bits usually),
+   inside of the block, and it will still return the correct entire block */
+static inline word readBlock( packedmatrix *m, int row, int col ) {
+  int block=col/RADIX;
+  int truerow=m->rowswap[row];
 
-void printPackedMatrix( packedmatrix *m );
+  word entry=m->values[ block + truerow ];
+  
+  return entry;
+}
 
-void printPackedMatrixTight( packedmatrix *m );
+void printMatrix( packedmatrix *m );
+
+void printMatrixTight( packedmatrix *m );
 
 /**********************************************************************/
 /* this adds rows sourcerow and destrow and stores the total in row
    destrow, but only begins at the column coloffset */
 
-void rowAddPackedOffset( packedmatrix *m, int sourcerow, int destrow, 
+void rowAddOffset( packedmatrix *m, int sourcerow, int destrow, 
 			 int coloffset );
 
-void rowClearPackedOffset(packedmatrix *m, int row, int coloffset);
+void rowClearOffset(packedmatrix *m, int row, int coloffset);
 
-void rowAddPacked( packedmatrix *m, int sourcerow, int destrow);
+void rowAdd( packedmatrix *m, int sourcerow, int destrow);
 
-int gaussianPackedDelayed(packedmatrix *m, int startcol, int full);
+int reduceGaussianDelayed(packedmatrix *m, int startcol, int full);
 
-int gaussianPacked(packedmatrix *m, int full);
+int reduceGaussian(packedmatrix *m, int full);
 
-inline bit dotProductPacked( word a, word b );
+static inline BIT dotProduct( word a, word b ) {
+  word temp=a & b;
+  //int i, 
+  int total=0;
 
-packedmatrix *transposePacked( packedmatrix *data );
+/*   for (i=0; i<RADIX; i++) { */
+/*     if ((temp & packingmask[i])!=0) total++; */
+/*   } */
+/*   return (total % 2); */
+  while (temp)  {
+    total = !total;
+    temp = temp & (temp - 1);
+  }
+  return total;
+}
 
-bit bigDotProductPacked( packedmatrix *a, packedmatrix *bT, int rowofa,
+packedmatrix *transpose( packedmatrix *data );
+
+BIT bigDotProduct( packedmatrix *a, packedmatrix *bT, int rowofa,
 			 int rowofb );
 
-/* MEMLEAK use destroyPackedMatrix */
+/* MEMLEAK use destroyMatrix */
 
-packedmatrix *matrixTimesMatrixTransposePacked( packedmatrix *a, 
+packedmatrix *matrixTimesMatrixTranspose( packedmatrix *a, 
 						packedmatrix *bT );
   
-/* MEMLEAK: use destroyPackedMatrix */
+/* MEMLEAK: use destroyMatrix */
 /* Normally, if you will multiply several times by b, it is smarter to
   calculate bT yourself, and keep it, and then use the function called
-  matrixTimesMatrixTransposePacked */
-packedmatrix *matrixTimesMatrixPacked( packedmatrix *a, 
+  matrixTimesMatrixTranspose */
+packedmatrix *matrixTimesMatrix( packedmatrix *a, 
 				       packedmatrix *b);
 word randomWord();
 
-void fillRandomlyPacked( packedmatrix *a );
+void fillRandomly( packedmatrix *a );
 
-void makeIdentityPacked( packedmatrix *a );
+void makeIdentity( packedmatrix *a );
 
 matrix *unpackMatrix( packedmatrix *pm );
 
 packedmatrix *packMatrix( matrix *m );
 
-inline bit isEqualWord( word a, word b);
+static inline BIT isEqualWord( word a, word b) {
+  if (a==b) return YES;
+  else return NO;
+}
 
-bit equalPackedMatrix( packedmatrix *a, packedmatrix *b );
+BIT equalMatrix( packedmatrix *a, packedmatrix *b );
 
-int comparePackedMatrix(packedmatrix *a, packedmatrix *b);
+int compareMatrix(packedmatrix *a, packedmatrix *b);
 
-/* MEMLEAK: use destroyPackedMatrix */
-packedmatrix *clonePacked( packedmatrix *p);
+/* MEMLEAK: use destroyMatrix */
+packedmatrix *clone( packedmatrix *p);
 
-/* MEMLEAK: use destroyPackedMatrix */
+/* MEMLEAK: use destroyMatrix */
 /* This is sometimes called augment */
-packedmatrix *concatPacked( packedmatrix *a, packedmatrix *b);
+packedmatrix *concat( packedmatrix *a, packedmatrix *b);
 
 
-/* MEMLEAK: use destroyPackedMatrix */
-packedmatrix *copySubMatrixPacked( packedmatrix *a, int lowr, int lowc,
+/* MEMLEAK: use destroyMatrix */
+packedmatrix *copySubMatrix( packedmatrix *a, int lowr, int lowc,
 				   int highr, int highc);
 
-/* MEMLEAK: use destroyPackedMatrix */
-packedmatrix *invertPackedGaussian(packedmatrix *target, 
+/* MEMLEAK: use destroyMatrix */
+packedmatrix *invertGaussian(packedmatrix *target, 
 				   packedmatrix *identity);
 
-/* MEMLEAK: use destroyPackedMatrix */
-packedmatrix *addPacked(packedmatrix *left, packedmatrix *right);
+/* MEMLEAK: use destroyMatrix */
+packedmatrix *add(packedmatrix *left, packedmatrix *right);
 
 void lazyPrint(packedmatrix *a);
 

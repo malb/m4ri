@@ -26,9 +26,10 @@
 #include "grayflex.h"
 #include <stdlib.h>
 #include <stdio.h>
+
+#define max(x,y) ((x > y)?x:y)
  
 code **codebook;
-const int MAXKAY = 16;
 
 void printBitString(int number, int length){
   int i;
@@ -100,4 +101,21 @@ void destroyAllCodes() {
     free(codebook[i]);
   }
   free(codebook);
+}
+
+static int log2Floor(int n){
+  int i;
+  for(i=0;TWOPOW(i)<=n;i++){}
+  return i;
+}
+
+int optK(int a,int b,int c) {
+  int n;
+  if (c==0) {
+    n = min(a,b);
+  } else {
+    n = b;
+  }
+  int res = min( MAXKAY, max(1, (int)(0.75*log2Floor(n))) );
+  return res;
 }

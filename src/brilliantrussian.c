@@ -17,42 +17,43 @@
 ******************************************************************************/
 
 #include "brilliantrussian.h"
-#include <stdlib.h>
 
-int forceNonZero2PackedFlex(packedmatrix *m, int xstart, int xstop, int y) {
+#define min(x,y) ((x < y)?x:y)
+#define TWOPOW(i) (1<<(i))
+
+int forceNonZero(packedmatrix *m, int xstart, int xstop, int y) {
   int i;
 
   for (i=xstart; i<=xstop; i++) {
-    if (readPackedCell(m, i, y)==1) {
-      if (i!=xstart) rowSwapPacked(m, i, xstart);
+    if (readCell(m, i, y)==1) {
+      if (i!=xstart) rowSwap(m, i, xstart);
       return YES;
     }
   }
-  
   return NO;
 }
 
 
-int prepPackedFlex(packedmatrix *m, int ai, int k) {
+int prep(packedmatrix *m, int ai, int k) {
   int pc; /* pivot column */
   int tr; /* target row */
   int good;
 
   int rank = 0;
 
-  for (pc=ai; pc<min(ai+k,m->cols); pc++) {
+  for (pc=ai; pc<min(ai+k,m->ncols); pc++) {
     /* Step one, find a pivot row in this column.*/
-    good=forceNonZero2PackedFlex(m, pc, min( ai+k*3-1, m->rows-1 ), pc);
+    good=forceNonZero(m, pc, min( ai+k*3-1, m->nrows-1 ), pc);
 
     if (good==NO) return rank;
 
-    for (tr=ai; tr<min(ai+k*3, m->rows); tr++) {
+    for (tr=ai; tr<min(ai+k*3, m->nrows); tr++) {
       /* Step two, add this pivot row to other rows as needed. */
       if (tr==pc) continue;
       
-      if (readPackedCell(m, tr, pc)==0) continue;
+      if (readCell(m, tr, pc)==0) continue;
 
-      rowAddPackedOffset(m, pc, tr, ai);
+      rowAddOffset(m, pc, tr, ai);
     }
     rank++;
   }
@@ -60,9 +61,9 @@ int prepPackedFlex(packedmatrix *m, int ai, int k) {
   return rank;
 }
 
-void combineFlex( packedmatrix * s1, int row1, int startblock1, 
-	          packedmatrix * s2, int row2, int startblock2,
-	          packedmatrix * dest, int row3, int startblock3 ) {
+void combine( packedmatrix * s1, int row1, int startblock1, 
+	      packedmatrix * s2, int row2, int startblock2,
+	      packedmatrix * dest, int row3, int startblock3 ) {
   int wide=s1->width - startblock1;
   int i;
 
@@ -71,12 +72,12 @@ void combineFlex( packedmatrix * s1, int row1, int startblock1,
   word *b3_ptr;
 
   /* this is a quite likely case, and we treat is specially to ensure
-     cache register friendlyness. (Keep in mind that the x86 has only
-     four general purpose registers) */
+   * cache register friendlyness. (Keep in mind that the x86 has only
+   * four general purpose registers)
+   */
   if( dest == s1 && row1 == row3 && startblock1 == startblock3) {
-
     /* A fair amount of time is spent in iterating i, thus we lower
-       the burden a bit here.
+     * the burden a bit here.
      */
     if(wide%2==0) {
       for(i = wide>>1 ; i > 0 ; i--) {
@@ -90,7 +91,6 @@ void combineFlex( packedmatrix * s1, int row1, int startblock1,
 	*b1_ptr++ ^= *b2_ptr++;
       }
       return;
-
     }
 
   } else {
@@ -103,7 +103,7 @@ void combineFlex( packedmatrix * s1, int row1, int startblock1,
   }
 }
 
-void makeTablePackedFlex( packedmatrix *m, int ai, int k,
+void makeTable( packedmatrix *m, int ai, int k,
 			  packedmatrix *tablepacked, int *lookuppacked, int full) {
   int homeblock= full ? 0 : ai/RADIX;
   int i, rowneeded, id;
@@ -118,14 +118,14 @@ void makeTablePackedFlex( packedmatrix *m, int ai, int k,
 
     lookuppacked[id]=i;
 
-    combineFlex(          m, rowneeded, homeblock, 
-		tablepacked,       i-1, homeblock, 
-		tablepacked,         i, homeblock);
+    combine( m,            rowneeded, homeblock, 
+	     tablepacked,  i-1,       homeblock, 
+	     tablepacked,  i,         homeblock);
   }
 }
 
 
-inline int getValueFlex(packedmatrix *m, int x, int y, int k) {
+static inline int getBits(packedmatrix *m, int x, int y, int k) {
   int truerow = m->rowswap[x];
   int block;
   int spot;
@@ -134,24 +134,18 @@ inline int getValueFlex(packedmatrix *m, int x, int y, int k) {
 
   word *values = m->values;
 
-  /**
-   * there are two possible situations. Either all bits are in one
-   * word or they are spread across two words.
-   */
+  /* there are two possible situations. Either all bits are in one
+   * word or they are spread across two words. */
 
   if ( (y%RADIX + k -1 ) < RADIX ) {
-    /**
-     * everything happens in one word here
-     */
+    /* everything happens in one word here */
     temp =  values[ y / RADIX + truerow ]; // get the value
     temp <<= y%RADIX; // clear upper bits
     temp >>= RADIX - k; // clear lower bits and move to correct position.
     return (int)temp;
 
   } else { 
-    /**
-     * two words are affected
-     */
+    /* two words are affected */
     block = y / RADIX + truerow; // correct block
     spot = (y + k ) % RADIX; // correct offset
     // make room by shifting spot times to the right, and add stuff from the second word
@@ -160,19 +154,19 @@ inline int getValueFlex(packedmatrix *m, int x, int y, int k) {
    }
 }
 
-void processRowPackedFlex(packedmatrix *m, int row, int homecol, int k, packedmatrix *tablepacked, int *lookuppacked) {
-  int blocknum=homecol/RADIX;
+void processRow(packedmatrix *m, int row, int homecol, int k, packedmatrix *tablepacked, int *lookuppacked) {
+  int blocknum = homecol/RADIX;
 
-  int value=getValueFlex(m, row, homecol, k);
+  int value = getBits(m, row, homecol, k);
 
-  int tablerow=lookuppacked[value];
+  int tablerow = lookuppacked[value];
 
-  combineFlex(          m,      row, blocknum, 
-              tablepacked, tablerow, blocknum, 
-                        m,      row, blocknum);
+  combine(m,                row, blocknum,
+	  tablepacked, tablerow, blocknum,
+	  m,                row, blocknum);
 }
 
-void processPackedFlex(packedmatrix *m, int startrow, int stoprow, int startcol, int k, packedmatrix *tablepacked, int *lookuppacked) {
+void process(packedmatrix *m, int startrow, int stoprow, int startcol, int k, packedmatrix *tablepacked, int *lookuppacked) {
   int i;
   int blocknum=startcol/RADIX;
   int value;
@@ -186,8 +180,8 @@ void processPackedFlex(packedmatrix *m, int startrow, int stoprow, int startcol,
   case 1:
     // no loop needed as only one block is operated on.
     for (i=startrow; i<=stoprow; i++) {
-      value=getValueFlex(m, i, startcol, k);
-      tablerow=lookuppacked[value];
+      value = getBits(m, i, startcol, k);
+      tablerow = lookuppacked[value];
       b1_ptr = m->values + blocknum + m->rowswap[i];
       b2_ptr = tablepacked->values + blocknum + tablepacked->rowswap[tablerow];
       *b1_ptr ^= *b2_ptr;
@@ -197,39 +191,39 @@ void processPackedFlex(packedmatrix *m, int startrow, int stoprow, int startcol,
   case 2:
     // two blocks, no loop
     for (i=startrow; i<=stoprow; i++) {
-      value=getValueFlex(m, i, startcol, k);
-      tablerow=lookuppacked[value];
+      value = getBits(m, i, startcol, k);
+      tablerow = lookuppacked[value];
       b1_ptr = m->values + blocknum + m->rowswap[i];
       b2_ptr = tablepacked->values + blocknum + tablepacked->rowswap[tablerow];
       *b1_ptr++ ^= *b2_ptr++;
       *b1_ptr ^= *b2_ptr;
-
     }
     break;
 
   default:
     // the real deal more than two blocks.
     for (i=startrow; i<=stoprow; i++) {
-      processRowPackedFlex(m, i, startcol, k, tablepacked, lookuppacked);
+      processRow(m, i, startcol, k, tablepacked, lookuppacked);
     }
     break;
   }
-
 }
 
-int doAByteColumnFlex(packedmatrix *m, int full, int k, int ai, 
-		      packedmatrix *tablepacked, int *lookuppacked) {
+int stepM4RI(packedmatrix *m, int full, int k, int ai, 
+	     packedmatrix *tablepacked, int *lookuppacked) {
   int submatrixrank;
   
   /*
    * Stage 1: Denote the first column to be processed in a given
-   * iteration as a_i . Then, perform Gaussian elimination on the
+   * iteration as ai. Then, perform Gaussian elimination on the
    * first 3k rows after and including the i-th row to produce an
-   * identity matrix in $a_{(i,i)} ... a_{(i+k-1),(i+k-1)}$ , and
-   * zeroes in $a_{(i+k),i} ... a_{(i+3k-1),(i+k-1)}$.
+   *
+   * identity matrix in $a_{(i,i)} ... a_{(i+k-1),(i+k-1)},$ 
+   *
+   * and zeroes in $a_{(i+k),i} ... a_{(i+3k-1),(i+k-1)}$.
    */
 
-  submatrixrank=prepPackedFlex(m, ai, k);
+  submatrixrank=prep(m, ai, k);
 
 
   if (submatrixrank!=k) return submatrixrank;
@@ -241,7 +235,7 @@ int doAByteColumnFlex(packedmatrix *m, int full, int k, int ai,
    * precomputed.
    */
 
-  makeTablePackedFlex(m, ai, k, tablepacked, lookuppacked, 0);
+  makeTable(m, ai, k, tablepacked, lookuppacked, 0);
 
 
   /*
@@ -255,8 +249,8 @@ int doAByteColumnFlex(packedmatrix *m, int full, int k, int ai,
    * Elimination had been performed.
   */
 
-  processPackedFlex(m, ai+k*3, m->rows-1, ai, k,
-		    tablepacked, lookuppacked);
+  process(m, ai+k*3, m->nrows-1, ai, k,
+	  tablepacked, lookuppacked);
 
   /* While the above form of the algorithm will reduce a system of
    * boolean linear equations to unit upper triangular form, and thus
@@ -267,154 +261,207 @@ int doAByteColumnFlex(packedmatrix *m, int full, int k, int ai,
    * the complexity slightly, changing the 2.5 coeffcient to 3
    */
 
-  if (full==YES) processPackedFlex(m, 0, ai-1, ai, k, 
-				   tablepacked, lookuppacked);
+  if (full==YES) process(m, 0, ai-1, ai, k, 
+			 tablepacked, lookuppacked);
 
   return submatrixrank;
 }
 
-int fourRussiansPackedFlex(packedmatrix *m, int full, int k, 
-		       packedmatrix *tablepacked, int *lookuppacked) {
+int reduceM4RI(packedmatrix *m, int full, int k, packedmatrix *tablepacked, int *lookuppacked) {
   int i, submatrixrank;
-  int stop=min(m->rows, m->cols);
-  int lastokay=-1;
+  int stop = min(m->nrows, m->ncols); 
 
   int rank = 0;
+  int simple = 0;
 
+  if (k == 0) {
+    k = optK(m->nrows, m->ncols, 0);
+  }
+
+  if (tablepacked == NULL && lookuppacked == NULL) {
+    simple = 1;
+    tablepacked = createMatrix( TWOPOW(k), m->ncols );
+    lookuppacked = (int *)safeCalloc( TWOPOW(k), sizeof(int) );
+  }
+  
+  // main loop
   for (i=0; i<stop; i+=k) {
     // not enough room for M4RI left.
-    if ( ((i+k*3-1)>=m->rows) || ((i+k-1)>=m->cols) ) {
-      return rank + gaussianPackedDelayed(m, lastokay+1, full);
+    if ( ((i+k*3) > m->nrows) || ((i+k) > m->ncols) ) {
+      rank += reduceGaussianDelayed(m, i, full);
+      break;
     }
     
-    submatrixrank=doAByteColumnFlex(m, full, k, i, tablepacked, lookuppacked);
+    submatrixrank=stepM4RI(m, full, k, i, tablepacked, lookuppacked);
 
     if (submatrixrank!=k) {
       // not full rank, use Gaussian elimination :-(
-      return rank + gaussianPackedDelayed(m, lastokay+1, full);
-    } 
-
-    lastokay=i+k-1;
-
+      rank += reduceGaussianDelayed(m, i, full);
+      break;
+    }
     rank += submatrixrank;
+  }
+
+  if (simple) {
+    free(lookuppacked);
+    destroyMatrix(tablepacked);
   }
   
   return rank; 
 }
 
-int simpleFourRussiansPackedFlex(packedmatrix *m, int full, int k) {
-  int size=m->cols;
-  int twokay=TWOPOW(k);
-
-  packedmatrix *mytable=createPackedMatrix(twokay, size);
-
-  int *mylookups=(int *)safeCalloc(twokay, sizeof(int));
-
-  int rank=fourRussiansPackedFlex(m, full, k, mytable, mylookups);
-
-  free(mylookups);
-
-  destroyPackedMatrix(mytable);
+void topReduceM4RI(packedmatrix *m, int k, packedmatrix *tablepacked, int *lookuppacked) {
+  int i,j,  submatrixrank;
+  int stop = min(m->nrows, m->ncols); 
+  int simple = 0;
   
-  return rank;
+  if (k == 0) {
+    k = optK(m->nrows, m->ncols, 0);
+  }
+  
+  /* setup tables */
+  if (tablepacked == NULL && lookuppacked == NULL) {
+    simple = 1;
+    tablepacked = createMatrix( TWOPOW(k), m->ncols );
+    lookuppacked = (int *)safeCalloc( TWOPOW(k), sizeof(int) );
+  }
+  
+  /* main loop */
+  for (i=0; i<stop; i+=k) {
+    if ( (i+k > m->nrows) || (i+k > m->ncols) ) {
+      reduceGaussianDelayed(m, i, 1);
+      break;
+    }
+    
+    submatrixrank = prep(m, i, k);
+    
+    if (submatrixrank==k) {
+      makeTable(m, i, k, tablepacked, lookuppacked, 0);
+      process(m, 0, i-1, i, k, tablepacked, lookuppacked);
+    } else {
+      reduceGaussianDelayed(m, i, 1);
+      break;
+    }
+  }
+  
+  /* clear tables */
+  if (simple) {
+    free(lookuppacked);
+    destroyMatrix(tablepacked);
+  }
 }
 
-packedmatrix *invertPackedFlexRussian(packedmatrix *m, 
-				      packedmatrix *identity, int k) {
-  packedmatrix *big=concatPacked(m, identity);
-  int size=m->cols;
+packedmatrix *invertM4RI(packedmatrix *m, 
+			 packedmatrix *identity, int k) {
+  packedmatrix *big=concat(m, identity);
+  int size=m->ncols;
+  if (k == 0) {
+    k = optK(m->nrows, m->ncols, 0);
+  }
   int twokay=TWOPOW(k);
   int i;
-  packedmatrix *mytable=createPackedMatrix(twokay, size*2);
-
+  packedmatrix *mytable=createMatrix(twokay, size*2);
   int *mylookups=(int *)safeCalloc(twokay, sizeof(int));
-  int rank;
   packedmatrix *answer;
-
-  rank=fourRussiansPackedFlex(big, YES, k, mytable, mylookups);
-
+  
+  reduceM4RI(big, YES, k, mytable, mylookups);
+  
   for(i=0; i < size; i++) {
-    if (!readPackedCell(big, i,i )) {
+    if (!readCell(big, i,i )) {
       answer=NULL;
       break;
     }
   }
   if (i == size)
-    answer=copySubMatrixPacked(big, 0, size, size-1, size*2-1);
-
+    answer=copySubMatrix(big, 0, size, size-1, size*2-1);
+  
   free(mylookups);
-  destroyPackedMatrix(mytable);
-  destroyPackedMatrix(big);
+  destroyMatrix(mytable);
+  destroyMatrix(big);
   
   return answer;
 }
 
-packedmatrix *m4rmTransposePacked(packedmatrix *A, packedmatrix *B, int k) {
+packedmatrix *multiplyM4RMTranspose(packedmatrix *A, packedmatrix *B, int k) {
   packedmatrix *AT, *BT, *CT, *C;
   
-  if(A->cols != B->rows) die("A cols need to match B rows");
+  if(A->ncols != B->nrows) die("A cols need to match B rows");
   
-  AT = transposePacked(A);
-  BT = transposePacked(B);
+  AT = transpose(A);
+  BT = transpose(B);
+  
+  CT = multiplyM4RM(BT,AT,k, NULL, NULL);
+  
+  destroyMatrix(AT);
+  destroyMatrix(BT);
 
-  CT = m4rmPacked(BT,AT,k);
-
-  destroyPackedMatrix(AT);
-  destroyPackedMatrix(BT);
-
-  C = transposePacked(CT);
-  destroyPackedMatrix(CT);
+  C = transpose(CT);
+  destroyMatrix(CT);
   return C;
 }
 
-
-packedmatrix *m4rmPacked(packedmatrix *A, packedmatrix *B, int k) {
-  int i,j;
-  int a,b,c;
+packedmatrix *multiplyM4RM(packedmatrix *A, packedmatrix *B, int k, packedmatrix *tablepacked, int *lookuppacked) {
+  int i,j,  a,b,c, simple;
   unsigned int x;
   packedmatrix *C;
-  int *lookuppacked;
-  packedmatrix *T;
+  
+  if(A->ncols != B->nrows) 
+    die("A cols need to match B rows");
+  
+  a = A->nrows;
+  b = A->ncols;
+  c = B->ncols;
 
-  if(A->cols != B->rows) die("A cols need to match B rows");
+  if (k == 0) {
+    k = optK(a,b,c);
+  }
 
-  a = A->rows;
-  b = A->cols;
-  c = B->cols;
+  if (tablepacked == NULL && lookuppacked == NULL) {
+    simple = 1;
+    tablepacked =createMatrix(TWOPOW(k), c);
+    lookuppacked = (int *)safeCalloc(TWOPOW(k), sizeof(int));
+  }
 
-  T =createPackedMatrix(TWOPOW(k), c);
-  lookuppacked = (int *)safeCalloc(TWOPOW(k), sizeof(int));
+  C = createMatrix(a, c);
 
-  C = createPackedMatrix(a,c);
+  for(i=0; i < b/k; i++) {
 
-  for(i=0 ; i < b/k ; i++) {
-
-    //Make a Gray Code table of all the 2^k linear combinations of the k rows of Bi .
-    //Call the xth row Tx .
-    makeTablePackedFlex( B, i*k, k, T, lookuppacked, 1);
+    /* Make a Gray Code table of all the $2^k$ linear combinations of
+     * the $k$ rows of $B_i$.  Call the $x$-th row $T_x$.
+     */
+    makeTable( B, i*k, k, tablepacked, lookuppacked, 1 );
     
-    for(j = 0; j<a ; j++) {
+    for(j = 0; j<a; j++) {
 
-      //Read the entries aj,(i-1)k+1 , aj,(i-1)k+2 , . . . , aj,(i-1)k+k .
-      //Let x be the k bit binary number formed by the concatenation of aj,(i-1)k+1 , . . . , aj,ik .
-      x = lookuppacked[getValueFlex(A, j, i*k, k)];
+      /* Read the entries 
+       *
+       *  $aj,(i-1)k+1, aj,(i-1)k+2 , ... , aj,(i-1)k+k.$
+       *
+       * Let $x$ be the $k$ bit binary number formed by the
+       * concatenation of $aj,(i-1)k+1 , ... , aj,ik$.
+       */
 
-      //for h = 1, 2, . . . , c do
-      //    Calculate Cjh = Cjh + Txh.
-      combineFlex(C,j,0,  T,x,0,  C,j,0 );
+      x = lookuppacked[getBits(A, j, i*k, k)];
+
+      /* for h = 1, 2, . . . , c do
+       *   Calculate Cjh = Cjh + Txh.
+       */
+      combine( C,j,0,  tablepacked,x,0,  C,j,0 );
     }
   }
 
   //handle rest
   if (b%k) {
-    makeTablePackedFlex( B, b/k * k , b%k, T, lookuppacked, 1);
+    makeTable( B, b/k * k , b%k, tablepacked, lookuppacked, 1);
     
-    for(j = 0; j<a ; j++) {
-      x = lookuppacked[getValueFlex(A, j, i*k, b%k)];
-      combineFlex(C,j,0, T,x,0,  C,j,0);
+    for(j = 0; j<a; j++) {
+      x = lookuppacked[getBits(A, j, i*k, b%k)];
+      combine(C,j,0, tablepacked,x,0,  C,j,0);
     }
   }
-  destroyPackedMatrix(T);
-  free(lookuppacked);
+  if (simple) {
+    destroyMatrix(tablepacked);
+    free(lookuppacked);
+  }
   return C;
 }

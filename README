@@ -1,0 +1,4 @@
+This library implements the "Method of the Four Russians" or Kronrad
+Method for matrix multiplication, reduction and inversion over GF(2).
+
+There is no official website right for now.

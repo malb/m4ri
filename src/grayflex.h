@@ -35,6 +35,7 @@ typedef struct codestruct /*renamed as*/ code;
 
 extern code **codebook;
 
+#define MAXKAY 16
 #define TWOPOW(i) (1<<(i))
 
 void printBitString(int number, int length);
@@ -85,5 +86,14 @@ void buildCodeFlex(int *ord, int *inc, int length);
 void buildAllCodes();
 
 void destroyAllCodes();
+
+/**
+ * Return the optimal k for the given parameters. If c != 0 then the
+ * optimal k for multiplication is returned, else the optimal k for
+ * inversion is returned. The optiomal $k$ here means $0.75 log_2(n)$
+ * where $n$ is $min(a,b)$ for inversiona and $b$ for multiplication.
+ */
+
+int optK(int a,int b,int c);
 
 #endif //GRAYFLEX_H
