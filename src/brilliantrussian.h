@@ -26,6 +26,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include "misc.h"
 #include "packedmatrix.h"
 
 /**
@@ -161,8 +162,15 @@ packedmatrix *invertM4RI(packedmatrix *m, packedmatrix *identity, int k);
  *
  */
 
-packedmatrix *multiplyM4RM(packedmatrix *A, packedmatrix *B, int k, packedmatrix *tablepacked, int *lookuppacked);
+packedmatrix *m2t_mul_m4rm(packedmatrix *ret, packedmatrix *A, packedmatrix *B, int k, packedmatrix *tablepacked, int *lookuppacked);
 
-packedmatrix *multiplyM4RMTranspose(packedmatrix *A, packedmatrix *B, int k);
+packedmatrix *m2t_mul_m4rm_t(packedmatrix *ret, packedmatrix *A, packedmatrix *B, int k);
+
+/**
+ * Matrix multiplication via Strasen + Gray codes.
+ *
+ */
+
+packedmatrix *m2t_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 
 #endif //BRILLIANTRUSSIAN_H

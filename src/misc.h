@@ -21,10 +21,14 @@
 
 #include "grayflex.h"
 
-/** code up: addToCell for XOR, like readCell and writeCell. **/
+#define max(x,y) ((x > y)?x:y)
+#define min(x,y) ((x < y)?x:y)
 
 #define YES 1
 #define NO 0
+
+#define LEFTMOST_BITS(w, spot)  (w & ~((1ULL<<(RADIX-spot))-1))>>(RADIX-spot)
+#define RIGHTMOST_BITS(w, spot) (w &  ((1ULL<<spot)-1))
 
 typedef unsigned char /* renamed as */ BIT;
 
@@ -43,8 +47,6 @@ extern int *lookup;
 extern int numcols;
 
 void die(char *errormessage);
-
-int min ( int a, int b);
 
 /* MEMLEAK, use free */
 void *safeCalloc( int count, int size );

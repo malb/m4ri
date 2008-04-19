@@ -18,26 +18,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
 #include "misc.h"
 
-/***************************************************/
 /***************************************************/
 void die(char *errormessage) {
   /*This function prints the error message and raises SIGABRT.*/
 
   fprintf(stderr, "\a%s\n", errormessage);
-  raise(SIGABRT);
+  abort();
 }
 
-/***************************************************/
-/***************************************************/
-int min ( int a, int b) {
-  if (a<=b) return a;
-  else return b;
-}
-
-/***************************************************/
 /***************************************************/
 
 /* MEMLEAK, use free */
@@ -53,7 +43,6 @@ void *safeCalloc( int count, int size ) {
   else return newthing;
 }
 
-/***************************************************/
 /***************************************************/
 
 /* MEMLEAK, use free */

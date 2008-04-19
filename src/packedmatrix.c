@@ -26,8 +26,7 @@ word sixteenmask[RADIX/16];
 
 /****************************************/
 
-/* MEMLEAK: use destroyPackedMatrix */
-packedmatrix *createMatrix(int r, int c) {
+packedmatrix *m2t_init(int r, int c) {
   packedmatrix *newmatrix;
   int i;
 
@@ -54,14 +53,38 @@ packedmatrix *createMatrix(int r, int c) {
   return newmatrix;
 }
 
-/************************************************************/
+/** We don't perform any sanity checks! **/
+packedmatrix *m2t_init_window(packedmatrix *m, int lowr, int lowc, int highr, int highc) {
+  int nrows, ncols, i, offset; 
+  packedmatrix *window = (packedmatrix *)calloc(1, sizeof(packedmatrix));
+  nrows = highr - lowr;
+  ncols = highc - lowc;
+  
+  window->ncols = ncols;
+  window->nrows = nrows;
+  window->width = ncols/RADIX;
+  window->values = m->values;
+  window->rowswap = (int *)safeCalloc( nrows, sizeof(int));
 
-void destroyMatrix( packedmatrix *condemned) {
+  offset = lowc / RADIX;
+
+  for(i=0; i<nrows; i++) {
+    window->rowswap[i] = m->rowswap[lowr + i] + offset;
+  }
+  
+  return window;
+}
+
+void m2t_free( packedmatrix *condemned) {
   free(condemned->values);
   free(condemned->rowswap);
   free(condemned);
 }
 
+void m2t_free_window( packedmatrix *condemned) {
+  free(condemned->rowswap);
+  free(condemned);
+}
 
 /************************************************************/
 
@@ -299,18 +322,17 @@ int reduceGaussian(packedmatrix *m, int full) {
 }
 
 
-/**********************************************************************/
-
-/* Works */
-/* MEMLEAK, use destroyMatrix */
-/* This is not efficient, but it is quadratic time, so who cares? */
-/* Efficient, would be to use the fact that: */
-/* [ A B ]T    [AT CT]
-   [ C D ]  =  [BT DT] and thus rearrange the blocks recursively. */
-packedmatrix *transpose( packedmatrix *data ) {
-  packedmatrix *newmatrix=createMatrix( data->ncols, data->nrows );
+packedmatrix *m2t_transpose(packedmatrix *newmatrix, packedmatrix *data) {
   int i,j,k;
   word temp;
+
+  if (newmatrix == NULL) {
+    newmatrix = m2t_init( data->ncols, data->nrows );
+  } else {
+    if (newmatrix->nrows != data->ncols || newmatrix->ncols != data->nrows) {
+      die("Wrong size for return matrix.\n");
+    }
+  }
 
   for (i=0; i<newmatrix->nrows; i++) {
     for (j=0; j<newmatrix->width; j++) {
@@ -351,39 +373,34 @@ BIT bigDotProduct( packedmatrix *a, packedmatrix *bT, int rowofa,
 
 /********************************************************/
 
-/* Works */
-/* MEMLEAK use destroyMatrix */
-
-packedmatrix *matrixTimesMatrixTranspose( packedmatrix *a, 
-						packedmatrix *bT ) {
+packedmatrix *m2t_mul_naiv_t(packedmatrix *product, packedmatrix *a, 
+			     packedmatrix *bT ) {
+  int i, j;
   int newrows=a->nrows;
   int newcols=bT->nrows;
-  packedmatrix *newmatrix=createMatrix(newrows, newcols);
-  int i, j;
 
-  for (i=0; i<newrows; i++) {
-    for (j=0; j<newcols; j++) {
-      writeCell(newmatrix, i, j, bigDotProduct( a, bT, i, j ) );
+  if (product==NULL) {
+    product=m2t_init(newrows, newcols);
+  } else {
+    if (product->nrows != newrows || product->ncols != newcols) {
+      die("Provided return matrix has wrong dimensions.\n");
     }
   }
 
-  return newmatrix;
+  for (i=0; i<newrows; i++) {
+    for (j=0; j<newcols; j++) {
+      writeCell(product, i, j, bigDotProduct( a, bT, i, j ) );
+    }
+  }
+
+  return product;
 }
   
-/********************************************************/
-
-/* Works */
-/* MEMLEAK: use destroyMatrix */
-/* Normally, if you will multiply several times by b, it is smarter to
-  calculate bT yourself, and keep it, and then use the function called
-  matrixTimesMatrixTranspose */
-packedmatrix *matrixTimesMatrix( packedmatrix *a, 
-				 packedmatrix *b) {
-  packedmatrix *bT=transpose(b);
-
-  packedmatrix *product=matrixTimesMatrixTranspose( a, bT );
-  
-  destroyMatrix(bT);
+packedmatrix *m2t_mul_naiv(packedmatrix *product, packedmatrix *a, 
+			   packedmatrix *b) {
+  packedmatrix *bT = m2t_transpose(NULL, b);
+  product = m2t_mul_naiv_t(product, a, bT );
+  m2t_free(bT);
 
   return product;
 }
@@ -480,78 +497,86 @@ int compareMatrix(packedmatrix *a, packedmatrix *b) {
 
 /********************************************************/
 
-/* MEMLEAK: use destroyMatrix */
-packedmatrix *clone( packedmatrix *p) {
-  packedmatrix *newmatrix=createMatrix(p->nrows, p->ncols);
-  int i, j;
+/* MEMLEAK: use m2t_free */
+packedmatrix *cloneMatrix( packedmatrix *p) {
+  packedmatrix *n = m2t_init(p->nrows, p->ncols);
+  int i, j, p_truerow, n_truerow;
   word entry;
   
   for (i=0; i<p->nrows; i++) {
+    p_truerow = p->rowswap[i];
+    n_truerow = n->rowswap[i];
     for (j=0; j<p->width; j++) {
-      
-      if (  (j*RADIX) < p->ncols ) { 
-	entry=readBlock(p, i, j*RADIX);
-	writeBlock(newmatrix, i, j*RADIX, entry);
-      }
+      n->values[n_truerow + j] = p->values[p_truerow + j];
     }
   }
 
-  return newmatrix;
+  return n;
 }
 
 
 /********************************************************/
 
-/* MEMLEAK: use destroyMatrix */
+/* MEMLEAK: use m2t_free */
 /* This is sometimes called augment */
 packedmatrix *concat( packedmatrix *a, packedmatrix *b) {
   packedmatrix *newmatrix;
-  int i, j;
+  int i, j, truerow, width;
   //word entry;
   
   if (a->nrows!=b->nrows) {
     die("Bad arguments to concat!\n");
   }
 
-  newmatrix=createMatrix(a->nrows, a->ncols + b->ncols);
+  newmatrix=m2t_init(a->nrows, a->ncols + b->ncols);
+  width = newmatrix->width;
 
   for (i=0; i<a->nrows; i++) {
-    for (j=0; j<a->ncols; j++) {
-      writeCell(newmatrix, i, j, readCell(a, i, j) );
+    truerow = a->rowswap[i];
+    for (j=0; j<a->width; j++) {
+      newmatrix->values[i*width + j] = a->values[truerow + j];
     }
   }
 
   for (i=0; i<b->nrows; i++) {
     for (j=0; j<b->ncols; j++) {
       writeCell(newmatrix, i, j+(a->ncols), 
-		      readCell(b, i, j) );
+		readCell(b, i, j) );
     }
   }
 
   return newmatrix;
 }
 
-
-/********************************************************/
-/* MEMLEAK: use destroyMatrix */
-packedmatrix *copySubMatrix( packedmatrix *a, int lowr, int lowc,
-				   int highr, int highc) {
+packedmatrix *stack(packedmatrix *a, packedmatrix *b) {
   packedmatrix *newmatrix;
-  int i, j;
-  
-  newmatrix=createMatrix(highr-lowr+1, highc-lowc+1);
+  int i, j, offset, truerow, width;
 
-  for (i=lowr; i<=highr; i++) {
-    for (j=lowc; j<=highc; j++) {
-      writeCell(newmatrix, i-lowr, j-lowc, readCell(a, i, j) );
+  if (a->ncols != b->ncols) {
+    die("Bad arguments to stack!\n");
+  }
+  newmatrix = m2t_init(a->nrows + b->nrows, a->ncols);
+  width = newmatrix->width;
+  
+  for(i=0; i<a->nrows; i++) {
+    truerow = a->rowswap[i];
+    for (j=0; j<a->width; j++) {
+      newmatrix->values[i*width + j] = a->values[truerow + j]; 
     }
   }
+  offset = a->nrows * a->width;
 
+  for(i=0; i<b->nrows; i++) {
+    truerow = b->rowswap[i];
+    for (j=0; j<b->width; j++) {
+      newmatrix->values[offset + i*width + j] = b->values[truerow + j]; 
+    }
+  }
   return newmatrix;
 }
 
 /*********************************************************/
-/* MEMLEAK: use destroyMatrix */
+/* MEMLEAK: use m2t_free */
 packedmatrix *invertGaussian(packedmatrix *target, 
 				   packedmatrix *identity) {
   packedmatrix *huge, *inverse;
@@ -561,34 +586,98 @@ packedmatrix *invertGaussian(packedmatrix *target,
 
   x=reduceGaussian(huge, YES);
 
-  if (x==NO) { destroyMatrix(huge); return NULL; }
+  if (x==NO) { m2t_free(huge); return NULL; }
   
-  inverse=copySubMatrix(huge, 0, target->ncols, target->nrows-1, 
-			      target->ncols*2-1);
+  inverse=copySubMatrix(huge, 0, target->ncols, target->nrows, 
+			target->ncols*2);
 
-  destroyMatrix(huge);
+  m2t_free(huge);
   return inverse;
 }
 
-packedmatrix *add(packedmatrix *left, packedmatrix *right) {
-
-  packedmatrix *ret;
-  int i,j,width;
+packedmatrix *m2t_add(packedmatrix *ret, packedmatrix *left, packedmatrix *right) {
+  int i,j,left_truerow, ret_truerow;
+  word entry;
 
   if (left->nrows != right->nrows || left->ncols != right->ncols) {
     die("rows and columns must match");
   }
 
-  width = left->width;
-
-  ret = createMatrix(left->nrows, left->ncols);
-  memcpy(ret->values, left->values, (RADIX>>3) * width * left->nrows);
-  memcpy(ret->rowswap, left->rowswap, left->nrows * sizeof(int));
+  if (ret == NULL) {
+    ret = cloneMatrix(left);
+  } else if (ret != left) {
+    if (ret->nrows != left->nrows || ret->ncols != left->ncols) {
+      die("rows and columns of returned matrix must match");
+    }
+    for (i=0; i<left->nrows; i++) {
+      left_truerow = left->rowswap[i];
+      ret_truerow = ret->rowswap[i];
+      for (j=0; j < left->width; j++) {
+	ret->values[ret_truerow + j] = left->values[left_truerow + j];
+      }
+    }
+  }
   
   for(i=0; i < right->nrows; i++) {
-    for(j=0; j < width; j++) {
+    for(j=0; j < left->width; j++) {
       ret->values[  ret->rowswap[i] + j ]  ^= right->values[ right->rowswap[i] + j];
     }
   }
   return ret;
+}
+
+
+packedmatrix *copySubMatrix(packedmatrix *m, int startrow, int startcol, int endrow, int endcol) {
+  int nrows, ncols, truerow, i, colword, x, y, block, spot, startword;
+  word temp  = 0;
+  
+  nrows = endrow - startrow;
+  ncols = endcol - startcol;
+
+  packedmatrix *newmatrix = m2t_init(nrows, ncols);
+
+  startword = startcol / RADIX;
+
+  /** we start at the beginning of a word **/
+  if (startcol%RADIX == 0) {
+    for(x = startrow, i=0; i<nrows; i++, x+=1) {
+      truerow = m->rowswap[x];
+
+      /** process full words first **/
+      for(y = startcol, colword=0; colword<ncols/RADIX; colword++, y+=RADIX) {
+	block = truerow + colword + startword;
+	temp = m->values[block];
+	newmatrix->values[newmatrix->rowswap[i] + colword] = temp;
+      }
+
+      /** process remaining bits **/
+      if (ncols%RADIX) {
+	colword = ncols/RADIX;
+	block = truerow + colword;
+	temp = m->values[block] & ~((1ULL<<(RADIX-ncols%RADIX))-1);
+	newmatrix->values[newmatrix->rowswap[i] + colword] = temp;
+      } 
+    }
+
+    /** startcol is not the beginning of a word **/
+  } else { 
+    spot = startcol % RADIX;
+    for(x = startrow, i=0; i<nrows; i++, x+=1) {
+      truerow = m->rowswap[x];
+
+      /** process full words first **/
+      for(y = startcol, colword=0; colword<ncols/RADIX; colword++, y+=RADIX) {
+	block = truerow + colword + startword;
+	temp = (m->values[block] << (spot)) | (m->values[block + 1] >> (RADIX-spot) ); 
+	newmatrix->values[newmatrix->rowswap[i] + colword] = temp;
+      }
+      /** process remaining bits (lazy)**/
+      colword = ncols/RADIX;
+      for (y=0; y < ncols%RADIX; y++) {
+	temp = readCell(m, x, startcol + colword*RADIX + y);
+	writeCell(newmatrix, i, colword*RADIX + y, temp);
+      }
+    }
+  }
+  return newmatrix;
 }

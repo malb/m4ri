@@ -18,7 +18,6 @@
 
 #include "brilliantrussian.h"
 
-#define min(x,y) ((x < y)?x:y)
 #define TWOPOW(i) (1<<(i))
 
 int forceNonZero(packedmatrix *m, int xstart, int xstop, int y) {
@@ -280,7 +279,7 @@ int reduceM4RI(packedmatrix *m, int full, int k, packedmatrix *tablepacked, int 
 
   if (tablepacked == NULL && lookuppacked == NULL) {
     simple = 1;
-    tablepacked = createMatrix( TWOPOW(k), m->ncols );
+    tablepacked = m2t_init( TWOPOW(k), m->ncols );
     lookuppacked = (int *)safeCalloc( TWOPOW(k), sizeof(int) );
   }
   
@@ -304,7 +303,7 @@ int reduceM4RI(packedmatrix *m, int full, int k, packedmatrix *tablepacked, int 
 
   if (simple) {
     free(lookuppacked);
-    destroyMatrix(tablepacked);
+    m2t_free(tablepacked);
   }
   
   return rank; 
@@ -322,7 +321,7 @@ void topReduceM4RI(packedmatrix *m, int k, packedmatrix *tablepacked, int *looku
   /* setup tables */
   if (tablepacked == NULL && lookuppacked == NULL) {
     simple = 1;
-    tablepacked = createMatrix( TWOPOW(k), m->ncols );
+    tablepacked = m2t_init( TWOPOW(k), m->ncols );
     lookuppacked = (int *)safeCalloc( TWOPOW(k), sizeof(int) );
   }
   
@@ -347,7 +346,7 @@ void topReduceM4RI(packedmatrix *m, int k, packedmatrix *tablepacked, int *looku
   /* clear tables */
   if (simple) {
     free(lookuppacked);
-    destroyMatrix(tablepacked);
+    m2t_free(tablepacked);
   }
 }
 
@@ -360,7 +359,7 @@ packedmatrix *invertM4RI(packedmatrix *m,
   }
   int twokay=TWOPOW(k);
   int i;
-  packedmatrix *mytable=createMatrix(twokay, size*2);
+  packedmatrix *mytable=m2t_init(twokay, size*2);
   int *mylookups=(int *)safeCalloc(twokay, sizeof(int));
   packedmatrix *answer;
   
@@ -373,37 +372,36 @@ packedmatrix *invertM4RI(packedmatrix *m,
     }
   }
   if (i == size)
-    answer=copySubMatrix(big, 0, size, size-1, size*2-1);
+    answer=copySubMatrix(big, 0, size, size, size*2);
   
   free(mylookups);
-  destroyMatrix(mytable);
-  destroyMatrix(big);
+  m2t_free(mytable);
+  m2t_free(big);
   
   return answer;
 }
 
-packedmatrix *multiplyM4RMTranspose(packedmatrix *A, packedmatrix *B, int k) {
-  packedmatrix *AT, *BT, *CT, *C;
+packedmatrix *m2t_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k) {
+  packedmatrix *AT, *BT, *CT;
   
   if(A->ncols != B->nrows) die("A cols need to match B rows");
   
-  AT = transpose(A);
-  BT = transpose(B);
+  AT = m2t_transpose(NULL, A);
+  BT = m2t_transpose(NULL, B);
   
-  CT = multiplyM4RM(BT,AT,k, NULL, NULL);
+  CT = m2t_mul_m4rm(NULL, BT,AT,k, NULL, NULL);
   
-  destroyMatrix(AT);
-  destroyMatrix(BT);
+  m2t_free(AT);
+  m2t_free(BT);
 
-  C = transpose(CT);
-  destroyMatrix(CT);
+  C = m2t_transpose(C, CT);
+  m2t_free(CT);
   return C;
 }
 
-packedmatrix *multiplyM4RM(packedmatrix *A, packedmatrix *B, int k, packedmatrix *tablepacked, int *lookuppacked) {
+packedmatrix *m2t_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *tablepacked, int *lookuppacked) {
   int i,j,  a,b,c, simple;
   unsigned int x;
-  packedmatrix *C;
   
   if(A->ncols != B->nrows) 
     die("A cols need to match B rows");
@@ -412,17 +410,30 @@ packedmatrix *multiplyM4RM(packedmatrix *A, packedmatrix *B, int k, packedmatrix
   b = A->ncols;
   c = B->ncols;
 
+
+  if (C == NULL) {
+    C = m2t_init(a, c);
+  } else {
+    if (C->nrows != a || C->ncols != c) {
+      die("C has wrong dimensions.\n");
+    }
+    /** clear first **/
+    for (i=0; i<C->nrows; i++) {
+      for (j=0; j<C->width; j++) {
+	C->values[C->rowswap[i] + j] = 0;
+      }
+    }
+  }
+
   if (k == 0) {
     k = optK(a,b,c);
   }
 
   if (tablepacked == NULL && lookuppacked == NULL) {
     simple = 1;
-    tablepacked =createMatrix(TWOPOW(k), c);
+    tablepacked = m2t_init(TWOPOW(k), c);
     lookuppacked = (int *)safeCalloc(TWOPOW(k), sizeof(int));
   }
-
-  C = createMatrix(a, c);
 
   for(i=0; i < b/k; i++) {
 
@@ -460,8 +471,204 @@ packedmatrix *multiplyM4RM(packedmatrix *A, packedmatrix *B, int k, packedmatrix
     }
   }
   if (simple) {
-    destroyMatrix(tablepacked);
+    m2t_free(tablepacked);
     free(lookuppacked);
   }
   return C;
 }
+
+
+packedmatrix *m2t_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+  int i,j,  a,b,c, k;
+  int anr, anc, bnr, bnc;
+  
+  if(A->ncols != B->nrows) {
+    die("A ncols need to match B nrows.\n");
+  }
+
+  a = A->nrows;
+  b = A->ncols;
+  c = B->ncols;
+
+  anr = a >> 1;
+  anc = b >> 1;
+  bnr = anc;
+  bnc = c >> 1;
+
+
+  if (cutoff <= 0) {
+    die("cutoff must be > 0.\n");
+  }
+
+  if (C == NULL) {
+    C = m2t_init(a, c);
+  } else {
+    if (C->nrows != a || C->ncols != c) {
+      die("C has wrong dimensions.\n");
+    }
+  }
+
+  /** handle case first, where the input matrices are too small already */
+  if (a <= cutoff || b <= cutoff || c <= cutoff) {
+    k = optK(a,b,c);
+    //printf("k: %d, a: %d, b: %d, c: %d.\n",k,a,b,c);
+    C = m2t_mul_m4rm(C, A, B, k, NULL, NULL);
+    return C;
+  }
+
+  packedmatrix *A00 = m2t_init_window(A,   0,   0, anr, anc);
+  packedmatrix *A01 = m2t_init_window(A,   0, anr, anc,   b);
+  packedmatrix *A10 = m2t_init_window(A, anr,   0,   a, anc);
+  packedmatrix *A11 = m2t_init_window(A, anr, anc,  a,    b);
+
+  packedmatrix *B00 = m2t_init_window(B,   0,   0, bnr, bnc);
+  packedmatrix *B01 = m2t_init_window(B,   0, bnc, bnr,   c);
+  packedmatrix *B10 = m2t_init_window(B, bnr,   0,   b, bnc);
+  packedmatrix *B11 = m2t_init_window(B, bnr, bnc,   b,   c);
+
+  packedmatrix *U0 = m2t_init_window(C,   0,   0, anr, bnc);
+  packedmatrix *U6 = m2t_init_window(C,   0, bnc, anr,   c);
+  packedmatrix *U3 = m2t_init_window(C, anr,   0,   a, bnc);
+  packedmatrix *U4 = m2t_init_window(C, anr, bnc,   a,   c);
+
+  packedmatrix *tmp = m2t_init(7*anr + 4*anc, max(anc,bnc));
+
+  int start_row = 0;
+  packedmatrix *S0 = m2t_init_window(tmp, start_row, 0, start_row + anr, anc);
+
+  start_row += anr;
+  packedmatrix *S1 = m2t_init_window(tmp, start_row, 0, start_row + anr, anc);
+
+  start_row += anr;
+  packedmatrix *S2 = m2t_init_window(tmp, start_row, 0, start_row + anr, anc);
+  
+  start_row += anr;
+  packedmatrix *S3 = m2t_init_window(tmp, start_row, 0, start_row + anr, anc);
+
+  start_row += anr;
+  packedmatrix *T0 = m2t_init_window(tmp, start_row, 0, start_row + anc, bnc);
+
+  start_row += anc;
+  packedmatrix *T1 = m2t_init_window(tmp, start_row, 0, start_row + anc, bnc);
+  
+  start_row += anc;
+  packedmatrix *T2 = m2t_init_window(tmp, start_row, 0, start_row + anc, bnc);
+
+  start_row += anc;
+  packedmatrix *T3 = m2t_init_window(tmp, start_row, 0, start_row + anc, bnc);
+  
+  start_row += anc;
+  packedmatrix *Q0 = m2t_init_window(tmp, start_row, 0, start_row + anr, bnc);
+
+  start_row += anr;
+  packedmatrix *Q1 = m2t_init_window(tmp, start_row, 0, start_row + anr, bnc);
+  
+  start_row += anr;
+  packedmatrix *Q2 = m2t_init_window(tmp, start_row, 0, start_row + anr, bnc);
+
+  // S0 = A10 + A11,  T0 = B01 - B00
+  // S1 = S0 - A00,   T1 = B11 - T0
+  // S2 = A00 - A10,  T2 = B11 - B01
+  // S3 = A01 - S1,   T3 = B10 - T1
+
+  m2t_add(S0, A10, A11);
+  m2t_add(S1,  S0, A00);
+  m2t_add(S2, A00, A10);
+  m2t_add(S3, A01,  S1);
+
+  m2t_add(T0, B01, B00);
+  m2t_add(T1, B11,  T0);
+  m2t_add(T2, B11, B01);
+  m2t_add(T3, B10,  T1);
+
+  if (anc <= cutoff || anc <= cutoff || bnc <= cutoff) {
+    // This is the base case, so we use MatrixWindow methods directly.
+    
+    // This next chunk is arranged so that each output cell gets written
+    // to exactly once. This is important because the output blocks might
+    // be quite fragmented in memory, whereas our temporary buffers
+    // (Q0, Q1, Q2) will be quite localised, so we can afford to do a bit
+  // of arithmetic in them.
+    
+    m2t_mul_m4rm(Q0, A00, B00, 0, NULL, NULL); // now Q0 holds P0
+    m2t_mul_m4rm(Q1, A01, B10, 0, NULL, NULL); // now Q1 holds P1
+    
+    m2t_add(U0, Q0, Q1); // now U0 is correct
+    
+    packedmatrix *S1T1 = m2t_mul_m4rm(NULL, S1, T1, 0, NULL, NULL);
+    m2t_add(Q0, Q0, S1T1); // now Q0 holds U1
+    m2t_free(S1T1);
+    
+    m2t_mul_m4rm(Q1, S2, T2, 0, NULL, NULL); // now Q1 holds P4
+    
+    m2t_add(Q1, Q1, Q0); // now Q1 holds U2
+    m2t_mul_m4rm(Q2, A11, T3, 0, NULL, NULL); // now Q2 holds P6
+    m2t_add(U3, Q1, Q2); // now U3 is correct
+    
+    m2t_mul_m4rm(Q2, S0, T0, 0, NULL, NULL); // now Q2 holds P2
+    m2t_add(U4, Q2, Q1); // now U4 is correct
+    
+    m2t_add(Q0, Q0, Q2); // now Q0 holds U5
+    m2t_mul_m4rm(Q2, S3, B11, 0, NULL, NULL); // now Q2 holds P5
+    m2t_add(U6, Q0, Q2);// now U6 is correct
+
+  } else{
+    m2t_mul_strassen(Q0, A00, B00, cutoff); // now Q0 holds P0
+    m2t_mul_strassen(Q1, A01, B10, cutoff); // now Q1 holds P1
+    
+    m2t_add(U0, Q0, Q1); // now U0 is correct
+    
+    packedmatrix *S1T1 = m2t_mul_strassen(NULL, S1, T1, cutoff);
+    m2t_add(Q0, Q0, S1T1); // now Q0 holds U1
+    m2t_free(S1T1);
+    
+    m2t_mul_strassen(Q1, S2, T2, cutoff); // now Q1 holds P4
+    
+    m2t_add(Q1, Q1, Q0); // now Q1 holds U2
+    m2t_mul_strassen(Q2, A11, T3, cutoff); // now Q2 holds P6
+    m2t_add(U3, Q1, Q2); // now U3 is correct
+    
+    m2t_mul_strassen(Q2, S0, T0, cutoff); // now Q2 holds P2
+    m2t_add(U4, Q2, Q1); // now U4 is correct
+    
+    m2t_add(Q0, Q0, Q2); // now Q0 holds U5
+    m2t_mul_strassen(Q2, S3, B11, cutoff); // now Q2 holds P5
+    m2t_add(U6, Q0, Q2);// now U6 is correct
+  }
+
+  /** clean up **/
+  m2t_free_window(A00);
+  m2t_free_window(A01);
+  m2t_free_window(A10);
+  m2t_free_window(A11);
+
+  m2t_free_window(B00);
+  m2t_free_window(B01);
+  m2t_free_window(B10);
+  m2t_free_window(B11);
+
+  m2t_free_window(U0);
+  m2t_free_window(U6);
+  m2t_free_window(U3);
+  m2t_free_window(U4);
+  
+  m2t_free_window(S0);
+  m2t_free_window(S1);
+  m2t_free_window(S2);
+  m2t_free_window(S3);
+
+  m2t_free_window(T0);
+  m2t_free_window(T1);
+  m2t_free_window(T2);
+  m2t_free_window(T3);
+
+  m2t_free_window(Q0);
+  m2t_free_window(Q1);
+  m2t_free_window(Q2);
+
+  m2t_free(tmp);
+
+  return C;
+}
+
+

@@ -46,9 +46,53 @@ extern word packingmask[RADIX];
 extern word bytemask[RADIX/8];
 extern word sixteenmask[RADIX/16];
 
-packedmatrix *createMatrix(int r, int c);
+/**
+ * Create a new matrix of dimension r x c.
+ *
+ * Use m2t_free to kill it.
+ *
+ * @param r number of rows
+ * @param c number of columns
+ *
+ */
 
-void destroyMatrix( packedmatrix *condemned );
+packedmatrix *m2t_init(int r, int c);
+
+/**
+ * Frees a matrix created with m2t_init
+ * 
+ * @param condemned matrix
+ */
+
+void m2t_free( packedmatrix *condemned );
+
+/**
+ * Create a window/view into the matrix m.
+ *
+ * A matrix window for m is a meta structure on the matrix m. It is
+ * setup to point into the matrix so m MUST NOT be freed while the
+ * matrix window is used.
+ *
+ * This function puts restrictions on the provided parameters which
+ * are not enforced currently.
+ *
+ *  - lowc must be divisible by RADIX
+ *  - highc must be divisible by RADIX
+ *  - all parameters must be within range for m
+ *
+ * Use m2t_free_free to free the window.
+ *
+ * @param m a matrix
+ * @param lowr starting row (inclusive)
+ * @param lowc starting column (inclusive)
+ * @param highr end row (exclusive)
+ * @param highc end column (exclusive)
+ *
+ */
+
+packedmatrix *m2t_init_window(packedmatrix *m, int lowr, int lowc, int highr, int highc);
+
+void m2t_free_window( packedmatrix *condemned);
 
 static inline void rowSwap( packedmatrix *m, int rowa, int rowb ) {
   int temp=m->rowswap[rowa];
@@ -125,8 +169,6 @@ void wordToStringComma( char *destination, word data);
   
 /* Important note: You can specify any of the RADIX bits (64 bits usually),
    inside of the block, and it will still return the correct entire block */
-/* Important note: You can specify any of the RADIX bits (64 bits usually),
-   inside of the block, and it will still return the correct entire block */
 static inline word readBlock( packedmatrix *m, int row, int col ) {
   int block=col/RADIX;
   int truerow=m->rowswap[row];
@@ -170,32 +212,41 @@ static inline BIT dotProduct( word a, word b ) {
   }
   return total;
 }
+/**
+ * Transpose a matrix.
+ *
+ * This is not efficient, but it is quadratic time, so who cares?
+ * Efficient, would be to use the fact that:
+ *
+@verbatim
+   [ A B ]T    [AT CT]
+   [ C D ]  =  [BT DT] 
+ @endverbatim 
+ * and thus rearrange the blocks recursively. 
+ *
+ * @param newmatrix return matrix (may be NULL)
+ * @param data matrix
+ */
 
-packedmatrix *transpose( packedmatrix *data );
+packedmatrix *m2t_transpose(packedmatrix *newmatrix, packedmatrix *data );
 
 BIT bigDotProduct( packedmatrix *a, packedmatrix *bT, int rowofa,
 			 int rowofb );
 
-/* MEMLEAK use destroyMatrix */
+/* MEMLEAK use m2t_free */
 
-packedmatrix *matrixTimesMatrixTranspose( packedmatrix *a, 
-						packedmatrix *bT );
+packedmatrix *m2t_mul_naiv_t(packedmatrix *ret, packedmatrix *a, packedmatrix *bT);
   
-/* MEMLEAK: use destroyMatrix */
+/* MEMLEAK: use m2t_free */
 /* Normally, if you will multiply several times by b, it is smarter to
   calculate bT yourself, and keep it, and then use the function called
   matrixTimesMatrixTranspose */
-packedmatrix *matrixTimesMatrix( packedmatrix *a, 
-				       packedmatrix *b);
+packedmatrix *m2t_mul_naiv(packedmatrix *ret, packedmatrix *a, packedmatrix *b);
 word randomWord();
 
 void fillRandomly( packedmatrix *a );
 
 void makeIdentity( packedmatrix *a );
-
-matrix *unpackMatrix( packedmatrix *pm );
-
-packedmatrix *packMatrix( matrix *m );
 
 static inline BIT isEqualWord( word a, word b) {
   if (a==b) return YES;
@@ -206,26 +257,48 @@ BIT equalMatrix( packedmatrix *a, packedmatrix *b );
 
 int compareMatrix(packedmatrix *a, packedmatrix *b);
 
-/* MEMLEAK: use destroyMatrix */
-packedmatrix *clone( packedmatrix *p);
+/* MEMLEAK: use m2t_free */
+packedmatrix *cloneMatrix( packedmatrix *p);
 
-/* MEMLEAK: use destroyMatrix */
+/* MEMLEAK: use m2t_free */
 /* This is sometimes called augment */
 packedmatrix *concat( packedmatrix *a, packedmatrix *b);
 
+packedmatrix *stack( packedmatrix *a, packedmatrix *b);
 
-/* MEMLEAK: use destroyMatrix */
+
+/**
+ * Copy a submatrix.
+ * 
+ * Note that the upper bounds are not included.
+ *
+ * @param a matrix
+ * @param lowr start rows
+ * @param lowc start column
+ * @param highr stop row (this row is NOT included)
+ * @param highc stop column (this column is NOT included)
+ */
 packedmatrix *copySubMatrix( packedmatrix *a, int lowr, int lowc,
 				   int highr, int highc);
 
-/* MEMLEAK: use destroyMatrix */
+/* MEMLEAK: use m2t_free */
 packedmatrix *invertGaussian(packedmatrix *target, 
 				   packedmatrix *identity);
 
-/* MEMLEAK: use destroyMatrix */
-packedmatrix *add(packedmatrix *left, packedmatrix *right);
+/**
+ * Add left to right and write the result to ret. ret is also
+ * returned.
+ *
+ * If ret is NULL then a new matrix is created which must be freed by
+ * m2t_free.
+ *
+ * @param ret a matrix (may be NULL)
+ * @param left a matrix
+ * @param right a matrix
+ */
+
+packedmatrix *m2t_add(packedmatrix *ret, packedmatrix *left, packedmatrix *right);
 
 void lazyPrint(packedmatrix *a);
-
 
 #endif //PACKEDMATRIX_H

@@ -6,12 +6,12 @@
 int test_equality(nr, nc) {
   packedmatrix *A, *B, *C, *D, *E;
   int ret = 0; 
-  A = createMatrix(100,100);
+  A = m2t_init(100,100);
   fillRandomly(A);
-  B = clone(A);
-  C = clone(A);
-  D = clone(A);
-  E = clone(A);
+  B = cloneMatrix(A);
+  C = cloneMatrix(A);
+  D = cloneMatrix(A);
+  E = cloneMatrix(A);
 
   reduceM4RI(A, 1, 0, NULL, NULL);
 
@@ -30,11 +30,11 @@ int test_equality(nr, nc) {
   ret += equalMatrix(A, D);
   ret += equalMatrix(A, E);
 
-  destroyMatrix(A);
-  destroyMatrix(B);
-  destroyMatrix(C);
-  destroyMatrix(D);
-  destroyMatrix(E);
+  m2t_free(A);
+  m2t_free(B);
+  m2t_free(C);
+  m2t_free(D);
+  m2t_free(E);
 
   return ret - 4;
 }

@@ -4,7 +4,7 @@
 /**
  * gray code generation used by the M4RI algorithm.
  * 
- * AUTHOR: malb
+ * @author Martin Albrecht 
  */
 
 /******************************************************************************
@@ -26,6 +26,8 @@
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
  
+#include "misc.h"
+
 struct codestruct {
   int *ord;
   int *inc;
