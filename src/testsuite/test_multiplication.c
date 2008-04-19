@@ -4,7 +4,7 @@
 #include "grayflex.h"
 
 int main(int argc, char **argv) {
-  buildAllCodes();
+  m2t_build_all_codes();
   packedmatrix *A, *B, *C;
   int n;
 
@@ -22,6 +22,6 @@ int main(int argc, char **argv) {
   m2t_free(B);
   m2t_free(C);
 
-  destroyAllCodes();
+  m2t_destroy_all_codes();
   return 0;
 }

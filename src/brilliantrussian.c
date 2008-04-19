@@ -17,6 +17,8 @@
 ******************************************************************************/
 
 #include "brilliantrussian.h"
+#include <emmintrin.h>
+#include "misc.h"
 
 #define TWOPOW(i) (1<<(i))
 
@@ -31,7 +33,6 @@ int forceNonZero(packedmatrix *m, int xstart, int xstop, int y) {
   }
   return NO;
 }
-
 
 int prep(packedmatrix *m, int ai, int k) {
   int pc; /* pivot column */
@@ -60,40 +61,76 @@ int prep(packedmatrix *m, int ai, int k) {
   return rank;
 }
 
-void combine( packedmatrix * s1, int row1, int startblock1, 
-	      packedmatrix * s2, int row2, int startblock2,
-	      packedmatrix * dest, int row3, int startblock3 ) {
-  int wide=s1->width - startblock1;
-  int i;
+void m2t_combine( packedmatrix * sc1, int row1, int startblock1, 
+		  packedmatrix * sc2, int row2, int startblock2,
+		  packedmatrix * dst, int row3, int startblock3 ) {
+  int wide=sc1->width - startblock1;
 
-  word *b1_ptr = s1->values + startblock1 + s1->rowswap[row1];
-  word *b2_ptr = s2->values + startblock2 + s2->rowswap[row2];
+  word *b1_ptr = sc1->values + startblock1 + sc1->rowswap[row1];
+  word *b2_ptr = sc2->values + startblock2 + sc2->rowswap[row2];
   word *b3_ptr;
 
   /* this is a quite likely case, and we treat is specially to ensure
    * cache register friendlyness. (Keep in mind that the x86 has only
    * four general purpose registers)
    */
-  if( dest == s1 && row1 == row3 && startblock1 == startblock3) {
-    /* A fair amount of time is spent in iterating i, thus we lower
-     * the burden a bit here.
-     */
-    if(wide%2==0) {
+
+  if( dst == sc1 && row1 == row3 && startblock1 == startblock3) {
+
+#ifdef HAVE_SSE2
+    /** check alignments **/
+    if (((unsigned long)b1_ptr%16==8) && ((unsigned long)b2_ptr%16==8)) {
+      *b1_ptr++ ^= *b2_ptr++;
+      wide--;
+    }
+
+    if (wide>32 && ((unsigned long)b1_ptr%16==0) && ((unsigned long)b2_ptr%16==0)) {
+      __m128i *dst_ptr = (__m128i*)b1_ptr;
+      __m128i *src_ptr = (__m128i*)b2_ptr;
+      __m128i *end_ptr = (__m128i*)((unsigned long)(b1_ptr + wide) & ~0xF);
+      __m128i xmm1;
+
+      do {
+	xmm1 = _mm_load_si128(dst_ptr);
+	const __m128i xmm2 = _mm_load_si128(src_ptr);
+	xmm1 = _mm_xor_si128(xmm1, xmm2);
+	_mm_store_si128(dst_ptr, xmm1);
+	++src_ptr;
+	++dst_ptr;
+      } while(dst_ptr < end_ptr);
+
+      b1_ptr = (word*)dst_ptr;
+      b2_ptr = (word*)src_ptr;
+
+      // handle rest
+      if (wide & 1)
+	*b1_ptr ^= *b2_ptr;
+
+    } else {
+      int i;
       for(i = wide>>1 ; i > 0 ; i--) {
 	*b1_ptr++ ^= *b2_ptr++;
 	*b1_ptr++ ^= *b2_ptr++;
       }
-      return;
-
-    } else {
-      for(i = wide ; i > 0 ; i--) {
-	*b1_ptr++ ^= *b2_ptr++;
-      }
-      return;
+      if (wide & 1)
+	*b1_ptr ^= *b2_ptr;
     }
 
-  } else {
-    b3_ptr = dest->values + startblock3 + dest->rowswap[row3];
+#else // no SSE2
+
+    int i;
+    for(i = wide>>1 ; i > 0 ; i--) {
+      *b1_ptr++ ^= *b2_ptr++;
+      *b1_ptr++ ^= *b2_ptr++;
+    }
+    if (wide & 1)
+      *b1_ptr ^= *b2_ptr;
+
+#endif
+    
+  } else { // dst != sc1
+    int i;
+    b3_ptr = dst->values + startblock3 + dst->rowswap[row3];
 
     for(i = 0 ; i < wide ; i++) {
       *b3_ptr++ = *b1_ptr++ ^ *b2_ptr++;
@@ -117,9 +154,9 @@ void makeTable( packedmatrix *m, int ai, int k,
 
     lookuppacked[id]=i;
 
-    combine( m,            rowneeded, homeblock, 
-	     tablepacked,  i-1,       homeblock, 
-	     tablepacked,  i,         homeblock);
+    m2t_combine( m,            rowneeded, homeblock, 
+		 tablepacked,  i-1,       homeblock, 
+		 tablepacked,  i,         homeblock);
   }
 }
 
@@ -160,9 +197,9 @@ void processRow(packedmatrix *m, int row, int homecol, int k, packedmatrix *tabl
 
   int tablerow = lookuppacked[value];
 
-  combine(m,                row, blocknum,
-	  tablepacked, tablerow, blocknum,
-	  m,                row, blocknum);
+  m2t_combine(m,                row, blocknum,
+	      tablepacked, tablerow, blocknum,
+	      m,                row, blocknum);
 }
 
 void process(packedmatrix *m, int startrow, int stoprow, int startcol, int k, packedmatrix *tablepacked, int *lookuppacked) {
@@ -274,7 +311,7 @@ int reduceM4RI(packedmatrix *m, int full, int k, packedmatrix *tablepacked, int 
   int simple = 0;
 
   if (k == 0) {
-    k = optK(m->nrows, m->ncols, 0);
+    k = m2t_opt_k(m->nrows, m->ncols, 0);
   }
 
   if (tablepacked == NULL && lookuppacked == NULL) {
@@ -305,17 +342,16 @@ int reduceM4RI(packedmatrix *m, int full, int k, packedmatrix *tablepacked, int 
     free(lookuppacked);
     m2t_free(tablepacked);
   }
-  
   return rank; 
 }
 
 void topReduceM4RI(packedmatrix *m, int k, packedmatrix *tablepacked, int *lookuppacked) {
-  int i,j,  submatrixrank;
+  int i, submatrixrank;
   int stop = min(m->nrows, m->ncols); 
   int simple = 0;
   
   if (k == 0) {
-    k = optK(m->nrows, m->ncols, 0);
+    k = m2t_opt_k(m->nrows, m->ncols, 0);
   }
   
   /* setup tables */
@@ -355,7 +391,7 @@ packedmatrix *invertM4RI(packedmatrix *m,
   packedmatrix *big=concat(m, identity);
   int size=m->ncols;
   if (k == 0) {
-    k = optK(m->nrows, m->ncols, 0);
+    k = m2t_opt_k(m->nrows, m->ncols, 0);
   }
   int twokay=TWOPOW(k);
   int i;
@@ -426,7 +462,7 @@ packedmatrix *m2t_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
   }
 
   if (k == 0) {
-    k = optK(a,b,c);
+    k = m2t_opt_k(a,b,c);
   }
 
   if (tablepacked == NULL && lookuppacked == NULL) {
@@ -457,7 +493,7 @@ packedmatrix *m2t_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
       /* for h = 1, 2, . . . , c do
        *   Calculate Cjh = Cjh + Txh.
        */
-      combine( C,j,0,  tablepacked,x,0,  C,j,0 );
+      m2t_combine( C,j,0,  tablepacked,x,0,  C,j,0 );
     }
   }
 
@@ -467,7 +503,7 @@ packedmatrix *m2t_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
     
     for(j = 0; j<a; j++) {
       x = lookuppacked[getBits(A, j, i*k, b%k)];
-      combine(C,j,0, tablepacked,x,0,  C,j,0);
+      m2t_combine(C,j,0, tablepacked,x,0,  C,j,0);
     }
   }
   if (simple) {
@@ -479,7 +515,7 @@ packedmatrix *m2t_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
 
 
 packedmatrix *m2t_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
-  int i,j,  a,b,c, k;
+  int a,b,c, k;
   int anr, anc, bnr, bnc;
   
   if(A->ncols != B->nrows) {
@@ -510,7 +546,7 @@ packedmatrix *m2t_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B
 
   /** handle case first, where the input matrices are too small already */
   if (a <= cutoff || b <= cutoff || c <= cutoff) {
-    k = optK(a,b,c);
+    k = m2t_opt_k(a,b,c);
     //printf("k: %d, a: %d, b: %d, c: %d.\n",k,a,b,c);
     C = m2t_mul_m4rm(C, A, B, k, NULL, NULL);
     return C;

@@ -501,7 +501,6 @@ int compareMatrix(packedmatrix *a, packedmatrix *b) {
 packedmatrix *cloneMatrix( packedmatrix *p) {
   packedmatrix *n = m2t_init(p->nrows, p->ncols);
   int i, j, p_truerow, n_truerow;
-  word entry;
   
   for (i=0; i<p->nrows; i++) {
     p_truerow = p->rowswap[i];
@@ -596,19 +595,23 @@ packedmatrix *invertGaussian(packedmatrix *target,
 }
 
 packedmatrix *m2t_add(packedmatrix *ret, packedmatrix *left, packedmatrix *right) {
-  int i,j,left_truerow, ret_truerow;
-  word entry;
-
   if (left->nrows != right->nrows || left->ncols != right->ncols) {
     die("rows and columns must match");
   }
-
   if (ret == NULL) {
     ret = cloneMatrix(left);
   } else if (ret != left) {
     if (ret->nrows != left->nrows || ret->ncols != left->ncols) {
       die("rows and columns of returned matrix must match");
     }
+  }
+  return _m2t_add_impl(ret, left, right);
+}
+
+packedmatrix *_m2t_add_impl(packedmatrix *ret, packedmatrix *left, packedmatrix *right) {
+  int i,j,left_truerow, ret_truerow;
+
+  if (ret != left) {
     for (i=0; i<left->nrows; i++) {
       left_truerow = left->rowswap[i];
       ret_truerow = ret->rowswap[i];
@@ -625,7 +628,6 @@ packedmatrix *m2t_add(packedmatrix *ret, packedmatrix *left, packedmatrix *right
   }
   return ret;
 }
-
 
 packedmatrix *copySubMatrix(packedmatrix *m, int startrow, int startcol, int endrow, int endcol) {
   int nrows, ncols, truerow, i, colword, x, y, block, spot, startword;

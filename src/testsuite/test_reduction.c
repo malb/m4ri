@@ -6,7 +6,7 @@
 int test_equality(nr, nc) {
   packedmatrix *A, *B, *C, *D, *E;
   int ret = 0; 
-  A = m2t_init(100,100);
+  A = m2t_init(nr, nc);
   fillRandomly(A);
   B = cloneMatrix(A);
   C = cloneMatrix(A);
@@ -40,7 +40,7 @@ int test_equality(nr, nc) {
 }
 
 int main(int argc, char **argv) {
-  buildAllCodes();
+  m2t_build_all_codes();
 
   int eq, failed = 0;
   eq = test_equality(100, 100);
@@ -66,6 +66,6 @@ int main(int argc, char **argv) {
     failed = 1;
   }
 
-  destroyAllCodes();
+  m2t_destroy_all_codes();
   return 0;
 }

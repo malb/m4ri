@@ -1,11 +1,13 @@
-INCLUDE=-I../
-LIBS=-L../../.libs/ -lm4ri
+CFLAGS=-I../
+LDFLAGS=-L../../.libs/ -lm4ri
+DEBUG=-ggdb
 
-all: test_reduction test_multiplication
+PRGS=test_reduction test_multiplication bench_reduction
 
-test_reduction: test_reduction.c
-	$(CC) -ggdb $(INCLUDE) $(LIBS) test_reduction.c -o test_reduction
+all: $(PRGS)
 
-test_multiplication: test_multiplication.c
-	$(CC) -ggdb $(INCLUDE) $(LIBS) test_multiplication.c -o test_multiplication
+.c:
+	$(CC) $(DEBUG) $(CFLAGS) $@.c $(LDFLAGS) -o $@
+clean:
+	rm $(PRGS)
 

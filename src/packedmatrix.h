@@ -299,6 +299,13 @@ packedmatrix *invertGaussian(packedmatrix *target,
 
 packedmatrix *m2t_add(packedmatrix *ret, packedmatrix *left, packedmatrix *right);
 
+/**
+ * Same as m2t_add but without any bound checks.
+ */
+
+packedmatrix *_m2t_add_impl(packedmatrix *ret, packedmatrix *left, packedmatrix *right);
+
+
 void lazyPrint(packedmatrix *a);
 
 #endif //PACKEDMATRIX_H

@@ -21,6 +21,8 @@
 
 #include "grayflex.h"
 
+#define HAVE_SSE2
+
 #define max(x,y) ((x > y)?x:y)
 #define min(x,y) ((x < y)?x:y)
 

@@ -40,7 +40,7 @@ extern code **codebook;
 #define MAXKAY 16
 #define TWOPOW(i) (1<<(i))
 
-void printBitString(int number, int length);
+void m2t_print_bit_string(int number, int length);
 
 /**
  * swaps length bits in v naively.
@@ -48,7 +48,7 @@ void printBitString(int number, int length);
  * WARNING: Uppper bits of return value may contain garbage after
  * operation.
  */
-int swap_bits(int v,int length);
+int m2t_swap_bits(int v,int length);
 
 /**
  * Returns the 'number'-th gray code entry for a gray code of length
@@ -67,27 +67,27 @@ int swap_bits(int v,int length);
  * 
  */
 
-int grayCode(int number, int length);
+int m2t_gray_code(int number, int length);
 
 /**
  * Fills in 'ord' and 'inc' with gray code data for a gray code of
  * length $2^{length}$.
  *
- * INPUT:
- *    ord -- will hold gray code data, must be preallocated with correct size
- *    inc -- will hold some increment data, must be preallocated with correct size
+ * 
+ * @param ord will hold gray code data, must be preallocated with correct size
+ * @param inc will hold some increment data, must be preallocated with correct size
  *
- * AUTHOR: malb
+ * @author Martin Albrecht
  *
- * THANKS: Robert Miller had the idea for a non-recursive implementation.
+ * Robert Miller had the idea for a non-recursive implementation.
  *
  */
 
-void buildCodeFlex(int *ord, int *inc, int length);
+void m2t_build_code(int *ord, int *inc, int length);
 
-void buildAllCodes();
+void m2t_build_all_codes();
 
-void destroyAllCodes();
+void m2t_destroy_all_codes();
 
 /**
  * Return the optimal k for the given parameters. If c != 0 then the
@@ -96,6 +96,6 @@ void destroyAllCodes();
  * where $n$ is $min(a,b)$ for inversiona and $b$ for multiplication.
  */
 
-int optK(int a,int b,int c);
+int m2t_opt_k(int a,int b,int c);
 
 #endif //GRAYFLEX_H

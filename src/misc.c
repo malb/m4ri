@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "misc.h"
+#include <mm_malloc.h>
 
 /***************************************************/
 void die(char *errormessage) {
@@ -35,12 +36,23 @@ void *safeCalloc( int count, int size ) {
   /* this function calls calloc with the given inputs, 
      but dies with an error message if a NULL is returned */
 
-  void *newthing=calloc( count, size );
+#ifdef HAVE_SSE2
+  void *newthing = _mm_malloc(count*size, 16);
+#else
+  void *newthing = calloc(count, size);
+#endif
   if (newthing==NULL) {
     die("calloc returned NULL");
     return NULL; /* unreachable. */
   }
-  else return newthing;
+#ifdef HAVE_SSE2
+  char *b = (char*)newthing;
+  int i;
+  for(i=0; i< count*size; i++) {
+    b[i] = 0;
+  }
+#endif
+  return newthing;
 }
 
 /***************************************************/

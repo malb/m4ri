@@ -31,7 +31,7 @@
  
 code **codebook;
 
-void printBitString(int number, int length){
+void m2t_print_bit_string(int number, int length){
   int i;
   for(i=length-1 ; i>=0; i--) {
     ((1<<i) & number) ? printf("1") : printf("0");
@@ -39,7 +39,7 @@ void printBitString(int number, int length){
   printf("\n");
 }
 
-int swap_bits(int v,int length) {
+int m2t_swap_bits(int v,int length) {
  unsigned int r = v; // r will be reversed bits of v; first get LSB of v
  int s = length - 1; // extra shift needed at end
  
@@ -53,7 +53,7 @@ int swap_bits(int v,int length) {
  return r;
 }
 
-int grayCode(int number, int length) {
+int m2t_gray_code(int number, int length) {
   int lastbit = 0;
   int res = 0;
   int i,bit;
@@ -62,16 +62,16 @@ int grayCode(int number, int length) {
     res |= ((lastbit>>1) ^ bit); 
     lastbit = bit;
   };
-  return swap_bits(res,length) & ((1<<length)-1);
+  return m2t_swap_bits(res,length) & ((1<<length)-1);
   //return res;
 }
 
-void buildCodeFlex(int *ord, int *inc, int length) {
+void m2t_build_code(int *ord, int *inc, int length) {
   int i,j;
 
   // this one is easy.
   for(i=0 ; i < TWOPOW(length) ; i++) {
-    ord[i] = grayCode(i,length);
+    ord[i] = m2t_gray_code(i,length);
   }
 
   for(i = length ; i>0 ; i--) {
@@ -81,7 +81,7 @@ void buildCodeFlex(int *ord, int *inc, int length) {
   }
 }
 
-void buildAllCodes() {
+void m2t_build_all_codes() {
   int k;
   codebook=calloc(MAXKAY+1, sizeof(code *));
 
@@ -89,11 +89,11 @@ void buildAllCodes() {
     codebook[k] = (code *)calloc(sizeof(code),1);
     codebook[k]->ord =(int *)calloc(TWOPOW(k),sizeof(int));
     codebook[k]->inc =(int *)calloc(TWOPOW(k),sizeof(int));
-    buildCodeFlex(codebook[k]->ord, codebook[k]->inc, k);
+    m2t_build_code(codebook[k]->ord, codebook[k]->inc, k);
   }
 }
 
-void destroyAllCodes() {
+void m2t_destroy_all_codes() {
   int i;
   for(i=1; i<MAXKAY+1; i++) {
     free(codebook[i]->inc);
@@ -103,19 +103,19 @@ void destroyAllCodes() {
   free(codebook);
 }
 
-static int log2Floor(int n){
+static int log2_floor(int n){
   int i;
   for(i=0;TWOPOW(i)<=n;i++){}
   return i;
 }
 
-int optK(int a,int b,int c) {
+int m2t_opt_k(int a,int b,int c) {
   int n;
   if (c==0) {
     n = min(a,b);
   } else {
     n = b;
   }
-  int res = min( MAXKAY, max(1, (int)(0.75*log2Floor(n))) );
+  int res = min( MAXKAY, max(1, (int)(0.75*log2_floor(n))) );
   return res;
 }

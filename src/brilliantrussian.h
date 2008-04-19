@@ -61,17 +61,34 @@ int forceNonZero(packedmatrix *m, int xstart, int xstop, int y);
 
 int prep(packedmatrix *m, int ai, int k);
 
-/** Adds row1 of s1, starting with col1 to the end, to row2 of s2,
- *  starting with col2 to the end. This gets stored in dest, in row3,
- *  starting with col3 
+/**
+ * Adds row1 of s1, starting with startblock1 to the end, to row2 of
+ * s2, starting with startblock2 to the end. This gets stored in dest,
+ * in row3, starting with startblock3.
  *
- *  row3[col3:] = row1[col1:] + row2[col2:]
+ * Almost all computation time is spent in this function and thus
+ * implementation improvements focus here.
+ *
+ * @param sc1 source matrix
+ * @param row1 sourc row for matrix sc1
+ * @param startblock1 starting block to work on in matrix sc1
+ * @param sc2 source matrix
+ * @param startblock2 starting block to work on in matrix sc2
+ * @param row2 sourc row for matrix sc2
+ * @param dst destination matrix
+ * @param row3 sourc row for matrix dst
+ * @param startblock3 starting block to work on in matrix dst
+ *
+ * 
+@verbatim
+  row3[col3:] = row1[col1:] + row2[col2:]
+@endverbatim
  * 
  */
 
-void combine( packedmatrix * s1, int row1, int startblock1, 
-	          packedmatrix * s2, int row2, int startblock2,
-	          packedmatrix * dest, int row3, int startblock3 );
+void m2t_combine( packedmatrix * sc1, int row1, int startblock1, 
+		  packedmatrix * sc2, int row2, int startblock2,
+		  packedmatrix * dst, int row3, int startblock3 );
 
 /**
  * Constructs all possible $2^k$ row combinations using the gray code
