@@ -5,7 +5,8 @@
  *
  *            M4RI: Method of the Four Russians Inversion
  *
- *       Copyright (C) 2007 Gregory Bard <gregory.bard@ieee.org> 
+ *       Copyright (C) 2007 Gregory Bard <gregory.bard@ieee.org>
+ *       Copyright (C) 2008 Martin Albrecht <M.R.Albrecht@rhu.ac.uk>
  *
  *  Distributed under the terms of the GNU General Public License (GPL)
  *
@@ -184,8 +185,15 @@ packedmatrix *m2t_mul_m4rm(packedmatrix *ret, packedmatrix *A, packedmatrix *B, 
 packedmatrix *m2t_mul_m4rm_t(packedmatrix *ret, packedmatrix *A, packedmatrix *B, int k);
 
 /**
- * Matrix multiplication via Strasen + Gray codes.
+ * Matrix multiplication via Strasen's matrix multiplication formula.
  *
+ * This implement is to a very large extend a port of the function
+ * strassen_window_multiply_c in Sage 3.0.
+ *
+ * @param C output matrix
+ * @param A input matrix
+ * @param B input matrix
+ * @param cutoff minimal dimension for Strassen
  */
 
 packedmatrix *m2t_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);

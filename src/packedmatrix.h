@@ -1,11 +1,12 @@
 #ifndef PACKEDMATRIX_H
 #define PACKEDMATRIX_H
 
-/******************************************************************************
+/**
 *
 *            M4RI: Method of the Four Russians Inversion
 *
 *       Copyright (C) 2007 Gregory Bard <gregory.bard@ieee.org> 
+*       Copyright (C) 2008 Martin Albrecht <M.R.Albrecht@rhu.ac.uk>
 *
 *  Distributed under the terms of the GNU General Public License (GPL)
 *
@@ -17,7 +18,7 @@
 *  The full text of the GPL is available at:
 *
 *                  http://www.gnu.org/licenses/
-******************************************************************************/
+*/
 
 #include "misc.h"
 #include <stdio.h>
@@ -233,11 +234,8 @@ packedmatrix *m2t_transpose(packedmatrix *newmatrix, packedmatrix *data );
 BIT bigDotProduct( packedmatrix *a, packedmatrix *bT, int rowofa,
 			 int rowofb );
 
-/* MEMLEAK use m2t_free */
-
 packedmatrix *m2t_mul_naiv_t(packedmatrix *ret, packedmatrix *a, packedmatrix *bT);
   
-/* MEMLEAK: use m2t_free */
 /* Normally, if you will multiply several times by b, it is smarter to
   calculate bT yourself, and keep it, and then use the function called
   matrixTimesMatrixTranspose */
@@ -257,15 +255,12 @@ BIT equalMatrix( packedmatrix *a, packedmatrix *b );
 
 int compareMatrix(packedmatrix *a, packedmatrix *b);
 
-/* MEMLEAK: use m2t_free */
 packedmatrix *cloneMatrix( packedmatrix *p);
 
-/* MEMLEAK: use m2t_free */
 /* This is sometimes called augment */
 packedmatrix *concat( packedmatrix *a, packedmatrix *b);
 
 packedmatrix *stack( packedmatrix *a, packedmatrix *b);
-
 
 /**
  * Copy a submatrix.
@@ -278,10 +273,9 @@ packedmatrix *stack( packedmatrix *a, packedmatrix *b);
  * @param highr stop row (this row is NOT included)
  * @param highc stop column (this column is NOT included)
  */
-packedmatrix *copySubMatrix( packedmatrix *a, int lowr, int lowc,
-				   int highr, int highc);
+packedmatrix *m2t_submatrix(packedmatrix *a, int lowr, int lowc,
+			    int highr, int highc);
 
-/* MEMLEAK: use m2t_free */
 packedmatrix *invertGaussian(packedmatrix *target, 
 				   packedmatrix *identity);
 

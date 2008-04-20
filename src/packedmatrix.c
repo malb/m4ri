@@ -57,12 +57,14 @@ packedmatrix *m2t_init(int r, int c) {
 packedmatrix *m2t_init_window(packedmatrix *m, int lowr, int lowc, int highr, int highc) {
   int nrows, ncols, i, offset; 
   packedmatrix *window = (packedmatrix *)calloc(1, sizeof(packedmatrix));
-  nrows = highr - lowr;
+  nrows = min(highr - lowr, m->nrows - lowr);
   ncols = highc - lowc;
   
   window->ncols = ncols;
   window->nrows = nrows;
   window->width = ncols/RADIX;
+  if (ncols%RADIX)
+    window->width++;
   window->values = m->values;
   window->rowswap = (int *)safeCalloc( nrows, sizeof(int));
 
@@ -382,9 +384,9 @@ packedmatrix *m2t_mul_naiv_t(packedmatrix *product, packedmatrix *a,
   if (product==NULL) {
     product=m2t_init(newrows, newcols);
   } else {
-    if (product->nrows != newrows || product->ncols != newcols) {
-      die("Provided return matrix has wrong dimensions.\n");
-    }
+    //if (product->nrows != newrows || product->ncols != newcols) {
+    //  die("Provided return matrix has wrong dimensions.\n");
+    //}
   }
 
   for (i=0; i<newrows; i++) {
@@ -495,9 +497,6 @@ int compareMatrix(packedmatrix *a, packedmatrix *b) {
   return 0;
 }
 
-/********************************************************/
-
-/* MEMLEAK: use m2t_free */
 packedmatrix *cloneMatrix( packedmatrix *p) {
   packedmatrix *n = m2t_init(p->nrows, p->ncols);
   int i, j, p_truerow, n_truerow;
@@ -587,7 +586,7 @@ packedmatrix *invertGaussian(packedmatrix *target,
 
   if (x==NO) { m2t_free(huge); return NULL; }
   
-  inverse=copySubMatrix(huge, 0, target->ncols, target->nrows, 
+  inverse=m2t_submatrix(huge, 0, target->ncols, target->nrows, 
 			target->ncols*2);
 
   m2t_free(huge);
@@ -612,7 +611,7 @@ packedmatrix *_m2t_add_impl(packedmatrix *ret, packedmatrix *left, packedmatrix 
   int i,j,left_truerow, ret_truerow;
 
   if (ret != left) {
-    for (i=0; i<left->nrows; i++) {
+    for (i=0; i<min(ret->nrows, left->nrows); i++) {
       left_truerow = left->rowswap[i];
       ret_truerow = ret->rowswap[i];
       for (j=0; j < left->width; j++) {
@@ -621,7 +620,7 @@ packedmatrix *_m2t_add_impl(packedmatrix *ret, packedmatrix *left, packedmatrix 
     }
   }
   
-  for(i=0; i < right->nrows; i++) {
+  for(i=0; i < min(ret->nrows, right->nrows); i++) {
     for(j=0; j < left->width; j++) {
       ret->values[  ret->rowswap[i] + j ]  ^= right->values[ right->rowswap[i] + j];
     }
@@ -629,7 +628,7 @@ packedmatrix *_m2t_add_impl(packedmatrix *ret, packedmatrix *left, packedmatrix 
   return ret;
 }
 
-packedmatrix *copySubMatrix(packedmatrix *m, int startrow, int startcol, int endrow, int endcol) {
+packedmatrix *m2t_submatrix(packedmatrix *m, int startrow, int startcol, int endrow, int endcol) {
   int nrows, ncols, truerow, i, colword, x, y, block, spot, startword;
   word temp  = 0;
   
