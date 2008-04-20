@@ -19,7 +19,6 @@
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
 
-//#include "grayflex.h"
 #include <stdlib.h>
 
 typedef unsigned long long word;

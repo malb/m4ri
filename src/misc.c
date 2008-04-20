@@ -19,7 +19,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "misc.h"
+#ifdef HAVE_SSE2
 #include <mm_malloc.h>
+#endif
 
 word packingmask[RADIX];
 word bytemask[RADIX/8];
