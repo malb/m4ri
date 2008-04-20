@@ -6,41 +6,41 @@
 int test_equality(nr, nc) {
   packedmatrix *A, *B, *C, *D, *E;
   int ret = 0; 
-  A = m2t_init(nr, nc);
+  A = mzd_init(nr, nc);
   fillRandomly(A);
-  B = cloneMatrix(A);
-  C = cloneMatrix(A);
-  D = cloneMatrix(A);
-  E = cloneMatrix(A);
+  B = mzd_copy(NULL, A);
+  C = mzd_copy(NULL, A);
+  D = mzd_copy(NULL, A);
+  E = mzd_copy(NULL, A);
 
-  reduceM4RI(A, 1, 0, NULL, NULL);
+  mzd_reduce_m4ri(A, 1, 0, NULL, NULL);
 
-  reduceM4RI(B, 1, 8, NULL, NULL);
+  mzd_reduce_m4ri(B, 1, 8, NULL, NULL);
 
-  reduceM4RI(C, 0, 0, NULL, NULL);
-  topReduceM4RI(C, 0, NULL, NULL);
+  mzd_reduce_m4ri(C, 0, 0, NULL, NULL);
+  mzd_top_reduce_m4ri(C, 0, NULL, NULL);
 
-  reduceM4RI(D, 0, 4, NULL, NULL);
-  topReduceM4RI(D, 4, NULL, NULL);
+  mzd_reduce_m4ri(D, 0, 4, NULL, NULL);
+  mzd_top_reduce_m4ri(D, 4, NULL, NULL);
 
-  reduceGaussian(E, 1);
+  mzd_reduce_naiv(E, 1);
   
-  ret = equalMatrix(A, B);
-  ret += equalMatrix(A, C);
-  ret += equalMatrix(A, D);
-  ret += equalMatrix(A, E);
+  ret = mzd_equal(A, B);
+  ret += mzd_equal(A, C);
+  ret += mzd_equal(A, D);
+  ret += mzd_equal(A, E);
 
-  m2t_free(A);
-  m2t_free(B);
-  m2t_free(C);
-  m2t_free(D);
-  m2t_free(E);
+  mzd_free(A);
+  mzd_free(B);
+  mzd_free(C);
+  mzd_free(D);
+  mzd_free(E);
 
   return ret - 4;
 }
 
 int main(int argc, char **argv) {
-  m2t_build_all_codes();
+  m4ri_build_all_codes();
 
   int eq, failed = 0;
   eq = test_equality(100, 100);
@@ -66,6 +66,6 @@ int main(int argc, char **argv) {
     failed = 1;
   }
 
-  m2t_destroy_all_codes();
+  m4ri_destroy_all_codes();
   return 0;
 }

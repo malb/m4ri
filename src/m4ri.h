@@ -1,14 +1,16 @@
 /**
- * Include this file if you which to use this M4RI implementation and configure as you wish.
+ * @file m4ri.h
+ * @brief Main include file.
  * 
- * AUTHOR: malb
+ * @author Gregory Bard <bard@fordham.edu>
+ * @author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
  */
-
 /******************************************************************************
 *
-*   M4RI: Method of the Four Russians Inversion
+*            M4RI: Method of the Four Russians Inversion
 *
-*       Copyright (C) 2006, 2007 Gregory Bard <bardg@math.umd.edu>
+*       Copyright (C) 2007 Gregory Bard <gregory.bard@ieee.org> 
+*       Copyright (C) 2007 Martin Albrecht <malb@informatik.uni-bremen.de> 
 *
 *  Distributed under the terms of the GNU General Public License (GPL)
 *
@@ -21,7 +23,6 @@
 *
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
-
 #if ! defined M4RI_H
 #define M4RI_H
 

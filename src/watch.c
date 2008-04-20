@@ -27,11 +27,11 @@ long watchrunning;
 
 double logtotal, logtotalsquare, logcount;
 
-void seedWatch() {
+void m4ri_watch_seed() {
   srand(clock()/10000);
 }
 
-double mysqrt(double n) {
+double m4ri_sqrt(double n) {
   double guess=n/2;
   double miss, der;
   int i;
@@ -50,30 +50,30 @@ double mysqrt(double n) {
   return guess;
 }
 
-void startWatch() {
+void m4ri_watch_start() {
   watchstart=clock();
-  watchrunning=YES;
+  watchrunning=TRUE;
 }
 
-void stopWatch() {
+void m4ri_watch_stop() {
   watchstop=clock();
-  watchrunning=NO;
+  watchrunning=FALSE;
 }
 
-clock_t getWatch() {
-  if (watchrunning==YES) 
+clock_t m4ri_watch_get() {
+  if (watchrunning==TRUE) 
     return clock()-watchstart;
   else 
     return watchstop-watchstart;
 }
 
-void clearLogs() {
+void m4ri_watch_clear_logs() {
   logtotal=0;
   logtotalsquare=0;
   logcount=0;
 }
 
-void store(clock_t watch) {
+void m4ri_watch_store(clock_t watch) {
   double value=(double)watch;
 
   logtotal+=value;
@@ -81,19 +81,19 @@ void store(clock_t watch) {
   logcount++;
 }
 
-double getAverage() {
+double m4ri_watch_get_average() {
   return logtotal/(logcount*1.0);
 }
 
-double getSigma() {
-  double mean = getAverage();
+double m4ri_watch_get_sigma() {
+  double mean = m4ri_watch_get_average();
   double ex_sq = logtotalsquare/(logcount*1.0);
   double var = ex_sq-mean*mean;
-  double sigma = mysqrt(var);
+  double sigma = m4ri_sqrt(var);
   return sigma;
 }
 
-long getCount() {
+long m4ri_watch_get_count() {
   return (long)logcount;
 }
 

@@ -28,25 +28,25 @@ extern long watchrunning;
 
 extern double logtotal, logtotalsquare, logcount;
 
-void seedWatch();
+void m4ri_watch_seed();
 
-double mysqrt(double n);
+double m4ri_sqrt(double n);
 
-void startWatch();
+void m4ri_watch_start();
 
-void stopWatch();
+void m4ri_watch_stop();
 
-clock_t getWatch();
+clock_t m4ri_watch_get();
 
-void clearLogs();
+void m4ri_watch_clear_logs();
 
-void store(clock_t watch);
+void m4ri_watch_store(clock_t watch);
 
-double getAverage();
+double m4ri_watch_get_average_time();
 
-double getSigma();
+double m4ri_watch_get_sigma();
 
-long getCount();
+long m4ri_watch_get_count();
 
 #endif //WATCH_H
 

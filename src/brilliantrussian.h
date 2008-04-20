@@ -1,11 +1,21 @@
+/**
+ * @file brilliantrussian.h
+ * @brief Matrix operations using Gray codes.
+ *
+ * @author Gregory Bard <bard@fordham.edu>
+ * @author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
+ *
+ * @note See http://eprint.iacr.org/2006/251.pdf for reference.
+ */
+
+
 #ifndef BRILLIANTRUSSIAN_H
 #define BRILLIANTRUSSIAN_H
-
-/**
+ /*******************************************************************
  *
  *            M4RI: Method of the Four Russians Inversion
  *
- *       Copyright (C) 2007 Gregory Bard <gregory.bard@ieee.org>
+ *       Copyright (C) 2007, 2008 Gregory Bard <bard@fordham.edu>
  *       Copyright (C) 2008 Martin Albrecht <M.R.Albrecht@rhu.ac.uk>
  *
  *  Distributed under the terms of the GNU General Public License (GPL)
@@ -19,48 +29,13 @@
  *
  *                  http://www.gnu.org/licenses/
  *
- *  
- * See http://eprint.iacr.org/2006/251.pdf for details of the used
- * algorithm.
- */
+ ********************************************************************/
 
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
 #include "misc.h"
 #include "packedmatrix.h"
-
-/**
- * Finds a pivot row between xstart and xstop. The column where this
- * pivot is search is y. Returns YES if such a pivot row was
- * found. Also, the appropriate row is swapped to the top (== xstart).
- *
- * 
- * @param m matrix to operate on
- * @param xstart start row
- * @param xstop stop row (including)
- * @param y column to read
- *
- * @return True if a pivot row was found
- */
-
-int forceNonZero(packedmatrix *m, int xstart, int xstop, int y);
-
-
-/***************************************************/
-
-/**
- * Performs Gaussian elimination on a submatrix of 3k x k starting at
- * point (homepoint, homepoint) of m.
- *
- * @param m matrix to operate on
- * @param homepoint row,col where to start
- * @param k
- *
- * @return rank of 3k x k submatrix.
- */
-
-int prep(packedmatrix *m, int ai, int k);
 
 /**
  * Adds row1 of s1, starting with startblock1 to the end, to row2 of
@@ -70,15 +45,15 @@ int prep(packedmatrix *m, int ai, int k);
  * Almost all computation time is spent in this function and thus
  * implementation improvements focus here.
  *
+ * @param dst destination matrix
+ * @param row3 sourc row for matrix dst
+ * @param startblock3 starting block to work on in matrix dst
  * @param sc1 source matrix
  * @param row1 sourc row for matrix sc1
  * @param startblock1 starting block to work on in matrix sc1
  * @param sc2 source matrix
  * @param startblock2 starting block to work on in matrix sc2
  * @param row2 sourc row for matrix sc2
- * @param dst destination matrix
- * @param row3 sourc row for matrix dst
- * @param startblock3 starting block to work on in matrix dst
  *
  * 
 @verbatim
@@ -87,115 +62,160 @@ int prep(packedmatrix *m, int ai, int k);
  * 
  */
 
-void m2t_combine( packedmatrix * sc1, int row1, int startblock1, 
-		  packedmatrix * sc2, int row2, int startblock2,
-		  packedmatrix * dst, int row3, int startblock3 );
+void mzd_combine(packedmatrix * dst, int row3, int startblock3,
+		 packedmatrix * sc1, int row1, int startblock1, 
+		 packedmatrix * sc2, int row2, int startblock2);
 
 /**
- * Constructs all possible $2^k$ row combinations using the gray code
- * table.
+ * Constructs all possible @f$2^k@f$ row combinations using the gray
+ * code table.
  * 
  * @param m matrix to operate on
  * @param ai the starting position
  * @param k
- * @param tablepacked prealloced matrix of dimension $2^k$ x m->ncols
- * @param lookuppacked prealloced table of length $2^k$
+ * @param T prealloced matrix of dimension @f$2^k@f$ x m->ncols
+ * @param L prealloced table of length @f$2^k@f$
  * @param full touch columns before ai?
  *
  */
 
-void makeTable( packedmatrix *m, int ai, int k, packedmatrix *tablepacked, int *lookuppacked, int full);
-
+void mzd_make_table( packedmatrix *m, int ai, int k, packedmatrix *T, int *L, int full);
 
 /**
- * Adds the correct row from tablepacked to the row 'row' in 'm'
- * starting at homecol.
+ * Adds a row from T to the row row in m starting at
+ * column  homecol.
  * 
- * @param m matrix to operate on
- * @param row the row which is operated on
- * @param homecol starting column for addition
- * @param k
- * @param tablepacked contains the correct row to be added
- * @param lookuptable contains row number to be addede
+ * @param m Matrix to operate on
+ * @param row Row which is operated on
+ * @param homecol Starting column for addition
+ * @param k M4RI parameter
+ * @param T contains the correct row to be added
+ * @param L Contains row number to be added
  */
 
-void processRow(packedmatrix *m, int row, int homecol, int k, packedmatrix *tablepacked, int *lookuppacked);
+void mzd_process_row(packedmatrix *m, int row, int homecol, int k, packedmatrix *T, int *L);
 
 /**
- *  Iterates proccessRow from startrow to stoprow.
- */
-
-void process(packedmatrix *m, int startrow, int stoprow, int startcol, int k, packedmatrix *tablepacked, int *lookuppacked);
-
-/**
- * This is the actual heart of the M4RI algorithm. 
+ * Iterate mzd_proccess_row from startrow to stoprow.
  *
- * @param m the matrix
- * @param full perform full reduction
- * @param k 
- * @param ai start column
- * @param tablepacked buffer
- * @param lookuppacked buffer
+ * @param m Matrix to operate on
+ * @param startrow top row which is operated on
+ * @param stoprow bottom row which is operated on
+ * @param startcol Starting column for addition
+ * @param k M4RI parameter
+ * @param T contains the correct row to be added
+ * @param L Contains row number to be added
  */
 
-int stepM4RI(packedmatrix *m, int full, int k, int ai, packedmatrix *tablepacked, int *lookuppacked);
+void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, int k, packedmatrix *T, int *L);
 
 /**
- * Perform matrix reduction using the 'Method of the Four Russians' or
- * Kronrod-Method.
+ * The actual heart of the M4RI algorithm.
+ *
+ * @param m Matrix
+ * @param full Perform full reduction
+ * @param k M4RI parameter
+ * @param ai Start column
+ * @param T Table generated by mzd_make_table
+ * @param L Lookup buffer generated by mzd_make_table
+ */
+
+int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai, packedmatrix *T, int *L);
+
+/**
+ * Perform matrix reduction using the 'Method of the Four Russians'
+ * (M4RI) or Kronrod-Method.
  * 
- * @param m the matrix to be reduced
- * @param full return the reduced row echelon form, not only the row echelon form
- * @param k
- * @param tablepacked preallocated table, may be NULL for automatic creation
- * @param lookuppacked preallocated lookup table, may be NULL for automatic creation
+ * @param m Matrix to be reduced.
+ * @param full Return the reduced row echelon form, not only upper triangular form.
+ * @param k M4RI parameter, may be 0 for auto-choose.
+ * @param T Preallocated table, may be NULL for automatic creation.
+ * @param L Preallocated lookup table, may be NULL for automatic creation.
+ *
+ * @note See http://eprint.iacr.org/2006/251.pdf for reference.
  */
 
-int reduceM4RI(packedmatrix *m, int full, int k, packedmatrix *tablepacked, int *lookuppacked);
+int mzd_reduce_m4ri(packedmatrix *m, int full, int k, packedmatrix *T, int *L);
 
 /**
- * Given a matrix in row echelon form compute the reduced row echelon
- * form of that matrix.
+ * Given a matrix in upper triangular form compute the reduced row
+ * echelon form of that matrix.
  * 
- * @param m the matrix to be reduced
- * @param full return the reduced row echelon form, not only the row echelon form
- * @param k
- * @param tablepacked preallocated table, may be NULL for automatic creation
- * @param lookuppacked preallocated lookup table, may be NULL for automatic creation
- */
-
-void topReduceM4RI(packedmatrix *m, int k, packedmatrix *tablepacked, int *lookuppacked);
-
-/**
- * Inverts the matrix m using Konrod's method. To avoid recomputing
- * the identity matrix over and over again, I may be passed in as
- * identity parameter.
- */
-
-packedmatrix *invertM4RI(packedmatrix *m, packedmatrix *identity, int k);
-
-
-/**
- * Matrix multiplication using Gray tables.
+ * @param m Matrix to be reduced.
+ * @param k M4RI parameter, may be 0 for auto-choose.
+ * @param T Preallocated table, may be NULL for automatic creation.
+ * @param L Preallocated lookup table, may be NULL for automatic creation.
+ *
+ * @note See http://eprint.iacr.org/2006/251.pdf for reference.
  *
  */
 
-packedmatrix *m2t_mul_m4rm(packedmatrix *ret, packedmatrix *A, packedmatrix *B, int k, packedmatrix *tablepacked, int *lookuppacked);
-
-packedmatrix *m2t_mul_m4rm_t(packedmatrix *ret, packedmatrix *A, packedmatrix *B, int k);
+void mzd_top_reduce_m4ri(packedmatrix *m, int k, packedmatrix *T, int *L);
 
 /**
- * Matrix multiplication via Strasen's matrix multiplication formula.
+ * Invert the matrix m using Konrod's method. To avoid
+ * recomputing the identity matrix over and over again, I may be
+ * passed in as identity parameter.
  *
- * This implement is to a very large extend a port of the function
+ * @param m Matrix to be reduced.
+ * @param identity Identity matrix.
+ * @param k M4RI parameter, may be 0 for auto-choose.
+ *
+ * @note See http://eprint.iacr.org/2006/251.pdf for reference.
+ */
+
+packedmatrix *mzd_invert_m4ri(packedmatrix *m, packedmatrix *identity, int k);
+
+
+/**
+ * Matrix multiplication using Konrod's method, i.e. compute @f$C@f$
+ * such that @f$ C == AB@f$.
+ *
+ * @param C Preallocated product matrix, mau be NULL for automatic creation.
+ * @param A Input matrix A
+ * @param B Input matrix B
+ * @param k M4RI parameter, may be 0 for auto-choose.
+ * @param T Preallocated table, may be NULL for automatic creation.
+ * @param L Preallocated lookup table, may be NULL for automatic creation.
+ *
+ * @return C Product of A and B
+ *
+ * @note See http://eprint.iacr.org/2006/251.pdf for reference.
+ *
+ */
+
+packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L);
+
+/**
+ * Matrix multiplication using Konrod's method but transpose all
+ * matrices first, i.e. compute @f$C@f$ such that @f$ C == AB == (B^T A^T)^T@f$.
+ *
+ * @param C Preallocated product matrix, mau be NULL for automatic creation.
+ * @param A Input matrix A
+ * @param B Input matrix B
+ * @param k M4RI parameter, may be 0 for auto-choose.
+ *
+ * @return C Product of A and B
+ *
+ * @note See http://eprint.iacr.org/2006/251.pdf for reference.
+ *
+ */
+
+packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k);
+
+/**
+ * Matrix multiplication via Strasen's matrix multiplication formula,
+ * i.e. compute @f$C@f$ such that @f$ C == AB@f$.
+ *
+ * @param C Preallocated product matrix, mau be NULL for automatic creation.
+ * @param A Input matrix A
+ * @param B Input matrix B
+ * @param cutoff Minimal dimension for Strassen recursion.
+ *
+ * @note This implement is to a very large extend a port of the function
  * strassen_window_multiply_c in Sage 3.0.
- *
- * @param C output matrix
- * @param A input matrix
- * @param B input matrix
- * @param cutoff minimal dimension for Strassen
  */
 
-packedmatrix *m2t_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+packedmatrix *mzd_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 
 #endif //BRILLIANTRUSSIAN_H

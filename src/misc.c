@@ -21,18 +21,26 @@
 #include "misc.h"
 #include <mm_malloc.h>
 
-/***************************************************/
-void die(char *errormessage) {
+word packingmask[RADIX];
+word bytemask[RADIX/8];
+word sixteenmask[RADIX/16];
+
+void m4ri_die(char *errormessage) {
   /*This function prints the error message and raises SIGABRT.*/
 
   fprintf(stderr, "\a%s\n", errormessage);
   abort();
 }
 
-/***************************************************/
+void m4ri_print_bit_string(int number, int length){
+  int i;
+  for(i=length-1 ; i>=0; i--) {
+    ((1<<i) & number) ? printf("1") : printf("0");
+  }
+  printf("\n");
+}
 
-/* MEMLEAK, use free */
-void *safeCalloc( int count, int size ) {
+void *m4ri_mm_calloc( int count, int size ) {
   /* this function calls calloc with the given inputs, 
      but dies with an error message if a NULL is returned */
 
@@ -42,7 +50,7 @@ void *safeCalloc( int count, int size ) {
   void *newthing = calloc(count, size);
 #endif
   if (newthing==NULL) {
-    die("calloc returned NULL");
+    m4ri_die("calloc returned NULL");
     return NULL; /* unreachable. */
   }
 #ifdef HAVE_SSE2
@@ -55,29 +63,49 @@ void *safeCalloc( int count, int size ) {
   return newthing;
 }
 
-/***************************************************/
-
-/* MEMLEAK, use free */
-void *safeMalloc( int count, int size ) {
-  /* this function calls malloc with the inputs, which are
-     to be provided in calloc notation. If the result is
-     NULL, the program dies with an error message.*/
-
-  void *newthing=malloc( count*size );
+void *m4ri_mm_malloc( int size ) {
+#ifdef HAVE_SSE2
+  void *newthing = _mm_malloc(size, 16);
+#else
+  void *newthing=malloc( size );
+#endif  
   if (newthing==NULL) {
-    die("malloc returned NULL");
+    m4ri_die("malloc returned NULL");
     return NULL; /* unreachable */
   }
   else return newthing;
 }
 
-/***************************************************/
-/***************************************************/
-
-BIT coinFlip() {
+BIT m4ri_coin_flip() {
   if (rand() < RAND_MAX/2) {
     return 0;
   }  else {
     return 1;
   }
 }
+
+void m4ri_setup_packing_masks() {
+  int i, j;
+  word x=1;
+
+  for (i=RADIX-1; i>=0; i--) {
+    packingmask[i]=x;
+    x<<=1;
+  }
+
+  for (i=0; i<RADIX/8; i++) {
+    x=0;
+    for (j=0; j<8; j++) {
+      x|=packingmask[j+i*8];
+    }
+    bytemask[i]=x; 
+  }
+
+  for (i=0; i<RADIX/16; i++) {
+    x=0;
+    for (j=0; j<16; j++) {
+      x|=packingmask[j+i*16];
+    }
+    sixteenmask[i]=x; 
+  }
+} 

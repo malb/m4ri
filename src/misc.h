@@ -19,43 +19,89 @@
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
 
-#include "grayflex.h"
+//#include "grayflex.h"
+#include <stdlib.h>
 
-//#define HAVE_SSE2
+typedef unsigned long long word;
 
-#define max(x,y) ((x > y)?x:y)
-#define min(x,y) ((x < y)?x:y)
+#define RADIX 64
+#define MAX(x,y) ((x > y)?x:y)
+#define MIN(x,y) ((x < y)?x:y)
+#define DIV_CEIL(x,y) ((x%y)?x/y+1:x/y)
 
-#define YES 1
-#define NO 0
+#define TRUE 1
+#define FALSE 0
 
+#define TWOPOW(i) (1<<(i))
+
+typedef unsigned char BIT;
+
+/**** bitmasks *****/
+
+extern word packingmask[RADIX]; //deprecated
+extern word bytemask[RADIX/8]; //deprecated
+extern word sixteenmask[RADIX/16]; //deprecated
+
+/**
+ * Clear the bit spot in the word w
+ * 
+ * @param w Word
+ * @param spot Integer with 0 <= spot < RADIX
+ */
+
+#define CLR_BIT(w, spot) (w &= ~(1ULL<<(RADIX - spot - 1)))
+#define SET_BIT(w, spot) (w |= (1ULL<<(RADIX - spot - 1)))
+#define GET_BIT(w, spot) ((w & (1ULL<<(RADIX - spot - 1))) >> (RADIX - spot - 1))
 #define LEFTMOST_BITS(w, spot)  (w & ~((1ULL<<(RADIX-spot))-1))>>(RADIX-spot)
 #define RIGHTMOST_BITS(w, spot) (w &  ((1ULL<<spot)-1))
 
-typedef unsigned char /* renamed as */ BIT;
+void m4ri_setup_packing_masks();
 
-struct matrixstruct {
-  BIT *cells;
-  int *rowswap;
-  int *colswap;
-  int nrows;
-  int ncols;
+/**** Error Handling *****/
+
+/**
+ * Print error message and abort().
+ *
+ * \param errormessage a string to be printed
+ *
+ * \todo Allow user to register callback.
+ *
+ * \warning The provided string is not free'd.
+ */
+
+void m4ri_die(char *errormessage);
+
+void m4ri_print_bit_string(int number, int length);
+
+/***** Memory Management *****/
+
+/**
+ * \brief Calloc wrapper.
+ *
+ * \param count Number of elements.
+ * \param size Size of each element.
+ */
+
+void *m4ri_mm_calloc( int count, int size );
+
+/**
+ * \brief Malloc wrapper.
+ *
+ * \param size Size in bytes.
+ */
+
+void *m4ri_mm_malloc( int size );
+
+/**
+ * \brief Free wrapper.
+ *
+ * \param condemned Pointer.
+ */
+
+static inline void m4ri_mm_free(void *condemned) { 
+  free(condemned); 
 };
 
-typedef struct matrixstruct /* renamed as */ matrix;
-
-extern BIT *table;
-extern int *lookup;
-extern int numcols;
-
-void die(char *errormessage);
-
-/* MEMLEAK, use free */
-void *safeCalloc( int count, int size );
-
-/* MEMLEAK, use free */
-void *safeMalloc( int count, int size );
-
-BIT coinFlip();
+BIT m4ri_coin_flip();
 
 #endif //MATRIX_H

@@ -285,7 +285,10 @@ AC_PROG_LIBTOOL
 
 AC_PROG_INSTALL
 
-AX_EXT()
+case $host_cpu in
+     i[[3456]]86*|x86_64*)
+	AX_EXT()
+esac
 
 AC_PROG_MAKE_SET
 

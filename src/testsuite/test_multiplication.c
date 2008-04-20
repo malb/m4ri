@@ -4,24 +4,27 @@
 #include "grayflex.h"
 
 int main(int argc, char **argv) {
-  m2t_build_all_codes();
-  packedmatrix *A, *B, *C;
+  m4ri_build_all_codes();
+  packedmatrix *A, *B, *C, *D, *E;
   int n;
+  int eq;
 
-  if (argc > 1) {
-    n = atoi(argv[1]);
-  } else {
-    n = 10;
+  A = mzd_init(120,171);
+  B = mzd_init(171,170);
+  C = mzd_mul_strassen(NULL, A,B, 64);
+  D = mzd_mul_m4rm(NULL, A,B, 0, NULL, NULL);
+  E = mzd_mul_naiv(NULL, A,B);
+
+  eq = mzd_equal(C,D);
+  eq += mzd_equal(D,E);
+  if (eq==2) {
+    printf("all tests passed.\n");
   }
 
-  A = m2t_init(1<<n,1<<n);
-  B = m2t_init(1<<n,1<<n);
-  C = m2t_mul_strassen(NULL, A,B, 1<<11);
+  mzd_free(A);
+  mzd_free(B);
+  mzd_free(C);
 
-  m2t_free(A);
-  m2t_free(B);
-  m2t_free(C);
-
-  m2t_destroy_all_codes();
+  m4ri_destroy_all_codes();
   return 0;
 }
