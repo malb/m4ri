@@ -7,7 +7,7 @@ int test_equality(nr, nc) {
   packedmatrix *A, *B, *C, *D, *E;
   int ret = 0; 
   A = mzd_init(nr, nc);
-  fillRandomly(A);
+  mzd_randomize(A);
   B = mzd_copy(NULL, A);
   C = mzd_copy(NULL, A);
   D = mzd_copy(NULL, A);

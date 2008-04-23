@@ -21,9 +21,15 @@
 
 #include <stdlib.h>
 
-typedef unsigned long long word;
+/*
+ * These define entirely the word width used in the library.
+ */
 
+typedef unsigned long long word;
 #define RADIX 64
+#define ONE 1ULL
+
+
 #define MAX(x,y) ((x > y)?x:y)
 #define MIN(x,y) ((x < y)?x:y)
 #define DIV_CEIL(x,y) ((x%y)?x/y+1:x/y)
@@ -35,12 +41,6 @@ typedef unsigned long long word;
 
 typedef unsigned char BIT;
 
-/**** bitmasks *****/
-
-extern word packingmask[RADIX]; //deprecated
-extern word bytemask[RADIX/8]; //deprecated
-extern word sixteenmask[RADIX/16]; //deprecated
-
 /**
  * Clear the bit spot in the word w
  * 
@@ -48,13 +48,11 @@ extern word sixteenmask[RADIX/16]; //deprecated
  * @param spot Integer with 0 <= spot < RADIX
  */
 
-#define CLR_BIT(w, spot) (w &= ~(1ULL<<(RADIX - spot - 1)))
-#define SET_BIT(w, spot) (w |= (1ULL<<(RADIX - spot - 1)))
-#define GET_BIT(w, spot) ((w & (1ULL<<(RADIX - spot - 1))) >> (RADIX - spot - 1))
-#define LEFTMOST_BITS(w, spot)  (w & ~((1ULL<<(RADIX-spot))-1))>>(RADIX-spot)
-#define RIGHTMOST_BITS(w, spot) (w &  ((1ULL<<spot)-1))
-
-void m4ri_setup_packing_masks();
+#define CLR_BIT(w, spot) (w &= ~(ONE<<(RADIX - spot - 1)))
+#define SET_BIT(w, spot) (w |= (ONE<<(RADIX - spot - 1)))
+#define GET_BIT(w, spot) ((w & (ONE<<(RADIX - spot - 1))) >> (RADIX - spot - 1))
+#define LEFTMOST_BITS(w, spot)  (w & ~((ONE<<(RADIX-spot))-1))>>(RADIX-spot)
+#define RIGHTMOST_BITS(w, spot) (w &  ((ONE<<spot)-1))
 
 /**** Error Handling *****/
 
@@ -70,7 +68,12 @@ void m4ri_setup_packing_masks();
 
 void m4ri_die(char *errormessage);
 
+/**** IO *****/
+
 void m4ri_print_bit_string(int number, int length);
+
+/* Warning: I assume *destination has RADIX*1.3 bytes available */
+void m4ri_word_to_str( char *destination, word data, int comma);
 
 /***** Memory Management *****/
 

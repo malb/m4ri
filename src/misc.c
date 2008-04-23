@@ -23,10 +23,6 @@
 #include <mm_malloc.h>
 #endif
 
-word packingmask[RADIX];
-word bytemask[RADIX/8];
-word sixteenmask[RADIX/16];
-
 void m4ri_die(char *errormessage) {
   /*This function prints the error message and raises SIGABRT.*/
 
@@ -40,6 +36,39 @@ void m4ri_print_bit_string(int number, int length){
     ((1<<i) & number) ? printf("1") : printf("0");
   }
   printf("\n");
+}
+
+/* Warning: I assume *destination has RADIX+1 bytes available */
+void m4ri_word_to_str( char *destination, word data, int colon) {
+  int i;
+  int j = 0;
+
+  if (colon == 0) {
+
+    for (i=0; i<RADIX; i++) {
+      if (GET_BIT(data,i))
+	destination[i]='1';
+      else 
+	destination[i]='0';
+    }
+    destination[RADIX]='\0';
+
+  } else {
+
+    for (i=0; i<RADIX; i++) {
+      if (GET_BIT(data,i))
+	destination[j]='1';
+      else 
+	destination[j]='0';
+      j++;
+      if (((i % 4)==3) && (i!=RADIX-1)) {
+	destination[j]=':';
+	j++;
+      }
+    }
+
+    destination[j]='\0';
+  }
 }
 
 void *m4ri_mm_calloc( int count, int size ) {
@@ -85,29 +114,3 @@ BIT m4ri_coin_flip() {
     return 1;
   }
 }
-
-void m4ri_setup_packing_masks() {
-  int i, j;
-  word x=1;
-
-  for (i=RADIX-1; i>=0; i--) {
-    packingmask[i]=x;
-    x<<=1;
-  }
-
-  for (i=0; i<RADIX/8; i++) {
-    x=0;
-    for (j=0; j<8; j++) {
-      x|=packingmask[j+i*8];
-    }
-    bytemask[i]=x; 
-  }
-
-  for (i=0; i<RADIX/16; i++) {
-    x=0;
-    for (j=0; j<16; j++) {
-      x|=packingmask[j+i*16];
-    }
-    sixteenmask[i]=x; 
-  }
-} 

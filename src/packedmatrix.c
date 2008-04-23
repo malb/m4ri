@@ -23,7 +23,6 @@
 static BIT bigDotProduct( packedmatrix *a, packedmatrix *bT, int rowofa, int rowofb );
 static inline BIT dotProduct( word a, word b );
 
-
 packedmatrix *mzd_init(int r, int c) {
   packedmatrix *newmatrix;
   int i;
@@ -90,51 +89,13 @@ void mzd_free_window( packedmatrix *condemned) {
   m4ri_mm_free(condemned);
 }
 
-/* The RADIX-bit word can be divided into RADIX/8 octets or 8 bit bytes */
-/* The most significant byte is numbered 0. */
-word fetchByte( word data, int which ) {
-  word masked=data & bytemask[which];
-  int chunks=RADIX/8;
-  int moved=(chunks-which-1)*8;
-
-  masked>>=moved;
-
-  return masked;
-}
-
-/* Warning: I assume *destination has RADIX+1 bytes available */
-void wordToString( char *destination, word data) {
-  int i;
-
-  for (i=0; i<RADIX; i++) {
-    if ((data & packingmask[i]) == 0) {
-      destination[i]='0';
-    } else destination[i]='1';
-  }
-  
-  destination[RADIX]='\0';
-}
-
-/* Warning: I assume *destination has 9 bytes available */
-void byteToString( char *destination, word data) {
-  int i;
-
-  for (i=0; i<8; i++) {
-    if ((data & packingmask[i+RADIX-8]) == 0) {
-      destination[i]='0';
-    } else destination[i]='1';
-  }
-  
-  destination[8]='\0';
-}
-
 /* Warning: I assume *destination has RADIX*1.25 bytes available */
 void wordToStringComma( char *destination, word data) {
   int i;
   int j=0;
   
   for (i=0; i<RADIX; i++) {
-    if ((data & packingmask[i]) == 0) {
+    if (GET_BIT(data,i) == 0) {
       destination[j]='0';
     } else destination[j]='1';
     j++;
@@ -158,7 +119,7 @@ void mzd_print_matrix( packedmatrix *m ) {
 
     for (j=0; j< m->ncols; j+=RADIX) {
       block=mzd_read_block(m, i, j);
-      wordToStringComma(temp, block);
+      m4ri_word_to_str(temp, block, 1);
       printf("%s ", temp);
     }
     printf("]\n");
@@ -175,7 +136,7 @@ void mzd_print_matrix_tight( packedmatrix *m ) {
 
     for (j=0; j< m->ncols; j+=RADIX) {
       block=mzd_read_block(m, i, j);
-      wordToString(temp, block);
+      m4ri_word_to_str(temp, block, 0);
       printf("%s", temp);
     }
     printf("]\n");
@@ -284,7 +245,7 @@ packedmatrix *mzd_transpose(packedmatrix *newmatrix, packedmatrix *data) {
       for (k=0; k<RADIX; k++) {
 	if (  (j*RADIX+k) < data->nrows ) { 
 	  if (mzd_read_bit(data, j*RADIX+k, i)==1)
-	    temp=temp | packingmask[k]; 
+	    SET_BIT(temp,k);
 	}
       }
       mzd_write_block(newmatrix, i, j*RADIX, temp);
@@ -316,7 +277,7 @@ static BIT bigDotProduct( packedmatrix *a, packedmatrix *bT, int rowofa,
 
   total=0;
   for (i=0; i< a->width; i++) {
-    if (  (i*RADIX) < a->nrows )  
+    //if (  (i*RADIX) < a->nrows )  
     total+=dotProduct( mzd_read_block(a, rowofa, i*RADIX), 
 		       mzd_read_block(bT, rowofb, i*RADIX) );
   }
@@ -355,22 +316,8 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, packedmatrix *A,  packedmatrix *B) {
   return C;
 }
 
-word randomWord() {
-  int i;
-  word temp=0;
-
-  for (i=0; i<RADIX; i++) {
-    if (m4ri_coin_flip()==1) {
-      temp|=packingmask[i];
-    }
-  }
-
-  return temp;
-}
-
-void fillRandomly( packedmatrix *a ) {
+void mzd_randomize( packedmatrix *a ) {
   int i, j;
-  
   for (i=0; i < (a->nrows); i++) {
     for (j=0; j < (a->ncols); j++) {
       mzd_write_bit(a, i, j, m4ri_coin_flip() );
@@ -595,7 +542,7 @@ packedmatrix *mzd_submatrix(packedmatrix *m, int startrow, int startcol, int end
       if (ncols%RADIX) {
 	colword = ncols/RADIX;
 	block = truerow + colword;
-	temp = m->values[block] & ~((1ULL<<(RADIX-ncols%RADIX))-1);
+	temp = m->values[block] & ~((ONE<<(RADIX-ncols%RADIX))-1);
 	newmatrix->values[newmatrix->rowswap[i] + colword] = temp;
       } 
     }
@@ -622,3 +569,4 @@ packedmatrix *mzd_submatrix(packedmatrix *m, int startrow, int startcol, int end
   }
   return newmatrix;
 }
+
