@@ -22,6 +22,8 @@
 #include <emmintrin.h>
 #endif
 
+#include <assert.h>
+
 #include "brilliantrussian.h"
 #include "grayflex.h"
 #include "misc.h"
@@ -141,6 +143,7 @@ static int _mzd_get_bits(packedmatrix *m, int x, int y, int k) {
 void mzd_combine( packedmatrix * dst, int row3, int startblock3,
 		  packedmatrix * sc1, int row1, int startblock1, 
 		  packedmatrix * sc2, int row2, int startblock2) {
+  int i;
   int wide = sc1->width - startblock1;
 
   word *b1_ptr = sc1->values + startblock1 + sc1->rowswap[row1];
@@ -156,9 +159,12 @@ void mzd_combine( packedmatrix * dst, int row3, int startblock3,
 
 #ifdef HAVE_SSE2
     /** check alignments **/
-    if (((unsigned long)b1_ptr%16==8) && ((unsigned long)b2_ptr%16==8)) {
-      *b1_ptr++ ^= *b2_ptr++;
-      wide--;
+    unsigned long alignment = (unsigned long)b1_ptr%16;
+    if ((unsigned long)b2_ptr%16 == alignment) {
+      do {
+	*b1_ptr++ ^= *b2_ptr++;
+	wide--;
+      } while((unsigned long)b1_ptr%16 && wide);
     }
 
     if (wide>32 && ((unsigned long)b1_ptr%16==0) && ((unsigned long)b2_ptr%16==0)) {
@@ -180,42 +186,34 @@ void mzd_combine( packedmatrix * dst, int row3, int startblock3,
       b2_ptr = (word*)src_ptr;
 
       // handle rest
-      if (wide & 1)
-	*b1_ptr ^= *b2_ptr;
-
-    } else {
       int i;
-      for(i = wide>>1 ; i > 0 ; i--) {
-	*b1_ptr++ ^= *b2_ptr++;
+      for(i=0; i < ((sizeof(word)*wide)%16)/sizeof(word); i++) {
 	*b1_ptr++ ^= *b2_ptr++;
       }
-      if (wide & 1)
-	*b1_ptr ^= *b2_ptr;
+    } else {
+      int i;
+      for(i = wide-1 ; i >= 0 ; i--) {
+	b1_ptr[i] ^= b2_ptr[i];
+      }
     }
 
 #else // no SSE2
 
-    int i;
-    for(i = wide>>1 ; i > 0 ; i--) {
-      *b1_ptr++ ^= *b2_ptr++;
-      *b1_ptr++ ^= *b2_ptr++;
+    for(i = wide-1 ; i >= 0 ; i--) {
+      b1_ptr[i] ^= b2_ptr[i];
     }
-    if (wide & 1)
-      *b1_ptr ^= *b2_ptr;
-
 #endif
     
   } else { // dst != sc1
-    int i;
     b3_ptr = dst->values + startblock3 + dst->rowswap[row3];
 
     if (row1 >= sc1->nrows) {
-	for(i = 0 ; i < wide ; i++) {
-	  *b3_ptr++ = *b2_ptr++;
+	for(i = wide - 1 ; i >= 0 ; i--) {
+	  b3_ptr[i] = b2_ptr[i];
 	}
     } else {
-      for(i = 0 ; i < wide ; i++) {
-	*b3_ptr++ = *b1_ptr++ ^ *b2_ptr++;
+      for(i = wide - 1 ; i >= 0 ; i--) {
+	b3_ptr[i] = b1_ptr[i] ^ b2_ptr[i];
       }
     }
     return;
@@ -329,7 +327,7 @@ int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai,
   /**
    * Step 3. One can rapidly process the remaining rows from \f$i +
    * 3k\f$ until row \f$m\f$ (the last row) by using the table. For
-   * example, suppose the \f$j\f$-th row has entries $\fa_{j,i}
+   * example, suppose the \f$j\f$-th row has entries \f$a_{j,i}
    * ... a_{j,i+k-1}\f$ in the columns being processed. Selecting the
    * row of the table associated with this k-bit string, and adding it
    * to row j will force the k columns to zero, and adjust the

@@ -1,5 +1,7 @@
 AUTOMAKE_OPTIONS = gnu
 
+AM_CFLAGS=-std=c99 ${SIMD_FLAGS}
+
 lib_LTLIBRARIES = libm4ri.la
 
 libm4ri_la_SOURCES = src/brilliantrussian.c src/misc.c src/packedmatrix.c src/grayflex.c src/watch.c

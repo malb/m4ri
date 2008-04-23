@@ -1,16 +1,16 @@
 /**
- * @file m4ri.h
- * @brief Main include file.
+ * \file m4ri.h
+ * \brief Main include file for the M4RI library.
  * 
- * @author Gregory Bard <bard@fordham.edu>
- * @author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
+ * \author Gregory Bard <bard@fordham.edu>
+ * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
  */
 /******************************************************************************
 *
 *            M4RI: Method of the Four Russians Inversion
 *
 *       Copyright (C) 2007 Gregory Bard <gregory.bard@ieee.org> 
-*       Copyright (C) 2007 Martin Albrecht <malb@informatik.uni-bremen.de> 
+*       Copyright (C) 2007,2008 Martin Albrecht <malb@informatik.uni-bremen.de> 
 *
 *  Distributed under the terms of the GNU General Public License (GPL)
 *
@@ -23,8 +23,20 @@
 *
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
-#if ! defined M4RI_H
+#ifndef M4RI_H
 #define M4RI_H
+
+/**
+ * \mainpage 
+ * 
+ * M4RI is a library to do fast arithmetic with dense matrices over
+ * \f$F_2\f$. It was started by Gregory Bard and is now
+ * maintained by Martin Albrecht and Gregory Bard. M4RI is used by the
+ * Sage mathematics software and the PolyBoRi library.
+ *
+ * \example testsuite/test_multiplication.c
+ * \example testsuite/test_reduction.c
+ */
 
 #include <stdio.h>
 #include <stdlib.h>

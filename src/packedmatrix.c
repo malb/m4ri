@@ -255,7 +255,7 @@ packedmatrix *mzd_transpose(packedmatrix *newmatrix, packedmatrix *data) {
   return newmatrix;
 }
 
-static inline BIT dotProduct( word a, word b ) {
+static inline BIT _mzd_dot_product( word a, word b ) {
   word temp=a & b;
   //int i, 
   int total=0;
@@ -268,8 +268,8 @@ static inline BIT dotProduct( word a, word b ) {
 }
 
 /* Internal to naive matrix mult */
-static BIT bigDotProduct( packedmatrix *a, packedmatrix *bT, int rowofa,
-			 int rowofb ) {
+static BIT _mzd_big_dot_product( packedmatrix *a, packedmatrix *bT, int rowofa,
+				 int rowofb ) {
   /* ``a slot'' is a row of A, and a column of B when calcing AB */
   /* but since we use B^T so that we are working only with rows, */
   /* ``a slot'' of A is a row, ``a slot'' of B is a row of B^T */
@@ -278,34 +278,34 @@ static BIT bigDotProduct( packedmatrix *a, packedmatrix *bT, int rowofa,
   total=0;
   for (i=0; i< a->width; i++) {
     //if (  (i*RADIX) < a->nrows )  
-    total+=dotProduct( mzd_read_block(a, rowofa, i*RADIX), 
-		       mzd_read_block(bT, rowofb, i*RADIX) );
+    total+=_mzd_dot_product( mzd_read_block(a, rowofa, i*RADIX), 
+			     mzd_read_block(bT, rowofb, i*RADIX) );
   }
 
   return (BIT)(total % 2);
 }
 
-packedmatrix *mzd_mul_naiv_t(packedmatrix *product, packedmatrix *a, 
+packedmatrix *mzd_mul_naiv_t(packedmatrix *C, packedmatrix *A, 
 			     packedmatrix *bT ) {
   int i, j;
-  int newrows=a->nrows;
+  int newrows=A->nrows;
   int newcols=bT->nrows;
 
-  if (product==NULL) {
-    product=mzd_init(newrows, newcols);
+  if (C==NULL) {
+    C=mzd_init(newrows, newcols);
   } else {
-    if (product->nrows != newrows || product->ncols != newcols) {
+    if (C->nrows != newrows || C->ncols != newcols) {
       m4ri_die("Provided return matrix has wrong dimensions.\n");
     }
   }
 
   for (i=0; i<newrows; i++) {
     for (j=0; j<newcols; j++) {
-      mzd_write_bit(product, i, j, bigDotProduct( a, bT, i, j ) );
+      mzd_write_bit(C, i, j, _mzd_big_dot_product( A, bT, i, j ) );
     }
   }
 
-  return product;
+  return C;
 }
   
 packedmatrix *mzd_mul_naiv(packedmatrix *C, packedmatrix *A,  packedmatrix *B) {

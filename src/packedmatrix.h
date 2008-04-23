@@ -34,10 +34,12 @@
 #define SAFECHAR (int)(RADIX*1.3)
 
 /**
- * packedmatrix is the most fundamental data type in this
- * library.
+ * \brief Dense matrices over GF(2). 
+ * 
+ * The most fundamental data type in this library.
  */
-struct packedmatrixstruct {
+
+typedef struct {
   /**
    * Contains the actual values packed into words of size RADIX.
    */
@@ -68,9 +70,7 @@ struct packedmatrixstruct {
 
   int *rowswap;
 
-};
-
-typedef struct packedmatrixstruct packedmatrix;
+} packedmatrix;
 
 /**
  * Create a new matrix of dimension r x c.
@@ -276,8 +276,20 @@ void mzd_row_add( packedmatrix *m, int sourcerow, int destrow);
 
 packedmatrix *mzd_transpose(packedmatrix *newmatrix, packedmatrix *data );
 
+/**
+ * Naive cubic matrix multiplication, i.e. compute \f$C\f$ such that
+ * \f$C == AB\f$. Where B has to be provided transposed as bT.
+ *
+ * \param C Preallocated product matrix, may be NULL for automatic creation.
+ * \param A Input matrix A
+ * \param bT Input matrix \f$B^T\f$
+ *
+ * \note Normally, if you will multiply several times by b, it is
+ * smarter to calculate bT yourself, and keep it, and then use the
+ * function called matrixTimesMatrixTranspose
+ */
 
-packedmatrix *mzd_mul_naiv_t(packedmatrix *ret, packedmatrix *a, packedmatrix *bT);
+packedmatrix *mzd_mul_naiv_t(packedmatrix *C, packedmatrix *A, packedmatrix *bT);
   
 /**
  * Naive cubic matrix multiplication, i.e. compute \f$C\f$ such that
@@ -292,6 +304,12 @@ packedmatrix *mzd_mul_naiv_t(packedmatrix *ret, packedmatrix *a, packedmatrix *b
  * function called matrixTimesMatrixTranspose
  */
 packedmatrix *mzd_mul_naiv(packedmatrix *C, packedmatrix *A, packedmatrix *B);
+
+/**
+ * Fill matrix a with uniformly distributed bits.
+ *
+ * \param a Matrix
+ */
 
 void mzd_randomize( packedmatrix *a );
 
@@ -408,11 +426,11 @@ packedmatrix *mzd_submatrix(packedmatrix *a, int lowr, int lowc,
 			    int highr, int highc);
 
 /**
- * Invert the matrix m using Gaussian elimination. To avoid
+ * Invert the matrix target using Gaussian elimination. To avoid
  * recomputing the identity matrix over and over again, I may be
  * passed in as identity parameter.
  *
- * \param m Matrix to be reduced.
+ * \param target Matrix to be reduced.
  * \param identity Identity matrix.
  *
  */
