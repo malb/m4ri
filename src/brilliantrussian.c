@@ -188,8 +188,9 @@ void mzd_combine( packedmatrix * dst, int row3, int startblock3,
       }
     }
 #endif
-    for(i = wide-1 ; i >= 0 ; i--)
-      b1_ptr[i] ^= b2_ptr[i];
+    while(wide--) {
+      b1_ptr[wide] ^= b2_ptr[wide];
+    }
     return;
     
   } else { // dst != sc1

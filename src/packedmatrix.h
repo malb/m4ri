@@ -64,7 +64,7 @@ typedef struct {
   int width; 
 
   /**
-   * Offsets to each row, so e.g. the first word of the \f$i\f$-th row
+   * Offsets to each row, so e.g. the first word of the i-th row
    * is m->values[m->rowswap[i]]
    */
 
@@ -73,7 +73,7 @@ typedef struct {
 } packedmatrix;
 
 /**
- * Create a new matrix of dimension r x c.
+ * \brief Create a new matrix of dimension r x c.
  *
  * Use mzd_free to kill it.
  *
@@ -85,7 +85,7 @@ typedef struct {
 packedmatrix *mzd_init(int r, int c);
 
 /**
- * Free a matrix created with mzd_init.
+ * \brief Free a matrix created with mzd_init.
  * 
  * \param condemned matrix
  */
@@ -93,10 +93,10 @@ packedmatrix *mzd_init(int r, int c);
 void mzd_free( packedmatrix *condemned );
 
 /**
- * Create a window/view into the matrix m.
+ * \brief Create a window/view into the matrix m.
  *
  * A matrix window for m is a meta structure on the matrix m. It is
- * setup to point into the matrix so m MUST NOT be freed while the
+ * setup to point into the matrix so m \em must \em not be freed while the
  * matrix window is used.
  *
  * This function puts restrictions on the provided parameters which
@@ -119,7 +119,7 @@ void mzd_free( packedmatrix *condemned );
 packedmatrix *mzd_init_window(packedmatrix *m, int lowr, int lowc, int highr, int highc);
 
 /**
- * Frees a matrix window created with mzd_init_window.
+ * \brief Free a matrix window created with mzd_init_window.
  * 
  * \param condemned matrix
  */
@@ -127,7 +127,7 @@ packedmatrix *mzd_init_window(packedmatrix *m, int lowr, int lowc, int highr, in
 void mzd_free_window( packedmatrix *condemned);
 
 /**
- * Swap the two rows rowa and rowb.
+ * \brief Swap the two rows rowa and rowb.
  * 
  * \param m Matrix
  * \param rowa Row index
@@ -141,7 +141,7 @@ static inline void mzd_row_swap( packedmatrix *m, int rowa, int rowb ) {
 }
 
 /**
- * Read the bit at position m[row,col]
+ * \brief Read the bit at position m[row,col]
  * 
  * \param m Matrix
  * \param row Row index
@@ -153,7 +153,7 @@ static inline BIT mzd_read_bit( packedmatrix *m, int row, int col ) {
 }
 
 /**
- * Write the bit value to position m[row,col]
+ * \brief Write the bit value to position m[row,col]
  * 
  * \param m Matrix
  * \param row Row index
@@ -169,9 +169,16 @@ static inline void mzd_write_bit( packedmatrix *m, int row, int col, BIT value) 
 }
 
 /**
+ * \brief Add value to the word at position m[row,col].
+ *
+ * \param m Matrix
+ * \param row Row index
+ * \param col Column index
+ * \param value Word of BITs.
+ *
  * \note Keep in mind that the row, col refer to a row and column (of
  *  bits), and you can address the block by any of the RADIX (usually
- *  64) & \f$A_{i,j}\f$ there.
+ *  64) & A[i,j] there.
  */
 
 static inline void mzd_xor_block( packedmatrix *m, int row, int col, word value) {
@@ -183,9 +190,16 @@ static inline void mzd_xor_block( packedmatrix *m, int row, int col, word value)
 }
 
 /**
+ * \brief Write value to the word at position m[row,col].
+ *
+ * \param m Matrix
+ * \param row Row index
+ * \param col Column index
+ * \param value Word of BITs.
+ *
  * \note Keep in mind that the row, col refer to a row and column (of
  * bits), and you can address the block by any of the RADIX (usually
- * 64) \f$A_{i,j}\f$ there.
+ * 64) A[i,j] there.
  */
 
 static inline void mzd_write_block( packedmatrix *m, int row, int col, word value) {
@@ -193,9 +207,15 @@ static inline void mzd_write_block( packedmatrix *m, int row, int col, word valu
 }
 
 /**
+ * \brief Read the word  at position m[row,col].
+ *
+ * \param m Matrix
+ * \param row Row index
+ * \param col Column index
+ *
  * \note Keep in mind that the row, col refer to a row and column (of
  * bits), and you can address the block by any of the RADIX (usually
- * 64) \f$A_{i,j}\f$ there.
+ * 64) A[i,j] there.
  */
 
 static inline word mzd_read_block( packedmatrix *m, int row, int col ) {
@@ -203,8 +223,9 @@ static inline word mzd_read_block( packedmatrix *m, int row, int col ) {
 }
 
 /**
- * Print the matrix to stdout. The output will contain colons between
- * every 4-th column.
+ * \brief Print a matrix to stdout. 
+ *
+ * The output will contain colons between  every 4-th column.
  *
  * \param m Matrix
  */
@@ -212,7 +233,7 @@ static inline word mzd_read_block( packedmatrix *m, int row, int col ) {
 void mzd_print_matrix( packedmatrix *m );
 
 /**
- * Print the matrix to stdout.
+ * \brief Print the matrix to stdout.
  *
  * \param m Matrix
  */
@@ -220,7 +241,7 @@ void mzd_print_matrix( packedmatrix *m );
 void mzd_print_matrix_tight( packedmatrix *m );
 
 /**
- * Add the rows sourcerow and destrow and stores the total in the row
+ * \brief Add the rows sourcerow and destrow and stores the total in the row
  * destrow, but only begins at the column coloffset.
  *
  * \param m Matrix
@@ -235,7 +256,7 @@ void mzd_row_add_offset( packedmatrix *m, int sourcerow, int destrow,
 			 int coloffset );
 
 /**
- * Clears the given row, but only begins at the column coloffset.
+ * \brief Clear the given row, but only begins at the column coloffset.
  *
  * \param m Matrix
  * \param row Index of row
@@ -246,7 +267,7 @@ void mzd_row_add_offset( packedmatrix *m, int sourcerow, int destrow,
 void mzd_row_clear_offset(packedmatrix *m, int row, int coloffset);
 
 /**
- * Add the rows sourcerow and destrow and stores the total in the row
+ * \brief Add the rows sourcerow and destrow and stores the total in the row
  * destrow.
  *
  * \param m Matrix
@@ -259,7 +280,7 @@ void mzd_row_clear_offset(packedmatrix *m, int row, int coloffset);
 void mzd_row_add( packedmatrix *m, int sourcerow, int destrow);
 
 /**
- * Transpose a matrix.
+ * \brief Transpose a matrix.
  *
  * This is not efficient, but it is quadratic time, so who cares?
  * Efficient, would be to use the fact that:
@@ -277,12 +298,14 @@ void mzd_row_add( packedmatrix *m, int sourcerow, int destrow);
 packedmatrix *mzd_transpose(packedmatrix *newmatrix, packedmatrix *data );
 
 /**
- * Naive cubic matrix multiplication, i.e. compute \f$C\f$ such that
- * \f$C == AB\f$. Where B has to be provided transposed as bT.
+ * \brief Naive cubic matrix multiplication after prepcomputation.
+ *
+ * That is, compute C such that C == AB. Where B has to be
+ * provided transposed as bT.
  *
  * \param C Preallocated product matrix, may be NULL for automatic creation.
  * \param A Input matrix A
- * \param bT Input matrix \f$B^T\f$
+ * \param bT Input matrix  B^T
  *
  * \note Normally, if you will multiply several times by b, it is
  * smarter to calculate bT yourself, and keep it, and then use the
@@ -292,8 +315,9 @@ packedmatrix *mzd_transpose(packedmatrix *newmatrix, packedmatrix *data );
 packedmatrix *mzd_mul_naiv_t(packedmatrix *C, packedmatrix *A, packedmatrix *bT);
   
 /**
- * Naive cubic matrix multiplication, i.e. compute \f$C\f$ such that
- * \f$C == AB\f$.
+ * \brief Naive cubic matrix multiplication.
+ *
+ * That is, compute C such that C == AB.
  *
  * \param C Preallocated product matrix, may be NULL for automatic creation.
  * \param A Input matrix A
@@ -306,7 +330,7 @@ packedmatrix *mzd_mul_naiv_t(packedmatrix *C, packedmatrix *A, packedmatrix *bT)
 packedmatrix *mzd_mul_naiv(packedmatrix *C, packedmatrix *A, packedmatrix *B);
 
 /**
- * Fill matrix a with uniformly distributed bits.
+ * \brief Fill matrix a with uniformly distributed bits.
  *
  * \param a Matrix
  */
@@ -314,9 +338,11 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, packedmatrix *A, packedmatrix *B);
 void mzd_randomize( packedmatrix *a );
 
 /**
- * Set the matrix a to the value equivalent to the integer value
- * provided. Specifically, this function does nothing if \f$value\%2 ==
- * 0\f$ and returns the identity matrix if \f$value\%2 == 1\f$.
+ * \brief Set the matrix a to the value equivalent to the integer value
+ * provided. 
+ *
+ * Specifically, this function does nothing if value%2 == 0 and
+ * returns the identity matrix if value%2 == 1.
  *
  * If the matrix is not square then the largest possible square
  * submatrix is set to the identity matrix.
@@ -328,8 +354,10 @@ void mzd_randomize( packedmatrix *a );
 void mzd_set_ui(packedmatrix *a, unsigned value);
 
 /**
+ * \brief Gaussian elimination
+ * 
  * This will do Gaussian elimination on the matrix m but will start
- * not at column 0 necc but at column "startcol". If full=NO, then it
+ * not at column 0 necc but at column startcol. If full=FALSE, then it
  * will do triangular style elimination, and if full=TRUE, it will do
  * Gauss-Jordan style, or full elimination.
  */
@@ -337,6 +365,8 @@ void mzd_set_ui(packedmatrix *a, unsigned value);
 int mzd_gauss_delayed(packedmatrix *m, int startcol, int full);
 
 /**
+ * \brief Gaussian elimination
+ * 
  * This will do Gaussian elimination on the matrix m.  If  full =
  *  FALSE, then it will do triangular style elimination, and if 
  *  full = TRUE, it will do Gauss-Jordan style, or full elimination.
@@ -344,7 +374,7 @@ int mzd_gauss_delayed(packedmatrix *m, int startcol, int full);
 int mzd_reduce_naiv(packedmatrix *m, int full);
 
 /**
- * Return TRUE if  a ==  b.
+ * \brief Return TRUE if  a ==  b.
  *
  * \param a Matrix.
  * \param b Matrix.
@@ -353,8 +383,7 @@ int mzd_reduce_naiv(packedmatrix *m, int full);
 BIT mzd_equal( packedmatrix *a, packedmatrix *b );
 
 /**
- * Return -1,0,1 if if  a < ,  a ==  b or  a >
- *  b respectively.
+ * \brief Return -1,0,1 if if a < , a == b or a > b respectively.
  *
  * \param a Matrix.
  * \param b Matrix.
@@ -367,7 +396,7 @@ BIT mzd_equal( packedmatrix *a, packedmatrix *b );
 int mzd_cmp(packedmatrix *a, packedmatrix *b);
 
 /**
- * Copy matrix  p to  dst.
+ * \brief Copy matrix  p to  dst.
  *
  * \param dst May be NULL for automatic creation.
  * \param p Source matrix.
@@ -376,7 +405,7 @@ int mzd_cmp(packedmatrix *a, packedmatrix *b);
 packedmatrix *mzd_copy(packedmatrix *dst, packedmatrix *p);
 
 /**
- * \brief Concatenate  b to  a.
+ * \brief Concatenate  b to a.
  * 
  * That is,
  *
@@ -384,7 +413,7 @@ packedmatrix *mzd_copy(packedmatrix *dst, packedmatrix *p);
 [ A ], [ B ] -> [ A  B ]
 \endverbatim
  *
- *  The inputs are not modified but a new matrix is created.
+ * The inputs are not modified but a new matrix is created.
  *
  * \param a Matrix
  * \param b Matrix
@@ -394,7 +423,7 @@ packedmatrix *mzd_copy(packedmatrix *dst, packedmatrix *p);
 packedmatrix *mzd_concat( packedmatrix *a, packedmatrix *b);
 
 /**
- * \brief Stack  a on to of a.
+ * \brief Stack a on top of b.
  *
  * That is, 
  *
@@ -403,7 +432,7 @@ packedmatrix *mzd_concat( packedmatrix *a, packedmatrix *b);
                 [ B ]
 \endverbatim
  *
- *  The inputs are not modified but a new matrix is created.
+ * The inputs are not modified but a new matrix is created.
  *
  * \param a Matrix
  * \param b Matrix
@@ -412,23 +441,24 @@ packedmatrix *mzd_concat( packedmatrix *a, packedmatrix *b);
 packedmatrix *mzd_stack( packedmatrix *a, packedmatrix *b);
 
 /**
- * Copy a submatrix.
+ * \brief Copy a submatrix.
  * 
  * Note that the upper bounds are not included.
  *
  * \param a matrix
  * \param lowr start rows
  * \param lowc start column
- * \param highr stop row (this row is NOT included)
- * \param highc stop column (this column is NOT included)
+ * \param highr stop row (this row is \em not included)
+ * \param highc stop column (this column is \em not included)
  */
 packedmatrix *mzd_submatrix(packedmatrix *a, int lowr, int lowc,
 			    int highr, int highc);
 
 /**
- * Invert the matrix target using Gaussian elimination. To avoid
- * recomputing the identity matrix over and over again, I may be
- * passed in as identity parameter.
+ * \brief Invert the matrix target using Gaussian elimination. 
+ *
+ * To avoid recomputing the identity matrix over and over again, I may
+ * be passed in as identity parameter.
  *
  * \param target Matrix to be reduced.
  * \param identity Identity matrix.
@@ -438,11 +468,10 @@ packedmatrix *mzd_submatrix(packedmatrix *a, int lowr, int lowc,
 packedmatrix *mzd_invert_naiv(packedmatrix *target, packedmatrix *identity);
 
 /**
- * Add left to right and write the result to ret. ret is also
- * returned.
+ * \brief Add left to right and write the result to ret. 
  *
- * If ret is NULL then a new matrix is created which must be freed by
- * mzd_free.
+ * ret is also returned. If ret is NULL then a new matrix is created
+ * which must be freed by * mzd_free.
  *
  * \param ret Matrix may be NULL for automatic creation.
  * \param left Matrix
@@ -452,7 +481,7 @@ packedmatrix *mzd_invert_naiv(packedmatrix *target, packedmatrix *identity);
 packedmatrix *mzd_add(packedmatrix *ret, packedmatrix *left, packedmatrix *right);
 
 /**
- * Same as mzd_add but without any checks on the input.
+ * \brief Same as mzd_add but without any checks on the input.
  *
  * \param ret Matrix
  * \param left Matrix

@@ -20,8 +20,8 @@
 #include <string.h>
 #include "packedmatrix.h"
 
-static BIT bigDotProduct( packedmatrix *a, packedmatrix *bT, int rowofa, int rowofb );
-static inline BIT dotProduct( word a, word b );
+static BIT mzd_big_dot_product( packedmatrix *a, packedmatrix *bT, int rowofa, int rowofb );
+static inline BIT mzd_dot_product( word a, word b );
 
 packedmatrix *mzd_init(int r, int c) {
   packedmatrix *newmatrix;
@@ -54,7 +54,7 @@ packedmatrix *mzd_init(int r, int c) {
   return newmatrix;
 }
 
-/** We don't perform any sanity checks! **/
+/* We don't perform any sanity checks! */
 packedmatrix *mzd_init_window(packedmatrix *m, int lowr, int lowc, int highr, int highc) {
   int nrows, ncols, i, offset; 
   packedmatrix *window = (packedmatrix *)m4ri_mm_calloc(1, sizeof(packedmatrix));
@@ -526,19 +526,19 @@ packedmatrix *mzd_submatrix(packedmatrix *m, int startrow, int startcol, int end
 
   startword = startcol / RADIX;
 
-  /** we start at the beginning of a word **/
+  /* we start at the beginning of a word */
   if (startcol%RADIX == 0) {
     for(x = startrow, i=0; i<nrows; i++, x+=1) {
       truerow = m->rowswap[x];
 
-      /** process full words first **/
+      /* process full words first */
       for(y = startcol, colword=0; colword<ncols/RADIX; colword++, y+=RADIX) {
 	block = truerow + colword + startword;
 	temp = m->values[block];
 	newmatrix->values[newmatrix->rowswap[i] + colword] = temp;
       }
 
-      /** process remaining bits **/
+      /* process remaining bits */
       if (ncols%RADIX) {
 	colword = ncols/RADIX;
 	block = truerow + colword;
@@ -547,19 +547,19 @@ packedmatrix *mzd_submatrix(packedmatrix *m, int startrow, int startcol, int end
       } 
     }
 
-    /** startcol is not the beginning of a word **/
+    /* startcol is not the beginning of a word */
   } else { 
     spot = startcol % RADIX;
     for(x = startrow, i=0; i<nrows; i++, x+=1) {
       truerow = m->rowswap[x];
 
-      /** process full words first **/
+      /* process full words first */
       for(y = startcol, colword=0; colword<ncols/RADIX; colword++, y+=RADIX) {
 	block = truerow + colword + startword;
 	temp = (m->values[block] << (spot)) | (m->values[block + 1] >> (RADIX-spot) ); 
 	newmatrix->values[newmatrix->rowswap[i] + colword] = temp;
       }
-      /** process remaining bits (lazy)**/
+      /* process remaining bits (lazy)*/
       colword = ncols/RADIX;
       for (y=0; y < ncols%RADIX; y++) {
 	temp = mzd_read_bit(m, x, startcol + colword*RADIX + y);
