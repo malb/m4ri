@@ -156,53 +156,41 @@ void mzd_combine( packedmatrix * dst, int row3, int startblock3,
    */
 
   if( dst == sc1 && row1 == row3 && startblock1 == startblock3) {
-
 #ifdef HAVE_SSE2
-    /** check alignments **/
-    unsigned long alignment = (unsigned long)b1_ptr%16;
-    if ((unsigned long)b2_ptr%16 == alignment) {
-      do {
-	*b1_ptr++ ^= *b2_ptr++;
-	wide--;
-      } while((unsigned long)b1_ptr%16 && wide);
-    }
-
-    if (wide>32 && ((unsigned long)b1_ptr%16==0) && ((unsigned long)b2_ptr%16==0)) {
-      __m128i *dst_ptr = (__m128i*)b1_ptr;
-      __m128i *src_ptr = (__m128i*)b2_ptr;
-      __m128i *end_ptr = (__m128i*)((unsigned long)(b1_ptr + wide) & ~0xF);
-      __m128i xmm1;
-
-      do {
-	xmm1 = _mm_load_si128(dst_ptr);
-	const __m128i xmm2 = _mm_load_si128(src_ptr);
-	xmm1 = _mm_xor_si128(xmm1, xmm2);
-	_mm_store_si128(dst_ptr, xmm1);
-	++src_ptr;
-	++dst_ptr;
-      } while(dst_ptr < end_ptr);
-
-      b1_ptr = (word*)dst_ptr;
-      b2_ptr = (word*)src_ptr;
-
-      // handle rest
-      int i;
-      for(i=0; i < ((sizeof(word)*wide)%16)/sizeof(word); i++) {
-	*b1_ptr++ ^= *b2_ptr++;
+    if(wide>100) {
+      /** check alignments **/
+      unsigned long alignment = (unsigned long)b1_ptr%16;
+      if ((unsigned long)b2_ptr%16 == alignment) {
+	do {
+	  *b1_ptr++ ^= *b2_ptr++;
+	  wide--;
+	} while((unsigned long)b1_ptr%16 && wide);
       }
-    } else {
-      int i;
-      for(i = wide-1 ; i >= 0 ; i--) {
-	b1_ptr[i] ^= b2_ptr[i];
+
+      if (((unsigned long)b1_ptr%16==0) && ((unsigned long)b2_ptr%16==0)) {
+	__m128i *dst_ptr = (__m128i*)b1_ptr;
+	__m128i *src_ptr = (__m128i*)b2_ptr;
+	__m128i *end_ptr = (__m128i*)((unsigned long)(b1_ptr + wide) & ~0xF);
+	__m128i xmm1;
+
+	do {
+	  xmm1 = _mm_load_si128(dst_ptr);
+	  const __m128i xmm2 = _mm_load_si128(src_ptr);
+	  xmm1 = _mm_xor_si128(xmm1, xmm2);
+	  _mm_store_si128(dst_ptr, xmm1);
+	  ++src_ptr;
+	  ++dst_ptr;
+	} while(dst_ptr < end_ptr);
+	
+	b1_ptr = (word*)dst_ptr;
+	b2_ptr = (word*)src_ptr;
+	wide = ((sizeof(word)*wide)%16)/sizeof(word);
       }
-    }
-
-#else // no SSE2
-
-    for(i = wide-1 ; i >= 0 ; i--) {
-      b1_ptr[i] ^= b2_ptr[i];
     }
 #endif
+    for(i = wide-1 ; i >= 0 ; i--)
+      b1_ptr[i] ^= b2_ptr[i];
+    return;
     
   } else { // dst != sc1
     b3_ptr = dst->values + startblock3 + dst->rowswap[row3];
