@@ -149,7 +149,7 @@ void mzd_combine( packedmatrix * dst, int row3, int startblock3,
   word *b1_ptr = sc1->values + startblock1 + sc1->rowswap[row1];
   word *b2_ptr = sc2->values + startblock2 + sc2->rowswap[row2];
   word *b3_ptr;
-
+  
   /* this is a quite likely case, and we treat is specially to ensure
    * cache register friendlyness. (Keep in mind that the x86 has only
    * four general purpose registers)
@@ -188,9 +188,8 @@ void mzd_combine( packedmatrix * dst, int row3, int startblock3,
       }
     }
 #endif
-    while(wide--) {
-      b1_ptr[wide] ^= b2_ptr[wide];
-    }
+    for(i=wide-1; i >= 0; i--)
+      b1_ptr[i] ^= b2_ptr[i];
     return;
     
   } else { // dst != sc1
@@ -245,15 +244,16 @@ void mzd_process_row(packedmatrix *m, int row, int homecol, int k, packedmatrix 
 }
 
 void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, int k, packedmatrix *T, int *L) {
-  int i;
-  int blocknum=startcol/RADIX;
-  int value;
-  int tablerow;
+  int i,j;
+  const int blocknum=startcol/RADIX;
+  int wide = m->width - blocknum;
+
+  int value, tablerow;
   word *b1_ptr,*b2_ptr;
 
   // for optimization reasons we distinguish several cases here.
 
-  switch(m->width - startcol/RADIX) {
+  switch(wide) {
 
   case 1:
     // no loop needed as only one block is operated on.
@@ -281,10 +281,46 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
   default:
     // the real deal more than two blocks.
     for (i=startrow; i<=stoprow; i++) {
-      mzd_process_row(m, i, startcol, k, T, L);
-    }
-    break;
-  }
+      const int tablerow = L[ _mzd_get_bits(m, i, startcol, k) ];
+      word *m_ptr = m->values + blocknum + m->rowswap[i];
+      word *T_ptr = T->values + blocknum + T->rowswap[tablerow];
+#ifdef HAVE_SSE2
+      /** check alignments **/
+      wide = m->width - blocknum;
+      if (wide>10) {
+	unsigned long alignment = (unsigned long)m_ptr%16;
+	if ((unsigned long)T_ptr%16 == alignment) {
+	  do {
+	    *m_ptr++ ^= *T_ptr++;
+	    wide--;
+	  } while((unsigned long)m_ptr%16 && wide);
+	}
+      
+	if (((unsigned long)m_ptr%16==0) && ((unsigned long)T_ptr%16==0)) {
+	  __m128i *__m_ptr = (__m128i*)m_ptr;
+	  __m128i *__T_ptr = (__m128i*)T_ptr;
+	  __m128i *end_ptr = (__m128i*)((unsigned long)(m_ptr + wide) & ~0xF);
+	  __m128i xmm1;
+
+	  do {
+	   xmm1 = _mm_load_si128(__m_ptr    );
+	   const __m128i xmm2 = _mm_load_si128(__T_ptr    );
+	   xmm1 = _mm_xor_si128(xmm1, xmm2);
+	   _mm_store_si128(__m_ptr    , xmm1);
+	   __m_ptr++;
+	   __T_ptr++;
+	  } while(__m_ptr < end_ptr);
+
+	  m_ptr = (word*)__m_ptr;
+	  T_ptr = (word*)__T_ptr;
+	  wide = ((sizeof(word)*wide)%16)/sizeof(word);
+	}
+      }
+#endif
+      for(j=wide-1; j>=0 ; j--)
+      	m_ptr[j] ^= T_ptr[j];
+    } // end row loop
+  } // end switch case
 }
 
 int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai, 
@@ -476,8 +512,10 @@ packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
 }
 
 packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L) {
-  int i,j,  a,b,c, simple;
+  int i,j,ii,  a,b,c, simple;
   unsigned int x;
+
+  word *C_ptr, *T_ptr;
   
   //if(A->ncols != B->nrows) 
   //  m4ri_die("A cols need to match B rows");
@@ -500,6 +538,7 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
       }
     }
   }
+  int wide = C->width;
 
   if (k == 0) {
     k = m4ri_opt_k(a,b,c);
@@ -539,7 +578,11 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
        * Step 3. for \f$h = 1,2, ... , c\f$ do
        *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
        */
-      mzd_combine( C,j,0, C,j,0,  T,x,0);
+      //mzd_combine( C,j,0, C,j,0,  T,x,0);
+      C_ptr = C->values + C->rowswap[j];
+      T_ptr = T->values + T->rowswap[x];
+      for(ii=wide-1; ii>=0 ; ii--)
+	C_ptr[ii] ^= T_ptr[ii];
     }
   }
 
