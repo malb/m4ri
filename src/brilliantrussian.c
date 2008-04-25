@@ -286,9 +286,8 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
       word *T_ptr = T->values + blocknum + T->rowswap[tablerow];
 #ifdef HAVE_SSE2
       /** check alignments **/
-      wide = m->width - blocknum;
-      if (wide>10) {
-	unsigned long alignment = (unsigned long)m_ptr%16;
+      if (wide>4) {
+	const unsigned long alignment = (unsigned long)m_ptr%16;
 	if ((unsigned long)T_ptr%16 == alignment) {
 	  do {
 	    *m_ptr++ ^= *T_ptr++;
@@ -299,7 +298,7 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
 	if (((unsigned long)m_ptr%16==0) && ((unsigned long)T_ptr%16==0)) {
 	  __m128i *__m_ptr = (__m128i*)m_ptr;
 	  __m128i *__T_ptr = (__m128i*)T_ptr;
-	  __m128i *end_ptr = (__m128i*)((unsigned long)(m_ptr + wide) & ~0xF);
+	  const __m128i *end_ptr = (__m128i*)((unsigned long)(m_ptr + wide) & ~0xF);
 	  __m128i xmm1;
 
 	  do {
@@ -319,6 +318,9 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
 #endif
       for(j=wide-1; j>=0 ; j--)
       	m_ptr[j] ^= T_ptr[j];
+#ifdef HAVE_SSE2      
+      wide = m->width - blocknum;
+#endif
     } // end row loop
   } // end switch case
 }
