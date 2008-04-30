@@ -23,17 +23,16 @@
 code **codebook;
 
 int m4ri_swap_bits(int v,int length) {
- unsigned int r = v; // r will be reversed bits of v; first get LSB of v
- int s = length - 1; // extra shift needed at end
- 
- for (v >>= 1; v; v >>= 1)
-    {   
-      r <<= 1;
-      r |= v & 1;
-      s--;
-    }
- r <<= s;
- return r;
+  unsigned int r = v; /* r will be reversed bits of v; first get LSB of v */
+  int s = length - 1; /* extra shift needed at end */
+  
+  for (v >>= 1; v; v >>= 1) {   
+    r <<= 1;
+    r |= v & 1;
+    s--;
+  }
+  r <<= s;
+  return r;
 }
 
 int m4ri_gray_code(int number, int length) {

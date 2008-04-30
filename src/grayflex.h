@@ -104,7 +104,7 @@ int m4ri_swap_bits(int v,int l);
 int m4ri_gray_code(int i, int l);
 
 /**
- * Fills \var ord and \var inc with Gray code data for a Gray code of
+ * Fills var ord and var inc with Gray code data for a Gray code of
  * length \f$2^l\f$.
  * 
  * \param ord Will hold gray code data, must be preallocated with correct size
@@ -137,11 +137,11 @@ void m4ri_build_all_codes();
 void m4ri_destroy_all_codes();
 
 /**
- * \brief Return the optimal \vat k for the given parameters. 
+ * \brief Return the optimal var k for the given parameters. 
  *
- * If \var c != 0 then \var k for multiplication is returned, else
- * \var k for inversion. The optimal \var k here means \f$0.75
- * log_2(n)\f$ where \f$n\$ is \f$min(a,b)\f$ for inversion and
+ * If var c != 0 then var k for multiplication is returned, else
+ * var k for inversion. The optimal var k here means \f$0.75 log_2(n)\f$ 
+ * where \f$n\f$ is \f$min(a,b)\f$ for inversion and
  * \f$b\f$ for multiplication.
  * 
  * \param a Number of rows of (first) matrix

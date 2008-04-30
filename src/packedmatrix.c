@@ -20,6 +20,8 @@
 #include <string.h>
 #include "packedmatrix.h"
 
+#define SAFECHAR (int)(RADIX*2)
+
 static BIT mzd_big_dot_product( packedmatrix *a, packedmatrix *bT, int rowofa, int rowofb );
 static inline BIT mzd_dot_product( word a, word b );
 
@@ -89,36 +91,16 @@ void mzd_free_window( packedmatrix *condemned) {
   m4ri_mm_free(condemned);
 }
 
-/* Warning: I assume *destination has RADIX*1.25 bytes available */
-void wordToStringComma( char *destination, word data) {
-  int i;
-  int j=0;
-  
-  for (i=0; i<RADIX; i++) {
-    if (GET_BIT(data,i) == 0) {
-      destination[j]='0';
-    } else destination[j]='1';
-    j++;
-      
-    if (((i % 4)==3) && (i!=RADIX-1)) {
-      destination[j]=':';
-      j++;
-    }
-  }
-  
-  destination[(int)(RADIX*1.25)-1]='\0';
-}
-  
-void mzd_print_matrix( packedmatrix *m ) {
+void mzd_print_matrix( packedmatrix *M ) {
   int i, j;
   char temp[SAFECHAR];
   word block;
 
-  for (i=0; i< m->nrows; i++ ) {
+  for (i=0; i< M->nrows; i++ ) {
     printf("[ ");
 
-    for (j=0; j< m->ncols; j+=RADIX) {
-      block=mzd_read_block(m, i, j);
+    for (j=0; j< M->ncols; j+=RADIX) {
+      block=mzd_read_block(M, i, j);
       m4ri_word_to_str(temp, block, 1);
       printf("%s ", temp);
     }
@@ -150,7 +132,7 @@ void mzd_row_clear_offset(packedmatrix *m, int row, int coloffset) {
   int i;
   word temp;
   
-  // make sure to start clearing at coloffset
+  /* make sure to start clearing at coloffset */
   if (coloffset%RADIX) {
     temp=mzd_read_block(m, row, coloffset);
     temp &=  ~(((ONE<<(RADIX-coloffset%RADIX))) - ONE);
@@ -174,7 +156,7 @@ void mzd_row_add_offset( packedmatrix *m, int sourcerow, int destrow,
   int i;
   word temp;
   
-  // make sure to start adding at coloffset
+  /* make sure to start adding at coloffset */
   temp=mzd_read_block(m, sourcerow, startblock*RADIX);
   if (coloffset%RADIX)
     temp &= (ONE<<(RADIX - (coloffset%RADIX))) - ONE;
@@ -235,7 +217,7 @@ packedmatrix *mzd_transpose(packedmatrix *newmatrix, packedmatrix *data) {
     newmatrix = mzd_init( data->ncols, data->nrows );
   } else {
     if (newmatrix->nrows != data->ncols || newmatrix->ncols != data->nrows) {
-      m4ri_die("Wrong size for return matrix.\n");
+      m4ri_die("mzd_transpose: Wrong size for return matrix.\n");
     }
   }
 
@@ -257,7 +239,6 @@ packedmatrix *mzd_transpose(packedmatrix *newmatrix, packedmatrix *data) {
 
 static inline BIT _mzd_dot_product( word a, word b ) {
   word temp=a & b;
-  //int i, 
   int total=0;
 
   while (temp)  {
@@ -277,7 +258,6 @@ static BIT _mzd_big_dot_product( packedmatrix *a, packedmatrix *bT, int rowofa,
 
   total=0;
   for (i=0; i< a->width; i++) {
-    //if (  (i*RADIX) < a->nrows )  
     total+=_mzd_dot_product( mzd_read_block(a, rowofa, i*RADIX), 
 			     mzd_read_block(bT, rowofb, i*RADIX) );
   }
@@ -295,7 +275,7 @@ packedmatrix *mzd_mul_naiv_t(packedmatrix *C, packedmatrix *A,
     C=mzd_init(newrows, newcols);
   } else {
     if (C->nrows != newrows || C->ncols != newcols) {
-      m4ri_die("Provided return matrix has wrong dimensions.\n");
+      m4ri_die("mzd_mul_naiv_t: Provided return matrix has wrong dimensions.\n");
     }
   }
 
@@ -390,7 +370,7 @@ packedmatrix *mzd_copy(packedmatrix *n, packedmatrix *p) {
     if (n == p) {
       return p;
     } else if (n->nrows < p->nrows || n->ncols < p->ncols) {
-      m4ri_die("Target matrix is too small.");
+      m4ri_die("mzd_copy: Target matrix is too small.");
     }
   }
   int i, j, p_truerow, n_truerow;
@@ -410,10 +390,9 @@ packedmatrix *mzd_copy(packedmatrix *n, packedmatrix *p) {
 packedmatrix *mzd_concat( packedmatrix *a, packedmatrix *b) {
   packedmatrix *newmatrix;
   int i, j, truerow, width;
-  //word entry;
   
   if (a->nrows!=b->nrows) {
-    m4ri_die("Bad arguments to concat!\n");
+    m4ri_die("mzd_concat: Bad arguments to concat!\n");
   }
 
   newmatrix=mzd_init(a->nrows, a->ncols + b->ncols);
@@ -441,7 +420,7 @@ packedmatrix *mzd_stack(packedmatrix *a, packedmatrix *b) {
   int i, j, offset, truerow, width;
 
   if (a->ncols != b->ncols) {
-    m4ri_die("Bad arguments to stack!\n");
+    m4ri_die("mzd_stack: Bad arguments to stack!\n");
   }
   newmatrix = mzd_init(a->nrows + b->nrows, a->ncols);
   width = newmatrix->width;
@@ -482,13 +461,13 @@ packedmatrix *mzd_invert_naiv(packedmatrix *target, packedmatrix *identity) {
 
 packedmatrix *mzd_add(packedmatrix *ret, packedmatrix *left, packedmatrix *right) {
   if (left->nrows != right->nrows || left->ncols != right->ncols) {
-    m4ri_die("rows and columns must match");
+    m4ri_die("mzd_add: rows and columns must match.\n");
   }
   if (ret == NULL) {
     ret = mzd_copy(ret, left);
   } else if (ret != left) {
     if (ret->nrows != left->nrows || ret->ncols != left->ncols) {
-      m4ri_die("rows and columns of returned matrix must match");
+      m4ri_die("mzd_add: rows and columns of returned matrix must match.\n");
     }
   }
   return _mzd_add_impl(ret, left, right);

@@ -125,18 +125,18 @@ static int _mzd_get_bits(packedmatrix *m, int x, int y, int k) {
 
   if ( (y%RADIX + k -1 ) < RADIX ) {
     /* everything happens in one word here */
-    temp =  values[ y / RADIX + truerow ]; // get the value
-    temp <<= y%RADIX; // clear upper bits
-    temp >>= RADIX - k; // clear lower bits and move to correct position.
+    temp =  values[ y / RADIX + truerow ]; /* get the value */
+    temp <<= y%RADIX; /* clear upper bits */
+    temp >>= RADIX - k; /* clear lower bits and move to correct position.*/
     return (int)temp;
 
   } else { 
     /* two words are affected */
-    block = y / RADIX + truerow; // correct block
-    spot = (y + k ) % RADIX; // correct offset
-    // make room by shifting spot times to the right, and add stuff from the second word
+    block = y / RADIX + truerow; /* correct block */
+    spot = (y + k ) % RADIX; /* correct offset */
+    /* make room by shifting spot times to the right, and add stuff from the second word */
     temp = (values[block] << spot) | ( values[block + 1] >> (RADIX - spot) ); 
-    return ((int)temp & ((1<<k)-1)); // clear upper bits and return
+    return ((int)temp & ((1<<k)-1)); /* clear upper bits and return */
    }
 }
 
@@ -192,7 +192,7 @@ void mzd_combine( packedmatrix * dst, int row3, int startblock3,
       b1_ptr[i] ^= b2_ptr[i];
     return;
     
-  } else { // dst != sc1
+  } else { /* dst != sc1 */
     b3_ptr = dst->values + startblock3 + dst->rowswap[row3];
 
     if (row1 >= sc1->nrows) {
@@ -224,7 +224,7 @@ void mzd_make_table( packedmatrix *m, int ai, int k,
     L[id]=i;
 
     mzd_combine( T,  i,         homeblock,
-		 m,            rowneeded, homeblock, 
+		 m,  rowneeded, homeblock, 
 		 T,  i-1,       homeblock);
   }
 }
@@ -251,12 +251,12 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
   int value, tablerow;
   word *b1_ptr,*b2_ptr;
 
-  // for optimization reasons we distinguish several cases here.
+  /* for optimization reasons we distinguish several cases here. */
 
   switch(wide) {
 
   case 1:
-    // no loop needed as only one block is operated on.
+    /* no loop needed as only one block is operated on. */
     for (i=startrow; i<=stoprow; i++) {
       value = _mzd_get_bits(m, i, startcol, k);
       tablerow = L[ value ];
@@ -267,7 +267,7 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
     break;
 
   case 2:
-    // two blocks, no loop
+    /* two blocks, no loop */
     for (i=startrow; i<=stoprow; i++) {
       value = _mzd_get_bits(m, i, startcol, k);
       tablerow = L[ value ];
@@ -279,7 +279,7 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
     break;
 
   default:
-    // the real deal more than two blocks.
+    /* the real deal more than two blocks. */
     for (i=startrow; i<=stoprow; i++) {
       const int tablerow = L[ _mzd_get_bits(m, i, startcol, k) ];
       word *m_ptr = m->values + blocknum + m->rowswap[i];
@@ -321,8 +321,8 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
 #ifdef HAVE_SSE2      
       wide = m->width - blocknum;
 #endif
-    } // end row loop
-  } // end switch case
+    } /* end row loop */
+  } /* end switch case */
 }
 
 int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai, 
@@ -358,7 +358,7 @@ int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai,
    * ... a_{j,i+k-1}\f$ in the columns being processed. Selecting the
    * row of the table associated with this k-bit string, and adding it
    * to row j will force the k columns to zero, and adjust the
-   * remaining columns from \$f i + k\$f to n in the appropriate way,
+   * remaining columns from \f$ i + k\f$ to n in the appropriate way,
    * as if Gaussian elimination had been performed.
   */
 
@@ -398,9 +398,9 @@ int mzd_reduce_m4ri(packedmatrix *m, int full, int k, packedmatrix *T, int *L) {
     L = (int *)m4ri_mm_calloc( TWOPOW(k), sizeof(int) );
   }
   
-  // main loop
+  /* main loop */
   for (i=0; i<stop; i+=k) {
-    // not enough room for M4RI left.
+    /* not enough room for M4RI left. */
     if ( ((i+k*3) > m->nrows) || ((i+k) > m->ncols) ) {
       rank += mzd_gauss_delayed(m, i, full);
       break;
@@ -409,7 +409,7 @@ int mzd_reduce_m4ri(packedmatrix *m, int full, int k, packedmatrix *T, int *L) {
     submatrixrank=mzd_step_m4ri(m, full, k, i, T, L);
 
     if (submatrixrank!=k) {
-      // not full rank, use Gaussian elimination :-(
+      /* not full rank, use Gaussian elimination :-( */
       rank += mzd_gauss_delayed(m, i, full);
       break;
     }
@@ -498,12 +498,14 @@ packedmatrix *mzd_invert_m4ri(packedmatrix *m,
 packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k) {
   packedmatrix *AT, *BT, *CT;
   
-  //if(A->ncols != B->nrows) m4ri_die("A cols need to match B rows");
+  if(A->ncols != B->nrows) 
+    m4ri_die("mzd_mul_m4rm_t: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
   
   AT = mzd_transpose(NULL, A);
   BT = mzd_transpose(NULL, B);
   
-  CT = mzd_mul_m4rm(NULL, BT,AT,k, NULL, NULL);
+  CT = mzd_init(B->ncols, A->nrows);
+  CT = _mzd_mul_m4rm_impl(CT, BT, AT, k, NULL, NULL, 0);
   
   mzd_free(AT);
   mzd_free(BT);
@@ -514,37 +516,61 @@ packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
 }
 
 packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L) {
+  int i,j;
+  int a = A->nrows;
+  int b = A->ncols;
+  int c = B->ncols;
+
+  if(A->ncols != B->nrows) 
+    m4ri_die("mzd_mul_m4rm_t: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
+  if (C == NULL) {
+    C = mzd_init(a, c);
+  } else {
+    if (C->nrows != a || C->ncols != c)
+      m4ri_die("mzd_mul_m4rm: C (%d x %d) has wrong dimensions.\n", C->nrows, C->ncols);
+  }
+  return _mzd_mul_m4rm_impl(C, A, B, k, T, L, TRUE);
+
+}
+
+packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L) {
+  int i,j;
+  int a = A->nrows;
+  int b = A->ncols;
+  int c = B->ncols;
+
+  if(A->ncols != B->nrows) 
+    m4ri_die("mzd_mul_m4rm A ncols (%d) need to match B nrows (%d) .\n", A->ncols, B->nrows);
+  if (C == NULL) {
+    C = mzd_init(a, c);
+  } else {
+    if (C->nrows != a || C->ncols != c)
+      m4ri_die("mzd_mul_m4rm: C has wrong dimensions.\n");
+  }
+  return _mzd_mul_m4rm_impl(C, A, B, k, T, L, FALSE);
+}
+
+
+packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L, int clear) {
   int i,j,ii,  a,b,c, simple;
   unsigned int x;
 
   word *C_ptr, *T_ptr;
   
-  //if(A->ncols != B->nrows) 
-  //  m4ri_die("A cols need to match B rows");
-  
   a = A->nrows;
   b = A->ncols;
   c = B->ncols;
 
-
-  if (C == NULL) {
-    C = mzd_init(a, c);
-  } else {
-    //if (C->nrows != a || C->ncols != c) {
-    //  m4ri_die("C has wrong dimensions.\n");
-    //}
-    /** clear first **/
-    for (i=0; i<C->nrows; i++) {
-      for (j=0; j<C->width; j++) {
-	C->values[ C->rowswap[i] + j ] = 0;
-      }
-    }
-  }
   int wide = C->width;
+
+  /** clear first **/
+  if (clear)
+    for (i=0; i<C->nrows; i++)
+      for (j=0; j<C->width; j++)
+	C->values[ C->rowswap[i] + j ] = 0;
 
   if (k == 0) {
     k = m4ri_opt_k(a,b,c);
-    //printf("k: %d\n",k);
   }
 
   if (T == NULL && L == NULL) {
@@ -580,7 +606,7 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
        * Step 3. for \f$h = 1,2, ... , c\f$ do
        *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
        */
-      //mzd_combine( C,j,0, C,j,0,  T,x,0);
+      /*mzd_combine( C,j,0, C,j,0,  T,x,0); */
       C_ptr = C->values + C->rowswap[j];
       T_ptr = T->values + T->rowswap[x];
       for(ii=wide-1; ii>=0 ; ii--)
@@ -588,7 +614,7 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
     }
   }
 
-  //handle rest
+  /* handle rest */
   if (b%k) {
     mzd_make_table( B, b/k * k , b%k, T, L, 1);
     
@@ -605,7 +631,7 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
 }
 
 
-static packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   int a,b,c;
   int anr, anc, bnr, bnc;
   
@@ -613,7 +639,7 @@ static packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, pa
   b = A->ncols;
   c = B->ncols;
 
-  // adjust cutting numbers to work on words
+  /* adjust cutting numbers to work on words */
   a += (a%RADIX) ? RADIX-(a%RADIX) : 0;
   b += (b%RADIX) ? RADIX-(b%RADIX) : 0;
   c += (c%RADIX) ? RADIX-(c%RADIX) : 0;
@@ -624,7 +650,7 @@ static packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, pa
   bnc = (c/RADIX >> 1) * RADIX;
 
   packedmatrix *A00 = mzd_init_window(A,   0,   0,   anr,   anc);
-  packedmatrix *A01 = mzd_init_window(A,   0, anc,   anc, 2*anc);
+  packedmatrix *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc);
   packedmatrix *A10 = mzd_init_window(A, anr,   0, 2*anr,   anc);
   packedmatrix *A11 = mzd_init_window(A, anr, anc, 2*anr, 2*anc);
 
@@ -692,57 +718,55 @@ static packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, pa
      * can afford to do a bit of arithmetic in them." (strassen.pyx)
      */
     
-    mzd_mul_m4rm(Q0, A00, B00, 0, NULL, NULL); // now Q0 holds P0
-    mzd_mul_m4rm(Q1, A01, B10, 0, NULL, NULL); // now Q1 holds P1
+    _mzd_mul_m4rm_impl(Q0, A00, B00, 0, NULL, NULL, TRUE); /* now Q0 holds P0 */
+    _mzd_mul_m4rm_impl(Q1, A01, B10, 0, NULL, NULL, TRUE); /* now Q1 holds P1 */
     
-    _mzd_add_impl(U0, Q0, Q1); // now U0 is correct
+    _mzd_add_impl(U0, Q0, Q1); /* now U0 is correct */
     
-    packedmatrix *S1T1 = mzd_mul_m4rm(NULL, S1, T1, 0, NULL, NULL);
-    _mzd_add_impl(Q0, Q0, S1T1); // now Q0 holds U1
-    mzd_free(S1T1);
+    mzd_addmul_m4rm(Q0, S1, T1, 0, NULL, NULL);
     
-    mzd_mul_m4rm(Q1, S2, T2, 0, NULL, NULL); // now Q1 holds P4
+    _mzd_mul_m4rm_impl(Q1, S2, T2, 0, NULL, NULL, TRUE); /* now Q1 holds P4 */
     
-    _mzd_add_impl(Q1, Q1, Q0); // now Q1 holds U2
-    mzd_mul_m4rm(Q2, A11, T3, 0, NULL, NULL); // now Q2 holds P6
-    _mzd_add_impl(U3, Q1, Q2); // now U3 is correct
+    _mzd_add_impl(Q1, Q1, Q0); /* now Q1 holds U2 */
+    _mzd_mul_m4rm_impl(Q2, A11, T3, 0, NULL, NULL, TRUE); /* now Q2 holds P6 */
+    _mzd_add_impl(U3, Q1, Q2); /* now U3 is correct */
     
-    mzd_mul_m4rm(Q2, S0, T0, 0, NULL, NULL); // now Q2 holds P2
-    _mzd_add_impl(U4, Q2, Q1); // now U4 is correct
+    _mzd_mul_m4rm_impl(Q2, S0, T0, 0, NULL, NULL, TRUE); /* now Q2 holds P2 */
+    _mzd_add_impl(U4, Q2, Q1); /* now U4 is correct */
     
-    _mzd_add_impl(Q0, Q0, Q2); // now Q0 holds U5
-    mzd_mul_m4rm(Q2, S3, B11, 0, NULL, NULL); // now Q2 holds P5
-    _mzd_add_impl(U6, Q0, Q2);// now U6 is correct
+    _mzd_add_impl(Q0, Q0, Q2); /* now Q0 holds U5 */
+    _mzd_mul_m4rm_impl(Q2, S3, B11, 0, NULL, NULL, TRUE); /* now Q2 holds P5 */
+    _mzd_add_impl(U6, Q0, Q2);/* now U6 is correct */
 
   } else{
-    _mzd_mul_strassen_impl(Q0, A00, B00, cutoff); // now Q0 holds P0
-    _mzd_mul_strassen_impl(Q1, A01, B10, cutoff); // now Q1 holds P1
+    _mzd_mul_strassen_impl(Q0, A00, B00, cutoff); /* now Q0 holds P0 */
+    _mzd_mul_strassen_impl(Q1, A01, B10, cutoff); /* now Q1 holds P1 */
     
-    _mzd_add_impl(U0, Q0, Q1); // now U0 is correct
+    _mzd_add_impl(U0, Q0, Q1); /* now U0 is correct */
     
     packedmatrix *S1T1 = mzd_mul_strassen(NULL, S1, T1, cutoff);
-    _mzd_add_impl(Q0, Q0, S1T1); // now Q0 holds U1
+    _mzd_add_impl(Q0, Q0, S1T1); /* now Q0 holds U1 */
     mzd_free(S1T1);
     
-    _mzd_mul_strassen_impl(Q1, S2, T2, cutoff); // now Q1 holds P4
+    _mzd_mul_strassen_impl(Q1, S2, T2, cutoff); /* now Q1 holds P4 */
     
-    _mzd_add_impl(Q1, Q1, Q0); // now Q1 holds U2
-    _mzd_mul_strassen_impl(Q2, A11, T3, cutoff); // now Q2 holds P6
-    _mzd_add_impl(U3, Q1, Q2); // now U3 is correct
+    _mzd_add_impl(Q1, Q1, Q0); /* now Q1 holds U2 */
+    _mzd_mul_strassen_impl(Q2, A11, T3, cutoff); /* now Q2 holds P6 */
+    _mzd_add_impl(U3, Q1, Q2); /* now U3 is correct */
     
-    _mzd_mul_strassen_impl(Q2, S0, T0, cutoff); // now Q2 holds P2
-    _mzd_add_impl(U4, Q2, Q1); // now U4 is correct
+    _mzd_mul_strassen_impl(Q2, S0, T0, cutoff); /* now Q2 holds P2 */
+    _mzd_add_impl(U4, Q2, Q1); /* now U4 is correct */
     
-    _mzd_add_impl(Q0, Q0, Q2); // now Q0 holds U5
-    _mzd_mul_strassen_impl(Q2, S3, B11, cutoff); // now Q2 holds P5
-    _mzd_add_impl(U6, Q0, Q2);// now U6 is correct
+    _mzd_add_impl(Q0, Q0, Q2); /* now Q0 holds U5 */
+    _mzd_mul_strassen_impl(Q2, S3, B11, cutoff); /* now Q2 holds P5 */
+    _mzd_add_impl(U6, Q0, Q2); /* now U6 is correct */
   }
 
-  // deal with rest
+  /* deal with rest */
   if (B->ncols > 2*bnc) {
     packedmatrix *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
     packedmatrix *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
-    mzd_mul_m4rm(C_last_col, A, B_last_col, 0, NULL, NULL);
+    _mzd_mul_m4rm_impl(C_last_col, A, B_last_col, 0, NULL, NULL, TRUE);
     mzd_free_window(B_last_col);
     mzd_free_window(C_last_col);
 
@@ -750,7 +774,7 @@ static packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, pa
   if (A->nrows > 2*anr) {
     packedmatrix *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
     packedmatrix *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, C->ncols);
-    mzd_mul_m4rm(C_last_row, A_last_row, B, 0, NULL, NULL);
+    _mzd_mul_m4rm_impl(C_last_row, A_last_row, B, 0, NULL, NULL, TRUE);
     mzd_free_window(A_last_row);
     mzd_free_window(C_last_row);
 
@@ -759,15 +783,13 @@ static packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, pa
     packedmatrix *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
     packedmatrix *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
     packedmatrix *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2);
-    packedmatrix *AB = mzd_mul_m4rm(NULL, A_last_col, B_last_row, 0, NULL, NULL);
-    _mzd_add_impl(C_bulk, C_bulk, AB);
-    mzd_free(AB);
+    mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0, NULL, NULL);
     mzd_free_window(A_last_col);
     mzd_free_window(B_last_row);
     mzd_free_window(C_bulk);
   }
 
-  /** clean up **/
+  /* clean up */
   mzd_free_window(A00); mzd_free_window(A01);
   mzd_free_window(A10); mzd_free_window(A11);
 
@@ -791,16 +813,13 @@ static packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, pa
   return C;
 }
 
-
 packedmatrix *mzd_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   int k;
-  if(A->ncols != B->nrows) {
-    m4ri_die("A ncols need to match B nrows.\n");
-  }
-
-  if (cutoff <= 0) {
-    m4ri_die("cutoff must be > 0.\n");
-  }
+  if(A->ncols != B->nrows)
+    m4ri_die("mzd_mul_strassen: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
+  
+  if (cutoff <= 0)
+    m4ri_die("mzd_mul_strassen: cutoff must be > 0.\n");
   cutoff = cutoff/RADIX * RADIX;
   if (cutoff == 0) {
     cutoff = RADIX;
@@ -808,16 +827,15 @@ packedmatrix *mzd_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B
 
   if (C == NULL) {
     C = mzd_init(A->nrows, B->ncols);
-  } else {
-    if (C->nrows != A->nrows || C->ncols != B->ncols) {
-      m4ri_die("C has wrong dimensions.\n");
-    }
+  } else if (C->nrows != A->nrows || C->ncols != B->ncols){
+    m4ri_die("mzd_mul_strassen: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
+	     C->nrows, C->ncols, A->nrows, B->ncols);
   }
 
-  /** handle case first, where the input matrices are too small already */
+  /* handle case first, where the input matrices are too small already */
   if (A->nrows <= cutoff || A->ncols <= cutoff || B->ncols <= cutoff) {
     k = m4ri_opt_k(A->nrows, A->ncols, B->ncols);
-    C = mzd_mul_m4rm(C, A, B, k, NULL, NULL);
+    C = _mzd_mul_m4rm_impl(C, A, B, k, NULL, NULL, TRUE);
     return C;
   }
 

@@ -18,15 +18,21 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include "misc.h"
 #ifdef HAVE_SSE2
 #include <mm_malloc.h>
 #endif
 
-void m4ri_die(char *errormessage) {
+
+
+void m4ri_die(char *errormessage, ...) {
   /*This function prints the error message and raises SIGABRT.*/
 
-  fprintf(stderr, "\a%s\n", errormessage);
+  va_list lst;
+  va_start(lst, errormessage);
+  vfprintf(stderr, errormessage, lst);
+  va_end(lst);
   abort();
 }
 
@@ -81,7 +87,7 @@ void *m4ri_mm_calloc( int count, int size ) {
   void *newthing = calloc(count, size);
 #endif
   if (newthing==NULL) {
-    m4ri_die("calloc returned NULL");
+    m4ri_die("m4ri_mm_calloc: calloc returned NULL\n");
     return NULL; /* unreachable. */
   }
 #ifdef HAVE_SSE2
@@ -101,11 +107,15 @@ void *m4ri_mm_malloc( int size ) {
   void *newthing=malloc( size );
 #endif  
   if (newthing==NULL) {
-    m4ri_die("malloc returned NULL");
+    m4ri_die("m4ri_mm_malloc: malloc returned NULL\n");
     return NULL; /* unreachable */
   }
   else return newthing;
 }
+
+void m4ri_mm_free(void *condemned) { 
+  free(condemned); 
+};
 
 BIT m4ri_coin_flip() {
   if (rand() < RAND_MAX/2) {
