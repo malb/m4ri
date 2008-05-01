@@ -30,11 +30,7 @@ packedmatrix *mzd_init(int r, int c) {
   int i;
 
   newmatrix=(packedmatrix *)m4ri_mm_calloc(1, sizeof(packedmatrix));
-
-  if ((c % RADIX)==0) 
-    newmatrix->width=(c/RADIX);
-  else 
-    newmatrix->width=(c/RADIX) + 1;
+  newmatrix->width=DIV_CEIL(c,RADIX);
 
   newmatrix->ncols=c;
   newmatrix->nrows=r;
@@ -474,21 +470,30 @@ packedmatrix *mzd_add(packedmatrix *ret, packedmatrix *left, packedmatrix *right
 }
 
 packedmatrix *_mzd_add_impl(packedmatrix *ret, packedmatrix *left, packedmatrix *right) {
-  int i,j,left_truerow, ret_truerow;
+  int i,j, src_truerow, dst_truerow;
+  packedmatrix *tmp;
+
+  if(ret == right && ret != left) {
+    tmp = right;
+    right = left;
+    left = tmp;
+  }
 
   if (ret != left) {
     for (i=0; i < MIN(ret->nrows, left->nrows); i++) {
-      left_truerow = left->rowswap[i];
-      ret_truerow = ret->rowswap[i];
+      src_truerow = left->rowswap[i];
+      dst_truerow = ret->rowswap[i];
       for (j=0; j < left->width; j++) {
-	ret->values[ret_truerow + j] = left->values[left_truerow + j];
+	ret->values[dst_truerow + j] = left->values[src_truerow + j];
       }
     }
   }
   
   for(i=0; i < MIN(ret->nrows, right->nrows); i++) {
-    for(j=0; j < left->width; j++) {
-      ret->values[  ret->rowswap[i] + j ]  ^= right->values[ right->rowswap[i] + j];
+    src_truerow = right->rowswap[i];
+    dst_truerow = ret->rowswap[i];
+    for(j=0; j < ret->width; j++) {
+      ret->values[ dst_truerow + j ]  ^= right->values[ src_truerow + j];
     }
   }
   return ret;

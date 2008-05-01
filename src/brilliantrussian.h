@@ -217,36 +217,4 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
 
 packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k);
 
-/**
- * \brief Matrix multiplication via Strassen's matrix multiplication formula,
- * i.e. compute C = AB. 
- * 
- * This is the convenient wrapper function.
- *
- * \param C Preallocated product matrix, may be NULL for automatic creation.
- * \param A Input matrix A
- * \param B Input matrix B
- * \param cutoff Minimal dimension for Strassen recursion.
- */
-
-packedmatrix *mzd_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
-
-/**
- * \brief Matrix multiplication via Strassen's matrix multiplication
- * formula, i.e. compute C = AB. 
- * 
- * This is the actual implementation.
- *
- * \param C Preallocated product matrix, may be NULL for automatic creation.
- * \param A Input matrix A
- * \param B Input matrix B
- * \param cutoff Minimal dimension for Strassen recursion.
- *
- * \note This implement is to a very large extend a port of the
- * function strassen_window_multiply_c in Sage 3.0; For reference see
- * http://www.sagemath.org
- */
-
-packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
-
 #endif //BRILLIANTRUSSIAN_H

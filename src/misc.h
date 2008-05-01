@@ -46,7 +46,7 @@ typedef unsigned long long word;
  * The number of bits in a word.
  */
 
-#define RADIX sizeof(word)<<3
+#define RADIX (sizeof(word)<<3)
 
 /**
  * The number one as a word.
