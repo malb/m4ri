@@ -66,7 +66,7 @@ void mzd_make_table( packedmatrix *M, int ai, int k, packedmatrix *T, int *L, in
  * \param L Contains row number to be added
  */
 
-void mzd_process_row(packedmatrix *M, int row, int homecol, int k, packedmatrix *T, int *L);
+void mzd_process_row(packedmatrix *M, const int row, const int homecol, const int k, const packedmatrix *T, const int *L);
 
 /**
  * \brief Iterate mzd_proccess_row from startrow to stoprow.

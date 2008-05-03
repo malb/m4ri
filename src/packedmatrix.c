@@ -544,9 +544,9 @@ packedmatrix *mzd_submatrix(packedmatrix *m, int startrow, int startcol, int end
   return newmatrix;
 }
 
-void mzd_combine( packedmatrix * dst, int row3, int startblock3,
-		  packedmatrix * sc1, int row1, int startblock1, 
-		  packedmatrix * sc2, int row2, int startblock2) {
+void mzd_combine( packedmatrix * dst, const int row3, const int startblock3,
+		  const packedmatrix * sc1, const int row1, const int startblock1, 
+		  const packedmatrix * sc2, const int row2, const int startblock2) {
   int i;
   int wide = sc1->width - startblock1;
 

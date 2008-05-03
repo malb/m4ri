@@ -529,8 +529,8 @@ packedmatrix *_mzd_add_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B);
  * thus implementation improvements should focus here.
  */
 
-void mzd_combine(packedmatrix * DST, int row3, int startblock3,
-		 packedmatrix * SC1, int row1, int startblock1, 
-		 packedmatrix * SC2, int row2, int startblock2);
+void mzd_combine(packedmatrix * DST, const int row3, const int startblock3,
+		 const packedmatrix * SC1, const int row1, const int startblock1, 
+		 const packedmatrix * SC2, const int row2, const int startblock2);
 
 #endif //PACKEDMATRIX_H

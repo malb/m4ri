@@ -54,7 +54,7 @@ static int _mzd_force_non_zero(packedmatrix *m, int xstart, int xstop, int y);
  * \return rank of 3k x k submatrix.
  */
 
-static int _mzd_prep(packedmatrix *m, int ai, int k);
+static int _mzd_prep(packedmatrix *m, const int ai, const int k);
 
 /**
  * Get k bits starting a position (x,y) from the matrix m.
@@ -65,7 +65,7 @@ static int _mzd_prep(packedmatrix *m, int ai, int k);
  * \param k Number of bits.
  */ 
 
-static int _mzd_get_bits(packedmatrix *m, int x, int y, int k);
+static inline int _mzd_get_bits(const packedmatrix *m, const int x, const int y, const int k);
 
 
 
@@ -83,7 +83,7 @@ static int _mzd_force_non_zero(packedmatrix *m, int xstart, int xstop, int y) {
   return FALSE;
 }
 
-static int _mzd_prep(packedmatrix *m, int ai, int k) {
+static int _mzd_prep(packedmatrix *m, const int ai, const int k) {
   int pc; /* pivot column */
   int tr; /* target row */
   int good;
@@ -111,31 +111,26 @@ static int _mzd_prep(packedmatrix *m, int ai, int k) {
   return rank;
 }
 
-static int _mzd_get_bits(packedmatrix *m, int x, int y, int k) {
+static inline int _mzd_get_bits(const packedmatrix *m, const int x, const int y, const int k) {
   int truerow = m->rowswap[ x ];
-  int block;
-  int spot;
-
   word temp;
-
-  word *values = m->values;
 
   /* there are two possible situations. Either all bits are in one
    * word or they are spread across two words. */
 
   if ( (y%RADIX + k -1 ) < RADIX ) {
     /* everything happens in one word here */
-    temp =  values[ y / RADIX + truerow ]; /* get the value */
+    temp =  m->values[ y / RADIX + truerow ]; /* get the value */
     temp <<= y%RADIX; /* clear upper bits */
     temp >>= RADIX - k; /* clear lower bits and move to correct position.*/
     return (int)temp;
 
   } else { 
     /* two words are affected */
-    block = y / RADIX + truerow; /* correct block */
-    spot = (y + k ) % RADIX; /* correct offset */
+    const int block = y / RADIX + truerow; /* correct block */
+    const int spot = (y + k ) % RADIX; /* correct offset */
     /* make room by shifting spot times to the right, and add stuff from the second word */
-    temp = (values[block] << spot) | ( values[block + 1] >> (RADIX - spot) ); 
+    temp = (m->values[block] << spot) | ( m->values[block + 1] >> (RADIX - spot) ); 
     return ((int)temp & ((1<<k)-1)); /* clear upper bits and return */
    }
 }
@@ -143,7 +138,7 @@ static int _mzd_get_bits(packedmatrix *m, int x, int y, int k) {
 
 void mzd_make_table( packedmatrix *m, int ai, int k,
 		     packedmatrix *T, int *L, int full) {
-  int homeblock= full ? 0 : ai/RADIX;
+  const int homeblock= full ? 0 : ai/RADIX;
   int i, rowneeded, id;
   int twokay= TWOPOW(k);
 
@@ -164,13 +159,13 @@ void mzd_make_table( packedmatrix *m, int ai, int k,
 
 
 
-void mzd_process_row(packedmatrix *m, int row, int homecol, int k, packedmatrix *T, int *L) {
-  int blocknum = homecol/RADIX;
+void mzd_process_row(packedmatrix *m, const int row, const int homecol, const int k, const packedmatrix *T, const int *L) {
+  const int blocknum = homecol/RADIX;
 
-  int value = _mzd_get_bits(m, row, homecol, k);
+  const int value = _mzd_get_bits(m, row, homecol, k);
 
-  int tablerow = L[ value ];
-
+  const int tablerow = L[ value ];
+  
   mzd_combine(m, row,      blocknum,
 	      m, row,      blocknum,
 	      T, tablerow, blocknum);
