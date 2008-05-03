@@ -486,6 +486,7 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
 
 packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L, int clear) {
   int i,j,ii,  a,b,c, simple;
+  int truerow;
   unsigned int x;
 
   word *C_ptr, *T_ptr;
@@ -497,10 +498,14 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
   int wide = C->width;
 
   /** clear first **/
-  if (clear)
-    for (i=0; i<C->nrows; i++)
-      for (j=0; j<C->width; j++)
-	C->values[ C->rowswap[i] + j ] = 0;
+  if (clear) {
+    for (i=0; i<C->nrows; i++) {
+      truerow = C->rowswap[i];
+      for (j=0; j<C->width; j++) {
+	C->values[truerow + j] = 0;
+      }
+    }
+  }
 
   if (k == 0) {
     k = m4ri_opt_k(a,b,c);
