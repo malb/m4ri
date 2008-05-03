@@ -25,7 +25,7 @@
 
 #define SAFECHAR (int)(RADIX+RADIX/3)
 
-static BIT mzd_big_dot_product( packedmatrix *a, packedmatrix *bT, int rowofa, int rowofb );
+static BIT mzd_big_dot_product( const packedmatrix *a, const packedmatrix *bT, const int rowofa, const int rowofb );
 static inline BIT mzd_dot_product( word a, word b );
 
 packedmatrix *mzd_init(int r, int c) {
@@ -90,7 +90,7 @@ void mzd_free_window( packedmatrix *condemned) {
   m4ri_mm_free(condemned);
 }
 
-void mzd_print_matrix( packedmatrix *M ) {
+void mzd_print_matrix( const packedmatrix *M ) {
   int i, j;
   char temp[SAFECHAR];
   word block;
@@ -107,7 +107,7 @@ void mzd_print_matrix( packedmatrix *M ) {
   }
 }
 
-void mzd_print_matrix_tight( packedmatrix *m ) {
+void mzd_print_matrix_tight( const packedmatrix *m ) {
   int i, j;
   char temp[SAFECHAR];
   word block;
@@ -208,7 +208,7 @@ int mzd_reduce_naiv(packedmatrix *m, int full) {
   return mzd_gauss_delayed(m,0, full); 
 }
 
-packedmatrix *mzd_transpose(packedmatrix *newmatrix, packedmatrix *data) {
+packedmatrix *mzd_transpose(packedmatrix *newmatrix, const packedmatrix *data) {
   int i,j,k;
   word temp;
 
@@ -248,8 +248,7 @@ static inline BIT _mzd_dot_product( word a, word b ) {
 }
 
 /* Internal to naive matrix mult */
-static BIT _mzd_big_dot_product( packedmatrix *a, packedmatrix *bT, int rowofa,
-				 int rowofb ) {
+static BIT _mzd_big_dot_product( const packedmatrix *a, const packedmatrix *bT, const int rowofa, const int rowofb ) {
   /* ``a slot'' is a row of A, and a column of B when calcing AB */
   /* but since we use B^T so that we are working only with rows, */
   /* ``a slot'' of A is a row, ``a slot'' of B is a row of B^T */
@@ -264,8 +263,7 @@ static BIT _mzd_big_dot_product( packedmatrix *a, packedmatrix *bT, int rowofa,
   return (BIT)(total % 2);
 }
 
-packedmatrix *mzd_mul_naiv_t(packedmatrix *C, packedmatrix *A, 
-			     packedmatrix *bT ) {
+packedmatrix *mzd_mul_naiv_t(packedmatrix *C, const packedmatrix *A, const packedmatrix *bT ) {
   int i, j;
   int newrows=A->nrows;
   int newcols=bT->nrows;
@@ -287,7 +285,7 @@ packedmatrix *mzd_mul_naiv_t(packedmatrix *C, packedmatrix *A,
   return C;
 }
   
-packedmatrix *mzd_mul_naiv(packedmatrix *C, packedmatrix *A,  packedmatrix *B) {
+packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A,  const packedmatrix *B) {
   packedmatrix *bT = mzd_transpose(NULL, B);
   C = mzd_mul_naiv_t(C, A, bT );
   mzd_free(bT);
@@ -324,7 +322,7 @@ void mzd_set_ui( packedmatrix *a, unsigned int value) {
   }
 }
 
-BIT mzd_equal( packedmatrix *a, packedmatrix *b ) {
+BIT mzd_equal(const packedmatrix *a, const packedmatrix *b ) {
   int i, j;
   word block1, block2;
 
@@ -342,7 +340,7 @@ BIT mzd_equal( packedmatrix *a, packedmatrix *b ) {
   return TRUE;
 }
 
-int mzd_cmp(packedmatrix *a, packedmatrix *b) {
+int mzd_cmp(const packedmatrix *a, const packedmatrix *b) {
 
   int i,j;
 
@@ -362,12 +360,12 @@ int mzd_cmp(packedmatrix *a, packedmatrix *b) {
   return 0;
 }
 
-packedmatrix *mzd_copy(packedmatrix *n, packedmatrix *p) {
+packedmatrix *mzd_copy(packedmatrix *n, const packedmatrix *p) {
   if (n == NULL) {
     n = mzd_init(p->nrows, p->ncols);
   } else {
     if (n == p) {
-      return p;
+      return n;
     } else if (n->nrows < p->nrows || n->ncols < p->ncols) {
       m4ri_die("mzd_copy: Target matrix is too small.");
     }
@@ -386,7 +384,7 @@ packedmatrix *mzd_copy(packedmatrix *n, packedmatrix *p) {
 }
 
 /* This is sometimes called augment */
-packedmatrix *mzd_concat( packedmatrix *a, packedmatrix *b) {
+packedmatrix *mzd_concat(const packedmatrix *a, const packedmatrix *b) {
   packedmatrix *newmatrix;
   int i, j, truerow, width;
   
@@ -414,7 +412,7 @@ packedmatrix *mzd_concat( packedmatrix *a, packedmatrix *b) {
   return newmatrix;
 }
 
-packedmatrix *mzd_stack(packedmatrix *a, packedmatrix *b) {
+packedmatrix *mzd_stack(const packedmatrix *a, const packedmatrix *b) {
   packedmatrix *newmatrix;
   int i, j, offset, truerow, width;
 
@@ -441,7 +439,7 @@ packedmatrix *mzd_stack(packedmatrix *a, packedmatrix *b) {
   return newmatrix;
 }
 
-packedmatrix *mzd_invert_naiv(packedmatrix *target, packedmatrix *identity) {
+packedmatrix *mzd_invert_naiv(packedmatrix *target, const packedmatrix *identity) {
   packedmatrix *huge, *inverse;
   int x;
 
@@ -458,7 +456,7 @@ packedmatrix *mzd_invert_naiv(packedmatrix *target, packedmatrix *identity) {
   return inverse;
 }
 
-packedmatrix *mzd_add(packedmatrix *ret, packedmatrix *left, packedmatrix *right) {
+packedmatrix *mzd_add(packedmatrix *ret, const packedmatrix *left, const packedmatrix *right) {
   if (left->nrows != right->nrows || left->ncols != right->ncols) {
     m4ri_die("mzd_add: rows and columns must match.\n");
   }
@@ -472,10 +470,10 @@ packedmatrix *mzd_add(packedmatrix *ret, packedmatrix *left, packedmatrix *right
   return _mzd_add_impl(ret, left, right);
 }
 
-packedmatrix *_mzd_add_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B) {
+packedmatrix *_mzd_add_impl(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
   int i;
   int nrows = MIN(MIN(A->nrows, B->nrows), C->nrows);
-  packedmatrix *tmp;
+  const packedmatrix *tmp;
 
   if (C == B) { //swap
     tmp = A;
@@ -489,7 +487,7 @@ packedmatrix *_mzd_add_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B) {
   return C;
 }
 
-packedmatrix *mzd_submatrix(packedmatrix *m, int startrow, int startcol, int endrow, int endcol) {
+packedmatrix *mzd_submatrix(const packedmatrix *m, const int startrow, const int startcol, const int endrow, const int endcol) {
   int nrows, ncols, truerow, i, colword, x, y, block, spot, startword;
   word temp  = 0;
   
