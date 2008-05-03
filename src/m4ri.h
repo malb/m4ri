@@ -51,5 +51,6 @@
 #include "watch.h"
 #include "packedmatrix.h"
 #include "brilliantrussian.h"
+#include "strassen.h"
 
 #endif //M4RI_H
