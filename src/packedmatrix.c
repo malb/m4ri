@@ -32,7 +32,7 @@ packedmatrix *mzd_init(int r, int c) {
   packedmatrix *newmatrix;
   int i;
 
-  newmatrix=(packedmatrix *)m4ri_mm_calloc(1, sizeof(packedmatrix));
+  newmatrix=(packedmatrix *)m4ri_mm_malloc(sizeof(packedmatrix));
   newmatrix->width=DIV_CEIL(c,RADIX);
 
   newmatrix->ncols=c;
@@ -58,7 +58,7 @@ packedmatrix *mzd_init(int r, int c) {
 /* We don't perform any sanity checks! */
 packedmatrix *mzd_init_window(packedmatrix *m, int lowr, int lowc, int highr, int highc) {
   int nrows, ncols, i, offset; 
-  packedmatrix *window = (packedmatrix *)m4ri_mm_calloc(1, sizeof(packedmatrix));
+  packedmatrix *window = (packedmatrix *)m4ri_mm_malloc(sizeof(packedmatrix));
   nrows = MIN(highr - lowr, m->nrows - lowr);
   ncols = highc - lowc;
   
@@ -552,16 +552,10 @@ void mzd_combine( packedmatrix * dst, const int row3, const int startblock3,
 
   word *b1_ptr = sc1->values + startblock1 + sc1->rowswap[row1];
   word *b2_ptr = sc2->values + startblock2 + sc2->rowswap[row2];
-  word *b3_ptr;
   
-  /* this is a quite likely case, and we treat is specially to ensure
-   * cache register friendlyness. (Keep in mind that the x86 has only
-   * four general purpose registers)
-   */
-
   if( dst == sc1 && row1 == row3 && startblock1 == startblock3) {
 #ifdef HAVE_SSE2
-    if(wide>10) {
+    if(wide>6) {
       /** check alignments **/
       unsigned long alignment = (unsigned long)b1_ptr%16;
       if ((unsigned long)b2_ptr%16 == alignment) {
@@ -574,7 +568,7 @@ void mzd_combine( packedmatrix * dst, const int row3, const int startblock3,
       if (((unsigned long)b1_ptr%16==0) && ((unsigned long)b2_ptr%16==0)) {
 	__m128i *dst_ptr = (__m128i*)b1_ptr;
 	__m128i *src_ptr = (__m128i*)b2_ptr;
-	__m128i *end_ptr = (__m128i*)((unsigned long)(b1_ptr + wide) & ~0xF);
+	const __m128i *end_ptr = (__m128i*)((unsigned long)(b1_ptr + wide) & ~0xF);
 	__m128i xmm1;
 
 	do {
@@ -591,23 +585,25 @@ void mzd_combine( packedmatrix * dst, const int row3, const int startblock3,
 	wide = ((sizeof(word)*wide)%16)/sizeof(word);
       }
     }
-#endif
+#endif //HAVE_SSE2
     for(i=wide-1; i >= 0; i--)
       b1_ptr[i] ^= b2_ptr[i];
     return;
     
   } else { /* dst != sc1 */
-    b3_ptr = dst->values + startblock3 + dst->rowswap[row3];
+    word *b3_ptr = dst->values + startblock3 + dst->rowswap[row3];
 
+    /* this is a corner case triggered by Strassen multiplication
+       which assumes certain (virtual) matrix sizes */
     if (row1 >= sc1->nrows) {
-	for(i = wide - 1 ; i >= 0 ; i--) {
-	  b3_ptr[i] = b2_ptr[i];
-	}
+      for(i = wide - 1 ; i >= 0 ; i--) {
+        b3_ptr[i] = b2_ptr[i];
+      }
     } else {
       for(i = wide - 1 ; i >= 0 ; i--) {
 	b3_ptr[i] = b1_ptr[i] ^ b2_ptr[i];
       }
+      return;
     }
-    return;
   }
 }
