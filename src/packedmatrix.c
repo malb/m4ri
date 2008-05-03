@@ -19,6 +19,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "packedmatrix.h"
+#ifdef HAVE_SSE2
+#include <emmintrin.h>
+#endif
 
 #define SAFECHAR (int)(RADIX*2)
 
@@ -469,34 +472,21 @@ packedmatrix *mzd_add(packedmatrix *ret, packedmatrix *left, packedmatrix *right
   return _mzd_add_impl(ret, left, right);
 }
 
-packedmatrix *_mzd_add_impl(packedmatrix *ret, packedmatrix *left, packedmatrix *right) {
-  int i,j, src_truerow, dst_truerow;
+packedmatrix *_mzd_add_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B) {
+  int i;
+  int nrows = MIN(MIN(A->nrows, B->nrows), C->nrows);
   packedmatrix *tmp;
 
-  if(ret == right && ret != left) {
-    tmp = right;
-    right = left;
-    left = tmp;
-  }
-
-  if (ret != left) {
-    for (i=0; i < MIN(ret->nrows, left->nrows); i++) {
-      src_truerow = left->rowswap[i];
-      dst_truerow = ret->rowswap[i];
-      for (j=0; j < left->width; j++) {
-	ret->values[dst_truerow + j] = left->values[src_truerow + j];
-      }
-    }
+  if (C == B) { //swap
+    tmp = A;
+    A = B;
+    B = tmp;
   }
   
-  for(i=0; i < MIN(ret->nrows, right->nrows); i++) {
-    src_truerow = right->rowswap[i];
-    dst_truerow = ret->rowswap[i];
-    for(j=0; j < ret->width; j++) {
-      ret->values[ dst_truerow + j ]  ^= right->values[ src_truerow + j];
-    }
+  for(i=nrows-1; i>=0; i--) {
+    mzd_combine(C,i,0, A,i,0, B,i,0);
   }
-  return ret;
+  return C;
 }
 
 packedmatrix *mzd_submatrix(packedmatrix *m, int startrow, int startcol, int endrow, int endcol) {
@@ -554,3 +544,70 @@ packedmatrix *mzd_submatrix(packedmatrix *m, int startrow, int startcol, int end
   return newmatrix;
 }
 
+void mzd_combine( packedmatrix * dst, int row3, int startblock3,
+		  packedmatrix * sc1, int row1, int startblock1, 
+		  packedmatrix * sc2, int row2, int startblock2) {
+  int i;
+  int wide = sc1->width - startblock1;
+
+  word *b1_ptr = sc1->values + startblock1 + sc1->rowswap[row1];
+  word *b2_ptr = sc2->values + startblock2 + sc2->rowswap[row2];
+  word *b3_ptr;
+  
+  /* this is a quite likely case, and we treat is specially to ensure
+   * cache register friendlyness. (Keep in mind that the x86 has only
+   * four general purpose registers)
+   */
+
+  if( dst == sc1 && row1 == row3 && startblock1 == startblock3) {
+#ifdef HAVE_SSE2
+    if(wide>10) {
+      /** check alignments **/
+      unsigned long alignment = (unsigned long)b1_ptr%16;
+      if ((unsigned long)b2_ptr%16 == alignment) {
+	do {
+	  *b1_ptr++ ^= *b2_ptr++;
+	  wide--;
+	} while((unsigned long)b1_ptr%16 && wide);
+      }
+
+      if (((unsigned long)b1_ptr%16==0) && ((unsigned long)b2_ptr%16==0)) {
+	__m128i *dst_ptr = (__m128i*)b1_ptr;
+	__m128i *src_ptr = (__m128i*)b2_ptr;
+	__m128i *end_ptr = (__m128i*)((unsigned long)(b1_ptr + wide) & ~0xF);
+	__m128i xmm1;
+
+	do {
+	  xmm1 = _mm_load_si128(dst_ptr);
+	  const __m128i xmm2 = _mm_load_si128(src_ptr);
+	  xmm1 = _mm_xor_si128(xmm1, xmm2);
+	  _mm_store_si128(dst_ptr, xmm1);
+	  ++src_ptr;
+	  ++dst_ptr;
+	} while(dst_ptr < end_ptr);
+	
+	b1_ptr = (word*)dst_ptr;
+	b2_ptr = (word*)src_ptr;
+	wide = ((sizeof(word)*wide)%16)/sizeof(word);
+      }
+    }
+#endif
+    for(i=wide-1; i >= 0; i--)
+      b1_ptr[i] ^= b2_ptr[i];
+    return;
+    
+  } else { /* dst != sc1 */
+    b3_ptr = dst->values + startblock3 + dst->rowswap[row3];
+
+    if (row1 >= sc1->nrows) {
+	for(i = wide - 1 ; i >= 0 ; i--) {
+	  b3_ptr[i] = b2_ptr[i];
+	}
+    } else {
+      for(i = wide - 1 ; i >= 0 ; i--) {
+	b3_ptr[i] = b1_ptr[i] ^ b2_ptr[i];
+      }
+    }
+    return;
+  }
+}
