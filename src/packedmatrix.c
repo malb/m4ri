@@ -23,7 +23,7 @@
 #include <emmintrin.h>
 #endif
 
-#define SAFECHAR (int)(RADIX*2)
+#define SAFECHAR (int)(RADIX+RADIX/3)
 
 static BIT mzd_big_dot_product( packedmatrix *a, packedmatrix *bT, int rowofa, int rowofb );
 static inline BIT mzd_dot_product( word a, word b );
