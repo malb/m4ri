@@ -1,10 +1,10 @@
 /******************************************************************************
 *
-*            M4RI: Method of the Four Russians Inversion
+*            M4BI: Method of the Four Russians Inversion
 *
 *       Copyright (C) 2007 Gregory Bard <gregory.bard@ieee.org> 
 *
-*  Distributed under the terms of the GNU General Public License (GPL)
+*  Distributed under the terms of the GNU General Public License (GEL)
 *
 *    This code is distributed in the hope that it will be useful,
 *    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -384,76 +384,84 @@ packedmatrix *mzd_copy(packedmatrix *n, const packedmatrix *p) {
 }
 
 /* This is sometimes called augment */
-packedmatrix *mzd_concat(const packedmatrix *a, const packedmatrix *b) {
-  packedmatrix *newmatrix;
-  int i, j, truerow, width;
+packedmatrix *mzd_concat(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
+  int i, j, src_truerow, dst_truerow;
   
-  if (a->nrows!=b->nrows) {
+  if (A->nrows != B->nrows) {
     m4ri_die("mzd_concat: Bad arguments to concat!\n");
   }
 
-  newmatrix=mzd_init(a->nrows, a->ncols + b->ncols);
-  width = newmatrix->width;
+  if (C == NULL) {
+    C = mzd_init(A->nrows, A->ncols + B->ncols);
+  } else if (C->nrows != A->nrows || C->ncols != (A->ncols + B->ncols)) {
+    m4ri_die("mzd_concat: C has wrong dimension!\n");
+  }
 
-  for (i=0; i<a->nrows; i++) {
-    truerow = a->rowswap[i];
-    for (j=0; j<a->width; j++) {
-      newmatrix->values[i*width + j] = a->values[truerow + j];
+  for (i=0; i<A->nrows; i++) {
+    dst_truerow = C->rowswap[i];
+    src_truerow = A->rowswap[i];
+    for (j=0; j <A->width; j++) {
+      C->values[dst_truerow + j] = A->values[src_truerow + j];
     }
   }
 
-  for (i=0; i<b->nrows; i++) {
-    for (j=0; j<b->ncols; j++) {
-      mzd_write_bit(newmatrix, i, j+(a->ncols), 
-		mzd_read_bit(b, i, j) );
+  for (i=0; i<B->nrows; i++) {
+    for (j=0; j<B->ncols; j++) {
+      mzd_write_bit(C, i, j+(A->ncols), mzd_read_bit(B, i, j) );
     }
   }
 
-  return newmatrix;
+  return C;
 }
 
-packedmatrix *mzd_stack(const packedmatrix *a, const packedmatrix *b) {
-  packedmatrix *newmatrix;
-  int i, j, offset, truerow, width;
+packedmatrix *mzd_stack(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
+  int i, j, offset, src_truerow, dst_truerow;
 
-  if (a->ncols != b->ncols) {
-    m4ri_die("mzd_stack: Bad arguments to stack!\n");
+  if (A->ncols != B->ncols) {
+    m4ri_die("mzd_stack: A->ncols (%d) != B->ncols (%d)!\n",A->ncols, B->ncols);
   }
-  newmatrix = mzd_init(a->nrows + b->nrows, a->ncols);
-  width = newmatrix->width;
+
+  if (C == NULL) {
+    C = mzd_init(A->nrows + B->nrows, A->ncols);
+  } else if (C->nrows != (A->nrows + B->nrows) || C->ncols != A->ncols) {
+    m4ri_die("mzd_stack: C has wrong dimension!\n");
+  }
   
-  for(i=0; i<a->nrows; i++) {
-    truerow = a->rowswap[i];
-    for (j=0; j<a->width; j++) {
-      newmatrix->values[i*width + j] = a->values[truerow + j]; 
+  for(i=0; i<A->nrows; i++) {
+    src_truerow = A->rowswap[i];
+    dst_truerow = C->rowswap[i];
+    for (j=0; j<A->width; j++) {
+      C->values[dst_truerow + j] = A->values[src_truerow + j]; 
     }
   }
-  offset = a->nrows * a->width;
 
-  for(i=0; i<b->nrows; i++) {
-    truerow = b->rowswap[i];
-    for (j=0; j<b->width; j++) {
-      newmatrix->values[offset + i*width + j] = b->values[truerow + j]; 
+  for(i=0; i<B->nrows; i++) {
+    dst_truerow = C->rowswap[A->nrows + i];
+    src_truerow = B->rowswap[i];
+    for (j=0; j<B->width; j++) {
+      C->values[dst_truerow + j] = B->values[src_truerow + j]; 
     }
   }
-  return newmatrix;
+  return C;
 }
 
-packedmatrix *mzd_invert_naiv(packedmatrix *target, const packedmatrix *identity) {
-  packedmatrix *huge, *inverse;
+packedmatrix *mzd_invert_naiv(packedmatrix *INV, packedmatrix *A, const packedmatrix *I) {
+  packedmatrix *H;
   int x;
 
-  huge=mzd_concat(target, identity);
+  H = mzd_concat(NULL, A, I);
 
-  x = mzd_reduce_naiv(huge, TRUE);
+  x = mzd_reduce_naiv(H, TRUE);
 
-  if (x == FALSE) { mzd_free(huge); return NULL; }
+  if (x == FALSE) { 
+    mzd_free(H); 
+    return NULL; 
+  }
   
-  inverse=mzd_submatrix(huge, 0, target->ncols, target->nrows, 
-			target->ncols*2);
+  INV = mzd_submatrix(INV, H, 0, A->ncols, A->nrows, A->ncols*2);
 
-  mzd_free(huge);
-  return inverse;
+  mzd_free(H);
+  return INV;
 }
 
 packedmatrix *mzd_add(packedmatrix *ret, const packedmatrix *left, const packedmatrix *right) {
@@ -487,14 +495,18 @@ packedmatrix *_mzd_add_impl(packedmatrix *C, const packedmatrix *A, const packed
   return C;
 }
 
-packedmatrix *mzd_submatrix(const packedmatrix *m, const int startrow, const int startcol, const int endrow, const int endcol) {
+packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *m, const int startrow, const int startcol, const int endrow, const int endcol) {
   int nrows, ncols, truerow, i, colword, x, y, block, spot, startword;
   word temp  = 0;
   
   nrows = endrow - startrow;
   ncols = endcol - startcol;
 
-  packedmatrix *newmatrix = mzd_init(nrows, ncols);
+  if (S == NULL) {
+    S = mzd_init(nrows, ncols);
+  } else if(S->nrows != nrows || S->ncols != ncols) {
+    m4ri_die("mzd_submatrix: got S with dimension %d x %d but expected %d x %d\n",S->nrows,S->ncols,nrows,ncols);
+  }
 
   startword = startcol / RADIX;
 
@@ -507,7 +519,7 @@ packedmatrix *mzd_submatrix(const packedmatrix *m, const int startrow, const int
       for(y = startcol, colword=0; colword<ncols/RADIX; colword++, y+=RADIX) {
 	block = truerow + colword + startword;
 	temp = m->values[block];
-	newmatrix->values[newmatrix->rowswap[i] + colword] = temp;
+	S->values[S->rowswap[i] + colword] = temp;
       }
 
       /* process remaining bits */
@@ -515,7 +527,7 @@ packedmatrix *mzd_submatrix(const packedmatrix *m, const int startrow, const int
 	colword = ncols/RADIX;
 	block = truerow + colword;
 	temp = m->values[block] & ~((ONE<<(RADIX-ncols%RADIX))-1);
-	newmatrix->values[newmatrix->rowswap[i] + colword] = temp;
+	S->values[S->rowswap[i] + colword] = temp;
       } 
     }
 
@@ -529,17 +541,17 @@ packedmatrix *mzd_submatrix(const packedmatrix *m, const int startrow, const int
       for(y = startcol, colword=0; colword<ncols/RADIX; colword++, y+=RADIX) {
 	block = truerow + colword + startword;
 	temp = (m->values[block] << (spot)) | (m->values[block + 1] >> (RADIX-spot) ); 
-	newmatrix->values[newmatrix->rowswap[i] + colword] = temp;
+	S->values[S->rowswap[i] + colword] = temp;
       }
       /* process remaining bits (lazy)*/
       colword = ncols/RADIX;
       for (y=0; y < ncols%RADIX; y++) {
 	temp = mzd_read_bit(m, x, startcol + colword*RADIX + y);
-	mzd_write_bit(newmatrix, i, colword*RADIX + y, temp);
+	mzd_write_bit(S, i, colword*RADIX + y, temp);
       }
     }
   }
-  return newmatrix;
+  return S;
 }
 
 void mzd_combine( packedmatrix * dst, const int row3, const int startblock3,

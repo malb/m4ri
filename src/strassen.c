@@ -2,7 +2,6 @@
  *
  *            M4RI: Method of the Four Russians Inversion
  *
- *       Copyright (C) 2007, 2008 Gregory Bard <bard@fordham.edu>
  *       Copyright (C) 2008 Martin Albrecht <M.R.Albrecht@rhu.ac.uk>
  *
  *  Distributed under the terms of the GNU General Public License (GPL)

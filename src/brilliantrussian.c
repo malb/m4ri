@@ -392,9 +392,8 @@ void mzd_top_reduce_m4ri(packedmatrix *m, int k, packedmatrix *T, int *L) {
   }
 }
 
-packedmatrix *mzd_invert_m4ri(packedmatrix *m, 
-			 packedmatrix *identity, int k) {
-  packedmatrix *big = mzd_concat(m, identity);
+packedmatrix *mzd_invert_m4ri(packedmatrix *m, packedmatrix *I, int k) {
+  packedmatrix *big = mzd_concat(NULL, m, I);
   int size=m->ncols;
   if (k == 0) {
     k = m4ri_opt_k(m->nrows, m->ncols, 0);
@@ -414,7 +413,7 @@ packedmatrix *mzd_invert_m4ri(packedmatrix *m,
     }
   }
   if (i == size)
-    answer=mzd_submatrix(big, 0, size, size, size*2);
+    answer=mzd_submatrix(NULL, big, 0, size, size, size*2);
   
   m4ri_mm_free(mylookups);
   mzd_free(mytable);
