@@ -16,11 +16,15 @@
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
 
+#ifndef HAVE_SSE2
+#undef HAVE_MM_MALLOC
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include "misc.h"
-#ifdef HAVE_SSE2
+#ifdef HAVE_MM_MALLOC
 #include <mm_malloc.h>
 #endif
 
@@ -81,7 +85,7 @@ void *m4ri_mm_calloc( int count, int size ) {
   /* this function calls calloc with the given inputs, 
      but dies with an error message if a NULL is returned */
 
-#ifdef HAVE_SSE2
+#ifdef HAVE_MM_MALLOC
   void *newthing = _mm_malloc(count*size, 16);
 #else
   void *newthing = calloc(count, size);
@@ -90,7 +94,7 @@ void *m4ri_mm_calloc( int count, int size ) {
     m4ri_die("m4ri_mm_calloc: calloc returned NULL\n");
     return NULL; /* unreachable. */
   }
-#ifdef HAVE_SSE2
+#ifdef HAVE_MM_MALLOC
   char *b = (char*)newthing;
   int i;
   for(i=0; i< count*size; i++) {
@@ -101,7 +105,7 @@ void *m4ri_mm_calloc( int count, int size ) {
 }
 
 void *m4ri_mm_malloc( int size ) {
-#ifdef HAVE_SSE2
+#ifdef HAVE_MM_MALLOC
   void *newthing = _mm_malloc(size, 16);
 #else
   void *newthing=malloc( size );

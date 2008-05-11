@@ -145,9 +145,19 @@ AC_CACHE_CHECK(for x86 cpuid $1 output, ax_cv_gcc_x86_cpuid_$1,
  [AC_RUN_IFELSE([AC_LANG_PROGRAM([#include <stdio.h>], [
      int op = $1, eax, ebx, ecx, edx;
      FILE *f;
-      __asm__("cpuid"
-        : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx)
-        : "a" (op));
+     /* 64-bit code is easy */
+     if (sizeof(long) == 8) {
+        __asm__("cpuid"
+                : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx)
+                : "a" (op));
+     } else {
+        __asm__("pushl %%ebx    \n\t"
+	        "cpuid          \n\t"
+	        "movl %%ebx, %1 \n\t"
+	        "popl %%ebx     \n\t"
+                : "=a" (eax), "=r" (ebx), "=c" (ecx), "=d" (edx)
+                : "a" (op));
+     }
      f = fopen("conftest_cpuid", "w"); if (!f) return 1;
      fprintf(f, "%x:%x:%x:%x\n", eax, ebx, ecx, edx);
      fclose(f);
@@ -269,6 +279,29 @@ AC_DEFUN([AX_EXT],
   AC_SUBST(SIMD_FLAGS)
 ])
 
+ 
+################################# 
+# Check this is SUN compiler # 
+################################# 
+
+AC_DEFUN([AX_CHECK_SUN_COMPILER], 
+[ 
+       $CC -V 2>test.txt 
+       SUN_STR=`head -1 test.txt |cut -f2 -d" "` 
+       rm -rf test.txt 
+       if test "$SUN_STR" = "Sun"; then 
+               SUN_CC_COMPILER=yes 
+       fi 
+
+       $CXX -V 2>test.txt 
+       SUN_STR=`head -1 test.txt |cut -f2 -d" "` 
+       rm -rf test.txt 
+       if test "$SUN_STR" = "Sun"; then 
+               SUN_CXX_COMPILER=yes 
+       fi 
+
+]) 
+
 # ===========================================================================
 #                                    Main
 # ===========================================================================
@@ -290,7 +323,17 @@ case $host_cpu in
 	AX_EXT()
 esac
 
+AX_CHECK_SUN_COMPILER()
+C99_FLAG="-std=c99"
+if test "x$SUN_CC_COMPILER" = "xyes"; then
+   C99_FLAG="-xc99=all,lib"
+fi
+
+AC_SUBST(C99_FLAG)
+
 AC_PROG_MAKE_SET
+
+AC_CHECK_HEADER([mm_malloc.h],AC_DEFINE(HAVE_MM_MALLOC,,[Support aligned allocations]),)
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
