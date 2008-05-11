@@ -224,7 +224,7 @@ packedmatrix *mzd_transpose(packedmatrix *newmatrix, const packedmatrix *data) {
     for (j=0; j<newmatrix->width; j++) {
       temp=(word)0;
       for (k=0; k<RADIX; k++) {
-	if (  (j*RADIX+k) < data->nrows ) { 
+	if (  (j*RADIX+k) < (unsigned int)data->nrows ) { 
 	  if (mzd_read_bit(data, j*RADIX+k, i)==1)
 	    SET_BIT(temp,k);
 	}
@@ -415,7 +415,7 @@ packedmatrix *mzd_concat(packedmatrix *C, const packedmatrix *A, const packedmat
 }
 
 packedmatrix *mzd_stack(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
-  int i, j, offset, src_truerow, dst_truerow;
+  int i, j, src_truerow, dst_truerow;
 
   if (A->ncols != B->ncols) {
     m4ri_die("mzd_stack: A->ncols (%d) != B->ncols (%d)!\n",A->ncols, B->ncols);
@@ -496,7 +496,7 @@ packedmatrix *_mzd_add_impl(packedmatrix *C, const packedmatrix *A, const packed
 }
 
 packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *m, const int startrow, const int startcol, const int endrow, const int endcol) {
-  int nrows, ncols, truerow, i, colword, x, y, block, spot, startword;
+  unsigned int nrows, ncols, truerow, i, colword, x, y, block, spot, startword;
   word temp  = 0;
   
   nrows = endrow - startrow;
@@ -547,7 +547,7 @@ packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *m, const int st
       colword = ncols/RADIX;
       for (y=0; y < ncols%RADIX; y++) {
 	temp = mzd_read_bit(m, x, startcol + colword*RADIX + y);
-	mzd_write_bit(S, i, colword*RADIX + y, temp);
+	mzd_write_bit(S, i, colword*RADIX + y, (BIT)temp);
       }
     }
   }

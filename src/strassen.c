@@ -99,7 +99,7 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
   _mzd_add_impl(C00, C00, X0);                  /* C00 = X0 + C00 */
 
   /* deal with rest */
-  if (B->ncols > 2*bnc) {
+  if (B->ncols > (int)(2*bnc)) {
     packedmatrix *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
     packedmatrix *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
     _mzd_mul_m4rm_impl(C_last_col, A, B_last_col, 0, NULL, NULL, TRUE);
@@ -107,7 +107,7 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
     mzd_free_window(C_last_col);
 
   }
-  if (A->nrows > 2*anr) {
+  if (A->nrows > (int)(2*anr)) {
     packedmatrix *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
     packedmatrix *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, C->ncols);
     _mzd_mul_m4rm_impl(C_last_row, A_last_row, B, 0, NULL, NULL, TRUE);
@@ -115,7 +115,7 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
     mzd_free_window(C_last_row);
 
   }
-  if (A->ncols > 2*anc) {
+  if (A->ncols > (int)(2*anc)) {
     packedmatrix *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
     packedmatrix *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
     packedmatrix *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2);
@@ -143,7 +143,6 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
 
 packedmatrix *_mzd_mul_strassen_impl_old_sched(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   int a,b,c;
-  int k;
   int anr, anc, bnr, bnc;
   
   a = A->nrows;

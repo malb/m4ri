@@ -6,7 +6,6 @@
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
  */
 
-
 #ifndef MISC_H
 #define MISC_H
  /*******************************************************************

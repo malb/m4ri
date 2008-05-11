@@ -443,7 +443,6 @@ packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
 }
 
 packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L) {
-  int i,j;
   int a = A->nrows;
   int b = A->ncols;
   int c = B->ncols;
@@ -461,7 +460,6 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
 }
 
 packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L) {
-  int i,j;
   int a = A->nrows;
   int b = A->ncols;
   int c = B->ncols;
@@ -479,12 +477,10 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
 
 
 packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L, int clear) {
-  int i,j,ii,  a,b,c, simple;
+  int i,j, a,b,c, simple;
   int truerow;
   unsigned int x;
 
-  word *C_ptr, *T_ptr;
-  
   a = A->nrows;
   b = A->ncols;
   c = B->ncols;
