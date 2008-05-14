@@ -522,7 +522,9 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
    */
 
 
+#ifdef HAVE_SSE2
   if (wide < SSE2_CUTOFF) {
+#endif
     for(i=0; i < b/k; i++) {
       mzd_make_table( B, i*k, k, T, L, 1 );
       for(j = 0; j<a; j++) {
@@ -534,15 +536,15 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
           C_ptr[ii] ^= T_ptr[ii];
       }
     }
+#ifdef HAVE_SSE2
   } else {
     for(i=0; i < b/k; i++) {
       mzd_make_table( B, i*k, k, T, L, 1 );
       for(j=0; j<a; j++) {
         x = L[ _mzd_get_bits(A, j, i*k, k) ];
-        unsigned int togo = wide;
+        int togo = wide;
         word *C_ptr = C->values + C->rowswap[j];
         const word *T_ptr = T->values + T->rowswap[x];
-#ifdef HAVE_SSE2
         /** check alignments **/
         if (ALIGNMENT(T_ptr,16) == ALIGNMENT(C_ptr,16)) {
           do {
@@ -570,12 +572,12 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
           T_ptr = (word*)src_ptr;
           togo = ((sizeof(word)*togo)%16)/sizeof(word);
         }
-#endif //HAVE_SSE2
         for(int ii=0; ii<togo; ii++)
           C_ptr[ii] ^= T_ptr[ii];
       }
     }
   }
+#endif //HAVE_SSE2
 
   /* handle rest */
   if (b%k) {
