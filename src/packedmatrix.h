@@ -545,6 +545,12 @@ void mzd_combine(packedmatrix * DST, const int row3, const int startblock3,
 		 const packedmatrix * SC2, const int row2, const int startblock2);
 
 #ifdef HAVE_SSE2
+
+/**
+ * Cutoff in words after which row length SSE2 instructions should be
+ * used.
+ */
+
 #define SSE2_CUTOFF 20
 #endif
 

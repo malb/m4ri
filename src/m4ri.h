@@ -34,12 +34,12 @@
  * Martin Albrecht and Gregory Bard. This library implements Kronrod's
  * method (or "Method of the Four Russians") for matrix multiplication
  * and the "Method of the Four Russians Inversion" algorithm for
- * matrix reduction. Strassen's multiplication formula is also
- * implemented.
+ * matrix reduction. The Strassen-Winograd matrix multiplication
+ * algorithm is also implemented.
  *
  * M4RI is available under the GPLv2+ and used by the Sage mathematics
  * software and the PolyBoRi library. See
- * http://sage.math.washington.edu/~malb/m4ri for details.
+ * http://sage.math.washington.edu/home/malb/m4ri for details.
  *
  * \example testsuite/test_multiplication.c
  * \example testsuite/test_reduction.c
