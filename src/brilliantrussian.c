@@ -68,7 +68,6 @@ static int _mzd_prep(packedmatrix *m, const int ai, const int k);
 static inline int _mzd_get_bits(const packedmatrix *m, const int x, const int y, const int k);
 
 
-
 /**-----------------------------------------------------------------------**/
 
 static int _mzd_force_non_zero(packedmatrix *m, int xstart, int xstop, int y) {
@@ -475,7 +474,6 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
   return _mzd_mul_m4rm_impl(C, A, B, k, T, L, FALSE);
 }
 
-
 packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L, int clear) {
   int i,j, a,b,c, simple;
   int truerow;
@@ -492,8 +490,8 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
     for (i=0; i<C->nrows; i++) {
       truerow = C->rowswap[i];
       for (j=0; j<C->width; j++) {
-	C->values[truerow + j] = 0;
-      }
+  	C->values[truerow + j] = 0;
+     }
     }
   }
 
@@ -506,7 +504,6 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
     T = mzd_init(TWOPOW(k), c);
     L = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
   }
-
   for(i=0; i < b/k; i++) {
 
     /**
@@ -517,28 +514,24 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
      * \f$T_x\f$.
      */
     mzd_make_table( B, i*k, k, T, L, 1 );
-    
+
+    /**
+     * Step 2. Read the entries 
+     *    \f$a_{j,(i-1)k+1}, a_{j,(i-1)k+2} , ... , a_{j,(i-1)k+k}.\f$
+     *
+     * Let \f$x\f$ be the \f$k\f$ bit binary number formed by the
+     * concatenation of \f$a_{j,(i-1)k+1}, ... , a_{j,ik}\f$.
+     *
+     * Step 3. for \f$h = 1,2, ... , c\f$ do
+     *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
+     */
     for(j = 0; j<a; j++) {
-
-      /**
-       * Step 2. Read the entries 
-       *    \f$a_{j,(i-1)k+1}, a_{j,(i-1)k+2} , ... , a_{j,(i-1)k+k}.\f$
-       *
-       * Let \f$x\f$ be the \f$k\f$ bit binary number formed by the
-       * concatenation of \f$a_{j,(i-1)k+1}, ... , a_{j,ik}\f$.
-       */
-
       x = L[ _mzd_get_bits(A, j, i*k, k) ];
-
-      /**
-       * Step 3. for \f$h = 1,2, ... , c\f$ do
-       *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
-       */
-      mzd_combine( C,j,0, C,j,0,  T,x,0);
-      //C_ptr = C->values + C->rowswap[j];
-      //T_ptr = T->values + T->rowswap[x];
-      //for(ii=wide-1; ii>=0 ; ii--)
-      //C_ptr[ii] ^= T_ptr[ii];
+      //mzd_combine( C,j,0, C,j,0,  T,x,0);
+      word *C_ptr = C->values + C->rowswap[j];
+      const word *T_ptr = T->values + T->rowswap[x];
+      for(int ii=0; ii<wide ; ii++)
+	C_ptr[ii] ^= T_ptr[ii];
     }
   }
 
