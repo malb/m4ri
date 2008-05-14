@@ -242,7 +242,7 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
 	}
       }
 #endif
-      for(j=0; j<wide ; j--)
+      for(j=0; j<wide ; j++)
       	m_ptr[j] ^= T_ptr[j];
 #ifdef HAVE_SSE2      
       wide = m->width - blocknum;
