@@ -565,7 +565,7 @@ void mzd_combine( packedmatrix * dst, const int row3, const int startblock3,
   
   if( dst == sc1 && row1 == row3 && startblock1 == startblock3) {
 #ifdef HAVE_SSE2
-    if(wide>6) {
+    if(wide > SSE2_CUTOFF) {
       /** check alignments **/
       if (ALIGNMENT(b2_ptr,16) == ALIGNMENT(b1_ptr,16)) {
 	do {

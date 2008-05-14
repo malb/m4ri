@@ -213,16 +213,15 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
       word *T_ptr = T->values + blocknum + T->rowswap[tablerow];
 #ifdef HAVE_SSE2
       /** check alignments **/
-      if (wide>4) {
-	const unsigned long alignment = (unsigned long)m_ptr%16;
-	if ((unsigned long)T_ptr%16 == alignment) {
+      if (wide > SSE2_CUTOFF) {
+	if (ALIGNMENT(T_ptr,16) == ALIGNMENT(m_ptr, 16)) {
 	  do {
 	    *m_ptr++ ^= *T_ptr++;
 	    wide--;
-	  } while((unsigned long)m_ptr%16 && wide);
+	  } while(ALIGNMENT(m_ptr,16) && wide);
 	}
       
-	if (((unsigned long)m_ptr%16==0) && ((unsigned long)T_ptr%16==0)) {
+	if (ALIGNMENT(m_ptr,16)==0 && ALIGNMENT(T_ptr,16)==0) {
 	  __m128i *__m_ptr = (__m128i*)m_ptr;
 	  __m128i *__T_ptr = (__m128i*)T_ptr;
 	  const __m128i *end_ptr = (__m128i*)((unsigned long)(m_ptr + wide) & ~0xF);
@@ -243,7 +242,7 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
 	}
       }
 #endif
-      for(j=wide-1; j>=0 ; j--)
+      for(j=0; j<wide ; j--)
       	m_ptr[j] ^= T_ptr[j];
 #ifdef HAVE_SSE2      
       wide = m->width - blocknum;
@@ -522,10 +521,10 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
    *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
    */
 
-  for(i=0; i < b/k; i++) {
-    mzd_make_table( B, i*k, k, T, L, 1 );
 
-    if (wide<6) {
+  if (wide < SSE2_CUTOFF) {
+    for(i=0; i < b/k; i++) {
+      mzd_make_table( B, i*k, k, T, L, 1 );
       for(j = 0; j<a; j++) {
         x = L[ _mzd_get_bits(A, j, i*k, k) ];
         /* mzd_combine( C,j,0, C,j,0,  T,x,0); */
@@ -534,7 +533,10 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
         for(int ii=0; ii<wide ; ii++)
           C_ptr[ii] ^= T_ptr[ii];
       }
-    } else {
+    }
+  } else {
+    for(i=0; i < b/k; i++) {
+      mzd_make_table( B, i*k, k, T, L, 1 );
       for(j=0; j<a; j++) {
         x = L[ _mzd_get_bits(A, j, i*k, k) ];
         unsigned int togo = wide;
