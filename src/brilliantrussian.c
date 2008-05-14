@@ -527,11 +527,20 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
      */
     for(j = 0; j<a; j++) {
       x = L[ _mzd_get_bits(A, j, i*k, k) ];
-      //mzd_combine( C,j,0, C,j,0,  T,x,0);
+      /*
+       * The following code is equivalent to:
+       *
+       * mzd_combine( C,j,0, C,j,0,  T,x,0);
+       *
+       * But we don't call it since it seems provide bad performance
+       * on Opterons. However, for medium sized matrices (n>=2000) we
+       * pay a performance penalty for not using it (SSE2) on the
+       * Core2Duo. So we should reintroduce the SSE2 stuff below.
+       */
       word *C_ptr = C->values + C->rowswap[j];
       const word *T_ptr = T->values + T->rowswap[x];
       for(int ii=0; ii<wide ; ii++)
-	C_ptr[ii] ^= T_ptr[ii];
+      C_ptr[ii] ^= T_ptr[ii];
     }
   }
 
