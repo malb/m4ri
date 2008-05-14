@@ -1,6 +1,8 @@
 /**
  * \file strassen.h
- * \brief Matrix operations using Strassen's formulas.
+ *
+ * \brief Matrix operations using Strassen's formulas including
+ * Winograd's improvements.
  *
  * \author Gregory Bard <bard@fordham.edu>
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
@@ -33,8 +35,8 @@
 #include "brilliantrussian.h"
 
 /**
- * \brief Matrix multiplication via Strassen's matrix multiplication formula,
- * i.e. compute C = AB. 
+ * \brief Matrix multiplication via the Strassen-Winograd matrix
+ * multiplication algorithm, i.e. compute C = AB.
  * 
  * This is the wrapper function including bounds checks. See
  * _mzd_mul_strassen_impl for implementation details.
@@ -48,16 +50,17 @@
 packedmatrix *mzd_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 
 /**
- * \brief Matrix multiplication via Strassen's matrix multiplication
- * formula, i.e. compute C = AB. 
+ * \brief Matrix multiplication via the Strassen-Winograd matrix
+ * multiplication algorithm, i.e. compute C = AB.
  * 
  * This is the actual implementation. Any matrix where either the
  * number of rows or the number of columns is smaller than cutoff is
  * processed using the M4RM algorithm.
  *
  * The parameter cutoff should be chosen such that all three matrices
- * of the subproduct fit into L2 cache. If \f$c\f$ is the cutoff and \f$L_2\f$ the size of the L2 cache in bytes, then
- * then \f$3/8c^2 \leq L_2\f$ should hold.
+ * of the subproduct fit into L2 cache. If \f$c\f$ is the cutoff and
+ * \f$L_2\f$ the size of the L2 cache in bytes, then then \f$3/8c^2
+ * \leq L_2\f$ should hold.
  *
  * \param C Preallocated product matrix, may be NULL for automatic creation.
  * \param A Input matrix A
