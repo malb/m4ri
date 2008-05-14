@@ -504,43 +504,74 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
     T = mzd_init(TWOPOW(k), c);
     L = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
   }
-  for(i=0; i < b/k; i++) {
 
-    /**
-     * The algorithm proceeds as follows:
-     * 
-     * Step 1. Make a Gray code table of all the \f$2^k\f$ linear combinations
-     * of the \f$k\f$ rows of \f$B_i\f$.  Call the \f$x\f$-th row
-     * \f$T_x\f$.
-     */
+  /**
+   * The algorithm proceeds as follows:
+   * 
+   * Step 1. Make a Gray code table of all the \f$2^k\f$ linear combinations
+   * of the \f$k\f$ rows of \f$B_i\f$.  Call the \f$x\f$-th row
+   * \f$T_x\f$.
+   *
+   * Step 2. Read the entries 
+   *    \f$a_{j,(i-1)k+1}, a_{j,(i-1)k+2} , ... , a_{j,(i-1)k+k}.\f$
+   *
+   * Let \f$x\f$ be the \f$k\f$ bit binary number formed by the
+   * concatenation of \f$a_{j,(i-1)k+1}, ... , a_{j,ik}\f$.
+   *
+   * Step 3. for \f$h = 1,2, ... , c\f$ do
+   *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
+   */
+
+  for(i=0; i < b/k; i++) {
     mzd_make_table( B, i*k, k, T, L, 1 );
 
-    /**
-     * Step 2. Read the entries 
-     *    \f$a_{j,(i-1)k+1}, a_{j,(i-1)k+2} , ... , a_{j,(i-1)k+k}.\f$
-     *
-     * Let \f$x\f$ be the \f$k\f$ bit binary number formed by the
-     * concatenation of \f$a_{j,(i-1)k+1}, ... , a_{j,ik}\f$.
-     *
-     * Step 3. for \f$h = 1,2, ... , c\f$ do
-     *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
-     */
-    for(j = 0; j<a; j++) {
-      x = L[ _mzd_get_bits(A, j, i*k, k) ];
-      /*
-       * The following code is equivalent to:
-       *
-       * mzd_combine( C,j,0, C,j,0,  T,x,0);
-       *
-       * But we don't call it since it seems provide bad performance
-       * on Opterons. However, for medium sized matrices (n>=2000) we
-       * pay a performance penalty for not using it (SSE2) on the
-       * Core2Duo. So we should reintroduce the SSE2 stuff below.
-       */
-      word *C_ptr = C->values + C->rowswap[j];
-      const word *T_ptr = T->values + T->rowswap[x];
-      for(int ii=0; ii<wide ; ii++)
-      C_ptr[ii] ^= T_ptr[ii];
+    if (wide<6) {
+      for(j = 0; j<a; j++) {
+        x = L[ _mzd_get_bits(A, j, i*k, k) ];
+        /* mzd_combine( C,j,0, C,j,0,  T,x,0); */
+        word *C_ptr = C->values + C->rowswap[j];
+        const word *T_ptr = T->values + T->rowswap[x];
+        for(int ii=0; ii<wide ; ii++)
+          C_ptr[ii] ^= T_ptr[ii];
+      }
+    } else {
+      for(j=0; j<a; j++) {
+        x = L[ _mzd_get_bits(A, j, i*k, k) ];
+        unsigned int togo = wide;
+        word *C_ptr = C->values + C->rowswap[j];
+        const word *T_ptr = T->values + T->rowswap[x];
+#ifdef HAVE_SSE2
+        /** check alignments **/
+        if (ALIGNMENT(T_ptr,16) == ALIGNMENT(C_ptr,16)) {
+          do {
+            *C_ptr++ ^= *T_ptr++;
+            togo--;
+          } while(ALIGNMENT(C_ptr,16) && togo);
+        }
+
+        if (ALIGNMENT(C_ptr,16)==0 && ALIGNMENT(T_ptr,16)==0) {
+          __m128i *dst_ptr = (__m128i*)C_ptr;
+          __m128i *src_ptr = (__m128i*)T_ptr;
+          const __m128i *end_ptr = (__m128i*)((unsigned long)(C_ptr + togo) & ~0xF);
+          __m128i xmm1;
+          
+          do {
+            xmm1 = _mm_load_si128(dst_ptr);
+            const __m128i xmm2 = _mm_load_si128(src_ptr);
+            xmm1 = _mm_xor_si128(xmm1, xmm2);
+            _mm_store_si128(dst_ptr, xmm1);
+            ++src_ptr;
+            ++dst_ptr;
+          } while(dst_ptr < end_ptr);
+          
+          C_ptr = (word*)dst_ptr;
+          T_ptr = (word*)src_ptr;
+          togo = ((sizeof(word)*togo)%16)/sizeof(word);
+        }
+#endif //HAVE_SSE2
+        for(int ii=0; ii<togo; ii++)
+          C_ptr[ii] ^= T_ptr[ii];
+      }
     }
   }
 

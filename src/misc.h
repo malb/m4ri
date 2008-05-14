@@ -153,6 +153,16 @@ typedef unsigned char BIT;
 
 #define RIGHTMOST_BITS(w, n) (w &  ((ONE<<n)-1))
 
+/**
+ * \brief return alignment of addr w.r.t. n. For example the address
+ * 17 would be 1 aligned w.r.t. 16.
+ *
+ * \param addr
+ * \param n
+ */
+
+#define ALIGNMENT(addr, n) (((unsigned long)(addr))%n)
+
 /**** Error Handling *****/
 
 /**

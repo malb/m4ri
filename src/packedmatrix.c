@@ -567,15 +567,14 @@ void mzd_combine( packedmatrix * dst, const int row3, const int startblock3,
 #ifdef HAVE_SSE2
     if(wide>6) {
       /** check alignments **/
-      unsigned long alignment = (unsigned long)b1_ptr%16;
-      if ((unsigned long)b2_ptr%16 == alignment) {
+      if (ALIGNMENT(b2_ptr,16) == ALIGNMENT(b1_ptr,16)) {
 	do {
 	  *b1_ptr++ ^= *b2_ptr++;
 	  wide--;
-	} while((unsigned long)b1_ptr%16 && wide);
+	} while(ALIGNMENT(b1_ptr,16) && wide);
       }
 
-      if (((unsigned long)b1_ptr%16==0) && ((unsigned long)b2_ptr%16==0)) {
+      if (ALIGNMENT(b1_ptr,16)==0 && ALIGNMENT(b2_ptr,16)==0) {
 	__m128i *dst_ptr = (__m128i*)b1_ptr;
 	__m128i *src_ptr = (__m128i*)b2_ptr;
 	const __m128i *end_ptr = (__m128i*)((unsigned long)(b1_ptr + wide) & ~0xF);
