@@ -39,7 +39,7 @@
  *
  * M4RI is available under the GPLv2+ and used by the Sage mathematics
  * software and the PolyBoRi library. See
- * http://sage.math.washington.edu/home/malb/m4ri for details.
+ * http://m4ri.sagemath.org for details.
  *
  * \example testsuite/test_multiplication.c
  * \example testsuite/test_reduction.c

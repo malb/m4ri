@@ -1,0 +1,47 @@
+#!/bin/sh
+
+output="cpucycles.o cpucycles.h"
+cleanup="test cpucycles-impl.o cpucycles-impl.h cpucycles-impl.c"
+
+exec 2>do.notes
+rm -f $output $cleanup
+
+(
+  echo amd64tscfreq gcc
+  echo amd64cpuinfo gcc
+  echo x86tscfreq gcc
+  echo x86cpuinfo gcc
+  echo powerpclinux gcc
+  echo powerpcmacos gcc
+  echo powerpcaix gcc
+  echo powerpcaix ibmcc
+  echo sparcpsrinfo gcc
+  echo sparcpsrinfo suncc
+  echo sparc32psrinfo gcc
+  echo sparc32psrinfo suncc
+  echo hppapstat gcc
+  echo hppapstat hpcc
+  echo alpha gcc
+  echo clockmonotonic gcc
+  echo gettimeofday gcc
+) | (
+  while read name compiler
+  do
+    echo ===== Trying $name.c with $compiler... >&2
+    rm -f $cleanup
+    cp $name.c cpucycles-impl.c || continue
+    cp $name.h cpucycles-impl.h || continue
+    env COMPILER=$compiler ./compile -c cpucycles-impl.c || continue
+    env COMPILER=$compiler ./compile -o test test.c cpucycles-impl.o || continue
+    ./test || continue
+    echo ===== Success. Using $name.c. >&2
+    mv cpucycles-impl.o cpucycles.o
+    mv cpucycles-impl.h cpucycles.h
+    rm -f $cleanup
+    exit 0
+  done
+  
+  echo ===== Giving up. >&2
+  rm -f $output $cleanup
+  exit 111
+)

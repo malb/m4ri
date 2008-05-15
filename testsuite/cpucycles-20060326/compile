@@ -1,0 +1,31 @@
+#!/bin/sh
+case "$COMPILER" in
+  suncc)
+    case "$ARCHITECTURE" in
+      64) /opt/SUNWspro/bin/cc -xarch=v9 -O2 "$@" ;;
+      32) /opt/SUNWspro/bin/cc -xarch=v8 -O2 "$@" ;;
+      *)  /opt/SUNWspro/bin/cc -O2 "$@" ;;
+    esac
+    ;;
+  ibmcc)
+    case "$ARCHITECTURE" in
+      64) xlc -q64 -O2 "$@" ;;
+      32) xlc -q32 -O2 "$@" ;;
+      *)  xlc -O2 "$@" ;;
+    esac
+    ;;
+  hpcc)
+    case "$ARCHITECTURE" in
+      64) /opt/ansic/bin/cc +DD64 -O2 "$@" ;;
+      32) /opt/ansic/bin/cc +DD32 -O2 "$@" ;;
+      *)  /opt/ansic/bin/cc -O2 "$@" ;;
+    esac
+    ;;
+  *)
+    case "$ARCHITECTURE" in
+      64) gcc -m64 -O2 "$@" ;;
+      32) gcc -m32 -O2 "$@" ;;
+      *)  gcc -O2 "$@" ;;
+    esac
+    ;;
+esac

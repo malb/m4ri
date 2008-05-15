@@ -1,0 +1,6 @@
+===== Trying amd64tscfreq.c with gcc...
+cpucycles-impl.o: In function `cpucycles_amd64tscfreq_persecond':
+cpucycles-impl.c:(.text+0x3d): undefined reference to `sysctlbyname'
+collect2: ld returned 1 exit status
+===== Trying amd64cpuinfo.c with gcc...
+===== Success. Using amd64cpuinfo.c.
