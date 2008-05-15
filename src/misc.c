@@ -118,7 +118,7 @@ void *m4ri_mm_malloc( int size ) {
 }
 
 void m4ri_mm_free(void *condemned) { 
-  free(condemned); 
+  _mm_free(condemned); 
 };
 
 BIT m4ri_coin_flip() {
