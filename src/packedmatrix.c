@@ -25,9 +25,6 @@
 
 #define SAFECHAR (int)(RADIX+RADIX/3)
 
-static BIT mzd_big_dot_product( const packedmatrix *a, const packedmatrix *bT, const int rowofa, const int rowofb );
-static inline BIT mzd_dot_product( word a, word b );
-
 packedmatrix *mzd_init(int r, int c) {
   packedmatrix *newmatrix;
   int i;
@@ -236,60 +233,42 @@ packedmatrix *mzd_transpose(packedmatrix *newmatrix, const packedmatrix *data) {
   return newmatrix;
 }
 
-static inline BIT _mzd_dot_product( word a, word b ) {
-  word temp=a & b;
-  int total=0;
-
-  while (temp)  {
-    total = !total;
-    temp = temp & (temp - 1);
-  }
-  return total;
-}
-
-/* Internal to naive matrix mult */
-static BIT _mzd_big_dot_product( const packedmatrix *a, const packedmatrix *bT, const int rowofa, const int rowofb ) {
-  /* ``a slot'' is a row of A, and a column of B when calcing AB */
-  /* but since we use B^T so that we are working only with rows, */
-  /* ``a slot'' of A is a row, ``a slot'' of B is a row of B^T */
-  int total, i;
-
-  total=0;
-  for (i=0; i< a->width; i++) {
-    total+=_mzd_dot_product( mzd_read_block(a, rowofa, i*RADIX), 
-			     mzd_read_block(bT, rowofb, i*RADIX) );
-  }
-
-  return (BIT)(total % 2);
-}
-
-packedmatrix *mzd_mul_naiv_t(packedmatrix *C, const packedmatrix *A, const packedmatrix *bT ) {
-  int i, j;
-  int newrows=A->nrows;
-  int newcols=bT->nrows;
+packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
+  int i, j, ii, jj;
+  packedmatrix *bT = mzd_transpose(NULL, B);
+  word temp, values;
+  word *a, *b, *c;
 
   if (C==NULL) {
-    C=mzd_init(newrows, newcols);
+    C=mzd_init(A->nrows, B->ncols);
   } else {
-    if (C->nrows != newrows || C->ncols != newcols) {
+    if (C->nrows != A->nrows || C->ncols != B->ncols) {
       m4ri_die("mzd_mul_naiv_t: Provided return matrix has wrong dimensions.\n");
     }
   }
 
-  for (i=0; i<newrows; i++) {
-    for (j=0; j<newcols; j++) {
-      mzd_write_bit(C, i, j, _mzd_big_dot_product( A, bT, i, j ) );
+  for (i=0; i<C->nrows; i++) {
+    a = A->values + A->rowswap[i];
+    c = C->values + C->rowswap[i];
+    
+    for (j=0; j<C->ncols; j++) {
+      temp = 0;
+      b = bT->values + bT->rowswap[j];
+      for (ii=0; ii<A->width; ii++)
+        temp ^= a[ii] & b[ii];
+      /* compute parity */
+      temp ^= temp >> 32;
+      temp ^= temp >> 16;
+      temp ^= temp >> 8;
+      temp ^= temp >> 4;
+      temp &= 0xf;
+      temp = (0x6996 >> temp) & 1;
+      if (temp) 
+        SET_BIT(c[j/RADIX],j%RADIX);
     }
   }
 
-  return C;
-}
-  
-packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A,  const packedmatrix *B) {
-  packedmatrix *bT = mzd_transpose(NULL, B);
-  C = mzd_mul_naiv_t(C, A, bT );
   mzd_free(bT);
-
   return C;
 }
 

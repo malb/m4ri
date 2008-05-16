@@ -295,23 +295,6 @@ void mzd_row_add(packedmatrix *M, const int sourcerow, const int destrow);
 packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A );
 
 /**
- * \brief Naive cubic matrix multiplication after prepcomputation.
- *
- * That is, compute C such that C == AB. Where B has to be
- * provided transposed as bT.
- *
- * \param C Preallocated product matrix, may be NULL for automatic creation.
- * \param A Input matrix A
- * \param bT Input matrix  B^T
- *
- * \note Normally, if you will multiply several times by b, it is
- * smarter to calculate bT yourself, and keep it, and then use the
- * function called matrixTimesMatrixTranspose
- */
-
-packedmatrix *mzd_mul_naiv_t(packedmatrix *C, const packedmatrix *A, const packedmatrix *bT);
-  
-/**
  * \brief Naive cubic matrix multiplication.
  *
  * That is, compute C such that C == AB.
