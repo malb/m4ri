@@ -17,7 +17,6 @@
  *                  http://www.gnu.org/licenses/
  *
  ********************************************************************/
-
 #ifdef HAVE_SSE2
 #include <emmintrin.h>
 #endif
@@ -473,6 +472,7 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
   return _mzd_mul_m4rm_impl(C, A, B, k, T, L, FALSE);
 }
 
+#define M4RM_BLOCKSIZE 768
 packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L, int clear) {
   int i,j, a,b,c, simple;
   int truerow;
@@ -493,9 +493,8 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
      }
     }
   }
-
   if (k == 0) {
-    k = m4ri_opt_k(a,b,c);
+    k = m4ri_opt_k(M4RM_BLOCKSIZE,b,c);
   }
 
   if (T == NULL && L == NULL) {
@@ -521,13 +520,13 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
    *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
    */
 
-
-#ifdef HAVE_SSE2
-  if (wide < SSE2_CUTOFF) {
-#endif
-    for(i=0; i < b/k; i++) {
+  unsigned long s, start;
+  for (start=0; start + M4RM_BLOCKSIZE <= a; start += M4RM_BLOCKSIZE) {
+    const unsigned long end = b/k;
+    for(i=0; i < end; i++) {
       mzd_make_table( B, i*k, k, T, L, 1 );
-      for(j = 0; j<a; j++) {
+      for(s = 0; s < M4RM_BLOCKSIZE; s++) {
+        j = start + s;
         x = L[ _mzd_get_bits(A, j, i*k, k) ];
         /* mzd_combine( C,j,0, C,j,0,  T,x,0); */
         word *C_ptr = C->values + C->rowswap[j];
@@ -536,48 +535,20 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
           C_ptr[ii] ^= T_ptr[ii];
       }
     }
-#ifdef HAVE_SSE2
-  } else {
-    for(i=0; i < b/k; i++) {
-      mzd_make_table( B, i*k, k, T, L, 1 );
-      for(j=0; j<a; j++) {
-        x = L[ _mzd_get_bits(A, j, i*k, k) ];
-        int togo = wide;
-        word *C_ptr = C->values + C->rowswap[j];
-        const word *T_ptr = T->values + T->rowswap[x];
-        /** check alignments **/
-        if (ALIGNMENT(T_ptr,16) == ALIGNMENT(C_ptr,16)) {
-          do {
-            *C_ptr++ ^= *T_ptr++;
-            togo--;
-          } while(ALIGNMENT(C_ptr,16) && togo);
-        }
-
-        if (ALIGNMENT(C_ptr,16)==0 && ALIGNMENT(T_ptr,16)==0) {
-          __m128i *dst_ptr = (__m128i*)C_ptr;
-          __m128i *src_ptr = (__m128i*)T_ptr;
-          const __m128i *end_ptr = (__m128i*)((unsigned long)(C_ptr + togo) & ~0xF);
-          __m128i xmm1;
-          
-          do {
-            xmm1 = _mm_load_si128(dst_ptr);
-            const __m128i xmm2 = _mm_load_si128(src_ptr);
-            xmm1 = _mm_xor_si128(xmm1, xmm2);
-            _mm_store_si128(dst_ptr, xmm1);
-            ++src_ptr;
-            ++dst_ptr;
-          } while(dst_ptr < end_ptr);
-          
-          C_ptr = (word*)dst_ptr;
-          T_ptr = (word*)src_ptr;
-          togo = ((sizeof(word)*togo)%16)/sizeof(word);
-        }
-        for(int ii=0; ii<togo; ii++)
-          C_ptr[ii] ^= T_ptr[ii];
-      }
+  }
+    
+  for(i=0; i < b/k; i++) {
+    mzd_make_table( B, i*k, k, T, L, 1 );
+    for(s = 0; s < a-start; s++) {
+      j = start + s;
+      x = L[ _mzd_get_bits(A, j, i*k, k) ];
+      /* mzd_combine( C,j,0, C,j,0,  T,x,0); */
+      word *C_ptr = C->values + C->rowswap[j];
+      const word *T_ptr = T->values + T->rowswap[x];
+      for(int ii=0; ii<wide ; ii++)
+        C_ptr[ii] ^= T_ptr[ii];
     }
   }
-#endif //HAVE_SSE2
 
   /* handle rest */
   if (b%k) {
