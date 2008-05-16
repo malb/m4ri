@@ -17,7 +17,7 @@ typ = options.typ
 cycles = []
 
 pattern = "cpu cycles:"
-for i in range(17):
+for i in range(9):
     if typ == "red":
 	out = commands.getoutput("./bench_reduction %d"%n)
     elif typ == "mul":
@@ -32,6 +32,9 @@ for i in range(17):
 # median as adviced in the cpucycles docs
 cycles = sorted(cycles)
 l = len(cycles)
-total_cycles = cycles[l/2]
+cycles_med = cycles[l/2]
+cycles_min = cycles[0]
+cycles_max = cycles[-1]
+cycles_avg = sum(cycles)/len(cycles)
 
-print "n: %5d, cpu cycles:  %10d"%(n, total_cycles)
+print "n: %5d, min: %10d, med: %10d, avg: %10d, max: 10%d"%(n, cycles_min, cycles_med, cycles_avg, cycles_max)
