@@ -533,63 +533,63 @@ packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *m, const int st
   return S;
 }
 
-void mzd_combine( packedmatrix * dst, const int row3, const int startblock3,
-		  const packedmatrix * sc1, const int row1, const int startblock1, 
-		  const packedmatrix * sc2, const int row2, const int startblock2) {
+void mzd_combine( packedmatrix * C, const int c_row, const int c_startblock,
+		  const packedmatrix * A, const int a_row, const int a_startblock, 
+		  const packedmatrix * B, const int b_row, const int b_startblock) {
   int i;
-  int wide = sc1->width - startblock1;
+  int wide = A->width - a_startblock;
 
-  word *b1_ptr = sc1->values + startblock1 + sc1->rowswap[row1];
-  word *b2_ptr = sc2->values + startblock2 + sc2->rowswap[row2];
+  word *a = A->values + a_startblock + A->rowswap[a_row];
+  word *b = B->values + b_startblock + B->rowswap[b_row];
   
-  if( dst == sc1 && row1 == row3 && startblock1 == startblock3) {
+  if( C == A && a_row == c_row && a_startblock == c_startblock) {
 #ifdef HAVE_SSE2
     if(wide > SSE2_CUTOFF) {
       /** check alignments **/
-      if (ALIGNMENT(b2_ptr,16) == ALIGNMENT(b1_ptr,16)) {
+      if (ALIGNMENT(a,16) == ALIGNMENT(b,16)) {
 	do {
-	  *b1_ptr++ ^= *b2_ptr++;
+	  *a++ ^= *b++;
 	  wide--;
-	} while(ALIGNMENT(b1_ptr,16) && wide);
+	} while(ALIGNMENT(a,16) && wide);
       }
 
-      if (ALIGNMENT(b1_ptr,16)==0 && ALIGNMENT(b2_ptr,16)==0) {
-	__m128i *dst_ptr = (__m128i*)b1_ptr;
-	__m128i *src_ptr = (__m128i*)b2_ptr;
-	const __m128i *end_ptr = (__m128i*)((unsigned long)(b1_ptr + wide) & ~0xF);
+      if (ALIGNMENT(a,16)==0 && ALIGNMENT(b,16)==0) {
+	__m128i *a128 = (__m128i*)a;
+	__m128i *b128 = (__m128i*)b;
+	const __m128i *eof = (__m128i*)((unsigned long)(a + wide) & ~0xF);
 	__m128i xmm1;
 
 	do {
-	  xmm1 = _mm_load_si128(dst_ptr);
-	  const __m128i xmm2 = _mm_load_si128(src_ptr);
+	  xmm1 = _mm_load_si128(a128);
+	  const __m128i xmm2 = _mm_load_si128(b128);
 	  xmm1 = _mm_xor_si128(xmm1, xmm2);
-	  _mm_store_si128(dst_ptr, xmm1);
-	  ++src_ptr;
-	  ++dst_ptr;
-	} while(dst_ptr < end_ptr);
+	  _mm_store_si128(a128, xmm1);
+	  ++b128;
+	  ++a128;
+	} while(a128 < eof);
 	
-	b1_ptr = (word*)dst_ptr;
-	b2_ptr = (word*)src_ptr;
+	a = (word*)a128;
+	b = (word*)b128;
 	wide = ((sizeof(word)*wide)%16)/sizeof(word);
       }
     }
 #endif //HAVE_SSE2
     for(i=wide-1; i >= 0; i--)
-      b1_ptr[i] ^= b2_ptr[i];
+      a[i] ^= b[i];
     return;
     
-  } else { /* dst != sc1 */
-    word *b3_ptr = dst->values + startblock3 + dst->rowswap[row3];
+  } else { /* C != A */
+    word *c = C->values + c_startblock + C->rowswap[c_row];
 
     /* this is a corner case triggered by Strassen multiplication
        which assumes certain (virtual) matrix sizes */
-    if (row1 >= sc1->nrows) {
+    if (a_row >= A->nrows) {
       for(i = wide - 1 ; i >= 0 ; i--) {
-        b3_ptr[i] = b2_ptr[i];
+        c[i] = b[i];
       }
     } else {
       for(i = wide - 1 ; i >= 0 ; i--) {
-	b3_ptr[i] = b1_ptr[i] ^ b2_ptr[i];
+	c[i] = a[i] ^ b[i];
       }
       return;
     }
