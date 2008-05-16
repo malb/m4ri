@@ -118,7 +118,11 @@ void *m4ri_mm_malloc( int size ) {
 }
 
 void m4ri_mm_free(void *condemned) { 
+#ifdef HAVE_MM_MALLOC
   _mm_free(condemned); 
+#else
+  free(condemned);
+#endif  
 };
 
 BIT m4ri_coin_flip() {
