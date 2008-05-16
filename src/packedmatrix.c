@@ -37,7 +37,7 @@ packedmatrix *mzd_init(int r, int c) {
 
   newmatrix->values=(word *)m4ri_mm_calloc( (newmatrix->width)*r, sizeof(word));
 
-  newmatrix->rowswap=(int *)m4ri_mm_malloc( r * sizeof(int));
+  newmatrix->rowswap=(unsigned int *)m4ri_mm_malloc( r * sizeof(int));
 
   /* Rowswap does not contain the rowswap index i but the correct
    * offset in the values table. Rowswap is exclusively used to access
@@ -65,7 +65,7 @@ packedmatrix *mzd_init_window(packedmatrix *m, int lowr, int lowc, int highr, in
   if (ncols%RADIX)
     window->width++;
   window->values = m->values;
-  window->rowswap = (int *)m4ri_mm_calloc( nrows, sizeof(int));
+  window->rowswap = (unsigned int *)m4ri_mm_calloc( nrows, sizeof(int));
 
   offset = lowc / RADIX;
 
@@ -234,9 +234,9 @@ packedmatrix *mzd_transpose(packedmatrix *newmatrix, const packedmatrix *data) {
 }
 
 packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
-  int i, j, ii, jj;
+  int i, j, ii;
   packedmatrix *bT = mzd_transpose(NULL, B);
-  word temp, values;
+  word temp;
   word *a, *b, *c;
 
   if (C==NULL) {

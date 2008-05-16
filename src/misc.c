@@ -123,7 +123,7 @@ void m4ri_mm_free(void *condemned) {
 #else
   free(condemned);
 #endif  
-};
+}
 
 BIT m4ri_coin_flip() {
   if (rand() < RAND_MAX/2) {

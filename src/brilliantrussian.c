@@ -441,7 +441,6 @@ packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
 
 packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L) {
   int a = A->nrows;
-  int b = A->ncols;
   int c = B->ncols;
 
   if(A->ncols != B->nrows) 
@@ -458,7 +457,6 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
 
 packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L) {
   int a = A->nrows;
-  int b = A->ncols;
   int c = B->ncols;
 
   if(A->ncols != B->nrows) 
@@ -473,17 +471,17 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
 }
 
 packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L, int clear) {
-  int i,j, a,b,c, simple;
+  int i,j, a_nr, a_nc, b_nc, simple;
   int truerow;
   unsigned int x;
 
-  a = A->nrows;
-  b = A->ncols;
-  c = B->ncols;
+  a_nr = A->nrows;
+  a_nc = A->ncols;
+  b_nc = B->ncols;
 
   int wide = C->width;
 
-  /** clear first **/
+  /* clear first */
   if (clear) {
     for (i=0; i<C->nrows; i++) {
       truerow = C->rowswap[i];
@@ -493,18 +491,15 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
     }
   }
   if (k == 0) {
-    k = m4ri_opt_k(M4RM_BLOCKSIZE,b,c);
+    k = m4ri_opt_k(M4RM_BLOCKSIZE, a_nc, b_nc);
   }
 
   if (T == NULL && L == NULL) {
     simple = 1;
-    T = mzd_init(TWOPOW(k), c);
+    T = mzd_init(TWOPOW(k), b_nc);
     L = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
   }
 
-  /* make sure that the chosen blocksize is a multiple of k for
-     simplicity*/
-  const unsigned int blocksize = DIV_CEIL(M4RM_BLOCKSIZE, k)*k;
 
   /**
    * The algorithm proceeds as follows:
@@ -524,41 +519,92 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
    */
 
   unsigned long s, start;
-  for (start=0; start + blocksize <= a; start += blocksize) {
-    const unsigned long end = b/k;
-    for(i=0; i < end; i++) {
-      mzd_make_table( B, i*k, k, T, L, 1 );
-      for(s = 0; s < blocksize; s++) {
-        j = start + s;
-        x = L[ _mzd_get_bits(A, j, i*k, k) ];
-        /* mzd_combine( C,j,0, C,j,0,  T,x,0); */
-        word *C_ptr = C->values + C->rowswap[j];
-        const word *T_ptr = T->values + T->rowswap[x];
-        for(int ii=0; ii<wide ; ii++)
-          C_ptr[ii] ^= T_ptr[ii];
+  const unsigned int blocksize = M4RM_BLOCKSIZE;
+  const unsigned long end = a_nc/k;
+
+#ifdef HAVE_SSE2
+  if (wide < SSE2_CUTOFF) {
+#endif
+    for (start=0; start + blocksize <= a_nr; start += blocksize) {
+      for(i=0; i < end; i++) {
+        mzd_make_table( B, i*k, k, T, L, 1 );
+        for(s = 0; s < blocksize; s++) {
+          j = start + s;
+          x = L[ _mzd_get_bits(A, j, i*k, k) ];
+          word * const c = C->values + C->rowswap[j];
+          const word * const t = T->values + T->rowswap[x];
+          for(int ii=0; ii<wide ; ii++)
+            c[ii] ^= t[ii];
+        }
+      }
+    }
+#ifdef HAVE_SSE2
+  } else {
+    for (start=0; start + blocksize <= a_nr; start += blocksize) {
+      for(i=0; i < end; i++) {
+        mzd_make_table( B, i*k, k, T, L, 1 );
+        for(s = 0; s < blocksize; s++) {
+          j = start + s;
+          x = L[ _mzd_get_bits(A, j, i*k, k) ];
+          word *c = C->values + C->rowswap[j];
+          const word * t = T->values + T->rowswap[x];
+          unsigned long todo = wide;
+
+          /* check alignments */
+          if (ALIGNMENT(c,16) == ALIGNMENT(t,16)) {
+            do {
+              *c++ ^= *t++;
+              todo--;
+            } while(ALIGNMENT(c,16) && todo);
+          }
+
+          if (ALIGNMENT(c,16)==0 && ALIGNMENT(t,16)==0) {
+            __m128i *c128 = (__m128i*)c;
+            __m128i *t128 = (__m128i*)t;
+            const __m128i *eof = (__m128i*)((unsigned long)(c + todo) & ~0xF);
+            __m128i xmm1;
+
+            do {
+              xmm1 = _mm_load_si128(c128);
+              const __m128i xmm2 = _mm_load_si128(t128);
+              xmm1 = _mm_xor_si128(xmm1, xmm2);
+              _mm_store_si128(c128, xmm1);
+              ++t128;
+              ++c128;
+            } while(c128 < eof);
+	
+            c = (word*)c128;
+            t = (word*)t128;
+            todo = ((sizeof(word)*todo)%16)/sizeof(word);
+          }
+
+          for(int ii=0; ii<todo ; ii++)
+            c[ii] ^= t[ii];
+        }
       }
     }
   }
-    
-  for(i=0; i < b/k; i++) {
+#endif
+  
+  for(i=0; i < a_nc/k; i++) {
     mzd_make_table( B, i*k, k, T, L, 1 );
-    for(s = 0; s < a-start; s++) {
+    for(s = 0; s < a_nr-start; s++) {
       j = start + s;
       x = L[ _mzd_get_bits(A, j, i*k, k) ];
       /* mzd_combine( C,j,0, C,j,0,  T,x,0); */
-      word *C_ptr = C->values + C->rowswap[j];
-      const word *T_ptr = T->values + T->rowswap[x];
+      word *c = C->values + C->rowswap[j];
+      const word *t = T->values + T->rowswap[x];
       for(int ii=0; ii<wide ; ii++)
-        C_ptr[ii] ^= T_ptr[ii];
+        c[ii] ^= t[ii];
     }
   }
 
   /* handle rest */
-  if (b%k) {
-    mzd_make_table( B, b/k * k , b%k, T, L, 1);
+  if (a_nc%k) {
+    mzd_make_table( B, a_nc/k * k , a_nc%k, T, L, 1);
     
-    for(j = 0; j<a; j++) {
-      x = L[ _mzd_get_bits(A, j, i*k, b%k) ];
+    for(j = 0; j<a_nr; j++) {
+      x = L[ _mzd_get_bits(A, j, i*k, a_nc%k) ];
       mzd_combine(C,j,0, C,j,0, T,x,0);
     }
   }

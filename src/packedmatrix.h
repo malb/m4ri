@@ -48,25 +48,25 @@ typedef struct {
    * Number of rows.
    */
 
-  int nrows;
+  unsigned int nrows;
 
   /**
    * Number of columns.
    */
 
-  int ncols;
+  unsigned int ncols;
 
   /**
    * width = ceil(nrows/RADIX)
    */
-  int width; 
+  unsigned int width; 
 
   /**
    * Offsets to each row, so e.g. the first word of the i-th row
    * is m->values[m->rowswap[i]]
    */
 
-  int *rowswap;
+  unsigned int *rowswap;
 
 } packedmatrix;
 
