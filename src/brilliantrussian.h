@@ -40,6 +40,13 @@
 #include "packedmatrix.h"
 
 /**
+ * Defines the number of rows of the matrix A that are processed as
+ * one block during the execution of the M4RM algorithm.
+ */
+
+#define M4RM_BLOCKSIZE 768
+
+/**
  * \brief Constructs all possible \f$2^k\f$ row combinations using the gray
  * code table.
  * 
@@ -195,5 +202,6 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
  */
 
 packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k);
+
 
 #endif //BRILLIANTRUSSIAN_H

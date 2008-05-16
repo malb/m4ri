@@ -472,7 +472,6 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
   return _mzd_mul_m4rm_impl(C, A, B, k, T, L, FALSE);
 }
 
-#define M4RM_BLOCKSIZE 768
 packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L, int clear) {
   int i,j, a,b,c, simple;
   int truerow;
@@ -503,6 +502,10 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
     L = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
   }
 
+  /* make sure that the chosen blocksize is a multiple of k for
+     simplicity*/
+  const unsigned int blocksize = DIV_CEIL(M4RM_BLOCKSIZE, k)*k;
+
   /**
    * The algorithm proceeds as follows:
    * 
@@ -521,11 +524,11 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
    */
 
   unsigned long s, start;
-  for (start=0; start + M4RM_BLOCKSIZE <= a; start += M4RM_BLOCKSIZE) {
+  for (start=0; start + blocksize <= a; start += blocksize) {
     const unsigned long end = b/k;
     for(i=0; i < end; i++) {
       mzd_make_table( B, i*k, k, T, L, 1 );
-      for(s = 0; s < M4RM_BLOCKSIZE; s++) {
+      for(s = 0; s < blocksize; s++) {
         j = start + s;
         x = L[ _mzd_get_bits(A, j, i*k, k) ];
         /* mzd_combine( C,j,0, C,j,0,  T,x,0); */
