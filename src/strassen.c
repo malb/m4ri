@@ -21,6 +21,8 @@
 #include "strassen.h"
 
 
+#define CLOSER(a,b,target) (abs((long)a-(long)target)<abs((long)b-(long)target))
+
 packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   unsigned int a,b,c;
   unsigned int anr, anc, bnr, bnc;
@@ -29,7 +31,7 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
   b = A->ncols;
   c = B->ncols;
   /* handle case first, where the input matrices are too small already */
-  if (A->nrows <= cutoff || A->ncols <= cutoff || B->ncols <= cutoff) {
+  if (CLOSER(A->nrows, A->nrows/2, cutoff) || CLOSER(A->ncols, A->ncols/2, cutoff) || CLOSER(B->ncols, B->ncols/2, cutoff)) {
     C = _mzd_mul_m4rm_impl(C, A, B, 0, NULL, NULL, TRUE);
     return C;
   }

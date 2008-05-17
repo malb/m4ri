@@ -134,24 +134,37 @@ static inline int _mzd_get_bits(const packedmatrix *m, const int x, const int y,
 }
 
 
-void mzd_make_table( packedmatrix *m, int ai, int k,
+void mzd_make_table( packedmatrix *M, int ai, int k,
 		     packedmatrix *T, int *L, int full) {
   const int homeblock= full ? 0 : ai/RADIX;
-  int i, rowneeded, id;
+  int i, j, rowneeded, id;
   int twokay= TWOPOW(k);
+  unsigned int wide = T->width - homeblock;
 
+  word *ti, *ti1, *m;
+
+  ti1 = T->values + homeblock;
   L[0]=0;
-
   for (i=1; i<twokay; i++) {
-    rowneeded=codebook[k]->inc[i-1]+ai;
+    rowneeded = codebook[k]->inc[i-1]+ai;
+    id = codebook[k]->ord[i];
+    L[id] = i;
 
-    id=codebook[k]->ord[i];
-
-    L[id]=i;
-
-    mzd_combine( T,  i,         homeblock,
-		 m,  rowneeded, homeblock, 
-		 T,  i-1,       homeblock);
+/*     mzd_combine( T,  i,         homeblock, */
+/* 		    M,  rowneeded, homeblock,  */
+/* 		    T,  i-1,       homeblock); */
+    ti = ti1 + T->width;
+    if (rowneeded >= M->nrows) {
+      for (j = 0; j < wide; j++) {
+        ti[j] = ti1[j];
+      }
+    } else {
+      m = M->values + M->rowswap[rowneeded] + homeblock;
+      for(j=wide-1; j>=0; j--) {
+        ti[j] = m[j] ^ ti1[j];
+      }
+    }
+    ti1 = ti;
   }
 }
 
@@ -569,8 +582,8 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
               const __m128i xmm2 = _mm_load_si128(t128);
               xmm1 = _mm_xor_si128(xmm1, xmm2);
               _mm_store_si128(c128, xmm1);
-              ++t128;
               ++c128;
+              ++t128;
             } while(c128 < eof);
 	
             c = (word*)c128;

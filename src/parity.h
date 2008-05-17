@@ -1,0 +1,76 @@
+/**
+ * \file parity.h
+ *
+ * \brief Compute the parity of 64 words in parallel.
+ *
+ * \author David Harvey
+ */
+
+#define MIX32(a, b) (((((a) << 32) ^ (a)) >> 32) + \
+                     ((((b) >> 32) ^ (b)) << 32))
+
+#define MIX16(a, b) (((((a) >> 16) ^ (a)) & 0x0000FFFF0000FFFF) + \
+                     ((((b) << 16) ^ (b)) & 0xFFFF0000FFFF0000));
+
+#define MIX8(a, b) (((((a) >> 8) ^ (a)) & 0x00FF00FF00FF00FF) + \
+                    ((((b) << 8) ^ (b)) & 0xFF00FF00FF00FF00));
+
+#define MIX4(a, b) (((((a) >> 4) ^ (a)) & 0x0F0F0F0F0F0F0F0F) + \
+                    ((((b) << 4) ^ (b)) & 0xF0F0F0F0F0F0F0F0));
+
+#define MIX2(a, b) (((((a) >> 2) ^ (a)) & 0x3333333333333333) + \
+                    ((((b) << 2) ^ (b)) & 0xCCCCCCCCCCCCCCCC));
+
+#define MIX1(a, b) (((((a) >> 1) ^ (a)) & 0x5555555555555555) + \
+                    ((((b) << 1) ^ (b)) & 0xAAAAAAAAAAAAAAAA));
+
+
+static inline word _parity64_helper(word* buf)
+{
+   word a0, a1, b0, b1, c0, c1;
+
+   a0 = MIX32(buf[0x20], buf[0x00]);
+   a1 = MIX32(buf[0x30], buf[0x10]);
+   b0 = MIX16(a1, a0);
+
+   a0 = MIX32(buf[0x28], buf[0x08]);
+   a1 = MIX32(buf[0x38], buf[0x18]);
+   b1 = MIX16(a1, a0);
+
+   c0 = MIX8(b1, b0);
+
+   a0 = MIX32(buf[0x24], buf[0x04]);
+   a1 = MIX32(buf[0x34], buf[0x14]);
+   b0 = MIX16(a1, a0);
+
+   a0 = MIX32(buf[0x2C], buf[0x0C]);
+   a1 = MIX32(buf[0x3C], buf[0x1C]);
+   b1 = MIX16(a1, a0);
+
+   c1 = MIX8(b1, b0);
+
+   return MIX4(c1, c0);
+}
+
+
+/**
+ * \brief Computes parity of each of buf[0], buf[1], ..., buf[63].
+ * Returns single word whose bits are the parities of buf[0], ...,
+ * buf[63].  Assumes 64-bit machine unsigned long.
+ *
+ * \param buf buffer of words of length 64
+ */
+static inline word parity64(word* buf)
+{
+   word d0, d1, e0, e1;
+
+   d0 = _parity64_helper(buf);
+   d1 = _parity64_helper(buf + 2);
+   e0 = MIX2(d1, d0);
+
+   d0 = _parity64_helper(buf + 1);
+   d1 = _parity64_helper(buf + 3);
+   e1 = MIX2(d1, d0);
+
+   return MIX1(e1, e0);
+}

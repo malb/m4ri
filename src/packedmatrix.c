@@ -19,6 +19,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "packedmatrix.h"
+#include "parity.h"
+
 #ifdef HAVE_SSE2
 #include <emmintrin.h>
 #endif
@@ -206,8 +208,8 @@ int mzd_reduce_naiv(packedmatrix *m, int full) {
 }
 
 packedmatrix *mzd_transpose(packedmatrix *newmatrix, const packedmatrix *data) {
-  int i,j,k;
-  word temp;
+  int i,j,k, eol;
+  word *temp;
 
   if (newmatrix == NULL) {
     newmatrix = mzd_init( data->ncols, data->nrows );
@@ -217,27 +219,34 @@ packedmatrix *mzd_transpose(packedmatrix *newmatrix, const packedmatrix *data) {
     }
   }
 
+  if(newmatrix->ncols%RADIX) {
+    eol = RADIX*(newmatrix->width-1);
+  } else {
+    eol = RADIX*(newmatrix->width);
+  }
+
   for (i=0; i<newmatrix->nrows; i++) {
-    for (j=0; j<newmatrix->width; j++) {
-      temp=(word)0;
+    temp = newmatrix->values + newmatrix->rowswap[i];
+    for (j=0; j < eol; j+=RADIX) {
       for (k=0; k<RADIX; k++) {
-	if (  (j*RADIX+k) < (unsigned int)data->nrows ) { 
-	  if (mzd_read_bit(data, j*RADIX+k, i)==1)
-	    SET_BIT(temp,k);
-	}
+        *temp |= ((word)mzd_read_bit(data, j+k, i))<<(RADIX-1-k);
       }
-      mzd_write_block(newmatrix, i, j*RADIX, temp);
+      temp++;
+    }
+    j = data->nrows - (data->nrows%RADIX);
+    for (k=0; k<(data->nrows%RADIX); k++) {
+      *temp |= ((word)mzd_read_bit(data, j+k, i))<<(RADIX-1-k);
     }
   }
-	
   return newmatrix;
 }
 
+
 packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
-  int i, j, ii;
+  int i, j, k, ii, eol;
   packedmatrix *bT = mzd_transpose(NULL, B);
-  word temp;
   word *a, *b, *c;
+  word parity[64];
 
   if (C==NULL) {
     C=mzd_init(A->nrows, B->ncols);
@@ -247,27 +256,35 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
     }
   }
 
+  if(C->ncols%RADIX) {
+    eol = (C->width-1);
+  } else {
+    eol = (C->width);
+  }
+
   for (i=0; i<C->nrows; i++) {
     a = A->values + A->rowswap[i];
     c = C->values + C->rowswap[i];
-    
-    for (j=0; j<C->ncols; j++) {
-      temp = 0;
-      b = bT->values + bT->rowswap[j];
-      for (ii=0; ii<A->width; ii++)
-        temp ^= a[ii] & b[ii];
-      /* compute parity */
-      temp ^= temp >> 32;
-      temp ^= temp >> 16;
-      temp ^= temp >> 8;
-      temp ^= temp >> 4;
-      temp &= 0xf;
-      temp = (0x6996 >> temp) & 1;
-      if (temp) 
-        SET_BIT(c[j/RADIX],j%RADIX);
+    for (j=0; j<eol; j++) {
+      for (k=0; k<RADIX; k++) {
+        b = bT->values + bT->rowswap[RADIX*j+k];
+        parity[k] = a[0] & b[0];
+        for (ii=1; ii<A->width; ii++)
+          parity[k] ^= a[ii] & b[ii];
+      }
+      c[j] = parity64(parity);
+    }
+
+    if (C->ncols%RADIX) {
+      for (k=0; k<C->ncols%RADIX; k++) {
+        b = bT->values + bT->rowswap[RADIX*(C->width-1)+k];
+        parity[k] = a[0] & b[0];
+        for (ii=1; ii<A->width; ii++)
+          parity[k] ^= a[ii] & b[ii];
+      }
+      c[C->width-1] = parity64(parity) & ~((ONE<<(RADIX-(C->ncols%RADIX)))-1);
     }
   }
-
   mzd_free(bT);
   return C;
 }

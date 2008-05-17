@@ -71,6 +71,8 @@ void mzd_make_table( packedmatrix *M, int ai, int k, packedmatrix *T, int *L, in
  * \param k M4RI parameter
  * \param T contains the correct row to be added
  * \param L Contains row number to be added
+ *
+ * \note This function assumes that the rowswap array of T is the identity.
  */
 
 void mzd_process_row(packedmatrix *M, const int row, const int homecol, const int k, const packedmatrix *T, const int *L);
