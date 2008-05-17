@@ -35,9 +35,9 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
     /* we copy the matrix first since it is only constant memory
        overhead and improves data locality, if you remove it make sure
        there are no speed regressions */
-    /* C = _mzd_mul_m4rm_impl(C, A, B, 0, NULL, NULL, TRUE); */
+    /* C = _mzd_mul_m4rm_impl(C, A, B, 0, TRUE); */
     packedmatrix *Cbar = mzd_init(C->nrows, C->ncols);
-    Cbar = _mzd_mul_m4rm_impl(Cbar, A, B, 0, NULL, NULL, FALSE);
+    Cbar = _mzd_mul_m4rm_impl(Cbar, A, B, 0, FALSE);
     mzd_copy(C, Cbar);
     mzd_free(Cbar);
     return C;
@@ -111,7 +111,7 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
   if (B->ncols > (int)(2*bnc)) {
     packedmatrix *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
     packedmatrix *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
-    _mzd_mul_m4rm_impl(C_last_col, A, B_last_col, 0, NULL, NULL, TRUE);
+    _mzd_mul_m4rm_impl(C_last_col, A, B_last_col, 0, TRUE);
     mzd_free_window(B_last_col);
     mzd_free_window(C_last_col);
 
@@ -119,7 +119,7 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
   if (A->nrows > (int)(2*anr)) {
     packedmatrix *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
     packedmatrix *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, C->ncols);
-    _mzd_mul_m4rm_impl(C_last_row, A_last_row, B, 0, NULL, NULL, TRUE);
+    _mzd_mul_m4rm_impl(C_last_row, A_last_row, B, 0, TRUE);
     mzd_free_window(A_last_row);
     mzd_free_window(C_last_row);
 
@@ -128,7 +128,7 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
     packedmatrix *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
     packedmatrix *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
     packedmatrix *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2);
-    mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0, NULL, NULL);
+    mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0);
     mzd_free_window(A_last_col);
     mzd_free_window(B_last_row);
     mzd_free_window(C_bulk);
@@ -160,7 +160,7 @@ packedmatrix *_mzd_mul_strassen_impl_old_sched(packedmatrix *C, packedmatrix *A,
 
   /* handle case first, where the input matrices are too small already */
   if (A->nrows <= cutoff || A->ncols <= cutoff || B->ncols <= cutoff) {
-    C = _mzd_mul_m4rm_impl(C, A, B, 0, NULL, NULL, TRUE);
+    C = _mzd_mul_m4rm_impl(C, A, B, 0, TRUE);
     return C;
   }
 
@@ -260,7 +260,7 @@ packedmatrix *_mzd_mul_strassen_impl_old_sched(packedmatrix *C, packedmatrix *A,
   if (B->ncols > 2*bnc) {
     packedmatrix *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
     packedmatrix *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
-    _mzd_mul_m4rm_impl(C_last_col, A, B_last_col, 0, NULL, NULL, TRUE);
+    _mzd_mul_m4rm_impl(C_last_col, A, B_last_col, 0, TRUE);
     mzd_free_window(B_last_col);
     mzd_free_window(C_last_col);
 
@@ -268,7 +268,7 @@ packedmatrix *_mzd_mul_strassen_impl_old_sched(packedmatrix *C, packedmatrix *A,
   if (A->nrows > 2*anr) {
     packedmatrix *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
     packedmatrix *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, C->ncols);
-    _mzd_mul_m4rm_impl(C_last_row, A_last_row, B, 0, NULL, NULL, TRUE);
+    _mzd_mul_m4rm_impl(C_last_row, A_last_row, B, 0, TRUE);
     mzd_free_window(A_last_row);
     mzd_free_window(C_last_row);
 
@@ -277,7 +277,7 @@ packedmatrix *_mzd_mul_strassen_impl_old_sched(packedmatrix *C, packedmatrix *A,
     packedmatrix *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
     packedmatrix *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
     packedmatrix *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2);
-    mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0, NULL, NULL);
+    mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0);
     mzd_free_window(A_last_col);
     mzd_free_window(B_last_row);
     mzd_free_window(C_bulk);

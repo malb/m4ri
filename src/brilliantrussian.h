@@ -147,11 +147,9 @@ packedmatrix *mzd_invert_m4ri(packedmatrix *M, packedmatrix *I, int k);
  * \param A Input matrix A
  * \param B Input matrix B
  * \param k M4RI parameter, may be 0 for auto-choose.
- * \param T Preallocated table, may be NULL for automatic creation.
- * \param L Preallocated lookup table, may be NULL for automatic creation.
  */
 
-packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L);
+packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k);
 
 
 /**
@@ -161,11 +159,9 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
  * \param A Input matrix A
  * \param B Input matrix B
  * \param k M4RI parameter, may be 0 for auto-choose.
- * \param T Preallocated table, may be NULL for automatic creation.
- * \param L Preallocated lookup table, may be NULL for automatic creation.
  */
 
-packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L);
+packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k);
 
 /**
  * \brief Matrix multiplication using Konrod's method, i.e. compute C such
@@ -177,15 +173,13 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
  * \param A Input matrix A
  * \param B Input matrix B
  * \param k M4RI parameter, may be 0 for auto-choose.
- * \param T Preallocated table, may be NULL for automatic creation.
- * \param L Preallocated lookup table, may be NULL for automatic creation.
  * \param clear clear the matrix C first
  *
  * \author Martin Albrecht -- initial implementation
  * \author William Hart -- block matrix implementation
  */
 
-packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L, int clear);
+packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear);
 
 /**
  * \brief Matrix multiplication using Konrod's method but transpose

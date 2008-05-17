@@ -455,7 +455,7 @@ packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
   BT = mzd_transpose(NULL, B);
   
   CT = mzd_init(B->ncols, A->nrows);
-  CT = _mzd_mul_m4rm_impl(CT, BT, AT, k, NULL, NULL, 0);
+  CT = _mzd_mul_m4rm_impl(CT, BT, AT, k, 0);
   
   mzd_free(AT);
   mzd_free(BT);
@@ -465,7 +465,7 @@ packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
   return C;
 }
 
-packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L) {
+packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k) {
   int a = A->nrows;
   int c = B->ncols;
 
@@ -477,10 +477,10 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
     if (C->nrows != a || C->ncols != c)
       m4ri_die("mzd_mul_m4rm: C (%d x %d) has wrong dimensions.\n", C->nrows, C->ncols);
   }
-  return _mzd_mul_m4rm_impl(C, A, B, k, T, L, TRUE);
+  return _mzd_mul_m4rm_impl(C, A, B, k, TRUE);
 }
 
-packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L) {
+packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k) {
   int a = A->nrows;
   int c = B->ncols;
 
@@ -492,11 +492,11 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
     if (C->nrows != a || C->ncols != c)
       m4ri_die("mzd_mul_m4rm: C has wrong dimensions.\n");
   }
-  return _mzd_mul_m4rm_impl(C, A, B, k, T, L, FALSE);
+  return _mzd_mul_m4rm_impl(C, A, B, k, FALSE);
 }
 
-packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L, int clear) {
-  int i,j, a_nr, a_nc, b_nc, simple;
+packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear) {
+  int i,j, a_nr, a_nc, b_nc;
   int truerow;
   unsigned int x;
 
@@ -527,12 +527,8 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
     k = m4ri_opt_k(blocksize, a_nc, b_nc);
   }
 
-  if (T == NULL && L == NULL) {
-    simple = 1;
-    T = mzd_init(TWOPOW(k), b_nc);
-    L = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
-  }
-
+  packedmatrix *T = mzd_init(TWOPOW(k), b_nc);
+  int *L = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
 
   /**
    * The algorithm proceeds as follows:
@@ -640,10 +636,9 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
       mzd_combine(C,j,0, C,j,0, T,x,0);
     }
   }
-  if (simple) {
-    mzd_free(T);
-    m4ri_mm_free(L);
-  }
+
+  mzd_free(T);
+  m4ri_mm_free(L);
   return C;
 }
 

@@ -28,7 +28,7 @@ int mul_test_equality(int m, int l, int n, int k, int cutoff) {
   C = mzd_mul_strassen(NULL, A, B, cutoff);
 
   /* D = A*B via M4RM, temporary buffers are managed internally */
-  D = mzd_mul_m4rm(    NULL, A, B, k, NULL, NULL);
+  D = mzd_mul_m4rm(    NULL, A, B, k);
 
   /* E = A*B via naiv cubic multiplication */
   E = mzd_mul_naiv(    NULL, A, B);
@@ -74,10 +74,10 @@ int addmul_test_equality(int m, int l, int n, int k, int cutoff) {
 
   /* D = C + A*B via M4RM, temporary buffers are managed internally */
   D = mzd_copy(NULL, C);
-  D = mzd_addmul_m4rm(D, A, B, k, NULL, NULL);
+  D = mzd_addmul_m4rm(D, A, B, k);
 
   /* E = C + A*B via naiv cubic multiplication */
-  E = mzd_mul_m4rm(NULL, A, B, k, NULL, NULL);
+  E = mzd_mul_m4rm(NULL, A, B, k);
   mzd_add(E, E, C);
 
   mzd_free(A);
