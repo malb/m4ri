@@ -244,9 +244,8 @@ packedmatrix *mzd_transpose(packedmatrix *newmatrix, const packedmatrix *data) {
 
 packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
   int i, j, k, ii, eol;
-  packedmatrix *bT = mzd_transpose(NULL, B);
+  packedmatrix *BT = mzd_transpose(NULL, B);
   word *a, *b, *c;
-  word parity[64];
 
   if (C==NULL) {
     C=mzd_init(A->nrows, B->ncols);
@@ -262,30 +261,60 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
     eol = (C->width);
   }
 
-  for (i=0; i<C->nrows; i++) {
-    a = A->values + A->rowswap[i];
-    c = C->values + C->rowswap[i];
-    for (j=0; j<eol; j++) {
-      for (k=0; k<RADIX; k++) {
-        b = bT->values + bT->rowswap[RADIX*j+k];
-        parity[k] = a[0] & b[0];
-        for (ii=1; ii<A->width; ii++)
+  word parity[64];
+  const int wide = A->width;
+  const int blocksize = MZD_MUL_BLOCKSIZE;
+  for (unsigned int start = 0; start + blocksize <= C->nrows; start += blocksize) {
+    for (i=start; i<start+blocksize; i++) {
+      a = A->values + A->rowswap[i];
+      c = C->values + C->rowswap[i];
+      for (j=RADIX*(eol-1); j>=0; j-=RADIX) {
+        for (k=RADIX-1; k>=0; k--) {
+          b = BT->values + BT->rowswap[j+k];
+          parity[k] = a[0] & b[0];
+          for (ii=wide-1; ii>=1; ii--)
           parity[k] ^= a[ii] & b[ii];
+        }
+        c[j/RADIX] ^= parity64(parity);
       }
-      c[j] = parity64(parity);
-    }
-
-    if (C->ncols%RADIX) {
-      for (k=0; k<C->ncols%RADIX; k++) {
-        b = bT->values + bT->rowswap[RADIX*(C->width-1)+k];
-        parity[k] = a[0] & b[0];
-        for (ii=1; ii<A->width; ii++)
-          parity[k] ^= a[ii] & b[ii];
+      
+      if (eol != C->width) {
+        for (k=0; k<C->ncols%RADIX; k++) {
+          b = BT->values + BT->rowswap[RADIX*eol+k];
+          parity[k] = a[0] & b[0];
+          for (ii=1; ii<A->width; ii++)
+            parity[k] ^= a[ii] & b[ii];
+        }
+        c[eol] ^= parity64(parity) & ~((ONE<<(RADIX-(C->ncols%RADIX)))-1);
       }
-      c[C->width-1] = parity64(parity) & ~((ONE<<(RADIX-(C->ncols%RADIX)))-1);
     }
   }
-  mzd_free(bT);
+
+  for (i=C->nrows - (C->nrows%blocksize); i<C->nrows; i++) {
+    a = A->values + A->rowswap[i];
+    c = C->values + C->rowswap[i];
+    for (j=RADIX*(eol-1); j>=0; j-=RADIX) {
+      for (k=RADIX-1; k>=0; k--) {
+        b = BT->values + BT->rowswap[j+k];
+        parity[k] = a[0] & b[0];
+        for (ii=wide-1; ii>=1; ii--)
+          parity[k] ^= a[ii] & b[ii];
+      }
+      c[j/RADIX] ^= parity64(parity);
+      }
+    
+    if (eol != C->width) {
+      for (k=0; k<C->ncols%RADIX; k++) {
+        b = BT->values + BT->rowswap[RADIX*eol+k];
+        parity[k] = a[0] & b[0];
+        for (ii=1; ii<A->width; ii++)
+          parity[k] ^= a[ii] & b[ii];
+      }
+      c[eol] ^= parity64(parity) & ~((ONE<<(RADIX-(C->ncols%RADIX)))-1);
+    }
+  }
+
+  mzd_free(BT);
   return C;
 }
 

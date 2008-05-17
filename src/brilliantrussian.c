@@ -465,7 +465,6 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
       m4ri_die("mzd_mul_m4rm: C (%d x %d) has wrong dimensions.\n", C->nrows, C->ncols);
   }
   return _mzd_mul_m4rm_impl(C, A, B, k, T, L, TRUE);
-
 }
 
 packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, packedmatrix *T, int *L) {
@@ -488,9 +487,14 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
   int truerow;
   unsigned int x;
 
+
   a_nr = A->nrows;
   a_nc = A->ncols;
   b_nc = B->ncols;
+
+  if (b_nc < RADIX-10) {
+    return mzd_mul_naiv(C, A, B);
+  }
 
   int wide = C->width;
 
@@ -503,8 +507,11 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
      }
     }
   }
+
+  const unsigned int blocksize = MZD_MUL_BLOCKSIZE;
+
   if (k == 0) {
-    k = m4ri_opt_k(M4RM_BLOCKSIZE, a_nc, b_nc);
+    k = m4ri_opt_k(blocksize, a_nc, b_nc);
   }
 
   if (T == NULL && L == NULL) {
@@ -532,7 +539,6 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
    */
 
   unsigned long s, start;
-  const unsigned int blocksize = M4RM_BLOCKSIZE;
   const unsigned long end = a_nc/k;
 
 #ifdef HAVE_SSE2

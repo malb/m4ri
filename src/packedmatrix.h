@@ -528,7 +528,6 @@ void mzd_combine(packedmatrix * DST, const int row3, const int startblock3,
 		 const packedmatrix * SC2, const int row2, const int startblock2);
 
 #ifdef HAVE_SSE2
-
 /**
  * Cutoff in words after which row length SSE2 instructions should be
  * used.
@@ -536,5 +535,13 @@ void mzd_combine(packedmatrix * DST, const int row3, const int startblock3,
 
 #define SSE2_CUTOFF 20
 #endif
+
+/**
+ * Defines the number of rows of the matrix A that are processed as
+ * one block during the execution of a multiplication algorithm.
+ */
+
+#define MZD_MUL_BLOCKSIZE 768
+
 
 #endif //PACKEDMATRIX_H
