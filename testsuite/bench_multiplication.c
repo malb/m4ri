@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
   }
 
   packedmatrix *A = mzd_init(n, n);
-  packedmatrix *B = mzd_init(n, 64);
+  packedmatrix *B = mzd_init(n, n);
   mzd_randomize(A);
   mzd_randomize(B);
 

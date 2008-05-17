@@ -588,8 +588,8 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
               const __m128i xmm2 = _mm_load_si128(t128);
               xmm1 = _mm_xor_si128(xmm1, xmm2);
               _mm_store_si128(c128, xmm1);
-              ++c128;
               ++t128;
+              ++c128;
             } while(c128 < eof);
 	
             c = (word*)c128;
