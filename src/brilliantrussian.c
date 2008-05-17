@@ -144,6 +144,8 @@ void mzd_make_table( packedmatrix *M, int ai, int k,
   word *ti, *ti1, *m;
 
   ti1 = T->values + homeblock;
+  ti = ti1 + T->width;
+
   L[0]=0;
   for (i=1; i<twokay; i++) {
     rowneeded = codebook[k]->inc[i-1]+ai;
@@ -153,18 +155,29 @@ void mzd_make_table( packedmatrix *M, int ai, int k,
 /*     mzd_combine( T,  i,         homeblock, */
 /* 		    M,  rowneeded, homeblock,  */
 /* 		    T,  i-1,       homeblock); */
-    ti = ti1 + T->width;
     if (rowneeded >= M->nrows) {
-      for (j = 0; j < wide; j++) {
-        ti[j] = ti1[j];
+      for (j = wide-1; j >= 0; j--) {
+        *ti++ = *ti1++;
       }
     } else {
       m = M->values + M->rowswap[rowneeded] + homeblock;
-      for(j=wide-1; j>=0; j--) {
-        ti[j] = m[j] ^ ti1[j];
+
+      word * end = ti + wide;
+      register word * end8 = end - 8;
+      while (ti < end8) {
+        *(ti++) = *(m++) ^ *(ti1++);
+        *(ti++) = *(m++) ^ *(ti1++);
+        *(ti++) = *(m++) ^ *(ti1++);
+        *(ti++) = *(m++) ^ *(ti1++);
+        *(ti++) = *(m++) ^ *(ti1++);
+        *(ti++) = *(m++) ^ *(ti1++);
+        *(ti++) = *(m++) ^ *(ti1++);
+        *(ti++) = *(m++) ^ *(ti1++);
+      }
+      while (ti < end) {
+        *(ti++) = *(m++) ^ *(ti1++);
       }
     }
-    ti1 = ti;
   }
 }
 
