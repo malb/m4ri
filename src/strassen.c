@@ -35,7 +35,7 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
     /* we copy the matrix first since it is only constant memory
        overhead and improves data locality, if you remove it make sure
        there are no speed regressions */
-    //C = _mzd_mul_m4rm_impl(C, A, B, 0, NULL, NULL, TRUE);
+    /* C = _mzd_mul_m4rm_impl(C, A, B, 0, NULL, NULL, TRUE); */
     packedmatrix *Cbar = mzd_init(C->nrows, C->ncols);
     Cbar = _mzd_mul_m4rm_impl(Cbar, A, B, 0, NULL, NULL, FALSE);
     mzd_copy(C, Cbar);
