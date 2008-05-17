@@ -518,9 +518,6 @@ packedmatrix *_mzd_add_impl(packedmatrix *C, const packedmatrix *A, const packed
  * \param SC2 source matrix
  * \param startblock2 starting block to work on in matrix sc2
  * \param row2 sourc row for matrix sc2
- * 
- * \note Almost all computation time is spent in this function and
- * thus implementation improvements should focus here.
  */
 
 void mzd_combine(packedmatrix * DST, const int row3, const int startblock3,
