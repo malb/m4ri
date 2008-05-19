@@ -150,7 +150,8 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
   return C;
 }
 
-packedmatrix *_mzd_mul_strassen_impl_old_sched(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+packedmatrix *_mzd_mul_strassen_mp_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+
   int a,b,c;
   int anr, anc, bnr, bnc;
   
@@ -189,71 +190,85 @@ packedmatrix *_mzd_mul_strassen_impl_old_sched(packedmatrix *C, packedmatrix *A,
   packedmatrix *U3 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
   packedmatrix *U4 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
 
-  packedmatrix *tmp = mzd_init(7*anr + 4*anc, MAX(anc,bnc));
+  /**
+   * \todo this is way too much memory
+   */
+  packedmatrix *S0 = mzd_init(anr, anc);
+  packedmatrix *S1 = mzd_init(anr, anc);
+  packedmatrix *S2 = mzd_init(anr, anc);
+  packedmatrix *S3 = mzd_init(anr, anc);
 
-  int start_row = 0;
-  packedmatrix *S0 = mzd_init_window(tmp, start_row, 0, start_row + anr, anc);
-
-  start_row += anr;
-  packedmatrix *S1 = mzd_init_window(tmp, start_row, 0, start_row + anr, anc);
-
-  start_row += anr;
-  packedmatrix *S2 = mzd_init_window(tmp, start_row, 0, start_row + anr, anc);
+  packedmatrix *T0 = mzd_init(bnr, bnc);
+  packedmatrix *T1 = mzd_init(bnr, bnc);
+  packedmatrix *T2 = mzd_init(bnr, bnc);
+  packedmatrix *T3 = mzd_init(bnr, bnc);
   
-  start_row += anr;
-  packedmatrix *S3 = mzd_init_window(tmp, start_row, 0, start_row + anr, anc);
+  packedmatrix *Q0 = mzd_init(anr, bnc);
+  packedmatrix *Q1 = mzd_init(anr, bnc);
+  packedmatrix *Q2 = mzd_init(anr, bnc);
+  packedmatrix *Q3 = mzd_init(anr, bnc);
 
-  start_row += anr;
-  packedmatrix *T0 = mzd_init_window(tmp, start_row, 0, start_row + anc, bnc);
-
-  start_row += anc;
-  packedmatrix *T1 = mzd_init_window(tmp, start_row, 0, start_row + anc, bnc);
+#pragma omp parallel sections
+  {
+#pragma omp section
+    {
+      _mzd_add_impl(S0, A10, A11);
+      _mzd_add_impl(S1,  S0, A00);
+      _mzd_add_impl(S2, A00, A10);
+      _mzd_add_impl(S3, A01,  S1);
+    }
+#pragma omp section 
+    {
+      _mzd_add_impl(T0, B01, B00);
+      _mzd_add_impl(T1, B11,  T0);
+      _mzd_add_impl(T2, B11, B01);
+      _mzd_add_impl(T3, B10,  T1);
+    }
+  }
   
-  start_row += anc;
-  packedmatrix *T2 = mzd_init_window(tmp, start_row, 0, start_row + anc, bnc);
-
-  start_row += anc;
-  packedmatrix *T3 = mzd_init_window(tmp, start_row, 0, start_row + anc, bnc);
-  
-  start_row += anc;
-  packedmatrix *Q0 = mzd_init_window(tmp, start_row, 0, start_row + anr, bnc);
-
-  start_row += anr;
-  packedmatrix *Q1 = mzd_init_window(tmp, start_row, 0, start_row + anr, bnc);
-  
-  start_row += anr;
-  packedmatrix *Q2 = mzd_init_window(tmp, start_row, 0, start_row + anr, bnc);
-
-  _mzd_add_impl(S0, A10, A11);
-  _mzd_add_impl(S1,  S0, A00);
-  _mzd_add_impl(S2, A00, A10);
-  _mzd_add_impl(S3, A01,  S1);
-
-  _mzd_add_impl(T0, B01, B00);
-  _mzd_add_impl(T1, B11,  T0);
-  _mzd_add_impl(T2, B11, B01);
-  _mzd_add_impl(T3, B10,  T1);
-
-  _mzd_mul_strassen_impl(Q0, A00, B00, cutoff); /* now Q0 holds P0 */
-  _mzd_mul_strassen_impl(Q1, A01, B10, cutoff); /* now Q1 holds P1 */
-  
+#pragma omp parallel sections
+  {
+#pragma omp section
+    {
+      _mzd_mul_strassen_mp_impl(Q0, A00, B00, cutoff); /* now Q0 holds P0 */
+    }
+#pragma omp section 
+    {
+      _mzd_mul_strassen_mp_impl(Q1, A01, B10, cutoff); /* now Q1 holds P1 */
+    }  
+  }
   _mzd_add_impl(U0, Q0, Q1); /* now U0 is correct */
   
-  packedmatrix *S1T1 = mzd_mul_strassen(NULL, S1, T1, cutoff);
-  _mzd_add_impl(Q0, Q0, S1T1); /* now Q0 holds U1 */
-  mzd_free(S1T1);
-    
-  _mzd_mul_strassen_impl(Q1, S2, T2, cutoff); /* now Q1 holds P4 */
-  
+#pragma omp parallel sections
+  {
+#pragma omp section
+    {
+      packedmatrix *S1T1 = mzd_mul_strassen(NULL, S1, T1, cutoff);
+      _mzd_add_impl(Q0, Q0, S1T1); /* now Q0 holds U1 */
+      mzd_free(S1T1);
+    }    
+#pragma omp section
+    {
+      _mzd_mul_strassen_mp_impl(Q1, S2, T2, cutoff); /* now Q1 holds P4 */
+    }
+  }  
   _mzd_add_impl(Q1, Q1, Q0); /* now Q1 holds U2 */
-  _mzd_mul_strassen_impl(Q2, A11, T3, cutoff); /* now Q2 holds P6 */
-  _mzd_add_impl(U3, Q1, Q2); /* now U3 is correct */
-  
-  _mzd_mul_strassen_impl(Q2, S0, T0, cutoff); /* now Q2 holds P2 */
-  _mzd_add_impl(U4, Q2, Q1); /* now U4 is correct */
-  
-  _mzd_add_impl(Q0, Q0, Q2); /* now Q0 holds U5 */
-  _mzd_mul_strassen_impl(Q2, S3, B11, cutoff); /* now Q2 holds P5 */
+
+#pragma omp parallel sections
+  {
+#pragma omp section
+    {
+      _mzd_mul_strassen_mp_impl(Q2, A11, T3, cutoff); /* now Q2 holds P6 */
+      _mzd_add_impl(U3, Q1, Q2); /* now U3 is correct */
+    }  
+#pragma omp section
+    {
+      _mzd_mul_strassen_mp_impl(Q3, S0, T0, cutoff); /* now Q3 holds P2 */
+      _mzd_add_impl(U4, Q1, Q3); /* now U4 is correct */
+    }
+  }  
+  _mzd_add_impl(Q0, Q0, Q3); /* now Q0 holds U5 */
+  _mzd_mul_strassen_mp_impl(Q2, S3, B11, cutoff); /* now Q2 holds P5 */
   _mzd_add_impl(U6, Q0, Q2); /* now U6 is correct */
 
   /* deal with rest */
@@ -293,16 +308,14 @@ packedmatrix *_mzd_mul_strassen_impl_old_sched(packedmatrix *C, packedmatrix *A,
   mzd_free_window(U0); mzd_free_window(U6);
   mzd_free_window(U3); mzd_free_window(U4);
   
-  mzd_free_window(S0); mzd_free_window(S1);
-  mzd_free_window(S2); mzd_free_window(S3);
+  mzd_free(S0); mzd_free(S1);
+  mzd_free(S2); mzd_free(S3);
 
-  mzd_free_window(T0); mzd_free_window(T1);
-  mzd_free_window(T2); mzd_free_window(T3);
+  mzd_free(T0); mzd_free(T1);
+  mzd_free(T2); mzd_free(T3);
 
-  mzd_free_window(Q0); mzd_free_window(Q1);
-  mzd_free_window(Q2);
-
-  mzd_free(tmp);
+  mzd_free(Q0); mzd_free(Q1);
+  mzd_free(Q2); mzd_free(Q3);
 
   return C;
 }
@@ -324,6 +337,10 @@ packedmatrix *mzd_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B
     m4ri_die("mzd_mul_strassen: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
 	     C->nrows, C->ncols, A->nrows, B->ncols);
   }
-
+#ifdef HAVE_OPENMP
+  /* this one isn't optimal */
+  return _mzd_mul_strassen_mp_impl(C, A, B, cutoff);
+#else
   return _mzd_mul_strassen_impl(C, A, B, cutoff);
+#endif  
 }
