@@ -194,4 +194,10 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
 packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k);
 
 
+/**
+ * \brief If defined 8 Gray code tables are used in parallel.
+ */
+
+#define GRAY8
+
 #endif //BRILLIANTRUSSIAN_H

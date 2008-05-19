@@ -150,9 +150,8 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
   return C;
 }
 
-#ifdef HAVE_OMP
+#ifdef HAVE_OPENMP
 packedmatrix *_mzd_mul_strassen_mp_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
-
   int a,b,c;
   int anr, anc, bnr, bnc;
   
@@ -339,7 +338,7 @@ packedmatrix *mzd_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B
     m4ri_die("mzd_mul_strassen: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
 	     C->nrows, C->ncols, A->nrows, B->ncols);
   }
-#ifdef HAVE_OMP
+#ifdef HAVE_OPENMP
   /* this one isn't optimal */
   return _mzd_mul_strassen_mp_impl(C, A, B, cutoff);
 #else
