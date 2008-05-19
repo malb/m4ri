@@ -145,6 +145,11 @@ void mzd_make_table( packedmatrix *M, int ai, int k,
 
   ti1 = T->values + homeblock;
   ti = ti1 + T->width;
+#ifdef HAVE_SSE2
+  unsigned long incw = 0;
+  if (T->width & 1) incw = 1;
+  ti += incw;
+#endif
 
   L[0]=0;
   for (i=1; i<twokay; i++) {
@@ -159,6 +164,9 @@ void mzd_make_table( packedmatrix *M, int ai, int k,
       for (j = wide-1; j >= 0; j--) {
         *ti++ = *ti1++;
       }
+#ifdef HAVE_SSE2
+      ti+=incw; ti1+=incw;
+#endif
     } else {
       m = M->values + M->rowswap[rowneeded] + homeblock;
 
@@ -177,6 +185,9 @@ void mzd_make_table( packedmatrix *M, int ai, int k,
       while (ti < end) {
         *(ti++) = *(m++) ^ *(ti1++);
       }
+#ifdef HAVE_SSE2
+      ti+=incw; ti1+=incw;
+#endif
     }
   }
 }

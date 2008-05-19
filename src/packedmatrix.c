@@ -39,7 +39,7 @@ packedmatrix *mzd_init(int r, int c) {
   /* make sure each row is 16-byte aligned */
   if (newmatrix->width & 1) {
     newmatrix->width++;
-    inwc = 1;
+    incw = 1;
   }
 #endif
 
