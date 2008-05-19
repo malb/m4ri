@@ -656,8 +656,8 @@ packedmatrix *_mzd_mul_m4rm_impl_old(packedmatrix *C, packedmatrix *A, packedmat
 
 packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear) {
   int i,j, ii;
-  unsigned int x1, x2;
-  word *t1, *t2, *c;
+  unsigned int x1, x2, x3, x4, x5, x6, x7, x8;
+  word *t1, *t2, *t3, *t4, *t5, *t6, *t7, *t8, *c;
 
   int a_nr = A->nrows;
   int a_nc = A->ncols;
@@ -684,8 +684,8 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
 
   if (k == 0) {
     k = m4ri_opt_k(blocksize, a_nc, b_nc);
-    if (k>2) {
-      k -= 1;
+    if (k>3) {
+      k -= 2;
     }
   }
 
@@ -693,58 +693,125 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
   int *L1 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
   packedmatrix *T2 = mzd_init(TWOPOW(k), b_nc);
   int *L2 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  packedmatrix *T3 = mzd_init(TWOPOW(k), b_nc);
+  int *L3 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  packedmatrix *T4 = mzd_init(TWOPOW(k), b_nc);
+  int *L4 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  packedmatrix *T5 = mzd_init(TWOPOW(k), b_nc);
+  int *L5 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  packedmatrix *T6 = mzd_init(TWOPOW(k), b_nc);
+  int *L6 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  packedmatrix *T7 = mzd_init(TWOPOW(k), b_nc);
+  int *L7 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  packedmatrix *T8 = mzd_init(TWOPOW(k), b_nc);
+  int *L8 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
 
   /* process stuff that fits into multiple of k first, but blockwise (babystep-giantstep)*/
   unsigned long babystep, giantstep;
-  const int kk = 2*k;
+  const int kk = 8*k;
   const unsigned long end = a_nc/kk;
 
   for (giantstep=0; giantstep + blocksize <= a_nr; giantstep += blocksize) {
     for(i=0; i < end; i++) {
-      mzd_make_table( B, i*kk,   k, T1, L1, 1 );
+      mzd_make_table( B, i*kk, k, T1, L1, 1 );
       mzd_make_table( B, i*kk+k, k, T2, L2, 1 );
+      mzd_make_table( B, i*kk+k+k, k, T3, L3, 1 );
+      mzd_make_table( B, i*kk+k+k+k, k, T4, L4, 1 );
+      mzd_make_table( B, i*kk+k+k+k+k, k, T5, L5, 1 );
+      mzd_make_table( B, i*kk+k+k+k+k+k, k, T6, L6, 1 );
+      mzd_make_table( B, i*kk+k+k+k+k+k+k, k, T7, L7, 1 );
+      mzd_make_table( B, i*kk+k+k+k+k+k+k+k, k, T8, L8, 1 );
+   
       for(babystep = 0; babystep < blocksize; babystep++) {
         j = giantstep + babystep;
-        x1 = L1[ _mzd_get_bits(A, j, i*kk,   k) ];
+        x1 = L1[ _mzd_get_bits(A, j, i*kk, k) ];
         x2 = L2[ _mzd_get_bits(A, j, i*kk+k, k) ];
+        x3 = L3[ _mzd_get_bits(A, j, i*kk+k+k, k) ];
+        x4 = L4[ _mzd_get_bits(A, j, i*kk+k+k+k, k) ];
+        x5 = L5[ _mzd_get_bits(A, j, i*kk+k+k+k+k, k) ];
+        x6 = L6[ _mzd_get_bits(A, j, i*kk+k+k+k+k+k, k) ];
+        x7 = L7[ _mzd_get_bits(A, j, i*kk+k+k+k+k+k+k, k) ];
+        x8 = L8[ _mzd_get_bits(A, j, i*kk+k+k+k+k+k+k+k, k) ];
         c = C->values + C->rowswap[j];
         t1 = T1->values + T1->rowswap[x1];
         t2 = T2->values + T2->rowswap[x2];
+        t3 = T3->values + T3->rowswap[x3];
+        t4 = T4->values + T4->rowswap[x4];
+        t5 = T5->values + T5->rowswap[x5];
+        t6 = T6->values + T6->rowswap[x6];
+        t7 = T7->values + T7->rowswap[x7];
+        t8 = T8->values + T8->rowswap[x8];
         for(ii=0; ii<wide ; ii++)
-          c[ii] ^= t1[ii] ^ t2[ii];
+          c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii] ^ t5[ii] ^ t6[ii] ^ t7[ii] ^ t8[ii];
       }
     }
   }
   
   for(i=0; i < end; i++) {
-    mzd_make_table( B, i*kk,   k, T1, L1, 1 );
+    mzd_make_table( B, i*kk, k, T1, L1, 1 );
     mzd_make_table( B, i*kk+k, k, T2, L2, 1 );
+    mzd_make_table( B, i*kk+k+k, k, T3, L3, 1 );
+    mzd_make_table( B, i*kk+k+k+k, k, T4, L4, 1 );
+    mzd_make_table( B, i*kk+k+k+k+k, k, T5, L5, 1 );
+    mzd_make_table( B, i*kk+k+k+k+k+k, k, T6, L6, 1 );
+    mzd_make_table( B, i*kk+k+k+k+k+k+k, k, T7, L7, 1 );
+    mzd_make_table( B, i*kk+k+k+k+k+k+k+k, k, T8, L8, 1 );
     for(babystep = 0; babystep < a_nr - giantstep; babystep++) {
       j = giantstep + babystep;
-      x1 = L1[ _mzd_get_bits(A, j, i*kk,   k) ];
+      x1 = L1[ _mzd_get_bits(A, j, i*kk, k) ];
       x2 = L2[ _mzd_get_bits(A, j, i*kk+k, k) ];
-      if (x1 == 0 && x2 == 0)
-        continue;
+      x3 = L3[ _mzd_get_bits(A, j, i*kk+k+k, k) ];
+      x4 = L4[ _mzd_get_bits(A, j, i*kk+k+k+k, k) ];
+      x5 = L5[ _mzd_get_bits(A, j, i*kk+k+k+k+k, k) ];
+      x6 = L6[ _mzd_get_bits(A, j, i*kk+k+k+k+k+k, k) ];
+      x7 = L7[ _mzd_get_bits(A, j, i*kk+k+k+k+k+k+k, k) ];
+      x8 = L8[ _mzd_get_bits(A, j, i*kk+k+k+k+k+k+k+k, k) ];
+      //if (x1 == 0 && x2 == 0 && x3 == 0 && x4 == 0 & x5 == 0 & x6 == 0 & x7 == 0 & x8 == 0)
+      //  continue;
       c = C->values + C->rowswap[j];
       t1 = T1->values + T1->rowswap[x1];
       t2 = T2->values + T2->rowswap[x2];
+      t3 = T3->values + T3->rowswap[x3];
+      t4 = T4->values + T4->rowswap[x4];
+      t5 = T5->values + T5->rowswap[x5];
+      t6 = T6->values + T6->rowswap[x6];
+      t7 = T7->values + T7->rowswap[x7];
+      t8 = T8->values + T8->rowswap[x8];
       for(ii=0; ii<wide ; ii++)
-        c[ii] ^= t1[ii] ^ t2[ii];
+        c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii] ^ t5[ii] ^ t6[ii] ^ t7[ii] ^ t8[ii];
     }
   }
 
   /* handle stuff that doesn't fit into multiple of k */
   if (a_nc%kk) {
-    mzd_make_table( B, end * kk ,         k, T1, L1, 1);
-    mzd_make_table( B, end * kk + k, a_nc%k, T2, L2, 1);
+    mzd_make_table( B, end * kk ,                     k, T1, L1, 1);
+    mzd_make_table( B, end * kk + k,                  k, T2, L2, 1);
+    mzd_make_table( B, end * kk + k+k,                k, T3, L3, 1);
+    mzd_make_table( B, end * kk + k+k+k,              k, T4, L4, 1);
+    mzd_make_table( B, end * kk + k+k+k+k,            k, T5, L5, 1);
+    mzd_make_table( B, end * kk + k+k+k+k+k,          k, T6, L6, 1);
+    mzd_make_table( B, end * kk + k+k+k+k+k+k,        k, T7, L7, 1);
+    mzd_make_table( B, end * kk + k+k+k+k+k+k+k, a_nc%k, T8, L8, 1);
     for(j = 0; j<a_nr; j++) {
-      x1 = L1[ _mzd_get_bits(A, j, end*kk,   k) ];
-      x2 = L2[ _mzd_get_bits(A, j, end*kk+k, a_nc%k) ];
+      x1 = L1[ _mzd_get_bits(A, j, end*kk, k) ];
+      x2 = L2[ _mzd_get_bits(A, j, end*kk+k, k) ];
+      x3 = L3[ _mzd_get_bits(A, j, end*kk+k+k, k) ];
+      x4 = L4[ _mzd_get_bits(A, j, end*kk+k+k+k, k) ];
+      x5 = L5[ _mzd_get_bits(A, j, end*kk+k+k+k+k, k) ];
+      x6 = L6[ _mzd_get_bits(A, j, end*kk+k+k+k+k+k, k) ];
+      x7 = L7[ _mzd_get_bits(A, j, end*kk+k+k+k+k+k+k, k) ];
+      x8 = L8[ _mzd_get_bits(A, j, end*kk+k+k+k+k+k+k+k, a_nc%k) ];
       c = C->values + C->rowswap[j];
       t1 = T1->values + T1->rowswap[x1];
       t2 = T2->values + T2->rowswap[x2];
+      t3 = T3->values + T3->rowswap[x3];
+      t4 = T4->values + T4->rowswap[x4];
+      t5 = T5->values + T5->rowswap[x5];
+      t6 = T6->values + T6->rowswap[x6];
+      t7 = T7->values + T7->rowswap[x7];
+      t8 = T8->values + T8->rowswap[x8];
       for(ii=0; ii<wide ; ii++)
-        c[ii] ^= t1[ii] ^ t2[ii];
+        c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii] ^ t5[ii] ^ t6[ii] ^ t7[ii] ^ t8[ii];
     }
   }
 
@@ -752,6 +819,18 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
   m4ri_mm_free(L1);
   mzd_free(T2);
   m4ri_mm_free(L2);
+  mzd_free(T3);
+  m4ri_mm_free(L3);
+  mzd_free(T4);
+  m4ri_mm_free(L4);
+  mzd_free(T5);
+  m4ri_mm_free(L5);
+  mzd_free(T6);
+  m4ri_mm_free(L6);
+  mzd_free(T7);
+  m4ri_mm_free(L7);
+  mzd_free(T8);
+  m4ri_mm_free(L8);
   return C;
 }
 

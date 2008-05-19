@@ -176,7 +176,7 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
  * \param clear clear the matrix C first
  *
  * \author Martin Albrecht -- initial implementation
- * \author William Hart -- block matrix implementation
+ * \author William Hart -- block matrix implementation, use of several Gray code tables, general speed-ups
  */
 
 packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear);
