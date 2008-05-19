@@ -510,14 +510,14 @@ packedmatrix *_mzd_add_impl(packedmatrix *C, const packedmatrix *A, const packed
  * in DST, in row3, starting with startblock3.
  *
  * \param DST destination matrix
- * \param row3 sourc row for matrix dst
+ * \param row3 destination row for matrix dst
  * \param startblock3 starting block to work on in matrix dst
  * \param SC1 source matrix
- * \param row1 sourc row for matrix sc1
+ * \param row1 source row for matrix sc1
  * \param startblock1 starting block to work on in matrix sc1
  * \param SC2 source matrix
  * \param startblock2 starting block to work on in matrix sc2
- * \param row2 sourc row for matrix sc2
+ * \param row2 source row for matrix sc2
  */
 
 void mzd_combine(packedmatrix * DST, const int row3, const int startblock3,

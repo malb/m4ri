@@ -34,6 +34,15 @@ packedmatrix *mzd_init(int r, int c) {
   newmatrix=(packedmatrix *)m4ri_mm_malloc(sizeof(packedmatrix));
   newmatrix->width=DIV_CEIL(c,RADIX);
 
+#ifdef HAVE_SSE2
+  int incw = 0;
+  /* make sure each row is 16-byte aligned */
+  if (newmatrix->width & 1) {
+    newmatrix->width++;
+    inwc = 1;
+  }
+#endif
+
   newmatrix->ncols=c;
   newmatrix->nrows=r;
 
@@ -50,6 +59,12 @@ packedmatrix *mzd_init(int r, int c) {
   for (i=0; i<r; i++) { 
     newmatrix->rowswap[i]=i*(newmatrix->width); 
   }
+
+#ifdef HAVE_SSE2
+  if (incw) {
+    newmatrix->width--;
+  }
+#endif
 
   return newmatrix;
 }
@@ -264,7 +279,8 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
   word parity[64];
   const int wide = A->width;
   const int blocksize = MZD_MUL_BLOCKSIZE;
-  for (unsigned int start = 0; start + blocksize <= C->nrows; start += blocksize) {
+  unsigned int start;
+  for (start = 0; start + blocksize <= C->nrows; start += blocksize) {
     for (i=start; i<start+blocksize; i++) {
       a = A->values + A->rowswap[i];
       c = C->values + C->rowswap[i];
@@ -592,24 +608,18 @@ void mzd_combine( packedmatrix * C, const int c_row, const int c_startblock,
 #ifdef HAVE_SSE2
     if(wide > SSE2_CUTOFF) {
       /** check alignments **/
-      if (ALIGNMENT(a,16) == ALIGNMENT(b,16)) {
-	do {
-	  *a++ ^= *b++;
-	  wide--;
-	} while(ALIGNMENT(a,16) && wide);
+      if (ALIGNMENT(a,16)) {
+        *a++ ^= *b++;
+        wide--;
       }
 
       if (ALIGNMENT(a,16)==0 && ALIGNMENT(b,16)==0) {
 	__m128i *a128 = (__m128i*)a;
 	__m128i *b128 = (__m128i*)b;
 	const __m128i *eof = (__m128i*)((unsigned long)(a + wide) & ~0xF);
-	__m128i xmm1;
 
 	do {
-	  xmm1 = _mm_load_si128(a128);
-	  const __m128i xmm2 = _mm_load_si128(b128);
-	  xmm1 = _mm_xor_si128(xmm1, xmm2);
-	  _mm_store_si128(a128, xmm1);
+	  *a128 = _mm_xor_si128(*a128, *b128);
 	  ++b128;
 	  ++a128;
 	} while(a128 < eof);
@@ -634,10 +644,38 @@ void mzd_combine( packedmatrix * C, const int c_row, const int c_startblock,
         c[i] = b[i];
       }
     } else {
-      for(i = wide - 1 ; i >= 0 ; i--) {
-	c[i] = a[i] ^ b[i];
+#ifdef HAVE_SSE2
+    if(wide > SSE2_CUTOFF) {
+      /** check alignments **/
+      if (ALIGNMENT(a,16)) {
+        *c++ = *b++ ^ *a++;
+        wide--;
       }
-      return;
+
+      if ((ALIGNMENT(b,16)==0) && (ALIGNMENT(c,16)==0)) {
+	__m128i *a128 = (__m128i*)a;
+	__m128i *b128 = (__m128i*)b;
+	__m128i *c128 = (__m128i*)c;
+	const __m128i *eof = (__m128i*)((unsigned long)(a + wide) & ~0xF);
+	
+	do {
+          *c128 = _mm_xor_si128(*a128, *b128);
+	  ++c128;
+	  ++b128;
+	  ++a128;
+	} while(a128 < eof);
+	
+	a = (word*)a128;
+	b = (word*)b128;
+	c = (word*)c128;
+	wide = ((sizeof(word)*wide)%16)/sizeof(word);
+      }
+    }
+#endif //HAVE_SSE2
+    for(i = wide - 1 ; i >= 0 ; i--) {
+      c[i] = a[i] ^ b[i];
+    }
+    return;
     }
   }
 }
