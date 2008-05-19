@@ -653,9 +653,107 @@ packedmatrix *_mzd_mul_m4rm_impl_old(packedmatrix *C, packedmatrix *A, packedmat
   return C;
 }
 
+#ifdef HAVE_SSE2
+static inline void _mzd_combine8_sse2(word *c, word *t1, word *t2, word *t3, word *t4, word *t5, word *t6, word *t7, word *t8, int wide) {
+  int i;
+  /* assuming t1 ... t8 are aligned, but c might not be */
+  if (ALIGNMENT(c,16)==0) {
+    __m128i *__c = (__m128i*)c;
+    __m128i *__t1 = (__m128i*)t1;
+    __m128i *__t2 = (__m128i*)t2;
+    __m128i *__t3 = (__m128i*)t3;
+    __m128i *__t4 = (__m128i*)t4;
+    __m128i *__t5 = (__m128i*)t5;
+    __m128i *__t6 = (__m128i*)t6;
+    __m128i *__t7 = (__m128i*)t7;
+    __m128i *__t8 = (__m128i*)t8;
+    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xF);
+    __m128i xmm1;
+    
+    while(__c < eof) {
+      xmm1 = _mm_xor_si128(*__c, *__t1++);
+      xmm1 = _mm_xor_si128(xmm1, *__t2++);
+      xmm1 = _mm_xor_si128(xmm1, *__t3++);
+      xmm1 = _mm_xor_si128(xmm1, *__t4++);
+      xmm1 = _mm_xor_si128(xmm1, *__t5++);
+      xmm1 = _mm_xor_si128(xmm1, *__t6++);
+      xmm1 = _mm_xor_si128(xmm1, *__t7++);
+      xmm1 = _mm_xor_si128(xmm1, *__t8++);
+      *__c++ = xmm1;
+    }
+    c  = (word*)__c;
+    t1 = (word*)__t1;
+    t2 = (word*)__t2;
+    t3 = (word*)__t3;
+    t4 = (word*)__t4;
+    t5 = (word*)__t5;
+    t6 = (word*)__t6;
+    t7 = (word*)__t7;
+    t8 = (word*)__t8;
+    wide = ((sizeof(word)*wide)%16)/sizeof(word);
+  }
+  for(i=0; i<wide; i++) {
+    c[i] ^= t1[i] ^ t2[i] ^ t3[i] ^ t4[i] ^ t5[i] ^ t6[i] ^ t7[i] ^ t8[i];
+  }
+}
+#endif
+
+#ifdef HAVE_SSE2
+static inline void _mzd_combine4_sse2(word *c, word *t1, word *t2, word *t3, word *t4, int wide) {
+  int i;
+  /* assuming t1 ... t8 are aligned, but c might not be */
+  if (ALIGNMENT(c,16)==0) {
+    __m128i *__c = (__m128i*)c;
+    __m128i *__t1 = (__m128i*)t1;
+    __m128i *__t2 = (__m128i*)t2;
+    __m128i *__t3 = (__m128i*)t3;
+    __m128i *__t4 = (__m128i*)t4;
+    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xF);
+    __m128i xmm1;
+    
+    while(__c < eof) {
+      xmm1 = _mm_xor_si128(*__c, *__t1++);
+      xmm1 = _mm_xor_si128(xmm1, *__t2++);
+      xmm1 = _mm_xor_si128(xmm1, *__t3++);
+      xmm1 = _mm_xor_si128(xmm1, *__t4++);
+      *__c++ = xmm1;
+    }
+    c  = (word*)__c;
+    t1 = (word*)__t1;
+    t2 = (word*)__t2;
+    t3 = (word*)__t3;
+    t4 = (word*)__t4;
+    wide = ((sizeof(word)*wide)%16)/sizeof(word);
+  }
+  for(i=0; i<wide; i++) {
+    c[i] ^= t1[i] ^ t2[i] ^ t3[i] ^ t4[i];
+  }
+}
+#endif //HAVE_SSE2
+
+#ifdef HAVE_SSE2
+
+#ifdef GRAY8
+#define _MZD_COMBINE _mzd_combine8_sse2(c, t1, t2, t3, t4, t5, t6, t7, t8, wide)
+#else //GRAY8
+#define _MZD_COMBINE _mzd_combine8_sse2(c, t1, t2, t3, t4, wide)
+#endif //GRAY8
+
+#else //HAVE_SSE2
+
+#ifdef GRAY8
+#define _MZD_COMBINE for(ii=0; ii<wide ; ii++) c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii] ^ t5[ii] ^ t6[ii] ^ t7[ii] ^ t8[ii]
+#else //GRAY8
+#define _MZD_COMBINE for(ii=0; ii<wide ; ii++) c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii]
+#endif //GRAY8
+
+#endif //HAVE_SSE2
 
 packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear) {
-  int i,j, ii;
+  int i,j;
+#ifndef HAVE_SSE2
+  int ii;
+#endif
   unsigned int x1, x2, x3, x4;
   word *t1, *t2, *t3, *t4;
 
@@ -764,14 +862,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
         t7 = T7->values + T7->rowswap[x7];
         t8 = T8->values + T8->rowswap[x8];
 #endif
-
-        for(ii=0; ii<wide ; ii++) {
-#ifdef GRAY8
-          c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii] ^ t5[ii] ^ t6[ii] ^ t7[ii] ^ t8[ii];
-#else
-          c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii];
-#endif
-        }
+        _MZD_COMBINE;
       }
     }
   }
@@ -812,13 +903,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
       t7 = T7->values + T7->rowswap[x7];
       t8 = T8->values + T8->rowswap[x8];
 #endif
-      for(ii=0; ii<wide ; ii++) {
-#ifdef GRAY8
-        c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii] ^ t5[ii] ^ t6[ii] ^ t7[ii] ^ t8[ii];
-#else
-        c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii];
-#endif
-      }
+      _MZD_COMBINE;
     }
   }
 
@@ -865,13 +950,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
       t7 = T7->values + T7->rowswap[x7];
       t8 = T8->values + T8->rowswap[x8];
 #endif
-      for(ii=0; ii<wide ; ii++) {
-#ifdef GRAY8
-        c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii] ^ t5[ii] ^ t6[ii] ^ t7[ii] ^ t8[ii];
-#else
-        c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii];
-#endif
-      }
+      _MZD_COMBINE;
     }
   }
 
