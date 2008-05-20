@@ -185,9 +185,12 @@ void mzd_make_table( packedmatrix *M, int ai, int k,
       while (ti < end) {
         *(ti++) = *(m++) ^ *(ti1++);
       }
+
 #ifdef HAVE_SSE2
       ti+=incw; ti1+=incw;
 #endif
+      ti += homeblock;
+      ti1 += homeblock;
     }
   }
 }
@@ -434,11 +437,11 @@ packedmatrix *mzd_invert_m4ri(packedmatrix *m, packedmatrix *I, int k) {
   }
   int twokay=TWOPOW(k);
   int i;
-  packedmatrix *mytable=mzd_init(twokay, size*2);
-  int *mylookups=(int *)m4ri_mm_calloc(twokay, sizeof(int));
+  packedmatrix *T=mzd_init(twokay, size*2);
+  int *L=(int *)m4ri_mm_calloc(twokay, sizeof(int));
   packedmatrix *answer;
   
-  mzd_reduce_m4ri(big, TRUE, k, mytable, mylookups);
+  mzd_reduce_m4ri(big, TRUE, k, T, L);
   
   for(i=0; i < size; i++) {
     if (!mzd_read_bit(big, i,i )) {
@@ -449,8 +452,8 @@ packedmatrix *mzd_invert_m4ri(packedmatrix *m, packedmatrix *I, int k) {
   if (i == size)
     answer=mzd_submatrix(NULL, big, 0, size, size, size*2);
   
-  m4ri_mm_free(mylookups);
-  mzd_free(mytable);
+  m4ri_mm_free(L);
+  mzd_free(T);
   mzd_free(big);
   
   return answer;

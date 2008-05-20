@@ -1,9 +1,12 @@
 #include <stdlib.h>
 #include "m4ri.h"
 
-int test_equality(nr, nc) {
+int red_test_equality(nr, nc) {
   packedmatrix *A, *B, *C, *D, *E;
   int ret = 0; 
+
+  printf("red: m: %4d, n: %4d\n",nr,nc);
+
   A = mzd_init(nr, nc);
   mzd_randomize(A);
   B = mzd_copy(NULL, A);
@@ -23,10 +26,25 @@ int test_equality(nr, nc) {
 
   mzd_reduce_naiv(E, 1);
   
-  ret = mzd_equal(A, B);
-  ret += mzd_equal(A, C);
-  ret += mzd_equal(A, D);
-  ret += mzd_equal(A, E);
+  if(mzd_equal(A, B) != TRUE) {
+    printf("FAIL: A != B\n");
+    ret -= 1;
+  }
+ 
+  if(mzd_equal(B, C) != TRUE) {
+    printf("FAIL: B != C\n");
+    ret -= 1;
+  }
+
+  if(mzd_equal(D, E) != TRUE) {
+    printf("FAIL: D != E\n");
+    ret -= 1;
+  }
+
+  if(mzd_equal(E, A) != TRUE) {
+    printf("FAIL: E != A\n");
+    ret -= 1;
+  }
 
   mzd_free(A);
   mzd_free(B);
@@ -34,34 +52,22 @@ int test_equality(nr, nc) {
   mzd_free(D);
   mzd_free(E);
 
-  return ret - 4;
+  return ret;
 }
 
 int main(int argc, char **argv) {
   m4ri_build_all_codes();
 
-  int eq, failed = 0;
-  eq = test_equality(100, 100);
-  if (eq != 0) {
-    printf("%d, %d, failed\n", 100, 100);
-    failed = 1;
-  }
+  int status = 0;
+  status += red_test_equality(100, 100);
+  status += red_test_equality(21, 171);
+  status += red_test_equality(31, 121);
+  status += red_test_equality(193, 65);
+  status += red_test_equality(1025, 1025);
+  status += red_test_equality(2048, 2048);
 
-  eq = test_equality(100, 120);
-  if (eq != 0) {
-    printf("%d, %d, failed\n", 100, 120);
-    failed = 1;
-  }
-
-  eq = test_equality(120, 100);
-  if (eq != 0) {
-    printf("%d, %d, failed\n", 120, 100);
-    failed = 1;
-  }
-
-  if (failed == 0) {
-    printf("all tests passed.\n");
-    failed = 1;
+  if (status == 0) {
+    printf("All tests passed.\n");
   }
 
   m4ri_destroy_all_codes();
