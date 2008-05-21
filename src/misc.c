@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 #include "misc.h"
 #ifdef HAVE_MM_MALLOC
 #include <mm_malloc.h>
