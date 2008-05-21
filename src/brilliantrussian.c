@@ -689,7 +689,7 @@ static inline void _mzd_combine4_sse2(word *c, word *t1, word *t2, word *t3, wor
 #ifdef GRAY8
 #define _MZD_COMBINE _mzd_combine8_sse2(c, t1, t2, t3, t4, t5, t6, t7, t8, wide)
 #else //GRAY8
-#define _MZD_COMBINE _mzd_combine8_sse2(c, t1, t2, t3, t4, wide)
+#define _MZD_COMBINE _mzd_combine4_sse2(c, t1, t2, t3, t4, wide)
 #endif //GRAY8
 
 #else //HAVE_SSE2

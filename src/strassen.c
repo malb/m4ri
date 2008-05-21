@@ -44,9 +44,15 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
   }
 
   /* adjust cutting numbers to work on words */
-  a -= a%RADIX;
-  b -= b%RADIX;
-  c -= c%RADIX;
+  unsigned long mult = 1;
+  unsigned long width = a;
+  while (width > 2*cutoff) {
+    width/=2;
+    mult*=2;
+  }
+  a -= a%(RADIX*mult);
+  b -= b%(RADIX*mult);
+  c -= c%(RADIX*mult);
 
   anr = ((a/RADIX) >> 1) * RADIX;
   anc = ((b/RADIX) >> 1) * RADIX;
