@@ -564,9 +564,6 @@ packedmatrix *_mzd_mul_m4rm_impl_old(packedmatrix *C, packedmatrix *A, packedmat
   unsigned long s, start;
   const unsigned long end = a_nc/k;
 
-#ifdef HAVE_SSE2
-  if (wide < SSE2_CUTOFF) {
-#endif
     for (start=0; start + blocksize <= a_nr; start += blocksize) {
       for(i=0; i < end; i++) {
         mzd_make_table( B, i*k, k, T, L, 1 );
@@ -580,80 +577,33 @@ packedmatrix *_mzd_mul_m4rm_impl_old(packedmatrix *C, packedmatrix *A, packedmat
         }
       }
     }
-#ifdef HAVE_SSE2
-  } else {
-    for (start=0; start + blocksize <= a_nr; start += blocksize) {
-      for(i=0; i < end; i++) {
-        mzd_make_table( B, i*k, k, T, L, 1 );
-        for(s = 0; s < blocksize; s++) {
-          j = start + s;
-          x = L[ _mzd_get_bits(A, j, i*k, k) ];
-          word *c = C->values + C->rowswap[j];
-          const word * t = T->values + T->rowswap[x];
-          unsigned long todo = wide;
-
-          /* check alignments */
-          if (ALIGNMENT(c,16) == ALIGNMENT(t,16)) {
-            do {
-              *c++ ^= *t++;
-              todo--;
-            } while(ALIGNMENT(c,16) && todo);
-          }
-
-          if (ALIGNMENT(c,16)==0 && ALIGNMENT(t,16)==0) {
-            __m128i *c128 = (__m128i*)c;
-            __m128i *t128 = (__m128i*)t;
-            const __m128i *eof = (__m128i*)((unsigned long)(c + todo) & ~0xF);
-            __m128i xmm1;
-
-            do {
-              xmm1 = _mm_load_si128(c128);
-              const __m128i xmm2 = _mm_load_si128(t128);
-              xmm1 = _mm_xor_si128(xmm1, xmm2);
-              _mm_store_si128(c128, xmm1);
-              ++t128;
-              ++c128;
-            } while(c128 < eof);
-	
-            c = (word*)c128;
-            t = (word*)t128;
-            todo = ((sizeof(word)*todo)%16)/sizeof(word);
-          }
-
-          for(int ii=0; ii<todo ; ii++)
-            c[ii] ^= t[ii];
-        }
-      }
-    }
-  }
-#endif
   
-  for(i=0; i < a_nc/k; i++) {
-    mzd_make_table( B, i*k, k, T, L, 1 );
-    for(s = 0; s < a_nr-start; s++) {
-      j = start + s;
-      x = L[ _mzd_get_bits(A, j, i*k, k) ];
-      /* mzd_combine( C,j,0, C,j,0,  T,x,0); */
-      word *c = C->values + C->rowswap[j];
+    for(i=0; i < a_nc/k; i++) {
+      mzd_make_table( B, i*k, k, T, L, 1 );
+      for(s = 0; s < a_nr-start; s++) {
+        j = start + s;
+        x = L[ _mzd_get_bits(A, j, i*k, k) ];
+        /* mzd_combine( C,j,0, C,j,0,  T,x,0); */
+        word *c = C->values + C->rowswap[j];
       const word *t = T->values + T->rowswap[x];
       for(int ii=0; ii<wide ; ii++)
         c[ii] ^= t[ii];
+      }
     }
-  }
-
-  /* handle rest */
-  if (a_nc%k) {
-    mzd_make_table( B, a_nc/k * k , a_nc%k, T, L, 1);
+    
+    /* handle rest */
+    if (a_nc%k) {
+      mzd_make_table( B, a_nc/k * k , a_nc%k, T, L, 1);
     
     for(j = 0; j<a_nr; j++) {
       x = L[ _mzd_get_bits(A, j, i*k, a_nc%k) ];
       mzd_combine(C,j,0, C,j,0, T,x,0);
     }
-  }
-
-  mzd_free(T);
-  m4ri_mm_free(L);
-  return C;
+    }
+    
+    mzd_free(T);
+    m4ri_mm_free(L);
+    return C;
 }
 
 #ifdef HAVE_SSE2

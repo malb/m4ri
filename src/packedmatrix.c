@@ -277,6 +277,9 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
   }
 
   word parity[64];
+  for (i=0; i<64; i++) {
+    parity[i] = 0;
+  }
   const int wide = A->width;
   const int blocksize = MZD_MUL_BLOCKSIZE;
   unsigned int start;
