@@ -97,12 +97,14 @@ int main(int argc, char **argv) {
   int status = 0;
   m4ri_build_all_codes();
   
+  status += mul_test_equality(1, 1, 1, 0, 1024);
   status += mul_test_equality(21, 171, 31, 0, 63); 
   status += mul_test_equality(21, 171, 31, 0, 131); 
   status += mul_test_equality(193, 65, 65, 10, 64);
   status += mul_test_equality(1025, 1025, 1025, 3, 256);
   status += mul_test_equality(2048, 2048, 4096, 0, 1024);
   status += mul_test_equality(4096, 3528, 4096, 0, 1024);
+  status += mul_test_equality(1024, 1025, 1, 0, 1024);
 
   status += addmul_test_equality(21, 171, 31, 0, 63);
   status += addmul_test_equality(21, 171, 31, 0, 131);
