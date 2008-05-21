@@ -438,7 +438,7 @@ packedmatrix *mzd_invert_m4ri(packedmatrix *m, packedmatrix *I, int k) {
   int twokay=TWOPOW(k);
   int i;
   packedmatrix *T=mzd_init(twokay, size*2);
-  int *L=(int *)m4ri_mm_calloc(twokay, sizeof(int));
+  int *L=(int *)m4ri_mm_malloc(twokay * sizeof(int));
   packedmatrix *answer;
   
   mzd_reduce_m4ri(big, TRUE, k, T, L);
@@ -542,7 +542,7 @@ packedmatrix *_mzd_mul_m4rm_impl_old(packedmatrix *C, packedmatrix *A, packedmat
   }
 
   packedmatrix *T = mzd_init(TWOPOW(k), b_nc);
-  int *L = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
 
   /**
    * The algorithm proceeds as follows:
@@ -704,9 +704,7 @@ static inline void _mzd_combine4_sse2(word *c, word *t1, word *t2, word *t3, wor
 
 packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear) {
   int i,j;
-#ifndef HAVE_SSE2
   int ii;
-#endif
   unsigned int x1, x2, x3, x4;
   word *t1, *t2, *t3, *t4;
 
@@ -752,23 +750,23 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
   }
 
   packedmatrix *T1 = mzd_init(TWOPOW(k), b_nc);
-  int *L1 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L1 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
   packedmatrix *T2 = mzd_init(TWOPOW(k), b_nc);
-  int *L2 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L2 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
   packedmatrix *T3 = mzd_init(TWOPOW(k), b_nc);
-  int *L3 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L3 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
   packedmatrix *T4 = mzd_init(TWOPOW(k), b_nc);
-  int *L4 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L4 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
 
 #ifdef GRAY8
   packedmatrix *T5 = mzd_init(TWOPOW(k), b_nc);
-  int *L5 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L5 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
   packedmatrix *T6 = mzd_init(TWOPOW(k), b_nc);
-  int *L6 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L6 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
   packedmatrix *T7 = mzd_init(TWOPOW(k), b_nc);
-  int *L7 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L7 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
   packedmatrix *T8 = mzd_init(TWOPOW(k), b_nc);
-  int *L8 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L8 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
 #endif
 
   /* process stuff that fits into multiple of k first, but blockwise (babystep-giantstep)*/
@@ -843,8 +841,6 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
       x7 = L7[ _mzd_get_bits(A, j, i*kk+k+k+k+k+k+k, k) ];
       x8 = L8[ _mzd_get_bits(A, j, i*kk+k+k+k+k+k+k+k, k) ];
 #endif
-      //if (x1 == 0 && x2 == 0 && x3 == 0 && x4 == 0 & x5 == 0 & x6 == 0 & x7 == 0 & x8 == 0)
-      //  continue;
       c = C->values + C->rowswap[j];
       t1 = T1->values + T1->rowswap[x1];
       t2 = T2->values + T2->rowswap[x2];
@@ -860,50 +856,30 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
     }
   }
 
-  /* handle stuff that doesn't fit into multiple of k */
+  /* handle stuff that doesn't fit into multiple of kk */
   if (a_nc%kk) {
-    mzd_make_table( B, end * kk ,                     k, T1, L1, 1);
-    mzd_make_table( B, end * kk + k,                  k, T2, L2, 1);
-    mzd_make_table( B, end * kk + k+k,                k, T3, L3, 1);
-#ifdef GRAY8
-    mzd_make_table( B, end * kk + k+k+k,              k, T4, L4, 1);
-#else
-    mzd_make_table( B, end * kk + k+k+k,         a_nc%k, T4, L4, 1);
-#endif
-#ifdef GRAY8
-    mzd_make_table( B, end * kk + k+k+k+k,            k, T5, L5, 1);
-    mzd_make_table( B, end * kk + k+k+k+k+k,          k, T6, L6, 1);
-    mzd_make_table( B, end * kk + k+k+k+k+k+k,        k, T7, L7, 1);
-    mzd_make_table( B, end * kk + k+k+k+k+k+k+k, a_nc%k, T8, L8, 1);
-#endif
-    for(j = 0; j<a_nr; j++) {
-      x1 = L1[ _mzd_get_bits(A, j, end*kk, k) ];
-      x2 = L2[ _mzd_get_bits(A, j, end*kk+k, k) ];
-      x3 = L3[ _mzd_get_bits(A, j, end*kk+k+k, k) ];
-#ifdef GRAY8
-      x4 = L4[ _mzd_get_bits(A, j, end*kk+k+k+k, k) ];
-#else
-      x4 = L4[ _mzd_get_bits(A, j, end*kk+k+k+k, a_nc%k) ];
-#endif
-
-#ifdef GRAY8
-      x5 = L5[ _mzd_get_bits(A, j, end*kk+k+k+k+k, k) ];
-      x6 = L6[ _mzd_get_bits(A, j, end*kk+k+k+k+k+k, k) ];
-      x7 = L7[ _mzd_get_bits(A, j, end*kk+k+k+k+k+k+k, k) ];
-      x8 = L8[ _mzd_get_bits(A, j, end*kk+k+k+k+k+k+k+k, a_nc%k) ];
-#endif
-      c = C->values + C->rowswap[j];
-      t1 = T1->values + T1->rowswap[x1];
-      t2 = T2->values + T2->rowswap[x2];
-      t3 = T3->values + T3->rowswap[x3];
-      t4 = T4->values + T4->rowswap[x4];
-#ifdef GRAY8
-      t5 = T5->values + T5->rowswap[x5];
-      t6 = T6->values + T6->rowswap[x6];
-      t7 = T7->values + T7->rowswap[x7];
-      t8 = T8->values + T8->rowswap[x8];
-#endif
-      _MZD_COMBINE;
+    for (i=end*kk/k; i < (a_nc)/k; i++) {
+      mzd_make_table( B, i*k, k, T1, L1, 1);
+      for(j = 0; j<a_nr; j++) {
+        x1 = L1[ _mzd_get_bits(A, j, i*k, k) ];
+        c = C->values + C->rowswap[j];
+        t1 = T1->values + T1->rowswap[x1];
+        for(ii=0; ii<wide; ii++) {
+          c[ii] ^= t1[ii];
+        }
+      }
+    }
+    /* handle stuff that doesn't fit into multiple of k */
+    if (a_nc%k) {
+      mzd_make_table( B, a_nc/k * k , a_nc%k, T1, L1, 1);
+      for(j = 0; j<a_nr; j++) {
+        x1 = L1[ _mzd_get_bits(A, j, i*k, a_nc%k) ];
+        c = C->values + C->rowswap[j];
+        t1 = T1->values + T1->rowswap[x1];
+        for(ii=0; ii<wide; ii++) {
+          c[ii] ^= t1[ii];
+        }
+      }
     }
   }
 

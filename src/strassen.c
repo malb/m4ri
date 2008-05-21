@@ -48,10 +48,10 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
   b -= b%RADIX;
   c -= c%RADIX;
 
-  anr = ((a/RADIX >> 1) * RADIX);
-  anc = (b/RADIX >> 1) * RADIX;
+  anr = ((a/RADIX) >> 1) * RADIX;
+  anc = ((b/RADIX) >> 1) * RADIX;
   bnr = anc;
-  bnc = (c/RADIX >> 1) * RADIX;
+  bnc = ((c/RADIX) >> 1) * RADIX;
 
   packedmatrix *A00 = mzd_init_window(A,   0,   0,   anr,   anc);
   packedmatrix *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc);
@@ -74,8 +74,10 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
    * algorithm"; http://arxiv.org/pdf/0707.2347v3 for reference on the
    * used operation scheduling.
    */
-  packedmatrix *X0 = mzd_init(anr, MAX(bnc,anc));
-  packedmatrix *X1 = mzd_init(anc, bnc);
+
+  /* change this to mzd_init(anr, MAX(bnc,anc)) to fix the todo below */
+  packedmatrix *X0 = mzd_init(anr, anc);
+  packedmatrix *X1 = mzd_init(bnr, bnc);
   
   _mzd_add_impl(X0, A00, A10);                  /*  X0 = A00 + A10 */
   _mzd_add_impl(X1, B11, B01);                  /*  X1 = B11 + B01 */
@@ -92,7 +94,17 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
   _mzd_add_impl(X0, X0, A01);                   /*  X0 = A01 + X0 */
   _mzd_mul_strassen_impl(C00, X0, B11, cutoff); /* C00 = X0*B11 */
 
-  _mzd_mul_strassen_impl(X0, A00, B00, cutoff); /* X0 = A00*B00*/
+  /**
+   * \todo ideally we would use the same X0 throughout the function
+   * but some called function doesn't like that and we end up with a
+   * wrong result if we use virtual X0 matrices. Ideally, this should
+   * be fixed not worked around. The check whether the bug has been
+   * fixed, use only one X0 and check if mzd_mul_strassen(4096, 3528,
+   * 4096, 1024) still returns the correct answer.
+   */
+
+  mzd_free(X0);
+  X0 = mzd_mul_strassen(NULL, A00, B00, cutoff); /* X0 = A00*B00*/
 
   _mzd_add_impl(C01, X0, C01);                  /* C01 =  X0 + C01 */
   _mzd_add_impl(C10, C01, C10);                 /* C10 = C01 + C10 */

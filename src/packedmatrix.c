@@ -82,7 +82,7 @@ packedmatrix *mzd_init_window(packedmatrix *m, int lowr, int lowc, int highr, in
   if (ncols%RADIX)
     window->width++;
   window->values = m->values;
-  window->rowswap = (unsigned int *)m4ri_mm_calloc( nrows, sizeof(int));
+  window->rowswap = (unsigned int *)m4ri_mm_malloc( nrows * sizeof(int));
 
   offset = lowc / RADIX;
 
@@ -347,9 +347,6 @@ void mzd_randomize( packedmatrix *a ) {
 }
 
 void mzd_set_ui( packedmatrix *a, unsigned int value) {
-  if (value%2 == 0) {
-    return;
-  }
 
   int i,j;
   int stop = MIN(a->nrows, a->ncols);
@@ -360,6 +357,9 @@ void mzd_set_ui( packedmatrix *a, unsigned int value) {
       mzd_write_block(a, i, j*RADIX, 0);
     }
   }
+
+  if(value%2 == 0)
+    return;
 
   for (i=0; i<stop; i++) {
     mzd_write_bit(a, i, i, 1);

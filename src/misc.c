@@ -97,9 +97,10 @@ void *m4ri_mm_calloc( int count, int size ) {
 #ifdef HAVE_MM_MALLOC
   char *b = (char*)newthing;
   int i;
-  for(i=0; i< count*size; i++) {
-    b[i] = 0;
-  }
+/*   for(i=0; i< count*size; i++) { */
+/*     b[i] = 0; */
+/*   } */
+  memset(b, 0, count*size);
 #endif
   return newthing;
 }
