@@ -49,10 +49,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include "watch.h"
-#include "parity.h"
-#include "grayflex.h"
 #include "packedmatrix.h"
 #include "brilliantrussian.h"
 #include "strassen.h"
+#include "grayflex.h"
+#include "parity.h"
 
 #endif //M4RI_H
