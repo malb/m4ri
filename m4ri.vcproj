@@ -188,6 +188,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\src\parity.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\strassen.h"
 				>
 			</File>

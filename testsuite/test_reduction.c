@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "m4ri.h"
 
-int red_test_equality(nr, nc) {
+int red_test_equality(int nr, int nc) {
   packedmatrix *A, *B, *C, *D, *E;
   int ret = 0; 
 
