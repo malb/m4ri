@@ -170,21 +170,35 @@ void mzd_make_table( packedmatrix *M, int ai, int k,
     } else {
       m = M->values + M->rowswap[rowneeded] + homeblock;
 
-      word * end = ti + wide;
-      register word * end8 = end - 8;
-      while (ti < end8) {
-        *(ti++) = *(m++) ^ *(ti1++);
-        *(ti++) = *(m++) ^ *(ti1++);
-        *(ti++) = *(m++) ^ *(ti1++);
-        *(ti++) = *(m++) ^ *(ti1++);
-        *(ti++) = *(m++) ^ *(ti1++);
-        *(ti++) = *(m++) ^ *(ti1++);
-        *(ti++) = *(m++) ^ *(ti1++);
-        *(ti++) = *(m++) ^ *(ti1++);
+      /* Duff's device loop unrolling */
+      register int n = (wide + 7) / 8;
+      switch (wide % 8) {
+      case 0: do { *(ti++) = *(m++) ^ *(ti1++);
+      case 7:      *(ti++) = *(m++) ^ *(ti1++);
+      case 6:      *(ti++) = *(m++) ^ *(ti1++);
+      case 5:      *(ti++) = *(m++) ^ *(ti1++);
+      case 4:      *(ti++) = *(m++) ^ *(ti1++);
+      case 3:      *(ti++) = *(m++) ^ *(ti1++);
+      case 2:      *(ti++) = *(m++) ^ *(ti1++);
+      case 1:      *(ti++) = *(m++) ^ *(ti1++);
+        } while (--n > 0);
       }
-      while (ti < end) {
-        *(ti++) = *(m++) ^ *(ti1++);
-      }
+
+/*       word * end = ti + wide; */
+/*       register word * end8 = end - 8; */
+/*       while (ti < end8) { */
+/*         *(ti++) = *(m++) ^ *(ti1++); */
+/*         *(ti++) = *(m++) ^ *(ti1++); */
+/*         *(ti++) = *(m++) ^ *(ti1++); */
+/*         *(ti++) = *(m++) ^ *(ti1++); */
+/*         *(ti++) = *(m++) ^ *(ti1++); */
+/*         *(ti++) = *(m++) ^ *(ti1++); */
+/*         *(ti++) = *(m++) ^ *(ti1++); */
+/*         *(ti++) = *(m++) ^ *(ti1++); */
+/*       } */
+/*       while (ti < end) { */
+/*         *(ti++) = *(m++) ^ *(ti1++); */
+/*       } */
 
 #ifdef HAVE_SSE2
       ti+=incw; ti1+=incw;
