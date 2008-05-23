@@ -32,12 +32,12 @@
  * pivot is search is y. Returns TRUE if such a pivot row was
  * found. Also, the appropriate row is swapped to the top (== xstart).
  *
- * @param m matrix to operate on
- * @param xstart start row
- * @param xstop stop row (exclusive)
- * @param y column to read
+ * \param m matrix to operate on
+ * \param xstart start row
+ * \param xstop stop row (exclusive)
+ * \param y column to read
  *
- * @return True if a pivot row was found
+ * \return True if a pivot row was found
  */
 
 static int _mzd_force_non_zero(packedmatrix *m, int xstart, int xstop, int y);
@@ -157,9 +157,6 @@ void mzd_make_table( packedmatrix *M, int ai, int k,
     id = codebook[k]->ord[i];
     L[id] = i;
 
-/*     mzd_combine( T,  i,         homeblock, */
-/* 		    M,  rowneeded, homeblock,  */
-/* 		    T,  i-1,       homeblock); */
     if (rowneeded >= M->nrows) {
       for (j = wide-1; j >= 0; j--) {
         *ti++ = *ti1++;
@@ -183,23 +180,6 @@ void mzd_make_table( packedmatrix *M, int ai, int k,
       case 1:      *(ti++) = *(m++) ^ *(ti1++);
         } while (--n > 0);
       }
-
-/*       word * end = ti + wide; */
-/*       register word * end8 = end - 8; */
-/*       while (ti < end8) { */
-/*         *(ti++) = *(m++) ^ *(ti1++); */
-/*         *(ti++) = *(m++) ^ *(ti1++); */
-/*         *(ti++) = *(m++) ^ *(ti1++); */
-/*         *(ti++) = *(m++) ^ *(ti1++); */
-/*         *(ti++) = *(m++) ^ *(ti1++); */
-/*         *(ti++) = *(m++) ^ *(ti1++); */
-/*         *(ti++) = *(m++) ^ *(ti1++); */
-/*         *(ti++) = *(m++) ^ *(ti1++); */
-/*       } */
-/*       while (ti < end) { */
-/*         *(ti++) = *(m++) ^ *(ti1++); */
-/*       } */
-
 #ifdef HAVE_SSE2
       ti+=incw; ti1+=incw;
 #endif
@@ -343,6 +323,77 @@ int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai,
     mzd_process_rows(m, 0, ai-1, ai, k, T, L);
 
   return submatrixrank;
+}
+
+int _mzd_gauss_submatrix(packedmatrix *A, int r, int c, int k) {
+  /* First do Gaussian elimination to get a k x k identity matrix */
+  int i,j,l;
+  int start_row = r;
+  int found;
+  for (j=c; j<c+k; j++) {
+    found = 0;
+    for (i=start_row; i< A->nrows; i++) {
+      /* first we need to clear the first columns first */
+      for (l=c; l<j; l++)
+        if (mzd_read_bit(A, i, l))
+          mzd_row_add_offset(A, l, i, l);
+      
+      /* pivot? */
+      if (mzd_read_bit(A, i, j)) {
+        mzd_row_swap(A, i, start_row);
+        /* clear above */
+        for (l=r; l<start_row; l++) {
+          if (mzd_read_bit(A, l, j)) {
+            mzd_row_add_offset(A, start_row, l, j);
+          }
+        }
+        start_row++;
+        found = 1;
+        break;
+      }
+    }
+    if (found==0) {
+      return j - c;
+    }
+  }
+  return j - c;
+}
+
+int mzd_reduce_m4ri1(packedmatrix *A, int full, int k) {
+  int stop = MIN(A->nrows, A->ncols); 
+  int rank = 0;
+  int r = 0;
+  int c = 0;
+  int kbar = 0;
+
+  packedmatrix *T = mzd_init( TWOPOW(k), A->ncols );
+  int *L = (int *)m4ri_mm_calloc( TWOPOW(k), sizeof(int) );
+
+  while(c<stop) {
+    if(c+k > A->nrows || c+k > A->ncols) {
+      //k = MIN(A->nrows,A->ncols) - c;
+      mzd_gauss_delayed(A, c, 1);
+      break;
+    }
+    kbar = _mzd_gauss_submatrix(A, r, c, k);
+
+    mzd_make_table(A, r, kbar, T, L, 0);
+    mzd_process_rows(A, r+kbar, A->nrows-1, c, kbar, T, L);
+
+    if (full==TRUE)
+      mzd_process_rows(A, 0, r-1, c, kbar, T, L);
+
+    rank += kbar;
+    r += kbar;
+    c += kbar;
+    if (k!=kbar) {
+      c++;
+    }
+
+  }
+  mzd_free(T);
+  m4ri_mm_free(L);
+  return rank;
 }
 
 int mzd_reduce_m4ri(packedmatrix *m, int full, int k, packedmatrix *T, int *L) {

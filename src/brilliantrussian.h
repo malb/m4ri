@@ -111,6 +111,8 @@ int mzd_step_m4ri(packedmatrix *M, int full, int k, int ai, packedmatrix *T, int
 
 int mzd_reduce_m4ri(packedmatrix *M, int full, int k, packedmatrix *T, int *L);
 
+int mzd_reduce_m4ri1(packedmatrix *M, int full, int k);
+
 /**
  * \brief Given a matrix in upper triangular form compute the reduced row
  * echelon form of that matrix.
