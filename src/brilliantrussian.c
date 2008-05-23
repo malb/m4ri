@@ -265,34 +265,19 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
       word *m_ptr = m->values + blocknum + m->rowswap[i];
       word *T_ptr = T->values + blocknum + T->rowswap[tablerow];
 #ifdef HAVE_SSE2
-      /** check alignments **/
-      if (wide > SSE2_CUTOFF) {
-	if (ALIGNMENT(T_ptr,16) == ALIGNMENT(m_ptr, 16)) {
-	  do {
-	    *m_ptr++ ^= *T_ptr++;
-	    wide--;
-	  } while(ALIGNMENT(m_ptr,16) && wide);
-	}
-      
-	if (ALIGNMENT(m_ptr,16)==0 && ALIGNMENT(T_ptr,16)==0) {
-	  __m128i *__m_ptr = (__m128i*)m_ptr;
-	  __m128i *__T_ptr = (__m128i*)T_ptr;
-	  const __m128i *end_ptr = (__m128i*)((unsigned long)(m_ptr + wide) & ~0xF);
-	  __m128i xmm1;
-
-	  do {
-	   xmm1 = _mm_load_si128(__m_ptr    );
-	   const __m128i xmm2 = _mm_load_si128(__T_ptr    );
-	   xmm1 = _mm_xor_si128(xmm1, xmm2);
-	   _mm_store_si128(__m_ptr    , xmm1);
-	   __m_ptr++;
-	   __T_ptr++;
-	  } while(__m_ptr < end_ptr);
-
-	  m_ptr = (word*)__m_ptr;
-	  T_ptr = (word*)__T_ptr;
-	  wide = ((sizeof(word)*wide)%16)/sizeof(word);
-	}
+      if (ALIGNMENT(m_ptr,16)==0) {
+        __m128i *m128 = (__m128i*)m_ptr;
+        __m128i *T128 = (__m128i*)T_ptr;
+        const __m128i *eof = (__m128i*)((unsigned long)(m_ptr + wide) & ~0xF);
+        
+        while(m128 < eof) {
+          *m128 = _mm_xor_si128(*m128, *T128++);
+          m128++;
+        }
+        
+        m_ptr = (word*)m128;
+        T_ptr = (word*)T128;
+        wide = ((sizeof(word)*wide)%16)/sizeof(word);
       }
 #endif
       for(j=0; j<wide ; j++)
