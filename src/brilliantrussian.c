@@ -359,12 +359,43 @@ int _mzd_gauss_submatrix(packedmatrix *A, int r, int c, int k) {
   return j - c;
 }
 
+void _mzd_make_table1(packedmatrix *M, int r, int c, int k,
+		      packedmatrix *T, int *L) {
+  const int homeblock= c/RADIX;
+  int i, j, rowneeded, id;
+  int twokay= TWOPOW(k);
+  unsigned int wide = T->width - homeblock;
+
+  word *ti, *ti1, *m;
+
+
+  L[0]=0;
+  for (i=1; i<twokay; i++) {
+    rowneeded = r + codebook[k]->inc[i-1];
+    id = codebook[k]->ord[i];
+    L[id] = i;
+
+    m = M->values + M->rowswap[rowneeded] + homeblock;
+    ti1 = T->values + T->rowswap[i-1] + homeblock;
+    ti = T->values + T->rowswap[i] + homeblock;
+      
+    for(j=0; j<wide; j++) {
+      *(ti++) = *(m++) ^ *(ti1++);
+    }
+  }
+}
+
+
 int mzd_reduce_m4ri1(packedmatrix *A, int full, int k) {
   int stop = MIN(A->nrows, A->ncols); 
   int rank = 0;
   int r = 0;
   int c = 0;
   int kbar = 0;
+  int i,j;
+  int x;
+  int homeblock = 0;
+  int wide;
 
   packedmatrix *T = mzd_init( TWOPOW(k), A->ncols );
   int *L = (int *)m4ri_mm_calloc( TWOPOW(k), sizeof(int) );
@@ -377,19 +408,30 @@ int mzd_reduce_m4ri1(packedmatrix *A, int full, int k) {
     }
     kbar = _mzd_gauss_submatrix(A, r, c, k);
 
-    mzd_make_table(A, r, kbar, T, L, 0);
-    mzd_process_rows(A, r+kbar, A->nrows-1, c, kbar, T, L);
-
-    if (full==TRUE)
-      mzd_process_rows(A, 0, r-1, c, kbar, T, L);
+    _mzd_make_table1(A, r, c, kbar, T, L);
+    homeblock = c/RADIX;
+    wide = T->width - homeblock;
+    printf("r: %d c: %d kbar: %d\n",r,c,kbar);
+    for(i=r+kbar; i<A->nrows; i++) {
+      x = L[_mzd_get_bits(A, i, c, kbar)];
+      for (j=0; j<=wide; j++) {
+        A->values[A->rowswap[i] + homeblock + j] ^= T->values[T->rowswap[x] + homeblock + j];
+      }
+    }
+    for(i=0; i<r; i++) {
+      x = L[_mzd_get_bits(A, i, c, kbar)];
+      for (j=0; j<=wide; j++) {
+        A->values[A->rowswap[i] + homeblock + j] ^= T->values[T->rowswap[x] + homeblock + j];
+      }
+    }
 
     rank += kbar;
     r += kbar;
     c += kbar;
-    if (k!=kbar) {
+    if(k!=kbar) {
       c++;
     }
-
+    mzd_print_matrix(A);
   }
   mzd_free(T);
   m4ri_mm_free(L);
