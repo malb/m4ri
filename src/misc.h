@@ -61,7 +61,9 @@ typedef unsigned long long word;
  * \param y Word
  */
 
+#ifndef MAX
 #define MAX(x,y) ((x > y)?x:y)
+#endif
 
 /**
  * \brief Return the minimal element of x and y
@@ -70,8 +72,9 @@ typedef unsigned long long word;
  * \param y Word
  */
 
-
+#ifndef MIN
 #define MIN(x,y) ((x < y)?x:y)
+#endif
 
 /**
  * \brief Return r such that x elements fit into r blocks of length y.

@@ -222,38 +222,38 @@ int mzd_reduce_naiv(packedmatrix *m, int full) {
   return mzd_gauss_delayed(m,0, full); 
 }
 
-packedmatrix *mzd_transpose(packedmatrix *newmatrix, const packedmatrix *data) {
+packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A) {
   int i,j,k, eol;
   word *temp;
 
-  if (newmatrix == NULL) {
-    newmatrix = mzd_init( data->ncols, data->nrows );
+  if (DST == NULL) {
+    DST = mzd_init( A->ncols, A->nrows );
   } else {
-    if (newmatrix->nrows != data->ncols || newmatrix->ncols != data->nrows) {
+    if (DST->nrows != A->ncols || DST->ncols != A->nrows) {
       m4ri_die("mzd_transpose: Wrong size for return matrix.\n");
     }
   }
 
-  if(newmatrix->ncols%RADIX) {
-    eol = RADIX*(newmatrix->width-1);
+  if(DST->ncols%RADIX) {
+    eol = RADIX*(DST->width-1);
   } else {
-    eol = RADIX*(newmatrix->width);
+    eol = RADIX*(DST->width);
   }
 
-  for (i=0; i<newmatrix->nrows; i++) {
-    temp = newmatrix->values + newmatrix->rowswap[i];
+  for (i=0; i<DST->nrows; i++) {
+    temp = DST->values + DST->rowswap[i];
     for (j=0; j < eol; j+=RADIX) {
       for (k=0; k<RADIX; k++) {
-        *temp |= ((word)mzd_read_bit(data, j+k, i))<<(RADIX-1-k);
+        *temp |= ((word)mzd_read_bit(A, j+k, i))<<(RADIX-1-k);
       }
       temp++;
     }
-    j = data->nrows - (data->nrows%RADIX);
-    for (k=0; k<(data->nrows%RADIX); k++) {
-      *temp |= ((word)mzd_read_bit(data, j+k, i))<<(RADIX-1-k);
+    j = A->nrows - (A->nrows%RADIX);
+    for (k=0; k<(A->nrows%RADIX); k++) {
+      *temp |= ((word)mzd_read_bit(A, j+k, i))<<(RADIX-1-k);
     }
   }
-  return newmatrix;
+  return DST;
 }
 
 
