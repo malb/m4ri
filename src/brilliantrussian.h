@@ -45,15 +45,14 @@
  * code table.
  * 
  * \param M matrix to operate on
- * \param ai the starting position
+ * \param r the starting row
+ * \oaram c the starting column (only exact up to block)
  * \param k
  * \param T prealloced matrix of dimension \f$2^k\f$ x m->ncols
  * \param L prealloced table of length \f$2^k\f$
- * \param full touch columns before ai?
- *
  */
 
-void mzd_make_table( packedmatrix *M, int ai, int k, packedmatrix *T, int *L, int full);
+void mzd_make_table( packedmatrix *M, int r, int c, int k, packedmatrix *T, int *L);
 
 /**
  * \brief Adds a row from T to the row row in m starting at column
@@ -110,8 +109,6 @@ int mzd_step_m4ri(packedmatrix *M, int full, int k, int ai, packedmatrix *T, int
  */
 
 int mzd_reduce_m4ri(packedmatrix *M, int full, int k, packedmatrix *T, int *L);
-
-int mzd_reduce_m4ri1(packedmatrix *M, int full, int k);
 
 /**
  * \brief Given a matrix in upper triangular form compute the reduced row

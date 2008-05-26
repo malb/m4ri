@@ -134,9 +134,8 @@ static inline int _mzd_get_bits(const packedmatrix *m, const int x, const int y,
 }
 
 
-void mzd_make_table( packedmatrix *M, int ai, int k,
-		     packedmatrix *T, int *L, int full) {
-  const int homeblock= full ? 0 : ai/RADIX;
+void mzd_make_table( packedmatrix *M, int r, int c, int k, packedmatrix *T, int *L) {
+  const int homeblock= c/RADIX;
   int i, j, rowneeded, id;
   int twokay= TWOPOW(k);
   unsigned int wide = T->width - homeblock;
@@ -153,7 +152,7 @@ void mzd_make_table( packedmatrix *M, int ai, int k,
 
   L[0]=0;
   for (i=1; i<twokay; i++) {
-    rowneeded = codebook[k]->inc[i-1]+ai;
+    rowneeded = r + codebook[k]->inc[i-1];
     id = codebook[k]->ord[i];
     L[id] = i;
 
@@ -293,7 +292,7 @@ int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai,
    * have been precomputed.
    */
 
-  mzd_make_table(m, ai, k, T, L, 0);
+  mzd_make_table(m, ai, ai, k, T, L);
 
   /**
    * Step 3. One can rapidly process the remaining rows from \f$i +
@@ -326,7 +325,6 @@ int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai,
 }
 
 int _mzd_gauss_submatrix(packedmatrix *A, int r, int c, int k) {
-  /* First do Gaussian elimination to get a k x k identity matrix */
   int i,j,l;
   int start_row = r;
   int found;
@@ -334,9 +332,9 @@ int _mzd_gauss_submatrix(packedmatrix *A, int r, int c, int k) {
     found = 0;
     for (i=start_row; i< A->nrows; i++) {
       /* first we need to clear the first columns first */
-      for (l=c; l<j; l++)
-        if (mzd_read_bit(A, i, l))
-          mzd_row_add_offset(A, l, i, l);
+      for (l=0; l<j-c; l++)
+        if (mzd_read_bit(A, i, c+l))
+          mzd_row_add_offset(A, r+l, i, c+l);
       
       /* pivot? */
       if (mzd_read_bit(A, i, j)) {
@@ -359,126 +357,90 @@ int _mzd_gauss_submatrix(packedmatrix *A, int r, int c, int k) {
   return j - c;
 }
 
-void _mzd_make_table1(packedmatrix *M, int r, int c, int k,
-		      packedmatrix *T, int *L) {
-  const int homeblock= c/RADIX;
-  int i, j, rowneeded, id;
-  int twokay= TWOPOW(k);
-  unsigned int wide = T->width - homeblock;
-
-  word *ti, *ti1, *m;
-
-
-  L[0]=0;
-  for (i=1; i<twokay; i++) {
-    rowneeded = r + codebook[k]->inc[i-1];
-    id = codebook[k]->ord[i];
-    L[id] = i;
-
-    m = M->values + M->rowswap[rowneeded] + homeblock;
-    ti1 = T->values + T->rowswap[i-1] + homeblock;
-    ti = T->values + T->rowswap[i] + homeblock;
-      
-    for(j=0; j<wide; j++) {
-      *(ti++) = *(m++) ^ *(ti1++);
-    }
-  }
-}
-
-
-int mzd_reduce_m4ri1(packedmatrix *A, int full, int k) {
-  int stop = MIN(A->nrows, A->ncols); 
-  int rank = 0;
+int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
+  const int ncols = A->ncols; 
   int r = 0;
   int c = 0;
   int kbar = 0;
-  int i,j;
-  int x;
-  int homeblock = 0;
-  int wide;
+  int simple; 
 
-  packedmatrix *T = mzd_init( TWOPOW(k), A->ncols );
-  int *L = (int *)m4ri_mm_calloc( TWOPOW(k), sizeof(int) );
+  if (k == 0) {
+    k = m4ri_opt_k(A->nrows, A->ncols, 0);
+  }
 
-  while(c<stop) {
-    if(c+k > A->nrows || c+k > A->ncols) {
-      //k = MIN(A->nrows,A->ncols) - c;
-      mzd_gauss_delayed(A, c, 1);
-      break;
+  if (T == NULL && L == NULL) {
+    simple = 1;
+    T = mzd_init( TWOPOW(k), A->ncols );
+    L = (int *)m4ri_mm_calloc( TWOPOW(k), sizeof(int) );
+  }
+
+  while(c<ncols) {
+    if(c+k > A->ncols) {
+      k = ncols - c;
     }
     kbar = _mzd_gauss_submatrix(A, r, c, k);
 
-    _mzd_make_table1(A, r, c, kbar, T, L);
-    homeblock = c/RADIX;
-    wide = T->width - homeblock;
-    printf("r: %d c: %d kbar: %d\n",r,c,kbar);
-    for(i=r+kbar; i<A->nrows; i++) {
-      x = L[_mzd_get_bits(A, i, c, kbar)];
-      for (j=0; j<=wide; j++) {
-        A->values[A->rowswap[i] + homeblock + j] ^= T->values[T->rowswap[x] + homeblock + j];
-      }
+    if (kbar) {
+      mzd_make_table(A, r, c, kbar, T, L);
+      mzd_process_rows(A, r+kbar, A->nrows-1, c, kbar, T, L);
+      if(full)
+        mzd_process_rows(A, 0, r-1, c, kbar, T, L);
     }
-    for(i=0; i<r; i++) {
-      x = L[_mzd_get_bits(A, i, c, kbar)];
-      for (j=0; j<=wide; j++) {
-        A->values[A->rowswap[i] + homeblock + j] ^= T->values[T->rowswap[x] + homeblock + j];
-      }
-    }
-
-    rank += kbar;
     r += kbar;
     c += kbar;
     if(k!=kbar) {
       c++;
     }
-    mzd_print_matrix(A);
-  }
-  mzd_free(T);
-  m4ri_mm_free(L);
-  return rank;
-}
-
-int mzd_reduce_m4ri(packedmatrix *m, int full, int k, packedmatrix *T, int *L) {
-  int i, submatrixrank;
-  int stop = MIN(m->nrows, m->ncols); 
-
-  int rank = 0;
-  int simple = 0;
-
-  if (k == 0) {
-    k = m4ri_opt_k(m->nrows, m->ncols, 0);
   }
 
-  if (T == NULL && L == NULL) {
-    simple = 1;
-    T = mzd_init( TWOPOW(k), m->ncols );
-    L = (int *)m4ri_mm_calloc( TWOPOW(k), sizeof(int) );
-  }
-  
-  /* main loop */
-  for (i=0; i<stop; i+=k) {
-    /* not enough room for M4RI left. */
-    if ( ((i+k*3) > m->nrows) || ((i+k) > m->ncols) ) {
-      rank += mzd_gauss_delayed(m, i, full);
-      break;
-    }
-    
-    submatrixrank=mzd_step_m4ri(m, full, k, i, T, L);
-
-    if (submatrixrank!=k) {
-      /* not full rank, use Gaussian elimination :-( */
-      rank += mzd_gauss_delayed(m, i, full);
-      break;
-    }
-    rank += submatrixrank;
-  }
-
-  if (simple) {
-    m4ri_mm_free(L);
+  if(simple) {
     mzd_free(T);
+    m4ri_mm_free(L);
   }
-  return rank; 
+  return r;
 }
+
+/* int mzd_reduce_m4ri(packedmatrix *m, int full, int k, packedmatrix *T, int *L) { */
+/*   int i, submatrixrank; */
+/*   int stop = MIN(m->nrows, m->ncols);  */
+
+/*   int rank = 0; */
+/*   int simple = 0; */
+
+/*   if (k == 0) { */
+/*     k = m4ri_opt_k(m->nrows, m->ncols, 0); */
+/*   } */
+
+/*   if (T == NULL && L == NULL) { */
+/*     simple = 1; */
+/*     T = mzd_init( TWOPOW(k), m->ncols ); */
+/*     L = (int *)m4ri_mm_calloc( TWOPOW(k), sizeof(int) ); */
+/*   } */
+  
+/*   /\* main loop *\/ */
+/*   for (i=0; i<stop; i+=k) { */
+/*     /\* not enough room for M4RI left. *\/ */
+/*     if ( ((i+k*3) > m->nrows) || ((i+k) > m->ncols) ) { */
+/*       rank += mzd_gauss_delayed(m, i, full); */
+/*       break; */
+/*     } */
+    
+/*     submatrixrank=mzd_step_m4ri(m, full, k, i, T, L); */
+
+/*     if (submatrixrank!=k) { */
+/*       /\* not full rank, use Gaussian elimination :-( *\/ */
+/*       rank += mzd_gauss_delayed(m, i, full); */
+/*       break; */
+/*     } */
+/*     rank += submatrixrank; */
+/*   } */
+
+/*   if (simple) { */
+/*     m4ri_mm_free(L); */
+/*     mzd_free(T); */
+/*   } */
+/*   return rank;  */
+/* } */
 
 void mzd_top_reduce_m4ri(packedmatrix *m, int k, packedmatrix *T, int *L) {
   int i, submatrixrank;
@@ -506,7 +468,7 @@ void mzd_top_reduce_m4ri(packedmatrix *m, int k, packedmatrix *T, int *L) {
     submatrixrank = _mzd_prep(m, i, k);
     
     if (submatrixrank==k) {
-      mzd_make_table(m, i, k, T, L, 0);
+      mzd_make_table(m, i, i, k, T, L);
       mzd_process_rows(m, 0, i-1, i, k, T, L);
     } else {
       mzd_gauss_delayed(m, i, 1);
@@ -658,7 +620,7 @@ packedmatrix *_mzd_mul_m4rm_impl_old(packedmatrix *C, packedmatrix *A, packedmat
 
     for (start=0; start + blocksize <= a_nr; start += blocksize) {
       for(i=0; i < end; i++) {
-        mzd_make_table( B, i*k, k, T, L, 1 );
+        mzd_make_table( B, i*k, 0, k, T, L);
         for(s = 0; s < blocksize; s++) {
           j = start + s;
           x = L[ _mzd_get_bits(A, j, i*k, k) ];
@@ -671,7 +633,7 @@ packedmatrix *_mzd_mul_m4rm_impl_old(packedmatrix *C, packedmatrix *A, packedmat
     }
   
     for(i=0; i < a_nc/k; i++) {
-      mzd_make_table( B, i*k, k, T, L, 1 );
+      mzd_make_table( B, i*k, 0, k, T, L);
       for(s = 0; s < a_nr-start; s++) {
         j = start + s;
         x = L[ _mzd_get_bits(A, j, i*k, k) ];
@@ -685,7 +647,7 @@ packedmatrix *_mzd_mul_m4rm_impl_old(packedmatrix *C, packedmatrix *A, packedmat
     
     /* handle rest */
     if (a_nc%k) {
-      mzd_make_table( B, a_nc/k * k , a_nc%k, T, L, 1);
+      mzd_make_table( B, a_nc/k * k , 0, a_nc%k, T, L);
     
     for(j = 0; j<a_nr; j++) {
       x = L[ _mzd_get_bits(A, j, i*k, a_nc%k) ];
@@ -872,15 +834,15 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
 
   for (giantstep=0; giantstep + blocksize <= a_nr; giantstep += blocksize) {
     for(i=0; i < end; i++) {
-      mzd_make_table( B, i*kk, k, T1, L1, 1 );
-      mzd_make_table( B, i*kk+k, k, T2, L2, 1 );
-      mzd_make_table( B, i*kk+k+k, k, T3, L3, 1 );
-      mzd_make_table( B, i*kk+k+k+k, k, T4, L4, 1 );
+      mzd_make_table( B, i*kk, 0, k, T1, L1);
+      mzd_make_table( B, i*kk+k, 0, k, T2, L2);
+      mzd_make_table( B, i*kk+k+k, 0, k, T3, L3);
+      mzd_make_table( B, i*kk+k+k+k, 0, k, T4, L4);
 #ifdef GRAY8
-      mzd_make_table( B, i*kk+k+k+k+k, k, T5, L5, 1 );
-      mzd_make_table( B, i*kk+k+k+k+k+k, k, T6, L6, 1 );
-      mzd_make_table( B, i*kk+k+k+k+k+k+k, k, T7, L7, 1 );
-      mzd_make_table( B, i*kk+k+k+k+k+k+k+k, k, T8, L8, 1 );
+      mzd_make_table( B, i*kk+k+k+k+k, 0, k, T5, L5);
+      mzd_make_table( B, i*kk+k+k+k+k+k, 0, k, T6, L6);
+      mzd_make_table( B, i*kk+k+k+k+k+k+k, 0, k, T7, L7);
+      mzd_make_table( B, i*kk+k+k+k+k+k+k+k, 0, k, T8, L8);
 #endif   
       for(babystep = 0; babystep < blocksize; babystep++) {
         j = giantstep + babystep;
@@ -911,15 +873,15 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
   }
   
   for(i=0; i < end; i++) {
-    mzd_make_table( B, i*kk, k, T1, L1, 1 );
-    mzd_make_table( B, i*kk+k, k, T2, L2, 1 );
-    mzd_make_table( B, i*kk+k+k, k, T3, L3, 1 );
-    mzd_make_table( B, i*kk+k+k+k, k, T4, L4, 1 );
+    mzd_make_table( B, i*kk, 0, k, T1, L1);
+    mzd_make_table( B, i*kk+k, 0, k, T2, L2);
+    mzd_make_table( B, i*kk+k+k, 0, k, T3, L3);
+    mzd_make_table( B, i*kk+k+k+k, 0, k, T4, L4);
 #ifdef GRAY8
-    mzd_make_table( B, i*kk+k+k+k+k, k, T5, L5, 1 );
-    mzd_make_table( B, i*kk+k+k+k+k+k, k, T6, L6, 1 );
-    mzd_make_table( B, i*kk+k+k+k+k+k+k, k, T7, L7, 1 );
-    mzd_make_table( B, i*kk+k+k+k+k+k+k+k, k, T8, L8, 1 );
+    mzd_make_table( B, i*kk+k+k+k+k, 0, k, T5, L5);
+    mzd_make_table( B, i*kk+k+k+k+k+k, 0, k, T6, L6);
+    mzd_make_table( B, i*kk+k+k+k+k+k+k, 0, k, T7, L7);
+    mzd_make_table( B, i*kk+k+k+k+k+k+k+k, 0, k, T8, L8);
 #endif
     for(babystep = 0; babystep < a_nr - giantstep; babystep++) {
       j = giantstep + babystep;
@@ -951,7 +913,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
   /* handle stuff that doesn't fit into multiple of kk */
   if (a_nc%kk) {
     for (i=end*kk/k; i < (a_nc)/k; i++) {
-      mzd_make_table( B, i*k, k, T1, L1, 1);
+      mzd_make_table( B, i*k, 0, k, T1, L1);
       for(j = 0; j<a_nr; j++) {
         x1 = L1[ _mzd_get_bits(A, j, i*k, k) ];
         c = C->values + C->rowswap[j];
@@ -963,7 +925,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
     }
     /* handle stuff that doesn't fit into multiple of k */
     if (a_nc%k) {
-      mzd_make_table( B, a_nc/k * k , a_nc%k, T1, L1, 1);
+      mzd_make_table( B, a_nc/k * k , 0, a_nc%k, T1, L1);
       for(j = 0; j<a_nr; j++) {
         x1 = L1[ _mzd_get_bits(A, j, i*k, a_nc%k) ];
         c = C->values + C->rowswap[j];
