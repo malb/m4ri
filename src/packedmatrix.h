@@ -133,6 +133,10 @@ void mzd_free_window(packedmatrix *A);
  */
  
 static inline void mzd_row_swap(packedmatrix *M, const int rowa, const int rowb) {
+  /**
+   * \todo it might be better to actually copy stuff around if the
+   * rows are far apart to improve data locality.
+   */
   int temp=M->rowswap[rowa];
   M->rowswap[rowa]=M->rowswap[rowb];
   M->rowswap[rowb]=temp;

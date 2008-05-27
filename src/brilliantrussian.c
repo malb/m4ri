@@ -188,20 +188,6 @@ void mzd_make_table( packedmatrix *M, int r, int c, int k, packedmatrix *T, int 
   }
 }
 
-
-
-void mzd_process_row(packedmatrix *m, const int row, const int homecol, const int k, const packedmatrix *T, const int *L) {
-  const int blocknum = homecol/RADIX;
-
-  const int value = _mzd_get_bits(m, row, homecol, k);
-
-  const int tablerow = L[ value ];
-  
-  mzd_combine(m, row,      blocknum,
-	      m, row,      blocknum,
-	      T, tablerow, blocknum);
-}
-
 void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, int k, packedmatrix *T, int *L) {
   int i,j;
   const int blocknum=startcol/RADIX;
@@ -216,7 +202,7 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
 
   case 1:
     /* no loop needed as only one block is operated on. */
-    for (i=startrow; i<=stoprow; i++) {
+    for (i=startrow; i<stoprow; i++) {
       value = _mzd_get_bits(m, i, startcol, k);
       tablerow = L[ value ];
       b1_ptr = m->values + blocknum + m->rowswap[ i ];
@@ -227,7 +213,7 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
 
   case 2:
     /* two blocks, no loop */
-    for (i=startrow; i<=stoprow; i++) {
+    for (i=startrow; i<stoprow; i++) {
       value = _mzd_get_bits(m, i, startcol, k);
       tablerow = L[ value ];
       b1_ptr = m->values + blocknum + m->rowswap[ i ];
@@ -239,7 +225,7 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
 
   default:
     /* the real deal more than two blocks. */
-    for (i=startrow; i<=stoprow; i++) {
+    for (i=startrow; i<stoprow; i++) {
       const int tablerow = L[ _mzd_get_bits(m, i, startcol, k) ];
       word *m_ptr = m->values + blocknum + m->rowswap[i];
       word *T_ptr = T->values + blocknum + T->rowswap[tablerow];
@@ -305,7 +291,7 @@ int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai,
    * as if Gaussian elimination had been performed.
   */
 
-  mzd_process_rows(m, ai+k*3, m->nrows-1, ai, k, T, L);
+  mzd_process_rows(m, ai+k*3, m->nrows, ai, k, T, L);
 
   /**
    * Step 4. While the above form of the algorithm will reduce a
@@ -319,7 +305,7 @@ int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai,
    */
 
   if (full==TRUE)
-    mzd_process_rows(m, 0, ai-1, ai, k, T, L);
+    mzd_process_rows(m, 0, ai, ai, k, T, L);
 
   return submatrixrank;
 }
@@ -382,9 +368,9 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
 
     if (kbar) {
       mzd_make_table(A, r, c, kbar, T, L);
-      mzd_process_rows(A, r+kbar, A->nrows-1, c, kbar, T, L);
+      mzd_process_rows(A, r+kbar, A->nrows, c, kbar, T, L);
       if(full)
-        mzd_process_rows(A, 0, r-1, c, kbar, T, L);
+        mzd_process_rows(A, 0, r, c, kbar, T, L);
     }
     r += kbar;
     c += kbar;
@@ -469,7 +455,7 @@ void mzd_top_reduce_m4ri(packedmatrix *m, int k, packedmatrix *T, int *L) {
     
     if (submatrixrank==k) {
       mzd_make_table(m, i, i, k, T, L);
-      mzd_process_rows(m, 0, i-1, i, k, T, L);
+      mzd_process_rows(m, 0, i, i, k, T, L);
     } else {
       mzd_gauss_delayed(m, i, 1);
       break;

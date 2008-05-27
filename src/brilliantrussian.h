@@ -55,34 +55,22 @@
 void mzd_make_table( packedmatrix *M, int r, int c, int k, packedmatrix *T, int *L);
 
 /**
- * \brief Adds a row from T to the row row in m starting at column
- * homecol.
- * 
- * \param M Matrix to operate on
- * \param row Row which is operated on
- * \param homecol Starting column for addition
- * \param k M4RI parameter
- * \param T contains the correct row to be added
- * \param L Contains row number to be added
+ * \brief The function looks up k bits from position i,startcol in each row
+ * and adds the appropriate row from T to the row i. 
  *
- * \note This function assumes that the rowswap array of T is the identity.
- */
-
-void mzd_process_row(packedmatrix *M, const int row, const int homecol, const int k, const packedmatrix *T, const int *L);
-
-/**
- * \brief Iterate mzd_proccess_row from startrow to stoprow.
+ * This process is iterated for i from startrow to stoprow
+ * (exclusive).
  *
  * \param M Matrix to operate on
  * \param startrow top row which is operated on
- * \param stoprow bottom row which is operated on
+ * \param endrow bottom row which is operated on
  * \param startcol Starting column for addition
  * \param k M4RI parameter
  * \param T contains the correct row to be added
  * \param L Contains row number to be added
  */
 
-void mzd_process_rows(packedmatrix *M, int startrow, int stoprow, int startcol, int k, packedmatrix *T, int *L);
+void mzd_process_rows(packedmatrix *M, int startrow, int endrow, int startcol, int k, packedmatrix *T, int *L);
 
 /**
  * \brief The actual heart of the M4RI algorithm.
