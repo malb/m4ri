@@ -92,7 +92,7 @@ static int _mzd_prep(packedmatrix *m, const int ai, const int k) {
     /* Step one, find a pivot row in this column.*/
     good=_mzd_force_non_zero(m, pc, MIN( ai+k*3, m->nrows-1 ), pc);
 
-    if (good == FALSE) 
+    if (good == FALSE)
       return rank;
 
     for (tr=ai; tr < MIN(ai+k*3, m->nrows); tr++) {
@@ -189,94 +189,56 @@ void mzd_make_table( packedmatrix *M, int r, int c, int k, packedmatrix *T, int 
 }
 
 void mzd_process_rows(packedmatrix *M, int startrow, int stoprow, int startcol, int k, packedmatrix *T, int *L) {
-  int i,j;
+  int r, c;
   const int blocknum=startcol/RADIX;
   int wide = M->width - blocknum;
 
-  int value, tablerow;
-  word *b1_ptr,*b2_ptr;
+  for (r=startrow; r+8<=stoprow; r+=8) {
+    const int x0 = L[ _mzd_get_bits(M, r+0, startcol, k) ];
+    const int x1 = L[ _mzd_get_bits(M, r+1, startcol, k) ];
+    const int x2 = L[ _mzd_get_bits(M, r+2, startcol, k) ];
+    const int x3 = L[ _mzd_get_bits(M, r+3, startcol, k) ];
+    const int x4 = L[ _mzd_get_bits(M, r+4, startcol, k) ];
+    const int x5 = L[ _mzd_get_bits(M, r+5, startcol, k) ];
+    const int x6 = L[ _mzd_get_bits(M, r+6, startcol, k) ];
+    const int x7 = L[ _mzd_get_bits(M, r+7, startcol, k) ];
+    
+    word *m0 = M->values + M->rowswap[r+0] + blocknum;
+    word *m1 = M->values + M->rowswap[r+1] + blocknum;
+    word *m2 = M->values + M->rowswap[r+2] + blocknum;
+    word *m3 = M->values + M->rowswap[r+3] + blocknum;
+    word *m4 = M->values + M->rowswap[r+4] + blocknum;
+    word *m5 = M->values + M->rowswap[r+5] + blocknum;
+    word *m6 = M->values + M->rowswap[r+6] + blocknum;
+    word *m7 = M->values + M->rowswap[r+7] + blocknum;
+    
+    word *t0 = T->values + T->rowswap[x0] + blocknum;
+    word *t1 = T->values + T->rowswap[x1] + blocknum;
+    word *t2 = T->values + T->rowswap[x2] + blocknum;
+    word *t3 = T->values + T->rowswap[x3] + blocknum;
+    word *t4 = T->values + T->rowswap[x4] + blocknum;
+    word *t5 = T->values + T->rowswap[x5] + blocknum;
+    word *t6 = T->values + T->rowswap[x6] + blocknum;
+    word *t7 = T->values + T->rowswap[x7] + blocknum;
 
-  /* for optimization reasons we distinguish several cases here. */
-
-  switch(wide) {
-
-  case 1:
-    /* no loop needed as only one block is operated on. */
-    for (i=startrow; i<stoprow; i++) {
-      value = _mzd_get_bits(M, i, startcol, k);
-      tablerow = L[ value ];
-      b1_ptr = M->values + blocknum + M->rowswap[ i ];
-      b2_ptr = T->values + blocknum + T->rowswap[ tablerow ];
-      *b1_ptr ^= *b2_ptr;
+    for(c=0; c<wide ; c++) {
+      *m0++ ^= *t0++;
+      *m1++ ^= *t1++;
+      *m2++ ^= *t2++;
+      *m3++ ^= *t3++;
+      *m4++ ^= *t4++;
+      *m5++ ^= *t5++;
+      *m6++ ^= *t6++;
+      *m7++ ^= *t7++;
     }
-    break;
-
-  case 2:
-    /* two blocks, no loop */
-    for (i=startrow; i<stoprow; i++) {
-      value = _mzd_get_bits(M, i, startcol, k);
-      tablerow = L[ value ];
-      b1_ptr = M->values + blocknum + M->rowswap[ i ];
-      b2_ptr = T->values + blocknum + T->rowswap[ tablerow ];
-      *b1_ptr++ ^= *b2_ptr++;
-      *b1_ptr ^= *b2_ptr;
-    }
-    break;
-
-  default:
-    /* the real deal more than two blocks. */
-    for (i=startrow; i+4<=stoprow; i+=4) {
-      const int x0 = L[ _mzd_get_bits(M, i+0, startcol, k) ];
-      const int x1 = L[ _mzd_get_bits(M, i+1, startcol, k) ];
-      const int x2 = L[ _mzd_get_bits(M, i+2, startcol, k) ];
-      const int x3 = L[ _mzd_get_bits(M, i+3, startcol, k) ];
-
-      word *m0 = M->values + M->rowswap[i+0] + blocknum;
-      word *m1 = M->values + M->rowswap[i+1] + blocknum;
-      word *m2 = M->values + M->rowswap[i+2] + blocknum;
-      word *m3 = M->values + M->rowswap[i+3] + blocknum;
-
-      word *t0 = T->values + T->rowswap[x0] + blocknum;
-      word *t1 = T->values + T->rowswap[x1] + blocknum;
-      word *t2 = T->values + T->rowswap[x2] + blocknum;
-      word *t3 = T->values + T->rowswap[x3] + blocknum;
-
-#undef HAVE_SSE2
-#ifdef HAVE_SSE2
-      if (ALIGNMENT(m_ptr,16)==0) {
-        __m128i *m128 = (__m128i*)m_ptr;
-        __m128i *T128 = (__m128i*)T_ptr;
-        const __m128i *eof = (__m128i*)((unsigned long)(m_ptr + wide) & ~0xF);
-        
-        while(m128 < eof) {
-          *m128 = _mm_xor_si128(*m128, *T128++);
-          m128++;
-        }
-        
-        m_ptr = (word*)m128;
-        T_ptr = (word*)T128;
-        wide = ((sizeof(word)*wide)%16)/sizeof(word);
-      }
-#endif
-      for(j=0; j<wide ; j++) {
-      	m0[j] ^= t0[j];
-      	m1[j] ^= t1[j];
-      	m2[j] ^= t2[j];
-      	m3[j] ^= t3[j];
-      }
-    } /* end row loop */
-    for( ; i<stoprow; i++) {
-      const int x0 = L[ _mzd_get_bits(M, i, startcol, k) ];
-      word *m0 = M->values + M->rowswap[i+0] + blocknum;
-      word *t0 = T->values + T->rowswap[x0] + blocknum;
-      for(j=0; j<wide ; j++)
-      	m0[j] ^= t0[j];
-    }
-#ifdef HAVE_SSE2      
-      wide = m->width - blocknum;
-#endif
-
-  } /* end switch case */
+  } /* end row loop */
+  for( ; r<stoprow; r++) {
+    const int x0 = L[ _mzd_get_bits(M, r, startcol, k) ];
+    word *m0 = M->values + M->rowswap[r] + blocknum;
+    word *t0 = T->values + T->rowswap[x0] + blocknum;
+    for(c=0; c<wide ; c++)
+      m0[c] ^= t0[c];
+  }
 }
 
 int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai, 

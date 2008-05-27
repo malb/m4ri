@@ -16,9 +16,7 @@ int main(int argc, char **argv) {
   }
   n = atoi(argv[1]);
   A = mzd_init(n, n);
-  // the algorithm doesn't detect the unit matrix so it is okay to use
-  // it here, to get reproducible results.
-  mzd_set_ui(A,1);
+  mzd_randomize(A);
   
   t = cpucycles();
   // standard parameter
