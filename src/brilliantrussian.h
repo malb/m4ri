@@ -73,6 +73,25 @@ void mzd_make_table( packedmatrix *M, int r, int c, int k, packedmatrix *T, int 
 void mzd_process_rows(packedmatrix *M, int startrow, int endrow, int startcol, int k, packedmatrix *T, int *L);
 
 /**
+ * \brief Same as mzd_process_rows but works with two Gray code tables in parallel.
+ *
+ * This process is iterated for i from startrow to stoprow
+ * (exclusive).
+ *
+ * \param M Matrix to operate on
+ * \param startrow top row which is operated on
+ * \param endrow bottom row which is operated on
+ * \param startcol Starting column for addition
+ * \param k M4RI parameter
+ * \param T0 contains the correct row to be added
+ * \param L0 Contains row number to be added
+ * \param T1 contains the correct row to be added
+ * \param L1 Contains row number to be added
+ */
+
+void mzd_process_rows2(packedmatrix *M, int startrow, int stoprow, int startcol, int k, packedmatrix *T0, int *L0, packedmatrix *T1, int *L1);
+
+/**
  * \brief The actual heart of the M4RI algorithm.
  *
  * \param M Matrix
