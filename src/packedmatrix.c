@@ -162,22 +162,21 @@ void mzd_row_clear_offset(packedmatrix *m, int row, int coloffset) {
 }
 
 
-void mzd_row_add_offset( packedmatrix *m, int sourcerow, int destrow, 
-		   int coloffset ) {
-
+void mzd_row_add_offset( packedmatrix *M, int srcrow, int dstrow, int coloffset) {
   int startblock= coloffset/RADIX;
   int i;
   word temp;
   
   /* make sure to start adding at coloffset */
-  temp=mzd_read_block(m, sourcerow, startblock*RADIX);
+  temp=mzd_read_block(M, srcrow, startblock*RADIX);
   if (coloffset%RADIX)
     temp &= (ONE<<(RADIX - (coloffset%RADIX))) - ONE;
-  mzd_xor_block(m, destrow, startblock*RADIX, temp);
+  mzd_xor_block(M, dstrow, startblock*RADIX, temp);
 
-  for ( i=startblock+1; i < (m->width); i++ ) {
-    temp=mzd_read_block(m, sourcerow, i*RADIX);
-    mzd_xor_block(m, destrow, i*RADIX, temp);
+  word *src = M->values + M->rowswap[srcrow];
+  word *dst = M->values + M->rowswap[dstrow];
+  for ( i=startblock+1; i < M->width; i++ ) {
+    dst[i] ^= src[i];
   }
 }
 
