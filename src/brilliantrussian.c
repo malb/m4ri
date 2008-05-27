@@ -188,10 +188,10 @@ void mzd_make_table( packedmatrix *M, int r, int c, int k, packedmatrix *T, int 
   }
 }
 
-void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, int k, packedmatrix *T, int *L) {
+void mzd_process_rows(packedmatrix *M, int startrow, int stoprow, int startcol, int k, packedmatrix *T, int *L) {
   int i,j;
   const int blocknum=startcol/RADIX;
-  int wide = m->width - blocknum;
+  int wide = M->width - blocknum;
 
   int value, tablerow;
   word *b1_ptr,*b2_ptr;
@@ -203,9 +203,9 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
   case 1:
     /* no loop needed as only one block is operated on. */
     for (i=startrow; i<stoprow; i++) {
-      value = _mzd_get_bits(m, i, startcol, k);
+      value = _mzd_get_bits(M, i, startcol, k);
       tablerow = L[ value ];
-      b1_ptr = m->values + blocknum + m->rowswap[ i ];
+      b1_ptr = M->values + blocknum + M->rowswap[ i ];
       b2_ptr = T->values + blocknum + T->rowswap[ tablerow ];
       *b1_ptr ^= *b2_ptr;
     }
@@ -214,9 +214,9 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
   case 2:
     /* two blocks, no loop */
     for (i=startrow; i<stoprow; i++) {
-      value = _mzd_get_bits(m, i, startcol, k);
+      value = _mzd_get_bits(M, i, startcol, k);
       tablerow = L[ value ];
-      b1_ptr = m->values + blocknum + m->rowswap[ i ];
+      b1_ptr = M->values + blocknum + M->rowswap[ i ];
       b2_ptr = T->values + blocknum + T->rowswap[ tablerow ];
       *b1_ptr++ ^= *b2_ptr++;
       *b1_ptr ^= *b2_ptr;
@@ -225,10 +225,23 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
 
   default:
     /* the real deal more than two blocks. */
-    for (i=startrow; i<stoprow; i++) {
-      const int tablerow = L[ _mzd_get_bits(m, i, startcol, k) ];
-      word *m_ptr = m->values + blocknum + m->rowswap[i];
-      word *T_ptr = T->values + blocknum + T->rowswap[tablerow];
+    for (i=startrow; i+4<=stoprow; i+=4) {
+      const int x0 = L[ _mzd_get_bits(M, i+0, startcol, k) ];
+      const int x1 = L[ _mzd_get_bits(M, i+1, startcol, k) ];
+      const int x2 = L[ _mzd_get_bits(M, i+2, startcol, k) ];
+      const int x3 = L[ _mzd_get_bits(M, i+3, startcol, k) ];
+
+      word *m0 = M->values + M->rowswap[i+0] + blocknum;
+      word *m1 = M->values + M->rowswap[i+1] + blocknum;
+      word *m2 = M->values + M->rowswap[i+2] + blocknum;
+      word *m3 = M->values + M->rowswap[i+3] + blocknum;
+
+      word *t0 = T->values + T->rowswap[x0] + blocknum;
+      word *t1 = T->values + T->rowswap[x1] + blocknum;
+      word *t2 = T->values + T->rowswap[x2] + blocknum;
+      word *t3 = T->values + T->rowswap[x3] + blocknum;
+
+#undef HAVE_SSE2
 #ifdef HAVE_SSE2
       if (ALIGNMENT(m_ptr,16)==0) {
         __m128i *m128 = (__m128i*)m_ptr;
@@ -245,12 +258,24 @@ void mzd_process_rows(packedmatrix *m, int startrow, int stoprow, int startcol, 
         wide = ((sizeof(word)*wide)%16)/sizeof(word);
       }
 #endif
+      for(j=0; j<wide ; j++) {
+      	m0[j] ^= t0[j];
+      	m1[j] ^= t1[j];
+      	m2[j] ^= t2[j];
+      	m3[j] ^= t3[j];
+      }
+    } /* end row loop */
+    for( ; i<stoprow; i++) {
+      const int x0 = L[ _mzd_get_bits(M, i, startcol, k) ];
+      word *m0 = M->values + M->rowswap[i+0] + blocknum;
+      word *t0 = T->values + T->rowswap[x0] + blocknum;
       for(j=0; j<wide ; j++)
-      	m_ptr[j] ^= T_ptr[j];
+      	m0[j] ^= t0[j];
+    }
 #ifdef HAVE_SSE2      
       wide = m->width - blocknum;
 #endif
-    } /* end row loop */
+
   } /* end switch case */
 }
 
