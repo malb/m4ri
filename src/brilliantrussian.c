@@ -191,37 +191,53 @@ void mzd_make_table( packedmatrix *M, int r, int c, int k, packedmatrix *T, int 
 void mzd_process_rows2(packedmatrix *M, int startrow, int stoprow, int startcol, int k, packedmatrix *T0, int *L0, packedmatrix *T1, int *L1) {
   int r, c;
   const int blocknum=startcol/RADIX;
-  int wide = M->width - blocknum;
+  const int wide = M->width - blocknum;
+  int x00 = 0;
+  int x01 = 0;
+  int x10 = 0;
+  int x11 = 0;
 
-  for (r=startrow; r+2<=stoprow; r+=2) {
-    const int x0 = L0[ _mzd_get_bits(M, r+0, startcol, k/2) ];
-    const int x1 = L0[ _mzd_get_bits(M, r+1, startcol, k/2) ];
+  const int ka = k/2;
+  const int kb = k-k/2;
 
-    const int y0 = L1[ _mzd_get_bits(M, r+0, startcol+k/2, k-k/2) ];
-    const int y1 = L1[ _mzd_get_bits(M, r+1, startcol+k/2, k-k/2) ];
+  for (r=startrow; r+2<=stoprow; ) {
+    while(r+2<=stoprow && x00 == 0 && x01 == 0) {
+      x00 = L0[ _mzd_get_bits(M, r+0, startcol,    ka) ];
+      x01 = L1[ _mzd_get_bits(M, r+0, startcol+ka, kb) ];
+      r++;
+    }
+    word *m0 = M->values + M->rowswap[r-1] + blocknum;
+    word *t00 = T0->values + T0->rowswap[x00] + blocknum;
+    word *t10 = T1->values + T1->rowswap[x01] + blocknum;
+
+    while(r+2<=stoprow && x10 == 0 && x11 == 0) {
+      x10 = L0[ _mzd_get_bits(M, r, startcol,    ka) ];
+      x11 = L1[ _mzd_get_bits(M, r, startcol+ka, kb) ];
+      r++;
+    }
+    word *m1 = M->values + M->rowswap[r-1] + blocknum;
     
-    word *m0 = M->values + M->rowswap[r+0] + blocknum;
-    word *m1 = M->values + M->rowswap[r+1] + blocknum;
-    
-    word *s0 = T0->values + T0->rowswap[x0] + blocknum;
-    word *s1 = T0->values + T0->rowswap[x1] + blocknum;
-
-    word *t0 = T1->values + T1->rowswap[y0] + blocknum;
-    word *t1 = T1->values + T1->rowswap[y1] + blocknum;
+    word *t01 = T0->values + T0->rowswap[x10] + blocknum;
+    word *t11 = T1->values + T1->rowswap[x11] + blocknum;
 
     for(c=0; c<wide ; c++) {
-      m0[c] ^= s0[c] ^ t0[c];
-      m1[c] ^= s1[c] ^ t1[c];
+      m0[c] ^= t00[c] ^ t10[c];
+      m1[c] ^= t01[c] ^ t11[c];
     }
+    x00 = 0;
+    x01 = 0;
+    x10 = 0;
+    x11 = 0;
+    
   } /* end row loop */
   for(; r<stoprow; r++) {
-    const int x0 = L0[ _mzd_get_bits(M, r, startcol,     k/2) ];
-    const int y0 = L1[ _mzd_get_bits(M, r, startcol+k/2, k-k/2)];
+    const int x0 = L0[ _mzd_get_bits(M, r, startcol,    ka)];
+    const int x1 = L1[ _mzd_get_bits(M, r, startcol+ka, kb)];
     word *m0 = M->values + M->rowswap[r] + blocknum;
-    word *s0 = T0->values + T0->rowswap[x0] + blocknum;
-    word *t0 = T1->values + T1->rowswap[y0] + blocknum;
+    word *t00 = T0->values + T0->rowswap[x0] + blocknum;
+    word *t0 = T1->values + T1->rowswap[x1] + blocknum;
     for(c=0; c<wide ; c++)
-      m0[c] ^= s0[c] ^ t0[c];
+      m0[c] ^= t00[c] ^ t0[c];
   }
 }
 
