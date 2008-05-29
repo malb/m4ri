@@ -416,48 +416,6 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
   return r;
 }
 
-/* int mzd_reduce_m4ri(packedmatrix *m, int full, int k, packedmatrix *T, int *L) { */
-/*   int i, submatrixrank; */
-/*   int stop = MIN(m->nrows, m->ncols);  */
-
-/*   int rank = 0; */
-/*   int simple = 0; */
-
-/*   if (k == 0) { */
-/*     k = m4ri_opt_k(m->nrows, m->ncols, 0); */
-/*   } */
-
-/*   if (T == NULL && L == NULL) { */
-/*     simple = 1; */
-/*     T = mzd_init( TWOPOW(k), m->ncols ); */
-/*     L = (int *)m4ri_mm_calloc( TWOPOW(k), sizeof(int) ); */
-/*   } */
-  
-/*   /\* main loop *\/ */
-/*   for (i=0; i<stop; i+=k) { */
-/*     /\* not enough room for M4RI left. *\/ */
-/*     if ( ((i+k*3) > m->nrows) || ((i+k) > m->ncols) ) { */
-/*       rank += mzd_gauss_delayed(m, i, full); */
-/*       break; */
-/*     } */
-    
-/*     submatrixrank=mzd_step_m4ri(m, full, k, i, T, L); */
-
-/*     if (submatrixrank!=k) { */
-/*       /\* not full rank, use Gaussian elimination :-( *\/ */
-/*       rank += mzd_gauss_delayed(m, i, full); */
-/*       break; */
-/*     } */
-/*     rank += submatrixrank; */
-/*   } */
-
-/*   if (simple) { */
-/*     m4ri_mm_free(L); */
-/*     mzd_free(T); */
-/*   } */
-/*   return rank;  */
-/* } */
-
 void mzd_top_reduce_m4ri(packedmatrix *m, int k, packedmatrix *T, int *L) {
   int i, submatrixrank;
   int stop = MIN(m->nrows, m->ncols); 
