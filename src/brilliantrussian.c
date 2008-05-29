@@ -28,34 +28,6 @@
 #include "misc.h"
 
 /**
- * Finds a pivot row between xstart and xstop. The column where this
- * pivot is search is y. Returns TRUE if such a pivot row was
- * found. Also, the appropriate row is swapped to the top (== xstart).
- *
- * \param m matrix to operate on
- * \param xstart start row
- * \param xstop stop row (exclusive)
- * \param y column to read
- *
- * \return True if a pivot row was found
- */
-
-static int _mzd_force_non_zero(packedmatrix *m, int xstart, int xstop, int y);
-
-/**
- * Performs Gaussian elimination on a submatrix of 3k x k starting at
- * point (homepoint, homepoint) of m.
- *
- * \param m matrix to operate on
- * \param homepoint row,col where to start
- * \param k
- *
- * \return rank of 3k x k submatrix.
- */
-
-static int _mzd_prep(packedmatrix *m, const int ai, const int k);
-
-/**
  * Get k bits starting a position (x,y) from the matrix m.
  *
  * \param m Source matrix.
@@ -63,51 +35,6 @@ static int _mzd_prep(packedmatrix *m, const int ai, const int k);
  * \param y Starting column.
  * \param k Number of bits.
  */ 
-
-static inline int _mzd_get_bits(const packedmatrix *m, const int x, const int y, const int k);
-
-
-/**-----------------------------------------------------------------------**/
-
-static int _mzd_force_non_zero(packedmatrix *m, int xstart, int xstop, int y) {
-  int i;
-
-  for (i=xstart; i<xstop; i++) {
-    if (mzd_read_bit(m, i, y)==1) {
-      if (i!=xstart) mzd_row_swap(m, i, xstart);
-      return TRUE;
-    }
-  }
-  return FALSE;
-}
-
-static int _mzd_prep(packedmatrix *m, const int ai, const int k) {
-  int pc; /* pivot column */
-  int tr; /* target row */
-  int good;
-
-  int rank = 0;
-
-  for (pc=ai; pc < MIN(ai+k,m->ncols); pc++) {
-    /* Step one, find a pivot row in this column.*/
-    good=_mzd_force_non_zero(m, pc, MIN( ai+k*3, m->nrows-1 ), pc);
-
-    if (good == FALSE)
-      return rank;
-
-    for (tr=ai; tr < MIN(ai+k*3, m->nrows); tr++) {
-      /* Step two, add this pivot row to other rows as needed. */
-      if (tr==pc) continue;
-      
-      if (mzd_read_bit(m, tr, pc)==0) continue;
-
-      mzd_row_add_offset(m, pc, tr, ai);
-    }
-    rank++;
-  }
-
-  return rank;
-}
 
 static inline int _mzd_get_bits(const packedmatrix *m, const int x, const int y, const int k) {
   int truerow = m->rowswap[ x ];
@@ -133,7 +60,44 @@ static inline int _mzd_get_bits(const packedmatrix *m, const int x, const int y,
    }
 }
 
+/**
+ *
+ */
 
+static int _mzd_gauss_submatrix(packedmatrix *A, int r, int c, int k, int endrow) {
+  int i,j,l;
+  int start_row = r;
+  int found;
+  for (j=c; j<c+k; j++) {
+    found = 0;
+    for (i=start_row; i< endrow; i++) {
+      /* first we need to clear the first columns first */
+      for (l=0; l<j-c; l++)
+        if (mzd_read_bit(A, i, c+l))
+          mzd_row_add_offset(A, r+l, i, c+l);
+      
+      /* pivot? */
+      if (mzd_read_bit(A, i, j)) {
+        mzd_row_swap(A, i, start_row);
+        /* clear above */
+        for (l=r; l<start_row; l++) {
+          if (mzd_read_bit(A, l, j)) {
+            mzd_row_add_offset(A, start_row, l, j);
+          }
+        }
+        start_row++;
+        found = 1;
+        break;
+      }
+    }
+    if (found==0) {
+      return j - c;
+    }
+  }
+  return j - c;
+}
+
+/** ---------------------- **/
 void mzd_make_table( packedmatrix *M, int r, int c, int k, packedmatrix *T, int *L) {
   const int homeblock= c/RADIX;
   int i, j, rowneeded, id;
@@ -270,10 +234,7 @@ void mzd_process_rows(packedmatrix *M, int startrow, int stoprow, int startcol, 
   }
 }
 
-int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai, 
-		  packedmatrix *T, int *L) {
-  int submatrixrank;
-  
+int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
   /**
    * The algorithm works as follows:
    *
@@ -282,21 +243,13 @@ int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai,
    * first \f$3k\f$ rows after and including the \f$i\f$-th row to
    * produce an identity matrix in \f$a_{i,i} ... a_{i+k-1,i+k-1},\f$
    * and zeroes in \f$a_{i+k,i} ... a_{i+3k-1,i+k-1}\f$.
-   */
-  submatrixrank = _mzd_prep(m, ai, k);
-  if (submatrixrank!=k) 
-    return submatrixrank;
-
-  /**
+   *
    * Step 2. Construct a table consisting of the \f$2^k\f$ binary strings of
    * length k in a Gray code.  Thus with only \f$2^k\f$ vector
    * additions, all possible linear combinations of these k rows
    * have been precomputed.
-   */
-
-  mzd_make_table(m, ai, ai, k, T, L);
-
-  /**
+   *
+   *
    * Step 3. One can rapidly process the remaining rows from \f$i +
    * 3k\f$ until row \f$m\f$ (the last row) by using the table. For
    * example, suppose the \f$j\f$-th row has entries \f$a_{j,i}
@@ -305,11 +258,7 @@ int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai,
    * to row j will force the k columns to zero, and adjust the
    * remaining columns from \f$ i + k\f$ to n in the appropriate way,
    * as if Gaussian elimination had been performed.
-  */
-
-  mzd_process_rows(m, ai+k*3, m->nrows, ai, k, T, L);
-
-  /**
+   *
    * Step 4. While the above form of the algorithm will reduce a
    * system of boolean linear equations to unit upper triangular form,
    * and thus permit a system to be solved with back substitution, the
@@ -320,46 +269,6 @@ int mzd_step_m4ri(packedmatrix *m, int full, int k, int ai,
    * 2.5 coeffcient to 3
    */
 
-  if (full==TRUE)
-    mzd_process_rows(m, 0, ai, ai, k, T, L);
-
-  return submatrixrank;
-}
-
-int _mzd_gauss_submatrix(packedmatrix *A, int r, int c, int k) {
-  int i,j,l;
-  int start_row = r;
-  int found;
-  for (j=c; j<c+k; j++) {
-    found = 0;
-    for (i=start_row; i< A->nrows; i++) {
-      /* first we need to clear the first columns first */
-      for (l=0; l<j-c; l++)
-        if (mzd_read_bit(A, i, c+l))
-          mzd_row_add_offset(A, r+l, i, c+l);
-      
-      /* pivot? */
-      if (mzd_read_bit(A, i, j)) {
-        mzd_row_swap(A, i, start_row);
-        /* clear above */
-        for (l=r; l<start_row; l++) {
-          if (mzd_read_bit(A, l, j)) {
-            mzd_row_add_offset(A, start_row, l, j);
-          }
-        }
-        start_row++;
-        found = 1;
-        break;
-      }
-    }
-    if (found==0) {
-      return j - c;
-    }
-  }
-  return j - c;
-}
-
-int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
   const int ncols = A->ncols; 
   int r = 0;
   int c = 0;
@@ -367,6 +276,9 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
 
   if (k == 0) {
     k = m4ri_opt_k(A->nrows, A->ncols, 0);
+  }
+  if (k>2) {
+    k-=1;
   }
 
   int kk = 2*k;
@@ -382,7 +294,7 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
     if(c+kk > A->ncols) {
       kk = ncols - c;
     }
-    kbar = _mzd_gauss_submatrix(A, r, c, kk);
+    kbar = _mzd_gauss_submatrix(A, r, c, kk, A->nrows);
 
     if (kbar) {
       if (kbar!=1) {
@@ -416,45 +328,59 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
   return r;
 }
 
-void mzd_top_reduce_m4ri(packedmatrix *m, int k, packedmatrix *T, int *L) {
-  int i, submatrixrank;
-  int stop = MIN(m->nrows, m->ncols); 
-  int simple = 0;
-  
+void mzd_top_reduce_m4ri(packedmatrix *A, int k, packedmatrix *T, int *L) {
+  const int ncols = A->ncols; 
+  int r = 0;
+  int c = 0;
+  int kbar = 0;
+
   if (k == 0) {
-    k = m4ri_opt_k(m->nrows, m->ncols, 0);
+    k = m4ri_opt_k(A->nrows, A->ncols, 0);
   }
-  
-  /* setup tables */
-  if (T == NULL && L == NULL) {
-    simple = 1;
-    T = mzd_init( TWOPOW(k), m->ncols );
-    L = (int *)m4ri_mm_calloc( TWOPOW(k), sizeof(int) );
+  if(k>2) {
+    k-=2;
   }
-  
-  /* main loop */
-  for (i=0; i<stop; i+=k) {
-    if ( (i+k > m->nrows) || (i+k > m->ncols) ) {
-      mzd_gauss_delayed(m, i, 1);
-      break;
+
+  int kk = 2*k;
+  int k0 = kk/2;
+  int k1 = kk - k0;
+
+  packedmatrix *T0 = mzd_init(TWOPOW(k0), A->ncols);
+  packedmatrix *T1 = mzd_init(TWOPOW(k1), A->ncols);
+  int *L0 = (int *)m4ri_mm_calloc(TWOPOW(k0), sizeof(int));
+  int *L1 = (int *)m4ri_mm_calloc(TWOPOW(k1), sizeof(int));
+
+  while(c<ncols) {
+    if(c+kk > A->ncols) {
+      kk = ncols - c;
     }
-    
-    submatrixrank = _mzd_prep(m, i, k);
-    
-    if (submatrixrank==k) {
-      mzd_make_table(m, i, i, k, T, L);
-      mzd_process_rows(m, 0, i, i, k, T, L);
-    } else {
-      mzd_gauss_delayed(m, i, 1);
-      break;
+    kbar = _mzd_gauss_submatrix(A, r, c, kk, MIN(r+kk,A->nrows));
+
+    if (kbar) {
+      if (kbar!=1) {
+        const int kbar0 = kbar/2;
+        const int kbar1 = kbar - kbar0;
+        mzd_make_table(A, r,       c, kbar0, T0, L0);
+        mzd_make_table(A, r+kbar0, c, kbar1, T1, L1);
+        mzd_process_rows2(A, 0, r, c, kbar, T0, L0, T1, L1);
+      } else {
+        /* todo: this is overkill */
+        mzd_make_table(A, r, c, kbar, T0, L0);
+        mzd_process_rows(A, 0, r, c, kbar, T0, L0);
+      }
+    }
+    r += kbar;
+    c += kbar;
+    if(kk!=kbar) {
+      c++;
     }
   }
-  
-  /* clear tables */
-  if (simple) {
-    m4ri_mm_free(L);
-    mzd_free(T);
-  }
+
+  mzd_free(T0);
+  m4ri_mm_free(L0);
+  mzd_free(T1);
+  m4ri_mm_free(L1);
+
 }
 
 packedmatrix *mzd_invert_m4ri(packedmatrix *m, packedmatrix *I, int k) {
@@ -571,23 +497,6 @@ packedmatrix *_mzd_mul_m4rm_impl_old(packedmatrix *C, packedmatrix *A, packedmat
 
   packedmatrix *T = mzd_init(TWOPOW(k), b_nc);
   int *L = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
-
-  /**
-   * The algorithm proceeds as follows:
-   * 
-   * Step 1. Make a Gray code table of all the \f$2^k\f$ linear combinations
-   * of the \f$k\f$ rows of \f$B_i\f$.  Call the \f$x\f$-th row
-   * \f$T_x\f$.
-   *
-   * Step 2. Read the entries 
-   *    \f$a_{j,(i-1)k+1}, a_{j,(i-1)k+2} , ... , a_{j,(i-1)k+k}.\f$
-   *
-   * Let \f$x\f$ be the \f$k\f$ bit binary number formed by the
-   * concatenation of \f$a_{j,(i-1)k+1}, ... , a_{j,ik}\f$.
-   *
-   * Step 3. for \f$h = 1,2, ... , c\f$ do
-   *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
-   */
 
   unsigned long s, start;
   const unsigned long end = a_nc/k;
@@ -731,6 +640,23 @@ static inline void _mzd_combine4_sse2(word *c, word *t1, word *t2, word *t3, wor
 #endif //HAVE_SSE2
 
 packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear) {
+  /**
+   * The algorithm proceeds as follows:
+   * 
+   * Step 1. Make a Gray code table of all the \f$2^k\f$ linear combinations
+   * of the \f$k\f$ rows of \f$B_i\f$.  Call the \f$x\f$-th row
+   * \f$T_x\f$.
+   *
+   * Step 2. Read the entries 
+   *    \f$a_{j,(i-1)k+1}, a_{j,(i-1)k+2} , ... , a_{j,(i-1)k+k}.\f$
+   *
+   * Let \f$x\f$ be the \f$k\f$ bit binary number formed by the
+   * concatenation of \f$a_{j,(i-1)k+1}, ... , a_{j,ik}\f$.
+   *
+   * Step 3. for \f$h = 1,2, ... , c\f$ do
+   *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
+   */
+
   int i,j;
   int ii;
   unsigned int x1, x2, x3, x4;
