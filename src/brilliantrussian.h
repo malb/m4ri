@@ -190,6 +190,6 @@ packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
  * \brief If defined 8 Gray code tables are used in parallel.
  */
 
-#define GRAY8
+#define M4RM_GRAY8
 
 #endif //BRILLIANTRUSSIAN_H

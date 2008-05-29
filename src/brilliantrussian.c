@@ -623,19 +623,19 @@ static inline void _mzd_combine4_sse2(word *c, word *t1, word *t2, word *t3, wor
 
 #ifdef HAVE_SSE2
 
-#ifdef GRAY8
+#ifdef M4RM_GRAY8
 #define _MZD_COMBINE _mzd_combine8_sse2(c, t1, t2, t3, t4, t5, t6, t7, t8, wide)
-#else //GRAY8
+#else //M4RM_GRAY8
 #define _MZD_COMBINE _mzd_combine4_sse2(c, t1, t2, t3, t4, wide)
-#endif //GRAY8
+#endif //M4RM_GRAY8
 
 #else //HAVE_SSE2
 
-#ifdef GRAY8
+#ifdef M4RM_GRAY8
 #define _MZD_COMBINE for(ii=0; ii<wide ; ii++) c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii] ^ t5[ii] ^ t6[ii] ^ t7[ii] ^ t8[ii]
-#else //GRAY8
+#else //M4RM_GRAY8
 #define _MZD_COMBINE for(ii=0; ii<wide ; ii++) c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii]
-#endif //GRAY8
+#endif //M4RM_GRAY8
 
 #endif //HAVE_SSE2
 
@@ -662,7 +662,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
   unsigned int x1, x2, x3, x4;
   word *t1, *t2, *t3, *t4;
 
-#ifdef GRAY8
+#ifdef M4RM_GRAY8
   unsigned int x5, x6, x7, x8;
   word *t5, *t6, *t7, *t8;
 #endif
@@ -694,7 +694,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
 
   if (k == 0) {
     k = m4ri_opt_k(blocksize, a_nc, b_nc);
-#ifdef GRAY8
+#ifdef M4RM_GRAY8
     if (k>3)
       k -= 2;
 #else
@@ -712,7 +712,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
   packedmatrix *T4 = mzd_init(TWOPOW(k), b_nc);
   int *L4 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
 
-#ifdef GRAY8
+#ifdef M4RM_GRAY8
   packedmatrix *T5 = mzd_init(TWOPOW(k), b_nc);
   int *L5 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
   packedmatrix *T6 = mzd_init(TWOPOW(k), b_nc);
@@ -725,7 +725,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
 
   /* process stuff that fits into multiple of k first, but blockwise (babystep-giantstep)*/
   unsigned long babystep, giantstep;
-#ifdef GRAY8
+#ifdef M4RM_GRAY8
   const int kk = 8*k;
 #else
   const int kk = 4*k;
@@ -738,7 +738,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
       mzd_make_table( B, i*kk+k, 0, k, T2, L2);
       mzd_make_table( B, i*kk+k+k, 0, k, T3, L3);
       mzd_make_table( B, i*kk+k+k+k, 0, k, T4, L4);
-#ifdef GRAY8
+#ifdef M4RM_GRAY8
       mzd_make_table( B, i*kk+k+k+k+k, 0, k, T5, L5);
       mzd_make_table( B, i*kk+k+k+k+k+k, 0, k, T6, L6);
       mzd_make_table( B, i*kk+k+k+k+k+k+k, 0, k, T7, L7);
@@ -750,7 +750,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
         x2 = L2[ _mzd_get_bits(A, j, i*kk+k, k) ];
         x3 = L3[ _mzd_get_bits(A, j, i*kk+k+k, k) ];
         x4 = L4[ _mzd_get_bits(A, j, i*kk+k+k+k, k) ];
-#ifdef GRAY8 
+#ifdef M4RM_GRAY8 
         x5 = L5[ _mzd_get_bits(A, j, i*kk+k+k+k+k, k) ];
         x6 = L6[ _mzd_get_bits(A, j, i*kk+k+k+k+k+k, k) ];
         x7 = L7[ _mzd_get_bits(A, j, i*kk+k+k+k+k+k+k, k) ];
@@ -761,7 +761,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
         t2 = T2->values + T2->rowswap[x2];
         t3 = T3->values + T3->rowswap[x3];
         t4 = T4->values + T4->rowswap[x4];
-#ifdef GRAY8
+#ifdef M4RM_GRAY8
         t5 = T5->values + T5->rowswap[x5];
         t6 = T6->values + T6->rowswap[x6];
         t7 = T7->values + T7->rowswap[x7];
@@ -777,7 +777,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
     mzd_make_table( B, i*kk+k, 0, k, T2, L2);
     mzd_make_table( B, i*kk+k+k, 0, k, T3, L3);
     mzd_make_table( B, i*kk+k+k+k, 0, k, T4, L4);
-#ifdef GRAY8
+#ifdef M4RM_GRAY8
     mzd_make_table( B, i*kk+k+k+k+k, 0, k, T5, L5);
     mzd_make_table( B, i*kk+k+k+k+k+k, 0, k, T6, L6);
     mzd_make_table( B, i*kk+k+k+k+k+k+k, 0, k, T7, L7);
@@ -789,7 +789,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
       x2 = L2[ _mzd_get_bits(A, j, i*kk+k, k) ];
       x3 = L3[ _mzd_get_bits(A, j, i*kk+k+k, k) ];
       x4 = L4[ _mzd_get_bits(A, j, i*kk+k+k+k, k) ];
-#ifdef GRAY8
+#ifdef M4RM_GRAY8
       x5 = L5[ _mzd_get_bits(A, j, i*kk+k+k+k+k, k) ];
       x6 = L6[ _mzd_get_bits(A, j, i*kk+k+k+k+k+k, k) ];
       x7 = L7[ _mzd_get_bits(A, j, i*kk+k+k+k+k+k+k, k) ];
@@ -800,7 +800,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
       t2 = T2->values + T2->rowswap[x2];
       t3 = T3->values + T3->rowswap[x3];
       t4 = T4->values + T4->rowswap[x4];
-#ifdef GRAY8
+#ifdef M4RM_GRAY8
       t5 = T5->values + T5->rowswap[x5];
       t6 = T6->values + T6->rowswap[x6];
       t7 = T7->values + T7->rowswap[x7];
@@ -845,7 +845,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
   m4ri_mm_free(L3);
   mzd_free(T4);
   m4ri_mm_free(L4);
-#ifdef GRAY8
+#ifdef M4RM_GRAY8
   mzd_free(T5);
   m4ri_mm_free(L5);
   mzd_free(T6);
