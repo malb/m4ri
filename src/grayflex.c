@@ -20,7 +20,7 @@
 #include "grayflex.h"
 #include <stdio.h>
 
-code **codebook;
+code **codebook = NULL;
 
 int m4ri_swap_bits(int v,int length) {
   unsigned int r = v; /* r will be reversed bits of v; first get LSB of v */
@@ -62,6 +62,9 @@ void m4ri_build_code(int *ord, int *inc, int l) {
 }
 
 void m4ri_build_all_codes() {
+  if (codebook) {
+    return;
+  }
   int k;
   codebook=(code**)m4ri_mm_calloc(MAXKAY+1, sizeof(code *));
   
