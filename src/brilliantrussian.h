@@ -73,10 +73,8 @@ void mzd_make_table( packedmatrix *M, int r, int c, int k, packedmatrix *T, int 
 void mzd_process_rows(packedmatrix *M, int startrow, int endrow, int startcol, int k, packedmatrix *T, int *L);
 
 /**
- * \brief Same as mzd_process_rows but works with two Gray code tables in parallel.
- *
- * This process is iterated for i from startrow to stoprow
- * (exclusive).
+ * \brief Same as mzd_process_rows but works with two Gray code tables
+ * in parallel.
  *
  * \param M Matrix to operate on
  * \param startrow top row which is operated on

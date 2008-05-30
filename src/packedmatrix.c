@@ -539,7 +539,8 @@ packedmatrix *_mzd_add_impl(packedmatrix *C, const packedmatrix *A, const packed
 }
 
 packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *m, const int startrow, const int startcol, const int endrow, const int endcol) {
-  unsigned int nrows, ncols, truerow, i, colword, x, y, block, spot, startword;
+  unsigned int nrows, ncols, i, colword, x, y, block, spot, startword;
+  unsigned int truerow;
   word temp  = 0;
   
   nrows = endrow - startrow;
@@ -547,7 +548,7 @@ packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *m, const int st
 
   if (S == NULL) {
     S = mzd_init(nrows, ncols);
-  } else if(S->nrows != nrows || S->ncols != ncols) {
+  } else if(S->nrows < nrows || S->ncols < ncols) {
     m4ri_die("mzd_submatrix: got S with dimension %d x %d but expected %d x %d\n",S->nrows,S->ncols,nrows,ncols);
   }
 
@@ -555,25 +556,18 @@ packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *m, const int st
 
   /* we start at the beginning of a word */
   if (startcol%RADIX == 0) {
-    for(x = startrow, i=0; i<nrows; i++, x+=1) {
-      truerow = m->rowswap[x];
-
-      /* process full words first */
-      for(y = startcol, colword=0; colword<ncols/RADIX; colword++, y+=RADIX) {
-	block = truerow + colword + startword;
-	temp = m->values[block];
-	S->values[S->rowswap[i] + colword] = temp;
+    if(ncols/RADIX) {
+      for(x = startrow, i=0; i<nrows; i++, x++) {
+        memcpy(S->values + S->rowswap[i], m->values + m->rowswap[x] + startword, 8*(ncols/RADIX));
       }
-
-      /* process remaining bits */
-      if (ncols%RADIX) {
-	colword = ncols/RADIX;
-	block = truerow + colword;
-	temp = m->values[block] & ~((ONE<<(RADIX-ncols%RADIX))-1);
-	S->values[S->rowswap[i] + colword] = temp;
+    }
+    if (ncols%RADIX) {
+      for(x = startrow, i=0; i<nrows; i++, x++) {
+        /* process remaining bits */
+	temp = m->values[m->rowswap[x] + startword + ncols/RADIX] & ~((ONE<<(RADIX-ncols%RADIX))-1);
+	S->values[S->rowswap[i] + ncols/RADIX] = temp;
       } 
     }
-
     /* startcol is not the beginning of a word */
   } else { 
     spot = startcol % RADIX;

@@ -61,7 +61,18 @@ static inline int _mzd_get_bits(const packedmatrix *m, const int x, const int y,
 }
 
 /**
+ * \brief Perform Gaussian reduction on a submatrix.
+ * 
+ * The submatrix has dimension at most k starting at r x c of A. Checks
+ * for pivot rows up to row endrow (exclusive). Terminates as soon as
+ * finding a pivot column fails.
  *
+ * \param A Matrix.
+ * \param r First row.
+ * \param c First column.
+ * \param k Maximal dimension of identity matrix to produce.
+ * \param endrow Maximal row index (exclusive) for rows to consider
+ * for inclusion.
  */
 
 static int _mzd_gauss_submatrix(packedmatrix *A, int r, int c, int k, int endrow) {
@@ -97,7 +108,6 @@ static int _mzd_gauss_submatrix(packedmatrix *A, int r, int c, int k, int endrow
   return j - c;
 }
 
-/** ---------------------- **/
 void mzd_make_table( packedmatrix *M, int r, int c, int k, packedmatrix *T, int *L) {
   const int homeblock= c/RADIX;
   int i, j, rowneeded, id;
@@ -152,61 +162,8 @@ void mzd_make_table( packedmatrix *M, int r, int c, int k, packedmatrix *T, int 
   }
 }
 
-void mzd_process_rows2(packedmatrix *M, int startrow, int stoprow, int startcol, int k, packedmatrix *T0, int *L0, packedmatrix *T1, int *L1) {
-  int r, c;
-  const int blocknum=startcol/RADIX;
-  const int wide = M->width - blocknum;
-  int x00 = 0;
-  int x01 = 0;
-  int x10 = 0;
-  int x11 = 0;
-
-  const int ka = k/2;
-  const int kb = k-k/2;
-
-  for (r=startrow; r+2<=stoprow; ) {
-    while(r+2<=stoprow && x00 == 0 && x01 == 0) {
-      x00 = L0[ _mzd_get_bits(M, r+0, startcol,    ka) ];
-      x01 = L1[ _mzd_get_bits(M, r+0, startcol+ka, kb) ];
-      r++;
-    }
-    word *m0 = M->values + M->rowswap[r-1] + blocknum;
-    word *t00 = T0->values + T0->rowswap[x00] + blocknum;
-    word *t10 = T1->values + T1->rowswap[x01] + blocknum;
-
-    while(r+2<=stoprow && x10 == 0 && x11 == 0) {
-      x10 = L0[ _mzd_get_bits(M, r, startcol,    ka) ];
-      x11 = L1[ _mzd_get_bits(M, r, startcol+ka, kb) ];
-      r++;
-    }
-    word *m1 = M->values + M->rowswap[r-1] + blocknum;
-    
-    word *t01 = T0->values + T0->rowswap[x10] + blocknum;
-    word *t11 = T1->values + T1->rowswap[x11] + blocknum;
-
-    for(c=0; c<wide ; c++) {
-      m0[c] ^= t00[c] ^ t10[c];
-      m1[c] ^= t01[c] ^ t11[c];
-    }
-    x00 = 0;
-    x01 = 0;
-    x10 = 0;
-    x11 = 0;
-    
-  } /* end row loop */
-  for(; r<stoprow; r++) {
-    const int x0 = L0[ _mzd_get_bits(M, r, startcol,    ka)];
-    const int x1 = L1[ _mzd_get_bits(M, r, startcol+ka, kb)];
-    word *m0 = M->values + M->rowswap[r] + blocknum;
-    word *t00 = T0->values + T0->rowswap[x0] + blocknum;
-    word *t0 = T1->values + T1->rowswap[x1] + blocknum;
-    for(c=0; c<wide ; c++)
-      m0[c] ^= t00[c] ^ t0[c];
-  }
-}
-
 void mzd_process_rows(packedmatrix *M, int startrow, int stoprow, int startcol, int k, packedmatrix *T, int *L) {
-  int r, c;
+  int r;
   const int blocknum=startcol/RADIX;
   int wide = M->width - blocknum;
 
@@ -215,22 +172,107 @@ void mzd_process_rows(packedmatrix *M, int startrow, int stoprow, int startcol, 
     const int x1 = L[ _mzd_get_bits(M, r+1, startcol, k) ];
     
     word *m0 = M->values + M->rowswap[r+0] + blocknum;
-    word *m1 = M->values + M->rowswap[r+1] + blocknum;
-    
     word *t0 = T->values + T->rowswap[x0] + blocknum;
+
+    word *m1 = M->values + M->rowswap[r+1] + blocknum;
     word *t1 = T->values + T->rowswap[x1] + blocknum;
 
-    for(c=0; c<wide ; c++) {
-      m0[c] ^= t0[c];
-      m1[c] ^= t1[c];
+    register int n = (wide + 7) / 8;
+    switch (wide % 8) {
+    case 0: do { *m0++ ^= *t0++; *m1++ ^= *t1++;
+      case 7:    *m0++ ^= *t0++; *m1++ ^= *t1++;
+      case 6:    *m0++ ^= *t0++; *m1++ ^= *t1++;
+      case 5:    *m0++ ^= *t0++; *m1++ ^= *t1++;
+      case 4:    *m0++ ^= *t0++; *m1++ ^= *t1++;
+      case 3:    *m0++ ^= *t0++; *m1++ ^= *t1++;
+      case 2:    *m0++ ^= *t0++; *m1++ ^= *t1++;
+      case 1:    *m0++ ^= *t0++; *m1++ ^= *t1++;
+      } while (--n > 0);
     }
-  } /* end row loop */
+  }
+
   for( ; r<stoprow; r++) {
     const int x0 = L[ _mzd_get_bits(M, r, startcol, k) ];
     word *m0 = M->values + M->rowswap[r] + blocknum;
     word *t0 = T->values + T->rowswap[x0] + blocknum;
-    for(c=0; c<wide ; c++)
-      m0[c] ^= t0[c];
+
+    register int n = (wide + 7) / 8;
+    switch (wide % 8) {
+    case 0: do { *m0++ ^= *t0++;
+      case 7:    *m0++ ^= *t0++;
+      case 6:    *m0++ ^= *t0++;
+      case 5:    *m0++ ^= *t0++;
+      case 4:    *m0++ ^= *t0++;
+      case 3:    *m0++ ^= *t0++;
+      case 2:    *m0++ ^= *t0++;
+      case 1:    *m0++ ^= *t0++;
+      } while (--n > 0);
+    }
+  }
+}
+
+void mzd_process_rows2(packedmatrix *M, int startrow, int stoprow, int startcol, int k, packedmatrix *T0, int *L0, packedmatrix *T1, int *L1) {
+  int r;
+  const int blocknum=startcol/RADIX;
+  const int wide = M->width - blocknum;
+
+  const int ka = k/2;
+  const int kb = k-k/2;
+
+  for(r=startrow; r<stoprow; r++) {
+    const int x0 = L0[ _mzd_get_bits(M, r, startcol, ka)];
+    const int x1 = L1[ _mzd_get_bits(M, r, startcol+ka, kb)];
+    word * m0 = M->values + M->rowswap[r] + blocknum;
+    const word *t0 = T0->values + T0->rowswap[x0] + blocknum;
+    const word *t1 = T1->values + T1->rowswap[x1] + blocknum;
+
+    register int n = (wide + 7) / 8;
+    switch (wide % 8) {
+    case 0: do { *m0++ ^= *t0++ ^ *t1++;
+      case 7:    *m0++ ^= *t0++ ^ *t1++;
+      case 6:    *m0++ ^= *t0++ ^ *t1++;
+      case 5:    *m0++ ^= *t0++ ^ *t1++;
+      case 4:    *m0++ ^= *t0++ ^ *t1++;
+      case 3:    *m0++ ^= *t0++ ^ *t1++;
+      case 2:    *m0++ ^= *t0++ ^ *t1++;
+      case 1:    *m0++ ^= *t0++ ^ *t1++;
+      } while (--n > 0);
+    }
+  }
+}
+
+void mzd_process_rows3(packedmatrix *M, int startrow, int stoprow, int startcol, int k, packedmatrix *T0, int *L0, packedmatrix *T1, int *L1, packedmatrix *T2, int *L2) {
+  int r;
+  const int blocknum=startcol/RADIX;
+  const int wide = M->width - blocknum;
+
+  int rem = k%3;
+  
+  const int ka = k/3 + ((rem>=2) ? 1 : 0);
+  const int kb = k/3 + ((rem>=1) ? 1 : 0);
+  const int kc = k/3;
+
+  for(r=startrow; r<stoprow; r++) {
+    const int x0 = L0[ _mzd_get_bits(M, r, startcol, ka)];
+    const int x1 = L1[ _mzd_get_bits(M, r, startcol+ka, kb)];
+    const int x2 = L2[ _mzd_get_bits(M, r, startcol+ka+kb, kc)];
+    word * m0 = M->values + M->rowswap[r] + blocknum;
+    const word *t0 = T0->values + T0->rowswap[x0] + blocknum;
+    const word *t1 = T1->values + T1->rowswap[x1] + blocknum;
+    const word *t2 = T2->values + T2->rowswap[x2] + blocknum;
+
+    register int n = (wide + 7) / 8;
+    switch (wide % 8) {
+    case 0: do { *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 7:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 6:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 5:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 4:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 3:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 2:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 1:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      } while (--n > 0);
+    }
   }
 }
 
@@ -281,14 +323,14 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
     k-=1;
   }
 
-  int kk = 2*k;
-  int k0 = kk/2;
-  int k1 = kk - k0;
+  int kk = 3*k;
 
-  packedmatrix *T0 = mzd_init(TWOPOW(k0), A->ncols);
-  packedmatrix *T1 = mzd_init(TWOPOW(k1), A->ncols);
-  int *L0 = (int *)m4ri_mm_calloc(TWOPOW(k0), sizeof(int));
-  int *L1 = (int *)m4ri_mm_calloc(TWOPOW(k1), sizeof(int));
+  packedmatrix *T0 = mzd_init(TWOPOW(k), A->ncols);
+  packedmatrix *T1 = mzd_init(TWOPOW(k), A->ncols);
+  packedmatrix *T2 = mzd_init(TWOPOW(k), A->ncols);
+  int *L0 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L1 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L2 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
 
   while(c<ncols) {
     if(c+kk > A->ncols) {
@@ -296,22 +338,32 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
     }
     kbar = _mzd_gauss_submatrix(A, r, c, kk, A->nrows);
 
-    if (kbar) {
-      if (kbar!=1) {
-        const int kbar0 = kbar/2;
-        const int kbar1 = kbar - kbar0;
-        mzd_make_table(A, r,       c, kbar0, T0, L0);
-        mzd_make_table(A, r+kbar0, c, kbar1, T1, L1);
-        mzd_process_rows2(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1);
-        if(full)
-          mzd_process_rows2(A, 0, r, c, kbar, T0, L0, T1, L1);
-      } else {
-        /* todo: this is overkill */
-        mzd_make_table(A, r, c, kbar, T0, L0);
-        mzd_process_rows(A, r+kbar, A->nrows, c, kbar, T0, L0);
-        if(full)
-          mzd_process_rows(A, 0, r, c, kbar, T0, L0);
-      }
+    if (kbar>2*k) {
+      int rem = kbar%3;
+      int ka = kbar/3 + ((rem>=2) ? 1 : 0);
+      int kb = kbar/3 + ((rem>=1) ? 1 : 0);
+      int kc = kbar/3;
+      mzd_make_table(A, r, c, ka, T0, L0);
+      mzd_make_table(A, r+ka, c, kb, T1, L1);
+      mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
+      mzd_process_rows3(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1, T2, L2);
+      if(full)
+        mzd_process_rows3(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2);
+      
+    } else if (kbar>k) {
+      const int ka = kbar/2;
+      const int kb = kbar - ka;
+      mzd_make_table(A, r, c, ka, T0, L0);
+      mzd_make_table(A, r+ka, c, kb, T1, L1);
+      mzd_process_rows2(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1);
+      if(full)
+        mzd_process_rows2(A, 0, r, c, kbar, T0, L0, T1, L1);
+      
+    } else if(kbar > 0) {
+      mzd_make_table(A, r, c, kbar, T0, L0);
+      mzd_process_rows(A, r+kbar, A->nrows, c, kbar, T0, L0);
+      if(full)
+        mzd_process_rows(A, 0, r, c, kbar, T0, L0);
     }
     r += kbar;
     c += kbar;
@@ -324,7 +376,8 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
   m4ri_mm_free(L0);
   mzd_free(T1);
   m4ri_mm_free(L1);
-
+  mzd_free(T2);
+  m4ri_mm_free(L2);
   return r;
 }
 
@@ -342,13 +395,11 @@ void mzd_top_reduce_m4ri(packedmatrix *A, int k, packedmatrix *T, int *L) {
   }
 
   int kk = 2*k;
-  int k0 = kk/2;
-  int k1 = kk - k0;
 
-  packedmatrix *T0 = mzd_init(TWOPOW(k0), A->ncols);
-  packedmatrix *T1 = mzd_init(TWOPOW(k1), A->ncols);
-  int *L0 = (int *)m4ri_mm_calloc(TWOPOW(k0), sizeof(int));
-  int *L1 = (int *)m4ri_mm_calloc(TWOPOW(k1), sizeof(int));
+  packedmatrix *T0 = mzd_init(TWOPOW(k), A->ncols);
+  packedmatrix *T1 = mzd_init(TWOPOW(k), A->ncols);
+  int *L0 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L1 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
 
   while(c<ncols) {
     if(c+kk > A->ncols) {
@@ -357,14 +408,13 @@ void mzd_top_reduce_m4ri(packedmatrix *A, int k, packedmatrix *T, int *L) {
     kbar = _mzd_gauss_submatrix(A, r, c, kk, MIN(r+kk,A->nrows));
 
     if (kbar) {
-      if (kbar!=1) {
-        const int kbar0 = kbar/2;
-        const int kbar1 = kbar - kbar0;
-        mzd_make_table(A, r,       c, kbar0, T0, L0);
-        mzd_make_table(A, r+kbar0, c, kbar1, T1, L1);
+      if (kbar>k) {
+        const int ka = kbar/2;
+        const int kb = kbar - ka;
+        mzd_make_table(A, r,       c, ka, T0, L0);
+        mzd_make_table(A, r+ka, c, kb, T1, L1);
         mzd_process_rows2(A, 0, r, c, kbar, T0, L0, T1, L1);
       } else {
-        /* todo: this is overkill */
         mzd_make_table(A, r, c, kbar, T0, L0);
         mzd_process_rows(A, 0, r, c, kbar, T0, L0);
       }
@@ -438,7 +488,7 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
   int c = B->ncols;
 
   if(A->ncols != B->nrows) 
-    m4ri_die("mzd_mul_m4rm_t: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
+    m4ri_die("mzd_mul_m4rm: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
   if (C == NULL) {
     C = mzd_init(a, c);
   } else {
