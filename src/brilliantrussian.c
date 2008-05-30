@@ -222,6 +222,8 @@ void mzd_process_rows2(packedmatrix *M, int startrow, int stoprow, int startcol,
   for(r=startrow; r<stoprow; r++) {
     const int x0 = L0[ _mzd_get_bits(M, r, startcol, ka)];
     const int x1 = L1[ _mzd_get_bits(M, r, startcol+ka, kb)];
+    if(x0 == 0 && x1 == 0)
+      continue;
     word * m0 = M->values + M->rowswap[r] + blocknum;
     const word *t0 = T0->values + T0->rowswap[x0] + blocknum;
     const word *t1 = T1->values + T1->rowswap[x1] + blocknum;
@@ -256,6 +258,9 @@ void mzd_process_rows3(packedmatrix *M, int startrow, int stoprow, int startcol,
     const int x0 = L0[ _mzd_get_bits(M, r, startcol, ka)];
     const int x1 = L1[ _mzd_get_bits(M, r, startcol+ka, kb)];
     const int x2 = L2[ _mzd_get_bits(M, r, startcol+ka+kb, kc)];
+    if(x0 == 0 && x1 == 0 && x2 == 0) 
+      continue;
+
     word * m0 = M->values + M->rowswap[r] + blocknum;
     const word *t0 = T0->values + T0->rowswap[x0] + blocknum;
     const word *t1 = T1->values + T1->rowswap[x1] + blocknum;
@@ -293,6 +298,9 @@ void mzd_process_rows4(packedmatrix *M, int startrow, int stoprow, int startcol,
     const int x1 = L1[ _mzd_get_bits(M, r, startcol+ka, kb)];
     const int x2 = L2[ _mzd_get_bits(M, r, startcol+ka+kb, kc)];
     const int x3 = L3[ _mzd_get_bits(M, r, startcol+ka+kb+kc, kd)];
+    if(x0 == 0 && x1 == 0 && x2 == 0 && x3 == 0) 
+      continue;
+
     word * m0 = M->values + M->rowswap[r] + blocknum;
     const word *t0 = T0->values + T0->rowswap[x0] + blocknum;
     const word *t1 = T1->values + T1->rowswap[x1] + blocknum;
