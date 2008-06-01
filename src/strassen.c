@@ -45,7 +45,7 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
 
   /* adjust cutting numbers to work on words */
   unsigned long mult = 1;
-  unsigned long width = a;
+  long width = a;
   while (width > 2*cutoff) {
     width/=2;
     mult*=2;

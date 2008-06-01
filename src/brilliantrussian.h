@@ -46,7 +46,7 @@
  * 
  * \param M matrix to operate on
  * \param r the starting row
- * \oaram c the starting column (only exact up to block)
+ * \param c the starting column (only exact up to block)
  * \param k
  * \param T prealloced matrix of dimension \f$2^k\f$ x m->ncols
  * \param L prealloced table of length \f$2^k\f$
@@ -87,7 +87,51 @@ void mzd_process_rows(packedmatrix *M, int startrow, int endrow, int startcol, i
  * \param L1 Contains row number to be added
  */
 
-void mzd_process_rows2(packedmatrix *M, int startrow, int stoprow, int startcol, int k, packedmatrix *T0, int *L0, packedmatrix *T1, int *L1);
+void mzd_process_rows2(packedmatrix *M, int startrow, int endrow, int startcol, int k, packedmatrix *T0, int *L0, packedmatrix *T1, int *L1);
+
+/**
+ * \brief Same as mzd_process_rows but works with three Gray code tables
+ * in parallel.
+ *
+ * \param M Matrix to operate on
+ * \param startrow top row which is operated on
+ * \param endrow bottom row which is operated on
+ * \param startcol Starting column for addition
+ * \param k M4RI parameter
+ * \param T0 contains the correct row to be added
+ * \param L0 Contains row number to be added
+ * \param T1 contains the correct row to be added
+ * \param L1 Contains row number to be added
+ * \param T2 contains the correct row to be added
+ * \param L2 Contains row number to be added
+ */
+
+void mzd_process_rows3(packedmatrix *M, int startrow, int endrow, int startcol, int k, 
+                       packedmatrix *T0, int *L0, packedmatrix *T1, int *L1,
+                       packedmatrix *T2, int *L2);
+
+/**
+ * \brief Same as mzd_process_rows but works with four Gray code tables
+ * in parallel.
+ *
+ * \param M Matrix to operate on
+ * \param startrow top row which is operated on
+ * \param endrow bottom row which is operated on
+ * \param startcol Starting column for addition
+ * \param k M4RI parameter
+ * \param T0 contains the correct row to be added
+ * \param L0 Contains row number to be added
+ * \param T1 contains the correct row to be added
+ * \param L1 Contains row number to be added
+ * \param T2 contains the correct row to be added
+ * \param L2 Contains row number to be added
+ * \param T3 contains the correct row to be added
+ * \param L3 Contains row number to be added
+ */
+
+void mzd_process_rows4(packedmatrix *M, int startrow, int endrow, int startcol, int k,
+                       packedmatrix *T0, int *L0, packedmatrix *T1, int *L1,
+                       packedmatrix *T2, int *L2, packedmatrix *T3, int *L3);
 
 /**
  * \brief Perform matrix reduction using the 'Method of the Four

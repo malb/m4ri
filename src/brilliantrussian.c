@@ -364,8 +364,8 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
 
   if (k == 0) {
     k = m4ri_opt_k(A->nrows, A->ncols, 0);
-    if (k>3) {
-      k-=2;
+    if (k>4) {
+      k-=3;
     }
   }
   int kk = 4*k;
@@ -452,35 +452,59 @@ void mzd_top_reduce_m4ri(packedmatrix *A, int k, packedmatrix *T, int *L) {
 
   if (k == 0) {
     k = m4ri_opt_k(A->nrows, A->ncols, 0);
+    if (k>4) {
+      k-=3;
+    }
   }
-  if(k>2) {
-    k-=2;
-  }
-
-  int kk = 2*k;
+  int kk = 4*k;
 
   packedmatrix *T0 = mzd_init(TWOPOW(k), A->ncols);
   packedmatrix *T1 = mzd_init(TWOPOW(k), A->ncols);
+  packedmatrix *T2 = mzd_init(TWOPOW(k), A->ncols);
+  packedmatrix *T3 = mzd_init(TWOPOW(k), A->ncols);
   int *L0 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
   int *L1 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L2 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+  int *L3 = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
 
   while(c<ncols) {
     if(c+kk > A->ncols) {
       kk = ncols - c;
     }
-    kbar = _mzd_gauss_submatrix(A, r, c, kk, MIN(r+kk,A->nrows));
+    kbar = _mzd_gauss_submatrix(A, r, c, kk, A->nrows);
 
-    if (kbar) {
-      if (kbar>k) {
-        const int ka = kbar/2;
-        const int kb = kbar - ka;
-        mzd_make_table(A, r,       c, ka, T0, L0);
-        mzd_make_table(A, r+ka, c, kb, T1, L1);
-        mzd_process_rows2(A, 0, r, c, kbar, T0, L0, T1, L1);
-      } else {
-        mzd_make_table(A, r, c, kbar, T0, L0);
-        mzd_process_rows(A, 0, r, c, kbar, T0, L0);
-      }
+    if (kbar>3*k) {
+      const int rem = kbar%4;
+      const int ka = kbar/4 + ((rem>=3) ? 1 : 0);
+      const int kb = kbar/4 + ((rem>=2) ? 1 : 0);
+      const int kc = kbar/4 + ((rem>=1) ? 1 : 0);
+      const int kd = kbar/4;
+      mzd_make_table(A, r, c, ka, T0, L0);
+      mzd_make_table(A, r+ka, c, kb, T1, L1);
+      mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
+      mzd_make_table(A, r+ka+kb+kc, c, kd, T3, L3);
+      mzd_process_rows4(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
+      
+    } else if (kbar>2*k) {
+      int rem = kbar%3;
+      int ka = kbar/3 + ((rem>=2) ? 1 : 0);
+      int kb = kbar/3 + ((rem>=1) ? 1 : 0);
+      int kc = kbar/3;
+      mzd_make_table(A, r, c, ka, T0, L0);
+      mzd_make_table(A, r+ka, c, kb, T1, L1);
+      mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
+      mzd_process_rows3(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2);
+      
+    } else if (kbar>k) {
+      const int ka = kbar/2;
+      const int kb = kbar - ka;
+      mzd_make_table(A, r, c, ka, T0, L0);
+      mzd_make_table(A, r+ka, c, kb, T1, L1);
+      mzd_process_rows2(A, 0, r, c, kbar, T0, L0, T1, L1);
+      
+    } else if(kbar > 0) {
+      mzd_make_table(A, r, c, kbar, T0, L0);
+      mzd_process_rows(A, 0, r, c, kbar, T0, L0);
     }
     r += kbar;
     c += kbar;
@@ -493,7 +517,10 @@ void mzd_top_reduce_m4ri(packedmatrix *A, int k, packedmatrix *T, int *L) {
   m4ri_mm_free(L0);
   mzd_free(T1);
   m4ri_mm_free(L1);
-
+  mzd_free(T2);
+  m4ri_mm_free(L2);
+  mzd_free(T3);
+  m4ri_mm_free(L3);
 }
 
 packedmatrix *mzd_invert_m4ri(packedmatrix *m, packedmatrix *I, int k) {
@@ -602,7 +629,7 @@ packedmatrix *_mzd_mul_m4rm_impl_old(packedmatrix *C, packedmatrix *A, packedmat
     }
   }
 
-  const unsigned int blocksize = MZD_MUL_BLOCKSIZE;
+  const int blocksize = MZD_MUL_BLOCKSIZE;
 
   if (k == 0) {
     k = m4ri_opt_k(blocksize, a_nc, b_nc);
@@ -611,8 +638,8 @@ packedmatrix *_mzd_mul_m4rm_impl_old(packedmatrix *C, packedmatrix *A, packedmat
   packedmatrix *T = mzd_init(TWOPOW(k), b_nc);
   int *L = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
 
-  unsigned long s, start;
-  const unsigned long end = a_nc/k;
+  long s, start;
+  const long end = a_nc/k;
 
     for (start=0; start + blocksize <= a_nr; start += blocksize) {
       for(i=0; i < end; i++) {
@@ -803,7 +830,7 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
     }
   }
 
-  const unsigned int blocksize = MZD_MUL_BLOCKSIZE;
+  const int blocksize = MZD_MUL_BLOCKSIZE;
 
   if (k == 0) {
     k = m4ri_opt_k(blocksize, a_nc, b_nc);
@@ -837,13 +864,13 @@ packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix 
 #endif
 
   /* process stuff that fits into multiple of k first, but blockwise (babystep-giantstep)*/
-  unsigned long babystep, giantstep;
+  long babystep, giantstep;
 #ifdef M4RM_GRAY8
   const int kk = 8*k;
 #else
   const int kk = 4*k;
 #endif
-  const unsigned long end = a_nc/kk;
+  const long end = a_nc/kk;
 
   for (giantstep=0; giantstep + blocksize <= a_nr; giantstep += blocksize) {
     for(i=0; i < end; i++) {
