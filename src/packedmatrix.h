@@ -143,11 +143,13 @@ static inline void mzd_row_swap(packedmatrix *M, const int rowa, const int rowb)
 }
 
 /**
- * \brief Read the bit at position M[row,col]
- * 
+ * \brief Read the bit at position M[row,col].
+ *
  * \param M Matrix
  * \param row Row index
  * \param col Column index
+ *
+ * \note No bounds checks whatsoever are performed.
  */
 
 static inline BIT mzd_read_bit(const packedmatrix *M, const int row, const int col ) {
@@ -161,6 +163,8 @@ static inline BIT mzd_read_bit(const packedmatrix *M, const int row, const int c
  * \param row Row index
  * \param col Column index
  * \param value Either 0 or 1 
+ *
+ * \note No bounds checks whatsoever are performed.
  */
 
 static inline void mzd_write_bit(packedmatrix *M, const int row, const int col, const BIT value) {
@@ -181,6 +185,8 @@ static inline void mzd_write_bit(packedmatrix *M, const int row, const int col, 
  * \note Keep in mind that the row, col refer to a row and column (of
  *  bits), and you can address the block by any of the RADIX (usually
  *  64) & A[i,j] there.
+ *
+ * \note No bounds checks whatsoever are performed.
  */
 
 static inline void mzd_xor_block(packedmatrix *M, const int row, const int col, const word value) {
@@ -202,6 +208,8 @@ static inline void mzd_xor_block(packedmatrix *M, const int row, const int col, 
  * \note Keep in mind that the row, col refer to a row and column (of
  * bits), and you can address the block by any of the RADIX (usually
  * 64) A[i,j] there.
+ *
+ * \note No bounds checks whatsoever are performed.
  */
 
 static inline void mzd_write_block(packedmatrix *M, const int row, const int col, const word value) {
@@ -218,6 +226,8 @@ static inline void mzd_write_block(packedmatrix *M, const int row, const int col
  * \note Keep in mind that the row, col refer to a row and column (of
  * bits), and you can address the block by any of the RADIX (usually
  * 64) A[i,j] there.
+ *
+ * \note No bounds checks whatsoever are performed.
  */
 
 static inline word mzd_read_block(const packedmatrix *M, const int row, const int col ) {
@@ -227,9 +237,10 @@ static inline word mzd_read_block(const packedmatrix *M, const int row, const in
 /**
  * \brief Print a matrix to stdout. 
  *
- * The output will contain colons between  every 4-th column.
+ * The output will contain colons between every 4-th column.
  *
  * \param M Matrix
+ *
  */
 
 void mzd_print_matrix(const packedmatrix *M );
@@ -250,8 +261,6 @@ void mzd_print_matrix_tight(const packedmatrix *M );
  * \param sourcerow Index of source row
  * \param destrow Index of target row
  * \param coloffset Column offset
- *
- * \note this can be done much faster with mzd_combine.
  */
 
 void mzd_row_add_offset(packedmatrix *M, const int sourcerow, const int destrow, const int coloffset );

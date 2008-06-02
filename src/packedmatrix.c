@@ -107,37 +107,46 @@ void mzd_free_window( packedmatrix *condemned) {
 void mzd_print_matrix( const packedmatrix *M ) {
   int i, j;
   char temp[SAFECHAR];
-  word block;
+  word *row;
 
   for (i=0; i< M->nrows; i++ ) {
     printf("[ ");
-
-    for (j=0; j< M->ncols; j+=RADIX) {
-      block=mzd_read_block(M, i, j);
-      m4ri_word_to_str(temp, block, 1);
+    row = M->values + M->rowswap[i];
+    for (j=0; j< M->width-1; j++) {
+      m4ri_word_to_str(temp, row[j], 1);
       printf("%s ", temp);
     }
-    printf("]\n");
+    row = row + M->width - 1;
+    for (j=0; j< (int)(M->ncols%RADIX); j++) {
+      printf("%d", (int)GET_BIT(*row, j));
+      if (((j % 4)==3) && (j!=RADIX-1))
+        printf(":");
+    }
+    if (M->ncols%RADIX)
+      printf(" ]\n");
+    else
+      printf("]\n");
   }
 }
 
-void mzd_print_matrix_tight( const packedmatrix *m ) {
+void mzd_print_matrix_tight( const packedmatrix *M ) {
   int i, j;
   char temp[SAFECHAR];
-  word block;
+  word *row;
 
-  for (i=0; i< m->nrows; i++ ) {
+  for (i=0; i< M->nrows; i++ ) {
     printf("[");
-
-    for (j=0; j< m->ncols; j+=RADIX) {
-      block=mzd_read_block(m, i, j);
-      m4ri_word_to_str(temp, block, 0);
+    row = M->values + M->rowswap[i];
+    for (j=0; j< M->width-1; j++) {
+      m4ri_word_to_str(temp, row[j], 0);
       printf("%s", temp);
+    }
+    row = row + M->width - 1;
+    for (j=0; j< (int)(M->ncols%RADIX); j++) {
+      printf("%d", (int)GET_BIT(*row, j));
     }
     printf("]\n");
   }
-
-  printf("\n\n\n");
 }
 
 void mzd_row_clear_offset(packedmatrix *m, int row, int coloffset) {
