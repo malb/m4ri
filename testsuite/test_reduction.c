@@ -2,7 +2,7 @@
 #include "m4ri.h"
 
 int red_test_equality(int nr, int nc) {
-  packedmatrix *A, *B, *C, *D, *E;
+  packedmatrix *A, *B, *C, *D, *E, *F;
   int ret = 0; 
 
   printf("red: m: %4d, n: %4d\n",nr,nc);
@@ -13,6 +13,7 @@ int red_test_equality(int nr, int nc) {
   C = mzd_copy(NULL, A);
   D = mzd_copy(NULL, A);
   E = mzd_copy(NULL, A);
+  F = mzd_copy(NULL, A);
 
   mzd_reduce_m4ri(A, 1, 0, NULL, NULL);
 
@@ -25,6 +26,9 @@ int red_test_equality(int nr, int nc) {
   mzd_top_reduce_m4ri(D, 4, NULL, NULL);
 
   mzd_reduce_naiv(E, 1);
+
+  mzd_reduce_naiv(F, 0);
+  mzd_top_reduce_m4ri(F, 0, NULL, NULL);
   
   if(mzd_equal(A, B) != TRUE) {
     printf("FAIL: A != B\n");
@@ -41,8 +45,13 @@ int red_test_equality(int nr, int nc) {
     ret -= 1;
   }
 
-  if(mzd_equal(E, A) != TRUE) {
-    printf("FAIL: E != A\n");
+  if(mzd_equal(E, F) != TRUE) {
+    printf("FAIL: E != F\n");
+    ret -= 1;
+  }
+
+  if(mzd_equal(F, A) != TRUE) {
+    printf("FAIL: F != A\n");
     ret -= 1;
   }
 

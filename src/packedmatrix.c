@@ -208,7 +208,10 @@ int mzd_gauss_delayed(packedmatrix *m, int startcol, int full) {
 	mzd_row_swap(m,startrow,j);
 	pivots++;
 
-	if (full==TRUE) start=0; else start=i+1;
+	if (full==TRUE) 
+          start=0; 
+        else 
+          start=startrow+1;
 
 	for(ii=start ;  ii < m->nrows ; ii++) {
 	  if (ii != startrow) {
