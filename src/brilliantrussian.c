@@ -452,8 +452,8 @@ void mzd_top_reduce_m4ri(packedmatrix *A, int k, packedmatrix *T, int *L) {
 
   if (k == 0) {
     k = m4ri_opt_k(A->nrows, A->ncols, 0);
-    if (k>4) {
-      k -= 3;
+    if (k>5) {
+      k -= 4;
     }
   }
   int kk = 4*k;
