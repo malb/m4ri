@@ -50,6 +50,22 @@
 packedmatrix *mzd_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 
 /**
+ * \brief Matrix multiplication and in-place addition via the
+ * Strassen-Winograd matrix multiplication algorithm, i.e. compute 
+ * C = C+ AB.
+ * 
+ * This is the wrapper function including bounds checks. See
+ * _mzd_addmul_strassen_impl for implementation details.
+ *
+ * \param C product matrix
+ * \param A Input matrix A
+ * \param B Input matrix B
+ * \param cutoff Minimal dimension for Strassen recursion.
+ */
+
+packedmatrix *mzd_addmul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+
+/**
  * \brief Matrix multiplication via the Strassen-Winograd matrix
  * multiplication algorithm, i.e. compute C = AB.
  * 
