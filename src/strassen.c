@@ -85,20 +85,20 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
   packedmatrix *X0 = mzd_init(anr, anc);
   packedmatrix *X1 = mzd_init(bnr, bnc);
   
-  _mzd_add_impl(X0, A00, A10);                  /*  X0 = A00 + A10 */
-  _mzd_add_impl(X1, B11, B01);                  /*  X1 = B11 + B01 */
-  _mzd_mul_strassen_impl(C10, X0, X1, cutoff);  /* C10 = X0*X1 */
+  _mzd_add_impl(X0, A00, A10);                  /*1    X0 = A00 + A10 */
+  _mzd_add_impl(X1, B11, B01);                  /*2    X1 = B11 + B01 */
+  _mzd_mul_strassen_impl(C10, X0, X1, cutoff);  /*3   C10 = X0*X1 */
 
-  _mzd_add_impl(X0, A10, A11);                  /*  X0 = A10 + A11 */
-  _mzd_add_impl(X1, B01, B00);                  /*  X1 = B01 + B00*/
-  _mzd_mul_strassen_impl(C11, X0, X1, cutoff);  /* C11 = X0*X1 */
+  _mzd_add_impl(X0, A10, A11);                  /*4    X0 = A10 + A11 */
+  _mzd_add_impl(X1, B01, B00);                  /*5    X1 = B01 + B00*/
+  _mzd_mul_strassen_impl(C11, X0, X1, cutoff);  /*6   C11 = X0*X1 */
 
-  _mzd_add_impl(X0, X0, A00);                   /*  X0 = X0 + A00 */
-  _mzd_add_impl(X1, X1, B11);                   /*  X1 = B11 + X1 */
-  _mzd_mul_strassen_impl(C01, X0, X1, cutoff);  /* C01 = X0*X1 */
+  _mzd_add_impl(X0, X0, A00);                   /*7    X0 = X0 + A00 */
+  _mzd_add_impl(X1, X1, B11);                   /*8    X1 = B11 + X1 */
+  _mzd_mul_strassen_impl(C01, X0, X1, cutoff);  /*9   C01 = X0*X1 */
 
-  _mzd_add_impl(X0, X0, A01);                   /*  X0 = A01 + X0 */
-  _mzd_mul_strassen_impl(C00, X0, B11, cutoff); /* C00 = X0*B11 */
+  _mzd_add_impl(X0, X0, A01);                   /*10   X0 = A01 + X0 */
+  _mzd_mul_strassen_impl(C00, X0, B11, cutoff); /*11  C00 = X0*B11 */
 
   /**
    * \todo ideally we would use the same X0 throughout the function
@@ -110,20 +110,20 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
    */
 
   mzd_free(X0);
-  X0 = mzd_mul_strassen(NULL, A00, B00, cutoff); /* X0 = A00*B00*/
+  X0 = mzd_mul_strassen(NULL, A00, B00, cutoff);/*12  X0 = A00*B00*/
 
-  _mzd_add_impl(C01, X0, C01);                  /* C01 =  X0 + C01 */
-  _mzd_add_impl(C10, C01, C10);                 /* C10 = C01 + C10 */
-  _mzd_add_impl(C01, C01, C11);                 /* C01 = C01 + C11 */
-  _mzd_add_impl(C11, C10, C11);                 /* C11 = C10 + C11 */
-  _mzd_add_impl(C01, C01, C00);                 /* C01 = C01 + C00 */
-  _mzd_add_impl(X1, X1, B10);                   /*  X1 = X1 + B10 */
-  _mzd_mul_strassen_impl(C00, A11, X1, cutoff); /* C00 = A11*X1 */
+  _mzd_add_impl(C01, X0, C01);                  /*13  C01 =  X0 + C01 */
+  _mzd_add_impl(C10, C01, C10);                 /*14  C10 = C01 + C10 */
+  _mzd_add_impl(C01, C01, C11);                 /*15  C01 = C01 + C11 */
+  _mzd_add_impl(C11, C10, C11);                 /*16  C11 = C10 + C11 */
+  _mzd_add_impl(C01, C01, C00);                 /*17  C01 = C01 + C00 */
+  _mzd_add_impl(X1, X1, B10);                   /*18   X1 = X1 + B10 */
+  _mzd_mul_strassen_impl(C00, A11, X1, cutoff); /*19  C00 = A11*X1 */
 
-  _mzd_add_impl(C10, C10, C00);                 /* C10 = C10 + C00 */
-  _mzd_mul_strassen_impl(C00, A01, B10, cutoff);/* C00 = A01*B10 */
+  _mzd_add_impl(C10, C10, C00);                 /*20  C10 = C10 + C00 */
+  _mzd_mul_strassen_impl(C00, A01, B10, cutoff);/*21  C00 = A01*B10 */
 
-  _mzd_add_impl(C00, C00, X0);                  /* C00 = X0 + C00 */
+  _mzd_add_impl(C00, C00, X0);                  /*22  C00 = X0 + C00 */
 
   /* deal with rest */
   if (B->ncols > (int)(2*bnc)) {
@@ -132,7 +132,6 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
     _mzd_mul_m4rm_impl(C_last_col, A, B_last_col, 0, TRUE);
     mzd_free_window(B_last_col);
     mzd_free_window(C_last_col);
-
   }
   if (A->nrows > (int)(2*anr)) {
     packedmatrix *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
@@ -140,7 +139,6 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
     _mzd_mul_m4rm_impl(C_last_row, A_last_row, B, 0, TRUE);
     mzd_free_window(A_last_row);
     mzd_free_window(C_last_row);
-
   }
   if (A->ncols > (int)(2*anc)) {
     packedmatrix *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
@@ -364,139 +362,6 @@ packedmatrix *mzd_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B
 #endif  
 }
 
-/* packedmatrix *_mzd_addmul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) { */
-/*   unsigned int a,b,c; */
-/*   unsigned int anr, anc, bnr, bnc; */
-  
-/*   a = A->nrows; */
-/*   b = A->ncols; */
-/*   c = B->ncols; */
-/*   /\* handle case first, where the input matrices are too small already *\/ */
-/*   if (CLOSER(A->nrows, A->nrows/2, cutoff) || CLOSER(A->ncols, A->ncols/2, cutoff) || CLOSER(B->ncols, B->ncols/2, cutoff)) { */
-/*     /\* we copy the matrix first since it is only constant memory */
-/*        overhead and improves data locality, if you remove it make sure */
-/*        there are no speed regressions *\/ */
-/*     //packedmatrix *Cbar = mzd_copy(NULL, C); */
-/*     //Cbar = mzd_addmul_m4rm(Cbar, A, B, 0); */
-/*     //mzd_copy(C, Cbar); */
-/*     //mzd_free(Cbar); */
-/*     C = mzd_addmul_m4rm(C, A, B, 0); */
-/*     return C; */
-/*   } */
-
-/*   /\* adjust cutting numbers to work on words *\/ */
-/*   unsigned long mult = 1; */
-/*   long width = a; */
-/*   while (width > 2*cutoff) { */
-/*     width/=2; */
-/*     mult*=2; */
-/*   } */
-/*   a -= a%(RADIX*mult); */
-/*   b -= b%(RADIX*mult); */
-/*   c -= c%(RADIX*mult); */
-
-/*   anr = ((a/RADIX) >> 1) * RADIX; */
-/*   anc = ((b/RADIX) >> 1) * RADIX; */
-/*   bnr = anc; */
-/*   bnc = ((c/RADIX) >> 1) * RADIX; */
-
-/*   packedmatrix *A00 = mzd_init_window(A,   0,   0,   anr,   anc); */
-/*   packedmatrix *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc); */
-/*   packedmatrix *A10 = mzd_init_window(A, anr,   0, 2*anr,   anc); */
-/*   packedmatrix *A11 = mzd_init_window(A, anr, anc, 2*anr, 2*anc); */
-
-/*   packedmatrix *B00 = mzd_init_window(B,   0,   0,   bnr,   bnc); */
-/*   packedmatrix *B01 = mzd_init_window(B,   0, bnc,   bnr, 2*bnc); */
-/*   packedmatrix *B10 = mzd_init_window(B, bnr,   0, 2*bnr,   bnc); */
-/*   packedmatrix *B11 = mzd_init_window(B, bnr, bnc, 2*bnr, 2*bnc); */
-
-/*   packedmatrix *C00 = mzd_init_window(C,   0,   0,   anr,   bnc); */
-/*   packedmatrix *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc); */
-/*   packedmatrix *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc); */
-/*   packedmatrix *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc); */
-  
-/*   /\** */
-/*    * \note See Jean-Guillaume Dumas, Clement Pernet, Wei Zhou; "Memory */
-/*    * efficient scheduling of Strassen-Winograd's matrix multiplication */
-/*    * algorithm"; http://arxiv.org/pdf/0707.2347v3 for reference on the */
-/*    * used operation scheduling. */
-/*    *\/ */
-
-/*   packedmatrix *X0 = mzd_init(anr, anc); */
-/*   packedmatrix *X1 = mzd_init(bnr, bnc); */
-  
-/*   _mzd_add_impl(C11, C11, C01);                    /\* 1  C11 = C11 + C01      *\/ */
-/*   _mzd_add_impl(C01, C01, C11);                    /\* 2  C01 = C01 + C11      *\/ */
-/*   _mzd_add_impl( X0, A10, A11);                    /\* 3   X0 = A10 + A11      *\/ */
-/*   _mzd_add_impl( X1, B01, B00);                    /\* 4   X1 = B01 + B00      *\/ */
-/*   _mzd_addmul_strassen_impl(C01, X0, X1, cutoff);  /\* 5  C01 = X0 X1 + C01    *\/ */
-
-/*   _mzd_add_impl(X0, X0, A00);                      /\* 6   X0 = X0 + A00       *\/ */
-/*   _mzd_add_impl(X1, X1, B11);                      /\* 7   X1 = B11 + X1       *\/ */
-/*   _mzd_addmul_strassen_impl(C10, X0, X1, cutoff);  /\* 8  C10 = X0 X1 + C10    *\/ */
-
-/*   _mzd_add_impl(X0, X0, A01);                      /\* 9   X0 = A01 + X0       *\/ */
-/*   _mzd_add_impl(X1, X1, B10);                      /\* 10  X1 = X1 + B10       *\/ */
-/*   _mzd_add_impl(C11, C11, C01);                    /\* 11 C11 = C01 + C11      *\/ */
-/*   _mzd_addmul_strassen_impl(C01, X0, B11, cutoff); /\* 12 C01 = X0 B11 + C01   *\/ */
-  
-/*   _mzd_mul_strassen_impl(X0, A00, B00, cutoff);    /\* 13  X0 = A00 B00        *\/ */
-
-/*   _mzd_add_impl(C10, C10, X0);                     /\* 14 C10 = C10 + X0       *\/ */
-/*   _mzd_addmul_strassen_impl(C00, A01, B10, cutoff);/\* 15 C00 = A01 B10 + C00  *\/ */
-
-/*   _mzd_add_impl(C00, C00, X0);                     /\* 16 C00 = X0 + C00       *\/ */
-/*   _mzd_add_impl(C01, C01, C10);                    /\* 17 C01 = C10 + C01      *\/ */
-/*   _mzd_add_impl(X0, A00, A10);                     /\* 18  X0 = A00 + A10      *\/ */
-/*   _mzd_add_impl(X1, B11, B01);                     /\* 19  X1 = B11 + B01      *\/ */
-/*   _mzd_addmul_strassen_impl(C10, X0, X1, cutoff);  /\* 20 C10 = X0 X1 + C10    *\/ */
-
-/*   _mzd_add_impl(C11, C10, C11);                    /\* 21 C11 = C10 + C11      *\/ */
-/*   _mzd_addmul_strassen_impl(C10, A11, X1, cutoff); /\* 22 C10 = A11 X1 + C10   *\/ */
-
-/*   /\* deal with rest *\/ */
-/*   if (B->ncols > (int)(2*bnc)) { */
-/*     packedmatrix *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols);  */
-/*     packedmatrix *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols); */
-/*     mzd_addmul_m4rm(C_last_col, A, B_last_col, 0); */
-/*     mzd_free_window(B_last_col); */
-/*     mzd_free_window(C_last_col); */
-
-/*   } */
-/*   if (A->nrows > (int)(2*anr)) { */
-/*     packedmatrix *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols); */
-/*     packedmatrix *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, C->ncols); */
-/*     mzd_addmul_m4rm(C_last_row, A_last_row, B, 0); */
-/*     mzd_free_window(A_last_row); */
-/*     mzd_free_window(C_last_row); */
-
-/*   } */
-/*   if (A->ncols > (int)(2*anc)) { */
-/*     packedmatrix *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols); */
-/*     packedmatrix *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc); */
-/*     packedmatrix *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2); */
-/*     mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0); */
-/*     mzd_free_window(A_last_col); */
-/*     mzd_free_window(B_last_row); */
-/*     mzd_free_window(C_bulk); */
-/*   } */
-
-/*   /\* clean up *\/ */
-/*   mzd_free_window(A00); mzd_free_window(A01); */
-/*   mzd_free_window(A10); mzd_free_window(A11); */
-
-/*   mzd_free_window(B00); mzd_free_window(B01); */
-/*   mzd_free_window(B10); mzd_free_window(B11); */
-
-/*   mzd_free_window(C00); mzd_free_window(C01); */
-/*   mzd_free_window(C10); mzd_free_window(C11); */
-  
-/*   mzd_free(X0); */
-/*   mzd_free(X1); */
-
-/*   return C; */
-/* } */
-
 packedmatrix *_mzd_addmul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   unsigned int a,b,c;
   unsigned int anr, anc, bnr, bnc;
@@ -546,7 +411,7 @@ packedmatrix *_mzd_addmul_strassen_impl(packedmatrix *C, packedmatrix *A, packed
   packedmatrix *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc);
   packedmatrix *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
   packedmatrix *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
-  
+
   /**
    * \note See Jean-Guillaume Dumas, Clement Pernet, Wei Zhou; "Memory
    * efficient scheduling of Strassen-Winograd's matrix multiplication
@@ -558,34 +423,34 @@ packedmatrix *_mzd_addmul_strassen_impl(packedmatrix *C, packedmatrix *A, packed
   packedmatrix *X1 = mzd_init(anr, anc);
   packedmatrix *X2 = mzd_init(bnr, bnc);
   
-  _mzd_add_impl(X0, A10, A11);                      /* 1  S1 = A21 + A22        X1   */
-  _mzd_add_impl(X1, B01, B00);                      /* 2  T1 = B12 - B11        X2   */
-  _mzd_mul_strassen_impl(X2, X0, X1, cutoff);       /* 3  P5 = S1 T1            X3   */
+  mzd_add(X0, A10, A11);                      /* 1  S1 = A21 + A22        X1 */
+  mzd_add(X1, B01, B00);                      /* 2  T1 = B12 - B11        X2 */
+  mzd_mul_strassen(X2, X0, X1, cutoff);       /* 3  P5 = S1 T1            X3 */
   
-  _mzd_add_impl(C11, X2, C11);                      /* 4  C22 = P5 + C22       C22   */
-  _mzd_add_impl(C01, X2, C01);                      /* 5  C12 = P5 + C12       C12   */
-  _mzd_add_impl(X0, X0, A00);                       /* 6  S2 = S1 - A11         X1   */
-  _mzd_add_impl(X1, B11, X1);                       /* 7  T2 = B22 - T1         X2   */
-  _mzd_mul_strassen_impl(X2, A00, B00, cutoff);     /* 8  P1 = A11 B11          X3   */
+  mzd_add(C11, X2, C11);                      /* 4  C22 = P5 + C22       C22 */
+  mzd_add(C01, X2, C01);                      /* 5  C12 = P5 + C12       C12 */
+  mzd_add(X0, X0, A00);                       /* 6  S2 = S1 - A11         X1 */
+  mzd_add(X1, B11, X1);                       /* 7  T2 = B22 - T1         X2 */
+  mzd_mul_strassen(X2, A00, B00, cutoff);     /* 8  P1 = A11 B11          X3 */
   
-  _mzd_add_impl(C00, X2, C00);                      /* 9  C11 = P1 + C11       C11   */
-  _mzd_addmul_strassen_impl(X2, X0, X1, cutoff);    /* 10 U2 = S2 T2 + P1       X3   */
+  mzd_add(C00, X2, C00);                      /* 9  C11 = P1 + C11       C11 */
+  mzd_addmul_strassen(X2, X0, X1, cutoff);    /* 10 U2 = S2 T2 + P1       X3 */
 
-  _mzd_addmul_strassen_impl(C00, A01, B10, cutoff); /* 11 U1 = A12 B21 + C11   C11   */
+  mzd_addmul_strassen(C00, A01, B10, cutoff); /* 11 U1 = A12 B21 + C11   C11 */
   
-  _mzd_add_impl(X0, A01, X0);                       /* 12 S4 = A12 - S2         X1   */
-  _mzd_add_impl(X1, X1, B10);                       /* 13 T4 = T2 - B21         X2   */
-  _mzd_addmul_strassen_impl(C01, X0, B11, cutoff);  /* 14 C12 = S4 B22 + C12   C12   */
+  mzd_add(X0, A01, X0);                       /* 12 S4 = A12 - S2         X1 */
+  mzd_add(X1, X1, B10);                       /* 13 T4 = T2 - B21         X2 */
+  mzd_addmul_strassen(C01, X0, B11, cutoff);  /* 14 C12 = S4 B22 + C12   C12 */
   
-  _mzd_add_impl(C01, X2, C01);                      /* 15 U5 = U2 + C12        C12   */
-  _mzd_addmul_strassen_impl(C10, A01, X1, cutoff);  /* 16 P4 = A12 T4 - C21    C21   */
+  mzd_add(C01, X2, C01);                      /* 15 U5 = U2 + C12        C12 */
+  mzd_addmul_strassen(C10, A11, X1, cutoff);  /* 16 P4 = A22 T4 - C21    C21 */
   
-  _mzd_add_impl(X0, A00, A10);                      /* 17 S3 = A11 - A21        X1   */
-  _mzd_add_impl(X1, B11, B01);                      /* 18 T3 = B22 - B12        X2   */
-  _mzd_addmul_strassen_impl(X2, X0, X1, cutoff);    /* 19 U3 = S3 T3 + U2       X3   */
+  mzd_add(X0, A00, A10);                      /* 17 S3 = A11 - A21        X1 */
+  mzd_add(X1, B11, B01);                      /* 18 T3 = B22 - B12        X2 */
+  mzd_addmul_strassen(X2, X0, X1, cutoff);    /* 19 U3 = S3 T3 + U2       X3 */
   
-  _mzd_add_impl(C11, X2, C11);                      /* 20 U7 = U3 + C22        C22   */
-  _mzd_add_impl(C10, X2, C10);                      /* 21 U6 = U3 - C21        C21   */
+  mzd_add(C11, X2, C11);                      /* 20 U7 = U3 + C22        C22 */
+  mzd_add(C10, X2, C10);                      /* 21 U6 = U3 - C21        C21 */
 
   /* deal with rest */
   if (B->ncols > (int)(2*bnc)) {
@@ -594,15 +459,15 @@ packedmatrix *_mzd_addmul_strassen_impl(packedmatrix *C, packedmatrix *A, packed
     mzd_addmul_m4rm(C_last_col, A, B_last_col, 0);
     mzd_free_window(B_last_col);
     mzd_free_window(C_last_col);
-
   }
   if (A->nrows > (int)(2*anr)) {
     packedmatrix *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
-    packedmatrix *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, C->ncols);
-    mzd_addmul_m4rm(C_last_row, A_last_row, B, 0);
+    packedmatrix *B_bulk = mzd_init_window(B, 0, 0, B->nrows, 2*bnc);
+    packedmatrix *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, 2*bnc);//C->ncols);
+    mzd_addmul_m4rm(C_last_row, A_last_row, B_bulk, 0);
     mzd_free_window(A_last_row);
+    mzd_free_window(B_bulk);
     mzd_free_window(C_last_row);
-
   }
   if (A->ncols > (int)(2*anc)) {
     packedmatrix *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
