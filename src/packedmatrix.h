@@ -57,7 +57,7 @@ typedef struct {
   int ncols;
 
   /**
-   * width = ceil(nrows/RADIX)
+   * width = ceil(ncols/RADIX)
    */
   int width; 
 
