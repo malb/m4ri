@@ -112,12 +112,12 @@ void mzd_print_matrix( const packedmatrix *M ) {
   for (i=0; i< M->nrows; i++ ) {
     printf("[ ");
     row = M->values + M->rowswap[i];
-    for (j=0; j< M->width-1; j++) {
+    for (j=0; j< M->ncols/RADIX; j++) {
       m4ri_word_to_str(temp, row[j], 1);
       printf("%s ", temp);
     }
     row = row + M->width - 1;
-    for (j=0; j< (int)(M->ncols%RADIX); j++) {
+    for (j=0; j< (M->ncols%RADIX); j++) {
       printf("%d", (int)GET_BIT(*row, j));
       if (((j % 4)==3) && (j!=RADIX-1))
         printf(":");
@@ -137,12 +137,12 @@ void mzd_print_matrix_tight( const packedmatrix *M ) {
   for (i=0; i< M->nrows; i++ ) {
     printf("[");
     row = M->values + M->rowswap[i];
-    for (j=0; j< M->width-1; j++) {
+    for (j=0; j< M->ncols/RADIX; j++) {
       m4ri_word_to_str(temp, row[j], 0);
       printf("%s", temp);
     }
     row = row + M->width - 1;
-    for (j=0; j< (int)(M->ncols%RADIX); j++) {
+    for (j=0; j< (M->ncols%RADIX); j++) {
       printf("%d", (int)GET_BIT(*row, j));
     }
     printf("]\n");
