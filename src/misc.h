@@ -139,6 +139,16 @@ typedef unsigned char BIT;
 #define GET_BIT(w, spot) ((w & (ONE<<(RADIX - spot - 1))) >> (RADIX - spot - 1))
 
 /**
+ * \brief Write the value to the bit spot in the word w
+ * 
+ * \param w Word.
+ * \param spot Integer with 0 <= spot < RADIX.
+ * \param value Either 0 or 1.
+ */
+
+#define WRITE_BIT(w, spot, value) (w = (w &~(ONE<<(RADIX - spot - 1)) | (((word)value)<<(RADIX - spot - 1))))
+
+/**
 * \brief Return the n leftmost bits of the word w.
 *
 * \param w Word

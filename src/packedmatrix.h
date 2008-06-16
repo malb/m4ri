@@ -128,8 +128,8 @@ void mzd_free_window(packedmatrix *A);
  * \brief Swap the two rows rowa and rowb.
  * 
  * \param M Matrix
- * \param rowa Row index
- * \param rowb Row index
+ * \param rowa Row index.
+ * \param rowb Row index.
  */
  
 static inline void mzd_row_swap(packedmatrix *M, const int rowa, const int rowb) {
@@ -141,6 +141,16 @@ static inline void mzd_row_swap(packedmatrix *M, const int rowa, const int rowb)
   M->rowswap[rowa]=M->rowswap[rowb];
   M->rowswap[rowb]=temp;
 }
+
+/**
+ * \brief Swap the two columns cola and colb.
+ * 
+ * \param M Matrix
+ * \param cola Column index.
+ * \param colb Column index.
+ */
+ 
+void mzd_col_swap(packedmatrix *M, const int cola, const int colb);
 
 /**
  * \brief Read the bit at position M[row,col].

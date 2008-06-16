@@ -729,3 +729,26 @@ void mzd_combine( packedmatrix * C, const int c_row, const int c_startblock,
     }
   }
 }
+
+
+void mzd_col_swap(packedmatrix *M, const int cola, const int colb) {
+  const int dwa = cola/RADIX;
+  const int dwb = colb/RADIX;
+  const int dba = cola%RADIX;
+  const int dbb = colb%RADIX;
+  
+  register word tmp;
+  word *ptr_a, *ptr_b, *base;
+
+  int i;
+
+  for (i=0; i<M->nrows; i++) {
+    base = M->values + M->rowswap[i];
+    ptr_a = base + dwa;
+    ptr_b = base + dwb;
+
+    tmp = GET_BIT(*ptr_b, dbb);
+    WRITE_BIT(*ptr_b, dbb, GET_BIT(*ptr_a, dba));
+    WRITE_BIT(*ptr_a, dba, tmp);
+  }
+}
