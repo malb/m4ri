@@ -757,18 +757,43 @@ void mzd_col_swap(packedmatrix *M, const int cola, const int colb) {
   }
 }
 
-/* void mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de) { */
-/*   int i,j; */
-/*   int length_ceil = CEIL_DIV(de-ze, RADIX); */
-/*   int length_floor = (de-ze)/RADIX; */
-/*   word *tmp = m4ri_calloc(length_ceil,sizeof(word)); */
-/*   for(i=0; i<M->nrows; i++) {  */
-/*     /\* copy out to tmp *\/ */
-/*     for(j=0; j<length_floor; j++) { */
-/*       tmp[j] = zd_read_bits(M, i, ze+j*RADIX, RADIX) */
-/*     } */
-/*     /\* write to dst *\/ */
-/*     /\* zero rest *\/ */
-/*   } */
-/*   m4ri_free(tmp); */
-/* } */
+void mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de) {
+  int i,j;
+
+  const int ds = ze;
+  const int ld_r = (de - ds)%RADIX;
+  const int lz_r = (ze - zs)%RADIX;
+  const int ld_c = DIV_CEIL(de-ze, RADIX);
+  const int ld_f = (de-ze)/RADIX;
+  const int lz_c = DIV_CEIL(ze-zs, RADIX);
+  const int lz_f = (ze-zs)/RADIX;
+
+  word *tmp = (word*)m4ri_mm_calloc(ld_c, sizeof(word));
+
+  for(i=0; i<M->nrows; i++) {
+    /* copy out to tmp */
+    for(j=0; j < ld_f; j++) {
+      tmp[j] = mzd_read_bits(M, i, ds + j*RADIX, RADIX);
+    }
+    if (ld_r)
+      tmp[ld_f] = mzd_read_bits(M, i, ds + ld_f*RADIX, ld_r);
+
+    /* write to dst */
+    for(j=0; j<ld_f; j++) {
+      mzd_clear_bits(M, i, zs + j*RADIX, RADIX);
+      mzd_write_zeroed_bits(M, i, zs + j*RADIX, RADIX, tmp[j]);
+    }
+
+    if(ld_r) {
+      mzd_clear_bits(M, i, zs + ld_f*RADIX, ld_r);
+      mzd_write_zeroed_bits(M, i, zs + ld_f*RADIX, ld_r, tmp[ld_f]);
+    }
+    /* zero rest */
+    for(j=0; j<lz_f; j++) {
+      mzd_clear_bits(M, i, zs + (de - ds) + j*RADIX, RADIX);
+    }
+    if(lz_r)
+      mzd_clear_bits(M, i, zs + (de - ds) + lz_f*RADIX, lz_r);
+  }
+  m4ri_mm_free(tmp);
+}
