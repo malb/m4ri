@@ -419,38 +419,38 @@ packedmatrix *_mzd_addmul_strassen_impl(packedmatrix *C, packedmatrix *A, packed
    * used operation scheduling.
    */
 
-  packedmatrix *X0 = mzd_init(anr, bnc);
-  packedmatrix *X1 = mzd_init(anr, anc);
-  packedmatrix *X2 = mzd_init(bnr, bnc);
+  packedmatrix *X0 = mzd_init(anr, anc);
+  packedmatrix *X1 = mzd_init(bnr, bnc);
+  packedmatrix *X2 = mzd_init(anr, bnc);
   
-  mzd_add(X0, A10, A11);                      /* 1  S1 = A21 + A22        X1 */
-  mzd_add(X1, B01, B00);                      /* 2  T1 = B12 - B11        X2 */
-  mzd_mul_strassen(X2, X0, X1, cutoff);       /* 3  P5 = S1 T1            X3 */
+  _mzd_add_impl(X0, A10, A11);                      /* 1  S1 = A21 + A22        X1 */
+  _mzd_add_impl(X1, B01, B00);                      /* 2  T1 = B12 - B11        X2 */
+  _mzd_mul_strassen_impl(X2, X0, X1, cutoff);       /* 3  P5 = S1 T1            X3 */
   
-  mzd_add(C11, X2, C11);                      /* 4  C22 = P5 + C22       C22 */
-  mzd_add(C01, X2, C01);                      /* 5  C12 = P5 + C12       C12 */
-  mzd_add(X0, X0, A00);                       /* 6  S2 = S1 - A11         X1 */
-  mzd_add(X1, B11, X1);                       /* 7  T2 = B22 - T1         X2 */
-  mzd_mul_strassen(X2, A00, B00, cutoff);     /* 8  P1 = A11 B11          X3 */
+  _mzd_add_impl(C11, X2, C11);                      /* 4  C22 = P5 + C22       C22 */
+  _mzd_add_impl(C01, X2, C01);                      /* 5  C12 = P5 + C12       C12 */
+  _mzd_add_impl(X0, X0, A00);                       /* 6  S2 = S1 - A11         X1 */
+  _mzd_add_impl(X1, B11, X1);                       /* 7  T2 = B22 - T1         X2 */
+  _mzd_mul_strassen_impl(X2, A00, B00, cutoff);     /* 8  P1 = A11 B11          X3 */
   
-  mzd_add(C00, X2, C00);                      /* 9  C11 = P1 + C11       C11 */
-  mzd_addmul_strassen(X2, X0, X1, cutoff);    /* 10 U2 = S2 T2 + P1       X3 */
+  _mzd_add_impl(C00, X2, C00);                      /* 9  C11 = P1 + C11       C11 */
+  _mzd_addmul_strassen_impl(X2, X0, X1, cutoff);    /* 10 U2 = S2 T2 + P1       X3 */
 
-  mzd_addmul_strassen(C00, A01, B10, cutoff); /* 11 U1 = A12 B21 + C11   C11 */
+  _mzd_addmul_strassen_impl(C00, A01, B10, cutoff); /* 11 U1 = A12 B21 + C11   C11 */
   
-  mzd_add(X0, A01, X0);                       /* 12 S4 = A12 - S2         X1 */
-  mzd_add(X1, X1, B10);                       /* 13 T4 = T2 - B21         X2 */
-  mzd_addmul_strassen(C01, X0, B11, cutoff);  /* 14 C12 = S4 B22 + C12   C12 */
+  _mzd_add_impl(X0, A01, X0);                       /* 12 S4 = A12 - S2         X1 */
+  _mzd_add_impl(X1, X1, B10);                       /* 13 T4 = T2 - B21         X2 */
+  _mzd_addmul_strassen_impl(C01, X0, B11, cutoff);  /* 14 C12 = S4 B22 + C12   C12 */
   
-  mzd_add(C01, X2, C01);                      /* 15 U5 = U2 + C12        C12 */
-  mzd_addmul_strassen(C10, A11, X1, cutoff);  /* 16 P4 = A22 T4 - C21    C21 */
+  _mzd_add_impl(C01, X2, C01);                      /* 15 U5 = U2 + C12        C12 */
+  _mzd_addmul_strassen_impl(C10, A11, X1, cutoff);  /* 16 P4 = A22 T4 - C21    C21 */
   
-  mzd_add(X0, A00, A10);                      /* 17 S3 = A11 - A21        X1 */
-  mzd_add(X1, B11, B01);                      /* 18 T3 = B22 - B12        X2 */
-  mzd_addmul_strassen(X2, X0, X1, cutoff);    /* 19 U3 = S3 T3 + U2       X3 */
+  _mzd_add_impl(X0, A00, A10);                      /* 17 S3 = A11 - A21        X1 */
+  _mzd_add_impl(X1, B11, B01);                      /* 18 T3 = B22 - B12        X2 */
+  _mzd_addmul_strassen_impl(X2, X0, X1, cutoff);    /* 19 U3 = S3 T3 + U2       X3 */
   
-  mzd_add(C11, X2, C11);                      /* 20 U7 = U3 + C22        C22 */
-  mzd_add(C10, X2, C10);                      /* 21 U6 = U3 - C21        C21 */
+  _mzd_add_impl(C11, X2, C11);                      /* 20 U7 = U3 + C22        C22 */
+  _mzd_add_impl(C10, X2, C10);                      /* 21 U6 = U3 - C21        C21 */
 
   /* deal with rest */
   if (B->ncols > (int)(2*bnc)) {
