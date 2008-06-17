@@ -47,7 +47,7 @@
  * \param cutoff Minimal dimension for Strassen recursion.
  */
 
-packedmatrix *mzd_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+packedmatrix *mzd_mul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 
 /**
  * \brief Matrix multiplication and in-place addition via the
@@ -63,7 +63,7 @@ packedmatrix *mzd_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B
  * \param cutoff Minimal dimension for Strassen recursion.
  */
 
-packedmatrix *mzd_addmul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+packedmatrix *mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 
 /**
  * \brief Matrix multiplication via the Strassen-Winograd matrix
@@ -88,6 +88,6 @@ packedmatrix *mzd_addmul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix
  * http://www.sagemath.org
  */
 
-packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+packedmatrix *_mzd_mul_strassen_impl_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 
 #endif //STRASSEN_H

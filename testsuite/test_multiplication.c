@@ -25,7 +25,7 @@ int mul_test_equality(int m, int l, int n, int k, int cutoff) {
   mzd_randomize(B);
 
   /* C = A*B via Strassen */
-  C = mzd_mul_strassen(NULL, A, B, cutoff);
+  C = mzd_mul(NULL, A, B, cutoff);
 
   /* D = A*B via M4RM, temporary buffers are managed internally */
   D = mzd_mul_m4rm(    NULL, A, B, k);
@@ -82,7 +82,7 @@ int addmul_test_equality(int m, int l, int n, int k, int cutoff) {
 
   /* F = C + A*B via naiv cubic multiplication */
   F = mzd_copy(NULL, C);
-  F = mzd_addmul_strassen(F, A, B, cutoff);
+  F = mzd_addmul(F, A, B, cutoff);
 
   mzd_free(A);
   mzd_free(B);
@@ -93,11 +93,11 @@ int addmul_test_equality(int m, int l, int n, int k, int cutoff) {
     ret -=1;
   }
   if (mzd_equal(E, F) != TRUE) {
-    printf("FAIL: add,mul = addmul_strassen\n");
+    printf("FAIL: add,mul = addmul\n");
     ret -=1;
   }
   if (mzd_equal(F, D) != TRUE) {
-    printf("FAILL addmul_m4rm != addmul_strassen\n");
+    printf("FAILL addmul_m4rm != addmul\n");
     ret -=1;
   }
 

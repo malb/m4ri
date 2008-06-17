@@ -146,7 +146,7 @@ typedef unsigned char BIT;
  * \param value Either 0 or 1.
  */
 
-#define WRITE_BIT(w, spot, value) (w = (w &~(ONE<<(RADIX - spot - 1)) | (((word)value)<<(RADIX - spot - 1))))
+#define WRITE_BIT(w, spot, value) (w = ((w &~(ONE<<(RADIX - spot - 1))) | (((word)value)<<(RADIX - spot - 1))))
 
 /**
 * \brief Return the n leftmost bits of the word w.

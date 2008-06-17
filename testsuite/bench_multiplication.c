@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
   mzd_randomize(B);
 
   t = cpucycles();
-  packedmatrix *C = mzd_mul_strassen(NULL, A, B, cutoff);
+  packedmatrix *C = mzd_mul(NULL, A, B, cutoff);
   printf("n: %5d, cutoff: %5d, cpu cycles: %llu\n",n, cutoff, cpucycles() - t);
 
   mzd_free(A);

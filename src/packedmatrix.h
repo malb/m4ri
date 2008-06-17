@@ -29,6 +29,7 @@
  ********************************************************************/
 
 #include "misc.h"
+#include "permutation.h"
 #include <stdio.h>
 
 /**
@@ -544,6 +545,106 @@ packedmatrix *_mzd_add_impl(packedmatrix *C, const packedmatrix *A, const packed
 void mzd_combine(packedmatrix * DST, const int row3, const int startblock3,
 		 const packedmatrix * SC1, const int row1, const int startblock1, 
 		 const packedmatrix * SC2, const int row2, const int startblock2);
+
+/**
+ * Get n bits starting a position (x,y) from the matrix M.
+ *
+ * \param M Source matrix.
+ * \param x Starting row.
+ * \param y Starting column.
+ * \param n Number of bits (<= RADIX);
+ */ 
+
+static inline word mzd_read_bits(const packedmatrix *m, const int x, const int y, const int n) {
+  int truerow = m->rowswap[ x ];
+  word temp;
+
+  /* there are two possible situations. Either all bits are in one
+   * word or they are spread across two words. */
+
+  if ( (y%RADIX + n - 1) < RADIX ) {
+    /* everything happens in one word here */
+    temp =  m->values[ y / RADIX + truerow ]; /* get the value */
+    temp <<= y%RADIX; /* clear upper bits */
+    temp >>= RADIX - n; /* clear lower bits and move to correct position.*/
+    return temp;
+
+  } else {
+    /* two words are affected */
+    const int block = y / RADIX + truerow; /* correct block */
+    const int spot = (y + n ) % RADIX; /* correct offset */
+    /* make room by shifting spot times to the right, and add stuff from the second word */
+    temp = (m->values[block] << spot) | ( m->values[block + 1] >> (RADIX - spot) ); 
+    return (temp << (RADIX-n)) >> (RADIX-n); /* clear upper bits and return */
+   }
+}
+
+
+/**
+ * Write n bits from values to M starting a position (x,y). The
+ * positions written to are expected to be zero.
+ *
+ * \param M Source matrix.
+ * \param x Starting row.
+ * \param y Starting column.
+ * \param n Number of bits (<= RADIX);
+ * \param values Word with values;
+ */
+
+static inline void mzd_write_zeroed_bits(const packedmatrix *m, const int x, const int y, const int n, word values) {
+  int truerow = m->rowswap[ x ];
+  word *temp;
+
+  /* there are two possible situations. Either all bits are in one
+   * word or they are spread across two words. */
+
+  if ( (y%RADIX + n - 1) < RADIX ) {
+    /* everything happens in one word here */
+    temp =  m->values +  y / RADIX + truerow;
+    *temp |= values<<(RADIX-(y%RADIX)-n);
+
+  } else {
+    /* two words are affected */
+    const int block = y / RADIX + truerow; /* correct block */
+    const int spot = (y + n ) % RADIX; /* correct offset */
+    m->values[block] |= values >> (spot);
+    m->values[block + 1] |= values<<(RADIX-spot);
+  }
+}
+
+/**
+ * Clear n bits in M starting a position (x,y).
+ *
+ * \param M Source matrix.
+ * \param x Starting row.
+ * \param y Starting column.
+ * \param n Number of bits (<= RADIX);
+ */
+
+static inline void mzd_clear_bits(const packedmatrix *m, const int x, const int y, const int n) {
+  int truerow = m->rowswap[ x ];
+  word temp;
+
+  /* there are two possible situations. Either all bits are in one
+   * word or they are spread across two words. */
+
+  if ( (y%RADIX + n - 1) < RADIX ) {
+    /* everything happens in one word here */
+    temp =  m->values[ y / RADIX + truerow ];
+    temp <<= y%RADIX; /* clear upper bits */
+    temp >>= RADIX-n; /* clear lower bits and move to correct position.*/
+    temp <<= RADIX-n - y%RADIX;
+    m->values[ y / RADIX + truerow ] ^= temp;
+  } else {
+    /* two words are affected */
+    const int block = y / RADIX + truerow; /* correct block */
+    const int spot = (y + n ) % RADIX; /* correct offset */
+    m->values[block] ^= m->values[block] & ((ONE<<(n-spot))-1);
+    m->values[block+1] ^= (m->values[block+1]>>(RADIX-spot))<<(RADIX-spot);
+  }
+}
+
+void mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de);
 
 #ifdef HAVE_SSE2
 /**

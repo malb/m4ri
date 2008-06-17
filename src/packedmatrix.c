@@ -732,6 +732,9 @@ void mzd_combine( packedmatrix * C, const int c_row, const int c_startblock,
 
 
 void mzd_col_swap(packedmatrix *M, const int cola, const int colb) {
+  if (cola == colb)
+    return;
+
   const int dwa = cola/RADIX;
   const int dwb = colb/RADIX;
   const int dba = cola%RADIX;
@@ -742,6 +745,7 @@ void mzd_col_swap(packedmatrix *M, const int cola, const int colb) {
 
   int i;
 
+  
   for (i=0; i<M->nrows; i++) {
     base = M->values + M->rowswap[i];
     ptr_a = base + dwa;
@@ -752,3 +756,19 @@ void mzd_col_swap(packedmatrix *M, const int cola, const int colb) {
     WRITE_BIT(*ptr_a, dba, tmp);
   }
 }
+
+/* void mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de) { */
+/*   int i,j; */
+/*   int length_ceil = CEIL_DIV(de-ze, RADIX); */
+/*   int length_floor = (de-ze)/RADIX; */
+/*   word *tmp = m4ri_calloc(length_ceil,sizeof(word)); */
+/*   for(i=0; i<M->nrows; i++) {  */
+/*     /\* copy out to tmp *\/ */
+/*     for(j=0; j<length_floor; j++) { */
+/*       tmp[j] = zd_read_bits(M, i, ze+j*RADIX, RADIX) */
+/*     } */
+/*     /\* write to dst *\/ */
+/*     /\* zero rest *\/ */
+/*   } */
+/*   m4ri_free(tmp); */
+/* } */

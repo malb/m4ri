@@ -23,7 +23,10 @@
 
 #define CLOSER(a,b,target) (abs((long)a-(long)target)<abs((long)b-(long)target))
 
-packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+packedmatrix *_mzd_mul_strassen_impl_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+  /**
+   * \todo: make sure not to overwrite crap after ncols and before width*RADIX
+   */
   unsigned int a,b,c;
   unsigned int anr, anc, bnr, bnc;
   
@@ -87,18 +90,18 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
   
   _mzd_add_impl(X0, A00, A10);                  /*1    X0 = A00 + A10 */
   _mzd_add_impl(X1, B11, B01);                  /*2    X1 = B11 + B01 */
-  _mzd_mul_strassen_impl(C10, X0, X1, cutoff);  /*3   C10 = X0*X1 */
+  _mzd_mul_strassen_impl_even(C10, X0, X1, cutoff);  /*3   C10 = X0*X1 */
 
   _mzd_add_impl(X0, A10, A11);                  /*4    X0 = A10 + A11 */
   _mzd_add_impl(X1, B01, B00);                  /*5    X1 = B01 + B00*/
-  _mzd_mul_strassen_impl(C11, X0, X1, cutoff);  /*6   C11 = X0*X1 */
+  _mzd_mul_strassen_impl_even(C11, X0, X1, cutoff);  /*6   C11 = X0*X1 */
 
   _mzd_add_impl(X0, X0, A00);                   /*7    X0 = X0 + A00 */
   _mzd_add_impl(X1, X1, B11);                   /*8    X1 = B11 + X1 */
-  _mzd_mul_strassen_impl(C01, X0, X1, cutoff);  /*9   C01 = X0*X1 */
+  _mzd_mul_strassen_impl_even(C01, X0, X1, cutoff);  /*9   C01 = X0*X1 */
 
   _mzd_add_impl(X0, X0, A01);                   /*10   X0 = A01 + X0 */
-  _mzd_mul_strassen_impl(C00, X0, B11, cutoff); /*11  C00 = X0*B11 */
+  _mzd_mul_strassen_impl_even(C00, X0, B11, cutoff); /*11  C00 = X0*B11 */
 
   /**
    * \todo ideally we would use the same X0 throughout the function
@@ -110,7 +113,7 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
    */
 
   mzd_free(X0);
-  X0 = mzd_mul_strassen(NULL, A00, B00, cutoff);/*12  X0 = A00*B00*/
+  X0 = mzd_mul(NULL, A00, B00, cutoff);/*12  X0 = A00*B00*/
 
   _mzd_add_impl(C01, X0, C01);                  /*13  C01 =  X0 + C01 */
   _mzd_add_impl(C10, C01, C10);                 /*14  C10 = C01 + C10 */
@@ -118,10 +121,10 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
   _mzd_add_impl(C11, C10, C11);                 /*16  C11 = C10 + C11 */
   _mzd_add_impl(C01, C01, C00);                 /*17  C01 = C01 + C00 */
   _mzd_add_impl(X1, X1, B10);                   /*18   X1 = X1 + B10 */
-  _mzd_mul_strassen_impl(C00, A11, X1, cutoff); /*19  C00 = A11*X1 */
+  _mzd_mul_strassen_impl_even(C00, A11, X1, cutoff); /*19  C00 = A11*X1 */
 
   _mzd_add_impl(C10, C10, C00);                 /*20  C10 = C10 + C00 */
-  _mzd_mul_strassen_impl(C00, A01, B10, cutoff);/*21  C00 = A01*B10 */
+  _mzd_mul_strassen_impl_even(C00, A01, B10, cutoff);/*21  C00 = A01*B10 */
 
   _mzd_add_impl(C00, C00, X0);                  /*22  C00 = X0 + C00 */
 
@@ -167,7 +170,7 @@ packedmatrix *_mzd_mul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmat
 }
 
 #ifdef HAVE_OPENMP
-packedmatrix *_mzd_mul_strassen_mp_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+packedmatrix *_mzd_mul_strassen_mp_impl_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   int a,b,c;
   int anr, anc, bnr, bnc;
   
@@ -246,11 +249,11 @@ packedmatrix *_mzd_mul_strassen_mp_impl(packedmatrix *C, packedmatrix *A, packed
   {
 #pragma omp section
     {
-      _mzd_mul_strassen_mp_impl(Q0, A00, B00, cutoff); /* now Q0 holds P0 */
+      _mzd_mul_strassen_mp_impl_even(Q0, A00, B00, cutoff); /* now Q0 holds P0 */
     }
 #pragma omp section 
     {
-      _mzd_mul_strassen_mp_impl(Q1, A01, B10, cutoff); /* now Q1 holds P1 */
+      _mzd_mul_strassen_mp_impl_even(Q1, A01, B10, cutoff); /* now Q1 holds P1 */
     }  
   }
   _mzd_add_impl(U0, Q0, Q1); /* now U0 is correct */
@@ -265,7 +268,7 @@ packedmatrix *_mzd_mul_strassen_mp_impl(packedmatrix *C, packedmatrix *A, packed
     }    
 #pragma omp section
     {
-      _mzd_mul_strassen_mp_impl(Q1, S2, T2, cutoff); /* now Q1 holds P4 */
+      _mzd_mul_strassen_mp_impl_even(Q1, S2, T2, cutoff); /* now Q1 holds P4 */
     }
   }  
   _mzd_add_impl(Q1, Q1, Q0); /* now Q1 holds U2 */
@@ -274,17 +277,17 @@ packedmatrix *_mzd_mul_strassen_mp_impl(packedmatrix *C, packedmatrix *A, packed
   {
 #pragma omp section
     {
-      _mzd_mul_strassen_mp_impl(Q2, A11, T3, cutoff); /* now Q2 holds P6 */
+      _mzd_mul_strassen_mp_impl_even(Q2, A11, T3, cutoff); /* now Q2 holds P6 */
       _mzd_add_impl(U3, Q1, Q2); /* now U3 is correct */
     }  
 #pragma omp section
     {
-      _mzd_mul_strassen_mp_impl(Q3, S0, T0, cutoff); /* now Q3 holds P2 */
+      _mzd_mul_strassen_mp_impl_even(Q3, S0, T0, cutoff); /* now Q3 holds P2 */
       _mzd_add_impl(U4, Q1, Q3); /* now U4 is correct */
     }
   }  
   _mzd_add_impl(Q0, Q0, Q3); /* now Q0 holds U5 */
-  _mzd_mul_strassen_mp_impl(Q2, S3, B11, cutoff); /* now Q2 holds P5 */
+  _mzd_mul_strassen_mp_impl_even(Q2, S3, B11, cutoff); /* now Q2 holds P5 */
   _mzd_add_impl(U6, Q0, Q2); /* now U6 is correct */
 
   /* deal with rest */
@@ -337,7 +340,7 @@ packedmatrix *_mzd_mul_strassen_mp_impl(packedmatrix *C, packedmatrix *A, packed
 }
 #endif
 
-packedmatrix *mzd_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+packedmatrix *mzd_mul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   if(A->ncols != B->nrows)
     m4ri_die("mzd_mul_strassen: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
   
@@ -356,13 +359,17 @@ packedmatrix *mzd_mul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B
   }
 #ifdef HAVE_OPENMP
   /* this one isn't optimal */
-  return _mzd_mul_strassen_mp_impl(C, A, B, cutoff);
+  return _mzd_mul_strassen_mp_impl_even(C, A, B, cutoff);
 #else
-  return _mzd_mul_strassen_impl(C, A, B, cutoff);
+  return _mzd_mul_strassen_impl_even(C, A, B, cutoff);
 #endif  
 }
 
-packedmatrix *_mzd_addmul_strassen_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+packedmatrix *_mzd_addmul_strassen_impl_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+  /**
+   * \todo: make sure not to overwrite crap after ncols and before width*RADIX
+   */
+
   unsigned int a,b,c;
   unsigned int anr, anc, bnr, bnc;
   
@@ -425,29 +432,29 @@ packedmatrix *_mzd_addmul_strassen_impl(packedmatrix *C, packedmatrix *A, packed
   
   _mzd_add_impl(X0, A10, A11);                      /* 1  S1 = A21 + A22        X1 */
   _mzd_add_impl(X1, B01, B00);                      /* 2  T1 = B12 - B11        X2 */
-  _mzd_mul_strassen_impl(X2, X0, X1, cutoff);       /* 3  P5 = S1 T1            X3 */
+  _mzd_mul_strassen_impl_even(X2, X0, X1, cutoff);       /* 3  P5 = S1 T1            X3 */
   
   _mzd_add_impl(C11, X2, C11);                      /* 4  C22 = P5 + C22       C22 */
   _mzd_add_impl(C01, X2, C01);                      /* 5  C12 = P5 + C12       C12 */
   _mzd_add_impl(X0, X0, A00);                       /* 6  S2 = S1 - A11         X1 */
   _mzd_add_impl(X1, B11, X1);                       /* 7  T2 = B22 - T1         X2 */
-  _mzd_mul_strassen_impl(X2, A00, B00, cutoff);     /* 8  P1 = A11 B11          X3 */
+  _mzd_mul_strassen_impl_even(X2, A00, B00, cutoff);     /* 8  P1 = A11 B11          X3 */
   
   _mzd_add_impl(C00, X2, C00);                      /* 9  C11 = P1 + C11       C11 */
-  _mzd_addmul_strassen_impl(X2, X0, X1, cutoff);    /* 10 U2 = S2 T2 + P1       X3 */
+  _mzd_addmul_strassen_impl_even(X2, X0, X1, cutoff);    /* 10 U2 = S2 T2 + P1       X3 */
 
-  _mzd_addmul_strassen_impl(C00, A01, B10, cutoff); /* 11 U1 = A12 B21 + C11   C11 */
+  _mzd_addmul_strassen_impl_even(C00, A01, B10, cutoff); /* 11 U1 = A12 B21 + C11   C11 */
   
   _mzd_add_impl(X0, A01, X0);                       /* 12 S4 = A12 - S2         X1 */
   _mzd_add_impl(X1, X1, B10);                       /* 13 T4 = T2 - B21         X2 */
-  _mzd_addmul_strassen_impl(C01, X0, B11, cutoff);  /* 14 C12 = S4 B22 + C12   C12 */
+  _mzd_addmul_strassen_impl_even(C01, X0, B11, cutoff);  /* 14 C12 = S4 B22 + C12   C12 */
   
   _mzd_add_impl(C01, X2, C01);                      /* 15 U5 = U2 + C12        C12 */
-  _mzd_addmul_strassen_impl(C10, A11, X1, cutoff);  /* 16 P4 = A22 T4 - C21    C21 */
+  _mzd_addmul_strassen_impl_even(C10, A11, X1, cutoff);  /* 16 P4 = A22 T4 - C21    C21 */
   
   _mzd_add_impl(X0, A00, A10);                      /* 17 S3 = A11 - A21        X1 */
   _mzd_add_impl(X1, B11, B01);                      /* 18 T3 = B22 - B12        X2 */
-  _mzd_addmul_strassen_impl(X2, X0, X1, cutoff);    /* 19 U3 = S3 T3 + U2       X3 */
+  _mzd_addmul_strassen_impl_even(X2, X0, X1, cutoff);    /* 19 U3 = S3 T3 + U2       X3 */
   
   _mzd_add_impl(C11, X2, C11);                      /* 20 U7 = U3 + C22        C22 */
   _mzd_add_impl(C10, X2, C10);                      /* 21 U6 = U3 - C21        C21 */
@@ -495,7 +502,9 @@ packedmatrix *_mzd_addmul_strassen_impl(packedmatrix *C, packedmatrix *A, packed
   return C;
 }
 
-packedmatrix *mzd_addmul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+#define _mzd_addmul_strassen_impl _mzd_addmul_strassen_impl_even
+
+packedmatrix *mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   if(A->ncols != B->nrows)
     m4ri_die("mzd_addmul_strassen: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
   
@@ -514,4 +523,5 @@ packedmatrix *mzd_addmul_strassen(packedmatrix *C, packedmatrix *A, packedmatrix
   }
   return _mzd_addmul_strassen_impl(C, A, B, cutoff);
 }
+
 
