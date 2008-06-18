@@ -17,13 +17,15 @@
  *                  http://www.gnu.org/licenses/
  *
  ********************************************************************/
+
+#include "misc.h"
+
 #ifdef HAVE_SSE2
 #include <emmintrin.h>
 #endif
 
 #include <assert.h>
 
-#include "misc.h"
 #include "brilliantrussian.h"
 #include "grayflex.h"
 

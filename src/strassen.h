@@ -90,4 +90,18 @@ packedmatrix *mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int 
 
 packedmatrix *_mzd_mul_strassen_impl_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 
+
+/**
+ * The default cutoff for Strassen-Winograd multiplication. It should
+ * hold hold that 2 * (n^2)/8 fits into the L2 cache.
+ */
+
+#ifndef STRASSEN_MUL_CUTOFF
+#ifndef CPU_L2_CACHE
+#define CPU_L2_CACHE 524288
+#endif //CPU_L2_CACHE
+
+#define STRASSEN_MUL_CUTOFF ((int)sqrt((double)(4*CPU_L2_CACHE)))
+#endif// STRASSEN_MUL_CUTOFF
+
 #endif //STRASSEN_H

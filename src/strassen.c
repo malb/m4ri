@@ -344,8 +344,13 @@ packedmatrix *mzd_mul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cut
   if(A->ncols != B->nrows)
     m4ri_die("mzd_mul_strassen: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
   
-  if (cutoff <= 0)
+  if (cutoff < 0)
     m4ri_die("mzd_mul_strassen: cutoff must be > 0.\n");
+
+  if(cutoff == 0) {
+    cutoff = STRASSEN_MUL_CUTOFF;
+  }
+
   cutoff = cutoff/RADIX * RADIX;
   if (cutoff == 0) {
     cutoff = RADIX;
@@ -507,9 +512,16 @@ packedmatrix *_mzd_addmul_strassen_impl_even(packedmatrix *C, packedmatrix *A, p
 packedmatrix *mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   if(A->ncols != B->nrows)
     m4ri_die("mzd_addmul_strassen: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
+
+
   
-  if (cutoff <= 0)
-    m4ri_die("mzd_addmul_strassen: cutoff must be > 0.\n");
+  if (cutoff < 0)
+    m4ri_die("mzd_addmul_strassen: cutoff must be >= 0.\n");
+
+  if(cutoff == 0) {
+    cutoff = STRASSEN_MUL_CUTOFF;
+  }
+  
   cutoff = cutoff/RADIX * RADIX;
   if (cutoff == 0) {
     cutoff = RADIX;
