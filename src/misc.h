@@ -29,6 +29,7 @@
  ********************************************************************/
 
 #include <stdlib.h>
+#include "config.h"
 
 /*
  * These define entirely the word width used in the library.

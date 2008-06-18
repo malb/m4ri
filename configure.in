@@ -1,285 +1,3 @@
-# ===========================================================================
-#        http://autoconf-archive.cryp.to/ax_check_compiler_flags.html
-# ===========================================================================
-#
-# SYNOPSIS
-#
-#   AX_CHECK_COMPILER_FLAGS(FLAGS, [ACTION-SUCCESS], [ACTION-FAILURE])
-#
-# DESCRIPTION
-#
-#   Check whether the given compiler FLAGS work with the current language's
-#   compiler, or whether they give an error. (Warnings, however, are
-#   ignored.)
-#
-#   ACTION-SUCCESS/ACTION-FAILURE are shell commands to execute on
-#   success/failure.
-#
-# LAST MODIFICATION
-#
-#   2008-04-12
-#
-# COPYLEFT
-#
-#   Copyright (c) 2008 Steven G. Johnson <stevenj@alum.mit.edu>
-#   Copyright (c) 2008 Matteo Frigo
-#
-#   This program is free software: you can redistribute it and/or modify it
-#   under the terms of the GNU General Public License as published by the
-#   Free Software Foundation, either version 3 of the License, or (at your
-#   option) any later version.
-#
-#   This program is distributed in the hope that it will be useful, but
-#   WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-#   Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-#   As a special exception, the respective Autoconf Macro's copyright owner
-#   gives unlimited permission to copy, distribute and modify the configure
-#   scripts that are the output of Autoconf when processing the Macro. You
-#   need not follow the terms of the GNU General Public License when using
-#   or distributing such scripts, even though portions of the text of the
-#   Macro appear in them. The GNU General Public License (GPL) does govern
-#   all other use of the material that constitutes the Autoconf Macro.
-#
-#   This special exception to the GPL applies to versions of the Autoconf
-#   Macro released by the Autoconf Macro Archive. When you make and
-#   distribute a modified version of the Autoconf Macro, you may extend this
-#   special exception to the GPL to apply to your modified version as well.
-
-AC_DEFUN([AX_CHECK_COMPILER_FLAGS],
-[AC_PREREQ(2.59) dnl for _AC_LANG_PREFIX
-AC_MSG_CHECKING([whether _AC_LANG compiler accepts $1])
-dnl Some hackery here since AC_CACHE_VAL can't handle a non-literal varname:
-AS_LITERAL_IF([$1],
-  [AC_CACHE_VAL(AS_TR_SH(ax_cv_[]_AC_LANG_ABBREV[]_flags_$1), [
-      ax_save_FLAGS=$[]_AC_LANG_PREFIX[]FLAGS
-      _AC_LANG_PREFIX[]FLAGS="$1"
-      AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
-        AS_TR_SH(ax_cv_[]_AC_LANG_ABBREV[]_flags_$1)=yes,
-        AS_TR_SH(ax_cv_[]_AC_LANG_ABBREV[]_flags_$1)=no)
-      _AC_LANG_PREFIX[]FLAGS=$ax_save_FLAGS])],
-  [ax_save_FLAGS=$[]_AC_LANG_PREFIX[]FLAGS
-   _AC_LANG_PREFIX[]FLAGS="$1"
-   AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
-     eval AS_TR_SH(ax_cv_[]_AC_LANG_ABBREV[]_flags_$1)=yes,
-     eval AS_TR_SH(ax_cv_[]_AC_LANG_ABBREV[]_flags_$1)=no)
-   _AC_LANG_PREFIX[]FLAGS=$ax_save_FLAGS])
-eval ax_check_compiler_flags=$AS_TR_SH(ax_cv_[]_AC_LANG_ABBREV[]_flags_$1)
-AC_MSG_RESULT($ax_check_compiler_flags)
-if test "x$ax_check_compiler_flags" = xyes; then
-        m4_default([$2], :)
-else
-        m4_default([$3], :)
-fi
-])dnl AX_CHECK_COMPILER_FLAGS
-
-# ===========================================================================
-#            http://autoconf-archive.cryp.to/ax_gcc_x86_cpuid.html
-# ===========================================================================
-#
-# SYNOPSIS
-#
-#   AX_GCC_X86_CPUID(OP)
-#
-# DESCRIPTION
-#
-#   On Pentium and later x86 processors, with gcc or a compiler that has a
-#   compatible syntax for inline assembly instructions, run a small program
-#   that executes the cpuid instruction with input OP. This can be used to
-#   detect the CPU type.
-#
-#   On output, the values of the eax, ebx, ecx, and edx registers are stored
-#   as hexadecimal strings as "eax:ebx:ecx:edx" in the cache variable
-#   ax_cv_gcc_x86_cpuid_OP.
-#
-#   If the cpuid instruction fails (because you are running a
-#   cross-compiler, or because you are not using gcc, or because you are on
-#   a processor that doesn't have this instruction), ax_cv_gcc_x86_cpuid_OP
-#   is set to the string "unknown".
-#
-#   This macro mainly exists to be used in AX_GCC_ARCHFLAG.
-#
-# LAST MODIFICATION
-#
-#   2008-04-12
-#
-# COPYLEFT
-#
-#   Copyright (c) 2008 Steven G. Johnson <stevenj@alum.mit.edu>
-#   Copyright (c) 2008 Matteo Frigo
-#
-#   This program is free software: you can redistribute it and/or modify it
-#   under the terms of the GNU General Public License as published by the
-#   Free Software Foundation, either version 3 of the License, or (at your
-#   option) any later version.
-#
-#   This program is distributed in the hope that it will be useful, but
-#   WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-#   Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-#   As a special exception, the respective Autoconf Macro's copyright owner
-#   gives unlimited permission to copy, distribute and modify the configure
-#   scripts that are the output of Autoconf when processing the Macro. You
-#   need not follow the terms of the GNU General Public License when using
-#   or distributing such scripts, even though portions of the text of the
-#   Macro appear in them. The GNU General Public License (GPL) does govern
-#   all other use of the material that constitutes the Autoconf Macro.
-#
-#   This special exception to the GPL applies to versions of the Autoconf
-#   Macro released by the Autoconf Macro Archive. When you make and
-#   distribute a modified version of the Autoconf Macro, you may extend this
-#   special exception to the GPL to apply to your modified version as well.
-
-AC_DEFUN([AX_GCC_X86_CPUID],
-[AC_REQUIRE([AC_PROG_CC])
-AC_LANG_PUSH([C])
-AC_CACHE_CHECK(for x86 cpuid $1 output, ax_cv_gcc_x86_cpuid_$1,
- [AC_RUN_IFELSE([AC_LANG_PROGRAM([#include <stdio.h>], [
-     int op = $1, eax, ebx, ecx, edx;
-     FILE *f;
-     /* 64-bit code is easy */
-     if (sizeof(long) == 8) {
-        __asm__("cpuid"
-                : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx)
-                : "a" (op));
-     } else {
-        __asm__("pushl %%ebx    \n\t"
-	        "cpuid          \n\t"
-	        "movl %%ebx, %1 \n\t"
-	        "popl %%ebx     \n\t"
-                : "=a" (eax), "=r" (ebx), "=c" (ecx), "=d" (edx)
-                : "a" (op));
-     }
-     f = fopen("conftest_cpuid", "w"); if (!f) return 1;
-     fprintf(f, "%x:%x:%x:%x\n", eax, ebx, ecx, edx);
-     fclose(f);
-     return 0;
-])],
-     [ax_cv_gcc_x86_cpuid_$1=`cat conftest_cpuid`; rm -f conftest_cpuid],
-     [ax_cv_gcc_x86_cpuid_$1=unknown; rm -f conftest_cpuid],
-     [ax_cv_gcc_x86_cpuid_$1=unknown])])
-AC_LANG_POP([C])
-])
-
-# ===========================================================================
-#                 http://autoconf-archive.cryp.to/ax_ext.html
-# ===========================================================================
-#
-# SYNOPSIS
-#
-#   AX_EXT
-#
-# DESCRIPTION
-#
-#   Find supported SIMD extensions by requesting cpuid. When an SIMD
-#   extension is found, the -m"simdextensionname" is added to SIMD_FLAGS
-#   (only if compilator support it) (ie : if "sse2" is available "-msse2" is
-#   added to SIMD_FLAGS)
-#
-#   This macro calls:
-#
-#     AC_SUBST(SIMD_FLAGS)
-#
-#   And defines:
-#
-#     HAVE_MMX / HAVE_SSE / HAVE_SSE2 / HAVE_SSE3 / HAVE_SSSE3
-#
-# LAST MODIFICATION
-#
-#   2008-04-12
-#
-# COPYLEFT
-#
-#   Copyright (c) 2008 Christophe Tournayre <turn3r@users.sourceforge.net>
-#
-#   Copying and distribution of this file, with or without modification, are
-#   permitted in any medium without royalty provided the copyright notice
-#   and this notice are preserved.
-
-AC_DEFUN([AX_EXT],
-[
-  #AC_REQUIRE([AX_GCC_X86_CPUID])
-
-  AX_GCC_X86_CPUID(0x00000001)
-  ecx=`echo $ax_cv_gcc_x86_cpuid_0x00000001 | cut -d ":" -f 3`
-  edx=`echo $ax_cv_gcc_x86_cpuid_0x00000001 | cut -d ":" -f 4`
-
- AC_CACHE_CHECK([whether mmx is supported], [ax_have_mmx_ext],
-  [
-    ax_have_mmx_ext=no
-    if test "$((0x$edx>>23&0x01))" = 1; then
-      ax_have_mmx_ext=yes
-    fi
-  ])
-
- AC_CACHE_CHECK([whether sse is supported], [ax_have_sse_ext],
-  [
-    ax_have_sse_ext=no
-    if test "$((0x$edx>>25&0x01))" = 1; then
-      ax_have_sse_ext=yes
-    fi
-  ])
-
- AC_CACHE_CHECK([whether sse2 is supported], [ax_have_sse2_ext],
-  [
-    ax_have_sse2_ext=no
-    if test "$((0x$edx>>26&0x01))" = 1; then
-      ax_have_sse2_ext=yes
-    fi
-  ])
-
- AC_CACHE_CHECK([whether sse3 is supported], [ax_have_sse3_ext],
-  [
-    ax_have_sse3_ext=no
-    if test "$((0x$ecx&0x01))" = 1; then
-      ax_have_sse3_ext=yes
-    fi
-  ])
-
- AC_CACHE_CHECK([whether ssse3 is supported], [ax_have_ssse3_ext],
-  [
-    ax_have_ssse3_ext=no
-    if test "$((0x$ecx>>9&0x01))" = 1; then
-      ax_have_ssse3_ext=yes
-    fi
-  ])
-
-  if test "$ax_have_mmx_ext" = yes; then
-    AC_DEFINE(HAVE_MMX,,[Support mmx instructions])
-    AX_CHECK_COMPILER_FLAGS(-mmmx, SIMD_FLAGS="$SIMD_FLAGS -mmmx", [])
-  fi
-
-  if test "$ax_have_sse_ext" = yes; then
-    AC_DEFINE(HAVE_SSE,,[Support SSE (Streaming SIMD Extensions) instructions])
-    AX_CHECK_COMPILER_FLAGS(-msse, SIMD_FLAGS="$SIMD_FLAGS -msse", [])
-  fi
-
-  if test "$ax_have_sse2_ext" = yes; then
-    AC_DEFINE(HAVE_SSE2,,[Support SSE2 (Streaming SIMD Extensions 2) instructions])
-    AX_CHECK_COMPILER_FLAGS(-msse2, SIMD_FLAGS="$SIMD_FLAGS -msse2", [])
-  fi
-
-  if test "$ax_have_sse3_ext" = yes; then
-    AC_DEFINE(HAVE_SSE3,,[Support SSE3 (Streaming SIMD Extensions 3) instructions])
-    AX_CHECK_COMPILER_FLAGS(-msse3, SIMD_FLAGS="$SIMD_FLAGS -msse3", [])
-  fi
-
-  if test "$ax_have_ssse3_ext" = yes; then
-    AC_DEFINE(HAVE_SSSE3,,[Support SSSE3 (Supplemental Streaming SIMD Extensions 3) instructions])
-  fi
-
-  AC_SUBST(SIMD_FLAGS)
-])
-
- 
 ################################# 
 # Check this is SUN compiler # 
 ################################# 
@@ -302,153 +20,6 @@ AC_DEFUN([AX_CHECK_SUN_COMPILER],
 
 ]) 
 
-################################# 
-# Check CPU Vendor # 
-################################# 
-
-AC_DEFUN([AX_CPU_VENDOR],
-[
- AC_REQUIRE([AX_GCC_X86_CPUID])
- AX_GCC_X86_CPUID(0x0)
-
- AC_CACHE_CHECK(for the processor vendor, ax_cpu_vendor,
- [
-   vendor=`echo $ax_cv_gcc_x86_cpuid_0x0 | cut -d ":" -f 2`
-
-   case $vendor in
-     756e6547*)
-       ax_cpu_vendor="Intel"
-       ;;
-     68747541*)
-       ax_cpu_vendor="AMD"
-       ;;
-     69727943*)
-       ax_cpu_vendor="Cyrix"
-       ;;
-     746e6543*)
-       ax_cpu_vendor="IDT"
-       ;;
-     646f6547*)
-       ax_cpu_vendor="Natsemi Geode"
-       ;;
-     52697365*)
-       ax_cpu_vendor="Rise"
-       ;;
-     65736952*)
-       ax_cpu_vendor="Rise"
-       ;;
-     20536953*)
-       ax_cpu_vendor="SiS"
-       ;;
-     *)
-       ax_cpu_vendor="Unknown"
-       ;;
-   esac
- ])
-])
-
-# ===========================================================================
-#               http://autoconf-archive.cryp.to/ax_openmp.html
-# ===========================================================================
-#
-# SYNOPSIS
-#
-#   AX_OPENMP([ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
-#
-# DESCRIPTION
-#
-#   This macro tries to find out how to compile programs that use OpenMP a
-#   standard API and set of compiler directives for parallel programming
-#   (see http://www-unix.mcs/)
-#
-#   On success, it sets the OPENMP_CFLAGS/OPENMP_CXXFLAGS/OPENMP_F77FLAGS
-#   output variable to the flag (e.g. -omp) used both to compile *and* link
-#   OpenMP programs in the current language.
-#
-#   NOTE: You are assumed to not only compile your program with these flags,
-#   but also link it with them as well.
-#
-#   If you want to compile everything with OpenMP, you should set:
-#
-#       CFLAGS="$CFLAGS $OPENMP_CFLAGS"
-#       #OR#  CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS"
-#       #OR#  FFLAGS="$FFLAGS $OPENMP_FFLAGS"
-#
-#   (depending on the selected language).
-#
-#   The user can override the default choice by setting the corresponding
-#   environment variable (e.g. OPENMP_CFLAGS).
-#
-#   ACTION-IF-FOUND is a list of shell commands to run if an OpenMP flag is
-#   found, and ACTION-IF-NOT-FOUND is a list of commands to run it if it is
-#   not found. If ACTION-IF-FOUND is not specified, the default action will
-#   define HAVE_OPENMP.
-#
-# LAST MODIFICATION
-#
-#   2008-04-12
-#
-# COPYLEFT
-#
-#   Copyright (c) 2008 Steven G. Johnson <stevenj@alum.mit.edu>
-#
-#   This program is free software: you can redistribute it and/or modify it
-#   under the terms of the GNU General Public License as published by the
-#   Free Software Foundation, either version 3 of the License, or (at your
-#   option) any later version.
-#
-#   This program is distributed in the hope that it will be useful, but
-#   WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-#   Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-#   As a special exception, the respective Autoconf Macro's copyright owner
-#   gives unlimited permission to copy, distribute and modify the configure
-#   scripts that are the output of Autoconf when processing the Macro. You
-#   need not follow the terms of the GNU General Public License when using
-#   or distributing such scripts, even though portions of the text of the
-#   Macro appear in them. The GNU General Public License (GPL) does govern
-#   all other use of the material that constitutes the Autoconf Macro.
-#
-#   This special exception to the GPL applies to versions of the Autoconf
-#   Macro released by the Autoconf Macro Archive. When you make and
-#   distribute a modified version of the Autoconf Macro, you may extend this
-#   special exception to the GPL to apply to your modified version as well.
-
-AC_DEFUN([AX_OPENMP], [
-AC_PREREQ(2.59) dnl for _AC_LANG_PREFIX
-
-AC_CACHE_CHECK([for OpenMP flag of _AC_LANG compiler], ax_cv_[]_AC_LANG_ABBREV[]_openmp, [save[]_AC_LANG_PREFIX[]FLAGS=$[]_AC_LANG_PREFIX[]FLAGS
-ax_cv_[]_AC_LANG_ABBREV[]_openmp=unknown
-# Flags to try:  -fopenmp (gcc), -openmp (icc), -mp (SGI & PGI),
-#                -xopenmp (Sun), -omp (Tru64), -qsmp=omp (AIX), none
-ax_openmp_flags="-fopenmp -openmp -mp -xopenmp -omp -qsmp=omp none"
-if test "x$OPENMP_[]_AC_LANG_PREFIX[]FLAGS" != x; then
-  ax_openmp_flags="$OPENMP_[]_AC_LANG_PREFIX[]FLAGS $ax_openmp_flags"
-fi
-for ax_openmp_flag in $ax_openmp_flags; do
-  case $ax_openmp_flag in
-    none) []_AC_LANG_PREFIX[]FLAGS=$save[]_AC_LANG_PREFIX[] ;;
-    *) []_AC_LANG_PREFIX[]FLAGS="$save[]_AC_LANG_PREFIX[]FLAGS $ax_openmp_flag" ;;
-  esac
-  AC_TRY_LINK_FUNC(omp_set_num_threads,
-	[ax_cv_[]_AC_LANG_ABBREV[]_openmp=$ax_openmp_flag; break])
-done
-[]_AC_LANG_PREFIX[]FLAGS=$save[]_AC_LANG_PREFIX[]FLAGS
-])
-if test "x$ax_cv_[]_AC_LANG_ABBREV[]_openmp" = "xunknown"; then
-  m4_default([$2],:)
-else
-  if test "x$ax_cv_[]_AC_LANG_ABBREV[]_openmp" != "xnone"; then
-    OPENMP_[]_AC_LANG_PREFIX[]FLAGS=$ax_cv_[]_AC_LANG_ABBREV[]_openmp
-  fi
-  m4_default([$1], [AC_DEFINE(HAVE_OPENMP,1,[Define if OpenMP is enabled])])
-fi
-])dnl AX_OPENMP
-
 # ===========================================================================
 #                                    Main
 # ===========================================================================
@@ -465,7 +36,17 @@ AC_PROG_LIBTOOL
 
 AC_PROG_INSTALL
 
-#C99 for suncc
+AC_CONFIG_HEADERS(src/config.h)
+
+m4_include([m4/ax_gcc_x86_cpuid.m4])
+m4_include([m4/ax_ext.m4])dnl
+m4_include([m4/ax_cpu_vendor.m4])dnl
+m4_include([m4/ax_count_cpus.m4])dnl
+m4_include([m4/ax_cache_size.m4])dnl
+m4_include([m4/ax_check_compiler_flags.m4])dnl
+m4_include([m4/ax_openmp.m4])dnl
+
+# C99 for suncc
 AX_CHECK_SUN_COMPILER()
 C99_FLAG="-std=c99"
 if test "x$ax_sun_cc_compiler" = "xyes"; then
@@ -473,9 +54,9 @@ if test "x$ax_sun_cc_compiler" = "xyes"; then
 fi
 AC_SUBST(C99_FLAG)
 
-#SSE2 support
+# SSE2 support
 case $host_cpu in
-     i[[3456]]86*|x86_64*)
+     i[[3456]]86*|x86_64*)o
         AX_CPU_VENDOR()
         if test "x$ax_cpu_vendor" = "xIntel"; then
             AX_EXT() # SSE2 is slower on the Opteron
@@ -484,12 +65,15 @@ esac
 
 AC_CHECK_HEADER([mm_malloc.h],AC_DEFINE(HAVE_MM_MALLOC,,[Support aligned allocations]),)
 
-#OpenMP support
+# OpenMP support
 AC_ARG_WITH(openmp, [  --with-openmp           add support for OpenMP Parallelism])
 if test "x$enable_openmp" == "xyes"; then
    AX_OPENMP()
 fi
 AC_SUBST(OPENMP_CFLAGS)
+
+# L1 and L2 Cache Size
+AX_CACHE_SIZE()
 
 AC_PROG_MAKE_SET
 

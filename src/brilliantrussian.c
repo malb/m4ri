@@ -23,9 +23,9 @@
 
 #include <assert.h>
 
+#include "misc.h"
 #include "brilliantrussian.h"
 #include "grayflex.h"
-#include "misc.h"
 
 
 /**

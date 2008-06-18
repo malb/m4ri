@@ -26,6 +26,8 @@
 #ifndef PERMUTATION_H
 #define PERMUTATION_H
 
+#include "misc.h"
+
 typedef struct {
   size_t *values;
   size_t size;
