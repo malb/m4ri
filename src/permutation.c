@@ -1,9 +1,3 @@
-/**
- * \file m4ri.h
- * \brief Main include file for the M4RI library.
- * 
- * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
- */
 /******************************************************************************
 *
 *            M4RI: Method of the Four Russians Inversion
@@ -21,18 +15,21 @@
 *
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
-#ifndef PERMUTATION_H
-#define PERMUTATION_H
 
-#include "misc.h"
+#include "permutation.h"
+#include "packedmatrix.h"
 
-typedef struct {
-  size_t *values;
-  size_t length;
-} permutation;
+permutation *mzp_init(size_t length) {
+  size_t i;
+  permutation *P = m4ri_mm_malloc(sizeof(permutation));
+  P->values = (size_t*)m4ri_mm_malloc(sizeof(size_t)*length);
+  P->length = length;
+  for (i=0; i<length; i++) {
+    P->values[i] = i;
+  }
+}
 
-permutation *mzp_init(size_t length);
-
-void mzp_free(permutation *P);
-
-#endif //PERMUTATION_H
+void mzp_free(permutation *P) {
+  m4ri_mm_free(P->values);
+  m4ri_mm_free(P);
+}

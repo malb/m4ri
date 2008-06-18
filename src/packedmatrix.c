@@ -781,14 +781,13 @@ permutation *mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de, int z
   int i,j;
 
   const int ds = ze;
+  const int ld_f = (de - ze)/RADIX;
   const int ld_r = (de - ds)%RADIX;
-  const int lz_r = (ze - zs)%RADIX;
-  const int ld_c = DIV_CEIL(de-ze, RADIX);
-  const int ld_f = (de-ze)/RADIX;
-  const int lz_c = DIV_CEIL(ze-zs, RADIX);
-  const int lz_f = (ze-zs)/RADIX;
 
-  word *tmp = (word*)m4ri_mm_calloc(ld_c, sizeof(word));
+  const int lz_f = (ze - zs)/RADIX;
+  const int lz_r = (ze - zs)%RADIX;
+
+  word *tmp = (word*)m4ri_mm_calloc(DIV_CEIL(de-ze, RADIX), sizeof(word));
 
   for(i=0; i<M->nrows; i++) {
     /* copy out to tmp */
@@ -820,5 +819,43 @@ permutation *mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de, int z
         mzd_clear_bits(M, i, zs + (de - ds) + lz_f*RADIX, lz_r);
     }
   }
+
+  for(j=0; j<(de-ds); j++) {
+    P->values[j] = P->values[de+j]; 
+  }
+
   m4ri_mm_free(tmp);
+  return P;
+}
+
+void mzd_apply_p_left(packedmatrix *A, permutation *P) {
+  int i;
+  for (i=0; i<P->length; i++) {
+    if(P->values[i] > i) 
+      mzd_row_swap(A, i, P->values[i]);
+  }
+}
+
+void mzd_apply_p_left_trans(packedmatrix *A, permutation *P) {
+  int i;
+  for (i=P->length-1; i>=0; i--) {
+    if(P->values[i] > i) 
+      mzd_row_swap(A, i, P->values[i]);
+  }
+}
+
+void mzd_apply_p_right_trans(packedmatrix *A, permutation *P) {
+  int i;
+  for (i=0; i<P->length; i++) {
+    if(P->values[i] > i) 
+      mzd_col_swap(A, i, P->values[i]);
+  }
+}
+
+void mzd_apply_p_right(packedmatrix *A, permutation *P) {
+  int i;
+  for (i=P->length-1; i>=0; i--) {
+    if(P->values[i] > i) 
+      mzd_col_swap(A, i, P->values[i]);
+  }
 }
