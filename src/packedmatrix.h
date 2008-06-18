@@ -63,6 +63,14 @@ typedef struct {
   int width; 
 
   /**
+   * column offset of the first column. This attribute is ignored by
+   * most functions!
+   *
+   */
+
+  int offset;
+  
+  /**
    * Offsets to each row, so e.g. the first word of the i-th row
    * is m->values[m->rowswap[i]]
    */
@@ -116,6 +124,35 @@ void mzd_free(packedmatrix *A);
  */
 
 packedmatrix *mzd_init_window(const packedmatrix *M, const int lowr, const int lowc, const int highr, const int highc);
+
+/**
+ * \brief Create a window/view into the matrix M.
+ *
+ * A matrix window for m is a meta structure on the matrix M. It is
+ * setup to point into the matrix so M \em must \em not be freed while the
+ * matrix window is used.
+ *
+ * This function is used for windows starting at a column index out of the
+ * RADIX grid.
+ * This function puts restrictions on the provided parameters which
+ * are not enforced currently.
+ *
+ *  - lowc must be divisible by RADIX
+ *  - highc must be divisible by RADIX
+ *  - all parameters must be within range for M
+ *
+ * Use mzd_free_free to free the window.
+ *
+ * \param M Matrix
+ * \param lowr Starting row (inclusive)
+ * \param lowc Starting column (inclusive)
+ * \param highr End row (exclusive)
+ * \param highc End column (exclusive)
+ * \param begin_offset Offset of the first column
+ *
+ */
+
+packedmatrix *mzd_init_window_weird (const packedmatrix *M, const int lowr, const int lowc, const int highr, const int highc, const int begin_offset);
 
 /**
  * \brief Free a matrix window created with mzd_init_window.
@@ -322,14 +359,27 @@ packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A );
  * That is, compute C such that C == AB.
  *
  * \param C Preallocated product matrix, may be NULL for automatic creation.
- * \param A Input matrix A
- * \param B Input matrix B
+ * \param A Input matrix A.
+ * \param B Input matrix B.
  *
  * \note Normally, if you will multiply several times by b, it is
  * smarter to calculate bT yourself, and keep it, and then use the
- * function called matrixTimesMatrixTranspose
+ * function called _mzd_mul_naiv
  */
 packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
+
+/**
+ * \brief Naive cubic matrix multiplication with the pre-transposed B.
+ *
+ * That is, compute C such that C == AB^t.
+ *
+ * \param C Preallocated product matrix.
+ * \param A Input matrix A.
+ * \param B Pre-transposed input matrix B.
+ *
+ */
+
+packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
 
 /**
  * \brief Fill matrix M with uniformly distributed bits.

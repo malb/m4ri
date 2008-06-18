@@ -79,6 +79,7 @@ packedmatrix *mzd_init_window(const packedmatrix *m, int lowr, int lowc, int hig
   window->ncols = ncols;
   window->nrows = nrows;
   window->width = ncols/RADIX;
+  window->offset = 0;
   if (ncols%RADIX)
     window->width++;
   window->values = m->values;
@@ -90,6 +91,17 @@ packedmatrix *mzd_init_window(const packedmatrix *m, int lowr, int lowc, int hig
     window->rowswap[i] = m->rowswap[lowr + i] + offset;
   }
   
+  return window;
+}
+
+packedmatrix *mzd_init_window_weird (const packedmatrix *m, int lowr, int lowc, int highr, int highc, int begin_offset) {
+  packedmatrix * window =  mzd_init_window(m, lowr, lowc, highr, highc);
+  if ((window-> offset = m->offset + begin_offset) >= RADIX)
+    window->offset -= RADIX;
+  
+  window->width = (window->offset + window->ncols) / RADIX;
+  if (window->ncols % RADIX)
+    window->width++;
   return window;
 }
 
@@ -117,7 +129,7 @@ void mzd_print_matrix( const packedmatrix *M ) {
       printf("%s ", temp);
     }
     row = row + M->width - 1;
-    for (j=0; j< (M->ncols%RADIX); j++) {
+    for (j=0; j< (int)(M->ncols%RADIX); j++) {
       printf("%d", (int)GET_BIT(*row, j));
       if (((j % 4)==3) && (j!=RADIX-1))
         printf(":");
@@ -142,7 +154,7 @@ void mzd_print_matrix_tight( const packedmatrix *M ) {
       printf("%s", temp);
     }
     row = row + M->width - 1;
-    for (j=0; j< (M->ncols%RADIX); j++) {
+    for (j=0; j< (int)(M->ncols%RADIX); j++) {
       printf("%d", (int)GET_BIT(*row, j));
     }
     printf("]\n");
@@ -311,17 +323,26 @@ packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A) {
 }
 
 packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
-  int i, j, k, ii, eol;
   packedmatrix *BT = mzd_transpose(NULL, B);
-  word *a, *b, *c;
 
   if (C==NULL) {
     C=mzd_init(A->nrows, B->ncols);
   } else {
     if (C->nrows != A->nrows || C->ncols != B->ncols) {
-      m4ri_die("mzd_mul_naiv_t: Provided return matrix has wrong dimensions.\n");
+      mzd_free (BT);
+      m4ri_die("mzd_mul_naiv: Provided return matrix has wrong dimensions.\n");
     }
   }
+  _mzd_mul_naiv(C, A, BT);
+  mzd_free (BT);
+  return C;
+}
+
+
+
+packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
+  int i, j, k, ii, eol;
+  word *a, *b, *c;
 
   if(C->ncols%RADIX) {
     eol = (C->width-1);
@@ -342,7 +363,7 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
       c = C->values + C->rowswap[i];
       for (j=RADIX*(eol-1); j>=0; j-=RADIX) {
         for (k=RADIX-1; k>=0; k--) {
-          b = BT->values + BT->rowswap[j+k];
+          b = B->values + B->rowswap[j+k];
           parity[k] = a[0] & b[0];
           for (ii=wide-1; ii>=1; ii--)
           parity[k] ^= a[ii] & b[ii];
@@ -352,7 +373,7 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
       
       if (eol != C->width) {
         for (k=0; k<(int)(C->ncols%RADIX); k++) {
-          b = BT->values + BT->rowswap[RADIX*eol+k];
+          b = B->values + B->rowswap[RADIX*eol+k];
           parity[k] = a[0] & b[0];
           for (ii=1; ii<A->width; ii++)
             parity[k] ^= a[ii] & b[ii];
@@ -367,7 +388,7 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
     c = C->values + C->rowswap[i];
     for (j=RADIX*(eol-1); j>=0; j-=RADIX) {
       for (k=RADIX-1; k>=0; k--) {
-        b = BT->values + BT->rowswap[j+k];
+        b = B->values + B->rowswap[j+k];
         parity[k] = a[0] & b[0];
         for (ii=wide-1; ii>=1; ii--)
           parity[k] ^= a[ii] & b[ii];
@@ -377,7 +398,7 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
     
     if (eol != C->width) {
       for (k=0; k<(int)(C->ncols%RADIX); k++) {
-        b = BT->values + BT->rowswap[RADIX*eol+k];
+        b = B->values + B->rowswap[RADIX*eol+k];
         parity[k] = a[0] & b[0];
         for (ii=1; ii<A->width; ii++)
           parity[k] ^= a[ii] & b[ii];
@@ -386,7 +407,6 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
     }
   }
 
-  mzd_free(BT);
   return C;
 }
 
