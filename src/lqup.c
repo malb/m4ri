@@ -17,50 +17,56 @@
  *
  ********************************************************************/
 
-#include "trsm.h"
+#include "lqup.h"
 #include "strassen.h"
+#include "trsm.h"
 #include "packedmatrix.h"
 #include "misc.h"
 #include "parity.h"
 #include "stdio.h"
 
-void mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) {
-  if(U->nrows != B->ncols)
-    m4ri_die("mzd_trsm_upper_right: U nrows (%d) need to match B ncols (%d).\n", U->nrows, B->ncols);
-  if(U->nrows != U->ncols)
-    m4ri_die("mzd_trsm_upper_right: U must be square and is found to be (%d) x (%d).\n", U->nrows, U->ncols);
-  
+void mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int cutoff) {
+
   if (cutoff <= 0)
     m4ri_die("mzd_trsm_upper_right: cutoff must be > 0.\n");
 
   _mzd_trsm_upper_right (U, B, cutoff);
 }
 
-void _mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) {
+size_t _mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int cutoff) {
 
-  /**
-   *  _________ 
-   *  \U00|   |
-   *   \  |U01|
-   *    \ |   |
-   *     \|___|
-   *      \U11|
-   *       \  |
-   *        \ |
-   *         \|
-   *   _______
-   *  |B0 |B1 |
-   *  |___|___|
-   *  
-   * U00 and B0 are possibly located at uneven locations.
-   * Their column dimension is lower than 64
-   * The first column of U01, U11, B1 are aligned to words.
-   */
+  size_t nrows = A->nrows;
+  size_t ncols = A->ncols;
 
-  size_t trail_dim_b =  (B->ncols + B->offset) % RADIX;
-  size_t nb = B->ncols;
-  size_t mb = B->nrows;
-  size_t n1 = RADIX-B->offset;
+  if (ncols < ){
+    /**
+     * Base case
+     */
+    
+  } else{
+    /**
+     * Block divide and conquer algorithm
+     */
+    
+    size_t n1 = (((ncols - 1) / RADIX + 1) >> 1) * RADIX;
+    packedmatrix *A0  = mzd_init_window_weird (A,  0,  0, nrows,    n1, A->offset);
+    packedmatrix *A1  = mzd_init_window_weird (A,  0, n1, nrows, ncols, A->offset);
+
+    size_t r1, r2;
+
+    r1 = _mzd_lqup (A0, P, Q, cutoff);
+
+    if (r1) {
+      _mzd_apply_p_left_notrans (A1, P, 0, r1);
+      _mzd_trsm_lower_left (U0, A01, cutoff);
+      _mzd_addmul (A11, A10, A01, cutoff);
+    }
+
+    r2 = _mzd_lqup (A22, P, Q, cutoff);
+    
+    
+  }
+
   packedmatrix *B0  = mzd_init_window_weird (B,  0,  0, mb, n1, B->offset);
   packedmatrix *B1  = mzd_init_window_weird (B,  0, n1, mb, nb,         0);
   packedmatrix *U00 = mzd_init_window_weird (U,  0,  0, n1, n1, U->offset);

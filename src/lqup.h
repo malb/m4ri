@@ -1,0 +1,57 @@
+/**
+ * \file lqup.h
+ *
+ * \brief LQUP matrix decomposition routines
+ *
+ * \author Clement Pernet <clement.pernet@gmail.com>
+ */
+
+
+#ifndef LQUP_H
+#define LQUP_H
+ /*******************************************************************
+ *
+ *            M4RI: Method of the Four Russians Inversion
+ *
+ *       Copyright (C) 2008 Clement Pernet <clement.pernet@gmail.com>
+ *
+ *  Distributed under the terms of the GNU General Public License (GPL)
+ *
+ *    This code is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    General Public License for more details.
+ *
+ *  The full text of the GPL is available at:
+ *
+ *                  http://www.gnu.org/licenses/
+ *
+ ********************************************************************/
+
+#include "misc.h"
+#include "packedmatrix.h"
+
+/**
+ * \brief LQUP matrix decomposition.
+ *
+ * Computes the transposed LQUP matrix decomposition using a block recursive algorithm
+ *
+ * If (L,Q,U,P) satisfy LQUP = A^T, it returns (L^T, Q^T, U^T, P^T).
+ * The Row echelon form (not reduced) can be read from the upper triangular matrix L^T.
+ * 
+ * This is the wrapper function including bounds checks. See
+ * _mzd_lqup for implementation details.
+ *
+ * The matrix L and U are stored in place over A.
+ * L^T is represented by the matrix Q^T L^T Q
+ * 
+ * \param A Input matrix
+ * \param P Output row permutation matrix
+ * \param Q Output column permutation matrix
+ * \cutoff Minimal dimension for Strassen recursion.
+ */
+size_t mzd_lqup (packedmatrix *A, permutation * P, permutation * Q);
+
+size_t _mzd_lqup (packedmatrix *a, permutation * P, permutation * Q);
+
+#endif
