@@ -260,7 +260,7 @@ static inline packedmatrix *_mzd_transpose_direct(packedmatrix *DST, const packe
   return DST;
 }
 
-static inline packedmatrix *_mzd_transpose_impl(packedmatrix *DST, const packedmatrix *X) {
+static inline packedmatrix *_mzd_transpose(packedmatrix *DST, const packedmatrix *X) {
   const int nr = X->nrows;
   const int nc = X->ncols;
   const int cutoff = 256; /* 256 seems optimal */
@@ -285,10 +285,10 @@ static inline packedmatrix *_mzd_transpose_impl(packedmatrix *DST, const packedm
   packedmatrix *BT = mzd_init_window(DST, nc2,   0,  nc, nr2);
   packedmatrix *DT = mzd_init_window(DST, nc2, nr2,  nc,  nr);
 
-  _mzd_transpose_impl(AT, A);
-  _mzd_transpose_impl(BT, B);
-  _mzd_transpose_impl(CT, C);
-  _mzd_transpose_impl(DT, D);
+  _mzd_transpose(AT, A);
+  _mzd_transpose(BT, B);
+  _mzd_transpose(CT, C);
+  _mzd_transpose(DT, D);
 
   mzd_free_window(A); mzd_free_window(B);
   mzd_free_window(C); mzd_free_window(D);
@@ -307,7 +307,7 @@ packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A) {
       m4ri_die("mzd_transpose: Wrong size for return matrix.\n");
     }
   }
-  return _mzd_transpose_impl(DST, A);
+  return _mzd_transpose(DST, A);
 }
 
 packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
@@ -572,10 +572,10 @@ packedmatrix *mzd_add(packedmatrix *ret, const packedmatrix *left, const packedm
       m4ri_die("mzd_add: rows and columns of returned matrix must match.\n");
     }
   }
-  return _mzd_add_impl(ret, left, right);
+  return _mzd_add(ret, left, right);
 }
 
-packedmatrix *_mzd_add_impl(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
+packedmatrix *_mzd_add(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
   int i;
   int nrows = MIN(MIN(A->nrows, B->nrows), C->nrows);
   const packedmatrix *tmp;

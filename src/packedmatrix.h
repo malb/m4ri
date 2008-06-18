@@ -502,7 +502,7 @@ packedmatrix *mzd_add(packedmatrix *C, const packedmatrix *A, const packedmatrix
  * \param B Matrix
  */
 
-packedmatrix *_mzd_add_impl(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
+packedmatrix *_mzd_add(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
 
 /**
  * \brief Same as mzd_add.
@@ -522,7 +522,7 @@ packedmatrix *_mzd_add_impl(packedmatrix *C, const packedmatrix *A, const packed
  * \param B Matrix
  */
 
-#define _mzd_sub_impl _mzd_add_impl
+#define _mzd_sub _mzd_add
 
 /**
  * \brief row3[col3:] = row1[col1:] + row2[col2:]

@@ -533,7 +533,7 @@ packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
   BT = mzd_transpose(NULL, B);
   
   CT = mzd_init(B->ncols, A->nrows);
-  CT = _mzd_mul_m4rm_impl(CT, BT, AT, k, 0);
+  CT = _mzd_mul_m4rm(CT, BT, AT, k, 0);
   
   mzd_free(AT);
   mzd_free(BT);
@@ -555,7 +555,7 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
     if (C->nrows != a || C->ncols != c)
       m4ri_die("mzd_mul_m4rm: C (%d x %d) has wrong dimensions.\n", C->nrows, C->ncols);
   }
-  return _mzd_mul_m4rm_impl(C, A, B, k, TRUE);
+  return _mzd_mul_m4rm(C, A, B, k, TRUE);
 }
 
 packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k) {
@@ -570,10 +570,10 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
     if (C->nrows != a || C->ncols != c)
       m4ri_die("mzd_mul_m4rm: C has wrong dimensions.\n");
   }
-  return _mzd_mul_m4rm_impl(C, A, B, k, FALSE);
+  return _mzd_mul_m4rm(C, A, B, k, FALSE);
 }
 
-packedmatrix *_mzd_mul_m4rm_impl_old(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear) {
+packedmatrix *_mzd_mul_m4rm_old(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear) {
   int i,j, a_nr, a_nc, b_nc;
   int truerow;
   unsigned int x;
@@ -749,7 +749,7 @@ static inline void _mzd_combine4_sse2(word *c, word *t1, word *t2, word *t3, wor
 
 #endif //HAVE_SSE2
 
-packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear) {
+packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear) {
   /**
    * The algorithm proceeds as follows:
    * 

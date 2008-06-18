@@ -175,8 +175,8 @@ packedmatrix *mzd_invert_m4ri(packedmatrix *M, packedmatrix *I, int k);
  * \brief Matrix multiplication using Konrod's method, i.e. compute C
  * such that C == AB. 
  * 
- * This is the convenient wrapper function, please see
- * _mzd_mul_m4rm_impl for authors and implementation details.
+ * This is the convenient wrapper function, please see _mzd_mul_m4rm
+ * for authors and implementation details.
  *
  * \param C Preallocated product matrix, may be NULL for automatic creation.
  * \param A Input matrix A
@@ -214,7 +214,7 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
  * \author William Hart -- block matrix implementation, use of several Gray code tables, general speed-ups
  */
 
-packedmatrix *_mzd_mul_m4rm_impl(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear);
+packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear);
 
 /**
  * \brief Matrix multiplication using Konrod's method but transpose
