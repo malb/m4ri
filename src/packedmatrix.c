@@ -757,7 +757,7 @@ void mzd_col_swap(packedmatrix *M, const int cola, const int colb) {
   }
 }
 
-void mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de) {
+permutation *mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de, int zero_out, permutation *P) {
   int i,j;
 
   const int ds = ze;
@@ -788,12 +788,17 @@ void mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de) {
       mzd_clear_bits(M, i, zs + ld_f*RADIX, ld_r);
       mzd_write_zeroed_bits(M, i, zs + ld_f*RADIX, ld_r, tmp[ld_f]);
     }
-    /* zero rest */
-    for(j=0; j<lz_f; j++) {
-      mzd_clear_bits(M, i, zs + (de - ds) + j*RADIX, RADIX);
+  }
+  
+  if (zero_out) {
+    for(i=0; i<M->nrows; i++) {
+      /* zero rest */
+      for(j=0; j<lz_f; j++) {
+        mzd_clear_bits(M, i, zs + (de - ds) + j*RADIX, RADIX);
+      }
+      if(lz_r)
+        mzd_clear_bits(M, i, zs + (de - ds) + lz_f*RADIX, lz_r);
     }
-    if(lz_r)
-      mzd_clear_bits(M, i, zs + (de - ds) + lz_f*RADIX, lz_r);
   }
   m4ri_mm_free(tmp);
 }

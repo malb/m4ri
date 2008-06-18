@@ -644,7 +644,23 @@ static inline void mzd_clear_bits(const packedmatrix *m, const int x, const int 
   }
 }
 
-void mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de);
+/**
+ * Rotate zero columns to the end.
+ *
+ * Given a matrix M with zero columns from zs up to ze (exclusive) and
+ * nonzero columns from ze to de (excluse) with zs < ze < de rotate
+ * the zero columns to the end such that the the nonzero block comes
+ * before the zero block.
+ *
+ * \param M Matrix.
+ * \param zs Start index of the zero columns.
+ * \param ze End index of the zero columns (exclusive).
+ * \param de End index of the nonzero columns (exclusive).
+ * \param zero_out actually write zero to the end.
+ * \param P permutation (will be written to).
+ */
+
+permutation *mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de, int zero_out, permutation *P);
 
 #ifdef HAVE_SSE2
 /**

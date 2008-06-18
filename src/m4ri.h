@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "watch.h"
+#include "permutation.h"
 #include "packedmatrix.h"
 #include "brilliantrussian.h"
 #include "strassen.h"
