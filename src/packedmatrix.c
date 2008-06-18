@@ -98,10 +98,18 @@ packedmatrix *mzd_init_window_weird (const packedmatrix *m, int lowr, int lowc, 
   packedmatrix * window =  mzd_init_window(m, lowr, lowc, highr, highc);
   if ((window-> offset = m->offset + begin_offset) >= RADIX)
     window->offset -= RADIX;
-  
+
+  //TODO : seems wrong
   window->width = (window->offset + window->ncols) / RADIX;
   if (window->ncols % RADIX)
     window->width++;
+  return window;
+}
+
+permutation *mzd_init_permutation_window (permutation* P, int begin, int end){
+  permutation *window = (permutation *)m4ri_mm_malloc(sizeof(permutation));
+  window->values = P->values + begin;
+  window->length = begin-end;
   return window;
 }
 
@@ -113,6 +121,10 @@ void mzd_free( packedmatrix *condemned) {
 
 void mzd_free_window( packedmatrix *condemned) {
   m4ri_mm_free(condemned->rowswap);
+  m4ri_mm_free(condemned);
+}
+
+void mzd_free_permutation_window (permutation* condemned){
   m4ri_mm_free(condemned);
 }
 

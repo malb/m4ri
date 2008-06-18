@@ -141,7 +141,7 @@ packedmatrix *mzd_init_window(const packedmatrix *M, const int lowr, const int l
  *  - highc must be divisible by RADIX
  *  - all parameters must be within range for M
  *
- * Use mzd_free_free to free the window.
+ * Use mzd_free_window to free the window.
  *
  * \param M Matrix
  * \param lowr Starting row (inclusive)
@@ -161,6 +161,33 @@ packedmatrix *mzd_init_window_weird (const packedmatrix *M, const int lowr, cons
  */
 
 void mzd_free_window(packedmatrix *A);
+
+ 
+/**
+ * \brief Create a window/view into the permutation matrix P.
+ *
+ * A matrix window for m is a meta structure on the matrix M. It is
+ * setup to point into the matrix so M \em must \em not be freed while the
+ * matrix window is used.
+ *
+ *  
+ * Use mzd_free_permutation_window to free the window.
+ *
+ * \param P Permutaiton matrix
+ * \param begin Starting index (inclusive)
+ * \param end   Ending index   (exclusive)
+ *
+ */
+
+permutation *mzd_init_permutation_window (permutation* P, int begin, int end);
+
+/**
+ * \brief Free a permutation matrix window created with mzd_init_permutation_window.
+ * 
+ * \param P Permutation Matrix
+ */
+
+void mzd_free_permutation_window (permutation* condemned);
 
 /**
  * \brief Swap the two rows rowa and rowb.

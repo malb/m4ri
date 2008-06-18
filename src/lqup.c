@@ -26,174 +26,75 @@
 #include "stdio.h"
 
 void mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int cutoff) {
-
   if (cutoff <= 0)
-    m4ri_die("mzd_trsm_upper_right: cutoff must be > 0.\n");
-
-  _mzd_trsm_upper_right (U, B, cutoff);
+    m4ri_die("mzd_lqup: cutoff must be > 0.\n");
+  if (P->length != A->nrows)
+    m4ri_die("mzd_lqup: Permutation P length (%d) must match A nrows (%d)\n",P->length, A->nrows);
+  if (Q->length != A->ncols)
+    m4ri_die("mzd_lqup: Permutation Q length (%d) must match A ncols (%d)\n",Q->length, A->ncols);
+  _mzd_lqup (A, P, Q, cutoff);
 }
 
 size_t _mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int cutoff) {
-
   size_t nrows = A->nrows;
   size_t ncols = A->ncols;
 
   if (ncols < ){
-    /**
-     * Base case
-     */
+    /* Base case */
     
   } else{
-    /**
-     * Block divide and conquer algorithm
-     */
+    /* Block divide and conquer algorithm */
     
     size_t n1 = (((ncols - 1) / RADIX + 1) >> 1) * RADIX;
     packedmatrix *A0  = mzd_init_window_weird (A,  0,  0, nrows,    n1, A->offset);
     packedmatrix *A1  = mzd_init_window_weird (A,  0, n1, nrows, ncols, A->offset);
 
     size_t r1, r2;
-
+    /* First recursive call */
     r1 = _mzd_lqup (A0, P, Q, cutoff);
 
+    packedmatrix *A10  = mzd_init_window_weird (A,  r1, 0, nrows, r1, A->offset);
+    packedmatrix *A01  = mzd_init_window_weird (A,  0, n1, r1, ncols, A->offset);
     if (r1) {
+      /* Computation of the Schur complement */
       _mzd_apply_p_left_notrans (A1, P, 0, r1);
       _mzd_trsm_lower_left (U0, A01, cutoff);
       _mzd_addmul (A11, A10, A01, cutoff);
     }
 
-    r2 = _mzd_lqup (A22, P, Q, cutoff);
+    /* Second recursive call */
+    packedmatrix *A11  = mzd_init_window_weird (A,  r1, n1, nrows, ncols, A->offset);
+    permutation * P2 = mzd_init_permutation_window (P, r1, nrows);
+    permutation * Q2 = mzd_init_permutation_window (Q, n1, ncols);
+    r2 = _mzd_lqup (A11, P2, Q2, cutoff);
+
+    /* Update Q */
+    for (size_t i = 0; i < ncols - n1; ++i)
+      Q2->values += n1;
+
+    /* Update A10 */
+    mzd_apply_p_left_trans (A10, P);
+
+    /* Update P */
+    for (size_t i = 0; i < nrows - r1; ++i)
+      P2->values += r1;
     
+    /* Permute the Right side of U to the left */
+    permutation * Q2b = mzd_init_permutation_window (P, r1, ncols);
+    // TODO : fix A->offset
+    packedmatrix* A11b = mzd_init_window_weird (A, r1, r1, nrows, ncols, A->offset);
+    packedmatrix* A01b = mzd_init_window_weird (A, 0, r1, r1, ncols, A->offset);
+    mzd_col_block_rotate (A1b, 0, n1, n1 + r2, 1, Q2b);
+    mzd_col_block_rotate (A0b, 0, n1, n1 + r2, 0, Q2b);
     
+    mzd_free_permutation_window (Q2);
+    mzd_free_permutation_window (P2);
+    mzd_free_window(A1b);
+    mzd_free_window(A0);
+    mzd_free_window(A1);
+    mzd_free_window(A01);
+    mzd_free_window(A10);
+    mzd_free_window(A11);
   }
-
-  packedmatrix *B0  = mzd_init_window_weird (B,  0,  0, mb, n1, B->offset);
-  packedmatrix *B1  = mzd_init_window_weird (B,  0, n1, mb, nb,         0);
-  packedmatrix *U00 = mzd_init_window_weird (U,  0,  0, n1, n1, U->offset);
-  packedmatrix *U01 = mzd_init_window_weird (U,  0, n1, n1, nb,         0);
-  packedmatrix *U11 = mzd_init_window_weird (U, n1, n1, nb, nb,         0);
   
-  _mzd_trsm_upper_right_weird (U00, B0, cutoff);
-  _mzd_addmul (B1, B0, U01, cutoff);
-  _mzd_trsm_upper_right_even (U11, B1, cutoff);
-  
-  mzd_free_window(B0);
-  mzd_free_window(B1);
-  
-  mzd_free_window(U00);
-  mzd_free_window(U01);
-  mzd_free_window(U11);
-}
-
-/**
- * Variant where U and B start at an odd bit position
- * Assumes that U->ncols < 64
- */
-void _mzd_trsm_upper_right_weird (packedmatrix *U, packedmatrix *B, const int cutoff) {
-
-  size_t mb = B->nrows;
-  size_t nb = B->ncols;
-  size_t offset = B->offset;
-  
-  for (size_t i=1; i < nb; ++i) {
-    
-    /* Computes X_i = B_i + X_{0..i-1} U_{0..i-1,i} */
-    
-    register word ucol = 0;
-    for (size_t k=0; k<i; ++k) {
-      if (GET_BIT (U->values[U->rowswap[k]], i + offset))
-	SET_BIT (ucol, k+offset);
-    }
-    
-    /* doing 64 dotproducts at a time, to use the parity64 parallelism */
-    size_t giantstep;
-    word tmp[64];
-    for (giantstep = 0; giantstep + RADIX < mb; giantstep += RADIX) {
-      for (size_t babystep = 0; babystep < RADIX; ++babystep)
-	tmp [babystep] = B->values [B->rowswap [babystep + giantstep]] & ucol;
-
-      word dotprod = parity64 (tmp);
-      
-      for (size_t babystep = 0; babystep < RADIX; ++babystep)
-	  if (GET_BIT (dotprod, babystep))
-	    FLIP_BIT (B->values [B->rowswap [giantstep + babystep]], i + offset);
-      }  
-      
-      for (size_t babystep = 0; babystep < mb - giantstep; ++babystep)
-	tmp [babystep] = B->values [B->rowswap [babystep + giantstep]] & ucol;
-      for (size_t babystep = mb-giantstep; babystep < 64; ++babystep)
-	tmp [babystep] = 0;
-
-      word dotprod = parity64 (tmp);
-      for (size_t babystep = 0; babystep < mb - giantstep; ++babystep)
-	if (GET_BIT (dotprod, babystep))
-	  FLIP_BIT (B->values [B->rowswap [giantstep + babystep ]], i + offset);
-    }
-}
-
-/**
- * Variant where U and B start at an odd bit position
- * Assumes that U->ncols < 64
- */
-void _mzd_trsm_upper_right_even (packedmatrix *U, packedmatrix *B, const int cutoff) {
-
-  size_t mb = B->nrows;
-  size_t nb = B->ncols;
-    
-  if (nb <= RADIX){
-    /* base case */
-    for (size_t i=1; i < nb; ++i) {
-
-      /* Computes X_i = B_i + X_{0..i-1} U_{0..i-1,i} */
-
-      register word ucol = 0;
-      for (size_t k=0; k<i; ++k) {
-	if (GET_BIT (U->values[U->rowswap[k]], i))
-	  SET_BIT (ucol, k);
-      }
-
-      /* doing 64 dotproducts at a time, to use the parity64 parallelism */
-      size_t giantstep;
-      word tmp[64];
-      for (giantstep = 0; giantstep + RADIX < mb; giantstep += RADIX) {
-	for (size_t babystep = 0; babystep < RADIX; ++babystep)
-	  tmp [babystep] = B->values [B->rowswap [babystep + giantstep]] & ucol;
-
-	word dotprod = parity64 (tmp);
-
-	for (size_t babystep = 0; babystep < RADIX; ++babystep)
-	  if (GET_BIT (dotprod, babystep))
-	    FLIP_BIT (B->values [B->rowswap [giantstep + babystep]], i);
-      }  
-      
-      for (size_t babystep = 0; babystep < mb - giantstep; ++babystep)
-	tmp [babystep] = B->values [B->rowswap [babystep + giantstep]] & ucol;
-      for (size_t babystep = mb-giantstep; babystep < 64; ++babystep)
-	tmp [babystep] = 0;
-
-      word dotprod = parity64 (tmp);
-      for (size_t babystep = 0; babystep < mb - giantstep; ++babystep)
-	if (GET_BIT (dotprod, babystep))
-	  FLIP_BIT (B->values [B->rowswap [giantstep + babystep ]], i);
-    }
-  } else {
-    size_t nb1 = (((nb-1) / RADIX + 1) >> 1) * RADIX;
-
-    packedmatrix *B0 = mzd_init_window(B,  0,     0,   mb, nb1);
-    packedmatrix *B1 = mzd_init_window(B,  0,   nb1,   mb, nb);
-    packedmatrix *U00 = mzd_init_window(U, 0,     0, nb1, nb1);
-    packedmatrix *U01 = mzd_init_window(U, 0,   nb1, nb1, nb);
-    packedmatrix *U11 = mzd_init_window(U, nb1, nb1,  nb, nb);
-
-    _mzd_trsm_upper_right_even (U00, B0, cutoff);
-    _mzd_addmul (B1, B0, U01, cutoff);
-    _mzd_trsm_upper_right_even (U11, B1, cutoff);
-
-    mzd_free_window(B0);
-    mzd_free_window(B1);
-
-    mzd_free_window(U00);
-    mzd_free_window(U01);
-    mzd_free_window(U11);
-  }
 }

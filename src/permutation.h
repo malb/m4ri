@@ -1,6 +1,6 @@
 /**
- * \file m4ri.h
- * \brief Main include file for the M4RI library.
+ * \file permutation.h
+ * \brief Permutation matrices for the M4RI library.
  * 
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
  */
