@@ -68,7 +68,7 @@ void _mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) 
   packedmatrix *U11 = mzd_init_window_weird (U, n1, n1, nb, nb,         0);
   
   _mzd_trsm_upper_right_weird (U00, B0, cutoff);
-  _mzd_addmul (B1, B0, U01, cutoff);
+  mzd_addmul (B1, B0, U01, cutoff);
   _mzd_trsm_upper_right_even (U11, B1, cutoff);
   
   mzd_free_window(B0);
@@ -180,7 +180,7 @@ void _mzd_trsm_upper_right_even (packedmatrix *U, packedmatrix *B, const int cut
     packedmatrix *U11 = mzd_init_window(U, nb1, nb1,  nb, nb);
 
     _mzd_trsm_upper_right_even (U00, B0, cutoff);
-    _mzd_addmul (B1, B0, U01, cutoff);
+    mzd_addmul (B1, B0, U01, cutoff);
     _mzd_trsm_upper_right_even (U11, B1, cutoff);
 
     mzd_free_window(B0);

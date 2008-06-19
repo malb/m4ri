@@ -60,7 +60,7 @@ void mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff);
  * \param B Input matrix, being overwritten by the solution matrix X
  * \cutoff Minimal dimension for Strassen recursion.
  */
-void _mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, cutoff);
+void _mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff);
 
 void _mzd_trsm_upper_right_even (packedmatrix *U, packedmatrix *B, const int cutoff);
 

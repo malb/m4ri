@@ -41,6 +41,7 @@ size_t _mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int c
 
   if (ncols < ){
     /* Base case */
+    mzd_reduce_m4ri (A, 0, 0, NULL, NULL);
     
   } else{
     /* Block divide and conquer algorithm */
