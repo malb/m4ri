@@ -111,10 +111,8 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
  * Strassen-Winograd matrix multiplication algorithm, i.e. compute 
  * C = C + AB.
  * 
- * The matrices A and B are respectively m x k and k x n, and at least one of them
- * is supposed to be not aligned on the RADIX grid.
- * Only the unaligned part of the product will be computed. The aligned part has to be computed by
- * _mzd_addmul_even.
+ * The matrices A and B are respectively m x k and k x n, and can be not
+ * aligned on the RADIX grid.
  * 
  * \param C Preallocated product matrix, may be NULL for automatic creation.
  * \param A Input matrix A
@@ -123,7 +121,7 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
  *
  */
 
-packedmatrix *_mzd_addmul_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+packedmatrix *_mzd_addmul (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 
 packedmatrix *_mzd_addmul_weird_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 

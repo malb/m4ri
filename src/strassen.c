@@ -511,11 +511,26 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   return C;
 }
 
-packedmatrix *_mzd_addmul_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff){
+packedmatrix *_mzd_addmul (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff){
   /**
    * Assumes that B and C are aligned in the same manner(as in a Schur complement)
+   * TODO: add addmul_even after each weird call 
    */
-  if (A->offset){
+  
+  if (!A->offset){
+    if (!B->offset){
+
+      return _mzd_addmul_even (C, A, B, cutoff);
+
+    } else {
+      int bnc = RADIX - B->offset;
+      packedmatrix * B0 = mzd_init_window (B, 0, 0, B->nrows, bnc);
+      packedmatrix * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
+      _mzd_addmul_even_weird  (C0,  A, B0, cutoff);
+      mzd_free (B0);
+      mzd_free (C0);
+    }
+  } else {
     if (B->offset) {
       int anc = RADIX - A->offset;
       int bnc = RADIX - B->offset;
@@ -536,7 +551,6 @@ packedmatrix *_mzd_addmul_weird (packedmatrix *C, packedmatrix *A, packedmatrix 
       mzd_free (B00); mzd_free (B01); mzd_free (B10);
 
     } else {
-
       int anc = RADIX - A->offset;
       packedmatrix * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
       packedmatrix * B0 = mzd_init_window (B, 0, 0, anc, B->ncols);
@@ -544,13 +558,6 @@ packedmatrix *_mzd_addmul_weird (packedmatrix *C, packedmatrix *A, packedmatrix 
       mzd_free (A0);
       mzd_free (B0);
     }
-  } else {
-    int bnc = RADIX - B->offset;
-    packedmatrix * B0 = mzd_init_window (B, 0, 0, B->nrows, bnc);
-    packedmatrix * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
-    _mzd_addmul_even_weird  (C0,  A, B0, cutoff);
-    mzd_free (B0);
-    mzd_free (C0);
   }
   return C;
 }
@@ -612,7 +619,7 @@ packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedma
     m4ri_die("mzd_addmul: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
 	     C->nrows, C->ncols, A->nrows, B->ncols);
   }
-  return _mzd_addmul_even(C, A, B, cutoff);
+  return _mzd_addmul(C, A, B, cutoff);
 }
 
 
