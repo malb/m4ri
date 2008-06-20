@@ -27,6 +27,7 @@ permutation *mzp_init(size_t length) {
   for (i=0; i<length; i++) {
     P->values[i] = i;
   }
+  return P;
 }
 
 void mzp_free(permutation *P) {

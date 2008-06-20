@@ -235,4 +235,6 @@ packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
 
 #define M4RM_GRAY8
 
+size_t _mzd_lqup_submatrix(packedmatrix *A, size_t r, size_t c, size_t endrow, int k, permutation *P, permutation *Q);
+
 #endif //BRILLIANTRUSSIAN_H

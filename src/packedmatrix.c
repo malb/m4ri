@@ -185,19 +185,20 @@ void mzd_row_clear_offset(packedmatrix *m, int row, int coloffset) {
 }
 
 
-void mzd_row_add_offset( packedmatrix *M, int srcrow, int dstrow, int coloffset) {
+void mzd_row_add_offset( packedmatrix *M, int dstrow, int srcrow, int coloffset) {
   int startblock= coloffset/RADIX;
   int i;
-  word temp;
   
   /* make sure to start adding at coloffset */
-  temp=mzd_read_block(M, srcrow, startblock*RADIX);
-  if (coloffset%RADIX)
-    temp &= (ONE<<(RADIX - (coloffset%RADIX))) - ONE;
-  mzd_xor_block(M, dstrow, startblock*RADIX, temp);
-
   word *src = M->values + M->rowswap[srcrow];
   word *dst = M->values + M->rowswap[dstrow];
+  word temp = src[startblock];
+
+  if (coloffset%RADIX)
+    temp = RIGHTMOST_BITS(temp, (RADIX-(coloffset%RADIX)-1));
+
+  dst[startblock] ^= temp;
+
   for ( i=startblock+1; i < M->width; i++ ) {
     dst[i] ^= src[i];
   }
@@ -205,7 +206,7 @@ void mzd_row_add_offset( packedmatrix *M, int srcrow, int dstrow, int coloffset)
 
 
 void mzd_row_add( packedmatrix *m, int sourcerow, int destrow) {
-  mzd_row_add_offset(m, sourcerow, destrow, 0);
+  mzd_row_add_offset(m, destrow, sourcerow, 0);
 }
 
 int mzd_gauss_delayed(packedmatrix *m, int startcol, int full) {
@@ -230,7 +231,7 @@ int mzd_gauss_delayed(packedmatrix *m, int startcol, int full) {
 	for(ii=start ;  ii < m->nrows ; ii++) {
 	  if (ii != startrow) {
 	    if (mzd_read_bit(m, ii, i)) {
-	      mzd_row_add_offset(m, startrow, ii, i);
+	      mzd_row_add_offset(m, ii, startrow, i);
 	    }
 	  }
 	}
@@ -822,10 +823,11 @@ permutation *mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de, int z
     }
   }
 
-  for(j=0; j<(de-ds); j++) {
-    P->values[j] = P->values[de+j]; 
+  if (P) {
+    for(j=0; j<(de-ds); j++) {
+      P->values[j] = P->values[de+j]; 
+    }
   }
-
   m4ri_mm_free(tmp);
   return P;
 }
@@ -833,7 +835,7 @@ permutation *mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de, int z
 void mzd_apply_p_left(packedmatrix *A, permutation *P) {
   int i;
   for (i=0; i<P->length; i++) {
-    if(P->values[i] > i) 
+    if(P->values[i] != i) 
       mzd_row_swap(A, i, P->values[i]);
   }
 }
@@ -841,7 +843,7 @@ void mzd_apply_p_left(packedmatrix *A, permutation *P) {
 void mzd_apply_p_left_trans(packedmatrix *A, permutation *P) {
   int i;
   for (i=P->length-1; i>=0; i--) {
-    if(P->values[i] > i) 
+    if(P->values[i] != i) 
       mzd_row_swap(A, i, P->values[i]);
   }
 }
@@ -849,7 +851,7 @@ void mzd_apply_p_left_trans(packedmatrix *A, permutation *P) {
 void mzd_apply_p_right_trans(packedmatrix *A, permutation *P) {
   int i;
   for (i=0; i<P->length; i++) {
-    if(P->values[i] > i) 
+    if(P->values[i] != i) 
       mzd_col_swap(A, i, P->values[i]);
   }
 }
@@ -857,7 +859,7 @@ void mzd_apply_p_right_trans(packedmatrix *A, permutation *P) {
 void mzd_apply_p_right(packedmatrix *A, permutation *P) {
   int i;
   for (i=P->length-1; i>=0; i--) {
-    if(P->values[i] > i) 
+    if(P->values[i] != i) 
       mzd_col_swap(A, i, P->values[i]);
   }
 }

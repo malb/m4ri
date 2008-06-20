@@ -31,8 +31,22 @@ typedef struct {
   size_t length;
 } permutation;
 
+/**
+ * Construct an identity permutation.
+ * 
+ * \param length Length of the permutation.
+ */
+
 permutation *mzp_init(size_t length);
 
+/**
+ * Free a permutation.
+ * 
+ * \param P Permutation to free.
+ */
+
 void mzp_free(permutation *P);
+
+
 
 #endif //PERMUTATION_H

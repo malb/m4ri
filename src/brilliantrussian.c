@@ -31,7 +31,8 @@
 
 
 /**
- * \brief Perform Gaussian reduction on a submatrix.
+ * \brief Perform Gaussian reduction to reduced row echelon form on a
+ * submatrix.
  * 
  * The submatrix has dimension at most k starting at r x c of A. Checks
  * for pivot rows up to row endrow (exclusive). Terminates as soon as
@@ -41,21 +42,21 @@
  * \param r First row.
  * \param c First column.
  * \param k Maximal dimension of identity matrix to produce.
- * \param endrow Maximal row index (exclusive) for rows to consider
+ * \param end_row Maximal row index (exclusive) for rows to consider
  * for inclusion.
  */
 
-static int _mzd_gauss_submatrix(packedmatrix *A, int r, int c, int k, int endrow) {
+static inline int _mzd_gauss_submatrix_full(packedmatrix *A, int r, int c, int end_row, int k) {
   int i,j,l;
   int start_row = r;
   int found;
   for (j=c; j<c+k; j++) {
     found = 0;
-    for (i=start_row; i< endrow; i++) {
-      /* first we need to clear the first columns first */
+    for (i=start_row; i< end_row; i++) {
+      /* first we need to clear the first columns */
       for (l=0; l<j-c; l++)
         if (mzd_read_bit(A, i, c+l))
-          mzd_row_add_offset(A, r+l, i, c+l);
+          mzd_row_add_offset(A, i, r+l, c+l);
       
       /* pivot? */
       if (mzd_read_bit(A, i, j)) {
@@ -63,7 +64,7 @@ static int _mzd_gauss_submatrix(packedmatrix *A, int r, int c, int k, int endrow
         /* clear above */
         for (l=r; l<start_row; l++) {
           if (mzd_read_bit(A, l, j)) {
-            mzd_row_add_offset(A, start_row, l, j);
+            mzd_row_add_offset(A, l, start_row, j);
           }
         }
         start_row++;
@@ -76,6 +77,92 @@ static int _mzd_gauss_submatrix(packedmatrix *A, int r, int c, int k, int endrow
     }
   }
   return j - c;
+}
+
+/**
+ * \brief Perform Gaussian reduction to upper triangular matrix on a
+ * submatrix.
+ * 
+ * The submatrix has dimension at most k starting at r x c of A. Checks
+ * for pivot rows up to row end_row (exclusive). Terminates as soon as
+ * finding a pivot column fails.
+ *
+ * \param A Matrix.
+ * \param r First row.
+ * \param c First column.
+ * \param k Maximal dimension of identity matrix to produce.
+ * \param end_row Maximal row index (exclusive) for rows to consider
+ * for inclusion.
+ */
+
+static inline int _mzd_gauss_submatrix(packedmatrix *A, int r, int c, int end_row, int k) {
+  int i,j,l;
+  int start_row = r;
+  int found;
+  for (j=c; j<c+k; j++) {
+    found = 0;
+    for (i=start_row; i< end_row; i++) {
+      /* first we need to clear the first columns */
+      for (l=0; l<j-c; l++)
+        if (mzd_read_bit(A, i, c+l))
+          mzd_row_add_offset(A, i, r+l, c+l);
+      
+      /* pivot? */
+      if (mzd_read_bit(A, i, j)) {
+        mzd_row_swap(A, i, start_row);
+        start_row++;
+        found = 1;
+        break;
+      }
+    }
+    if (found==0) {
+      return j - c;
+    }
+  }
+  return j - c;
+}
+
+/**
+ * \brief Given a submatrix in upper triangular form compute the
+ * reduced row echelon form.
+ * 
+ * The submatrix has dimension at most k starting at r x c of A. Checks
+ * for pivot rows up to row end_row (exclusive). Terminates as soon as
+ * finding a pivot column fails.
+ *
+ * \param A Matrix.
+ * \param r First row.
+ * \param c First column.
+ * \param k Maximal dimension of identity matrix to produce.
+ * \param end_row Maximal row index (exclusive) for rows to consider
+ * for inclusion.
+ */
+
+static inline int _mzd_gauss_submatrix_top(packedmatrix *A, int r, int c, int k) {
+  int j,l;
+  int start_row = r;
+  for (j=c; j<c+k; j++) {
+    for (l=r; l<start_row; l++) {
+      if (mzd_read_bit(A, l, j)) {
+        mzd_row_add_offset(A, l, start_row, j);
+      }
+    }
+    start_row++;
+  }
+  return k;
+}
+
+static inline void _mzd_copy_back_rows(packedmatrix *A, packedmatrix *U, size_t r, size_t c, size_t k) {
+  size_t startblock = c/RADIX;
+  size_t width = A->width - startblock;
+  size_t i, j;
+  for (i=0 ; i < k ; i++) {
+    const word * const src = U->values + U->rowswap[i] + startblock;
+    word *const dst = A->values + A->rowswap[r+i] + startblock;
+    for (j=0; j< width; j++) {
+      dst[j] = src[j];
+    }
+  }
 }
 
 void mzd_make_table( packedmatrix *M, int r, int c, int k, packedmatrix *T, int *L) {
@@ -340,6 +427,7 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
   }
   int kk = 4*k;
 
+  packedmatrix *U  = mzd_init(kk, A->ncols);
   packedmatrix *T0 = mzd_init(TWOPOW(k), A->ncols);
   packedmatrix *T1 = mzd_init(TWOPOW(k), A->ncols);
   packedmatrix *T2 = mzd_init(TWOPOW(k), A->ncols);
@@ -353,7 +441,13 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
     if(c+kk > A->ncols) {
       kk = ncols - c;
     }
-    kbar = _mzd_gauss_submatrix(A, r, c, kk, A->nrows);
+    if (full) {
+      kbar = _mzd_gauss_submatrix_full(A, r, c, A->nrows, kk);
+    } else {
+      kbar = _mzd_gauss_submatrix(A, r, c, A->nrows, kk);
+      U = mzd_submatrix(U, A, r, 0, r+kbar, A->ncols);
+      _mzd_gauss_submatrix_top(A, r, c, kbar);
+    }
 
     if (kbar>3*k) {
       const int rem = kbar%4;
@@ -396,6 +490,11 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
       if(full)
         mzd_process_rows(A, 0, r, c, kbar, T0, L0);
     }
+
+    if (!full) {
+      _mzd_copy_back_rows(A, U, r, c, kbar);
+    }
+
     r += kbar;
     c += kbar;
     if(kk!=kbar) {
@@ -411,6 +510,7 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, int *L) {
   m4ri_mm_free(L2);
   mzd_free(T3);
   m4ri_mm_free(L3);
+  mzd_free(U);
   return r;
 }
 
@@ -441,7 +541,7 @@ void mzd_top_reduce_m4ri(packedmatrix *A, int k, packedmatrix *T, int *L) {
     if(c+kk > A->ncols) {
       kk = ncols - c;
     }
-    kbar = _mzd_gauss_submatrix(A, r, c, kk, A->nrows);
+    kbar = _mzd_gauss_submatrix_full(A, r, c, A->nrows, kk);
 
     if (kbar>3*k) {
       const int rem = kbar%4;
@@ -812,24 +912,31 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
       k -= 1;
 #endif
   }
+
+#ifndef M4RM_GRAY8
+  int *buffer = m4ri_mm_malloc(4 * TWOPOW(k) * sizeof(int));
+#else
+  int *buffer = m4ri_mm_malloc(8 * TWOPOW(k) * sizeof(int));
+#endif
+
   packedmatrix *T1 = mzd_init(TWOPOW(k), b_nc);
-  int *L1 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
+  int *L1 = buffer;
   packedmatrix *T2 = mzd_init(TWOPOW(k), b_nc);
-  int *L2 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
+  int *L2 = buffer + 1*TWOPOW(k);
   packedmatrix *T3 = mzd_init(TWOPOW(k), b_nc);
-  int *L3 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
+  int *L3 = buffer + 2*TWOPOW(k);
   packedmatrix *T4 = mzd_init(TWOPOW(k), b_nc);
-  int *L4 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
+  int *L4 = buffer + 3*TWOPOW(k);
 
 #ifdef M4RM_GRAY8
   packedmatrix *T5 = mzd_init(TWOPOW(k), b_nc);
-  int *L5 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
+  int *L5 = buffer + 4*TWOPOW(k);
   packedmatrix *T6 = mzd_init(TWOPOW(k), b_nc);
-  int *L6 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
+  int *L6 = buffer + 5*TWOPOW(k);
   packedmatrix *T7 = mzd_init(TWOPOW(k), b_nc);
-  int *L7 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
+  int *L7 = buffer + 6*TWOPOW(k);
   packedmatrix *T8 = mzd_init(TWOPOW(k), b_nc);
-  int *L8 = (int *)m4ri_mm_malloc(TWOPOW(k) * sizeof(int));
+  int *L8 = buffer + 7*TWOPOW(k);
 #endif
 
   /* process stuff that fits into multiple of k first, but blockwise (babystep-giantstep)*/
@@ -947,23 +1054,99 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   }
 
   mzd_free(T1);
-  m4ri_mm_free(L1);
   mzd_free(T2);
-  m4ri_mm_free(L2);
   mzd_free(T3);
-  m4ri_mm_free(L3);
   mzd_free(T4);
-  m4ri_mm_free(L4);
 #ifdef M4RM_GRAY8
   mzd_free(T5);
-  m4ri_mm_free(L5);
   mzd_free(T6);
-  m4ri_mm_free(L6);
   mzd_free(T7);
-  m4ri_mm_free(L7);
   mzd_free(T8);
-  m4ri_mm_free(L8);
 #endif
+  m4ri_mm_free(buffer);
   return C;
 }
 
+
+
+void _mzd_lqup_submatrix_finish(packedmatrix *A, int r, int c, int kbar) {
+  size_t i, j;
+  for(i=0 ; i < kbar; i++) {
+    // clear L first
+    for (j=0; j<i; i++) {
+      mzd_write_bit(A, r+i, c+j, 0);
+    }
+    for(j=0; j<i ; j++) {
+      if(mzd_read_bit(A, r+j, c+i))
+        mzd_row_add_offset(A, r+j, r+i, c+i);
+    }
+  }
+}
+
+size_t _mzd_lqup_submatrix(packedmatrix *A, size_t r, size_t c, size_t end_row, int k, permutation *P, permutation *Q)  {
+  int i,j,l;
+  int start_row = r;
+  int found;
+  for (j=c; j<c+k; j++) {
+    found = 0;
+    for (i=start_row; i< end_row; i++) {
+      /* pivot? */
+      if (mzd_read_bit(A, i, j)) {
+        P->values[start_row] = i;
+        mzd_row_swap(A, i, start_row);
+        start_row++;
+        /* clear below but preserve transformation matrix */
+        for(l=start_row; l<end_row; l++) {
+          if (mzd_read_bit(A, l, j))
+            mzd_row_add_offset(A, l, i, j+1);
+        }
+        found = 1;
+        break;
+      }
+    }
+    if(!found) {
+      return j-c;
+    }
+  }
+  return j - c;
+}
+
+size_t _mzd_lqup_m4ri(packedmatrix *A, int k, permutation * P, permutation * Q) {
+  const size_t ncols = A->ncols; 
+  size_t r = 0;
+  size_t c = 0;
+  int kbar = 0;
+
+  if (k == 0) {
+    k = m4ri_opt_k(A->nrows, A->ncols, 0);
+  }
+
+  packedmatrix *I;
+  packedmatrix *T = mzd_init(TWOPOW(k), A->ncols);
+  int *L = (int *)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+
+  while(c<ncols) {
+    if(c+k > A->ncols) {
+      k = ncols - c;
+    }
+    kbar = _mzd_lqup_submatrix(A, r, c, MIN(A->nrows,r+3*k), kbar, P, Q);
+
+    if(kbar > 0) {
+      I = mzd_submatrix(I, A, r, 0, r+kbar, A->ncols);
+      _mzd_lqup_submatrix_finish(I, 0, c, kbar);
+      mzd_make_table(I, 0, c, kbar, T, L);
+      mzd_process_rows(A, r+3*kbar, A->nrows, c, kbar, T, L);
+    }
+
+    r += kbar;
+    c += kbar;
+    if(kbar==0) {
+      // we would need to do something about Q[i]
+      c++;
+    }
+  }
+
+  mzd_free(T);
+  m4ri_mm_free(L);
+  return r;
+}

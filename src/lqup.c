@@ -17,13 +17,13 @@
  *
  ********************************************************************/
 
-#include "lqup.h"
-#include "strassen.h"
-#include "trsm.h"
-#include "packedmatrix.h"
 #include "misc.h"
+#include "packedmatrix.h"
+#include "trsm.h"
 #include "parity.h"
-#include "stdio.h"
+#include <stdio.h>
+#include "strassen.h"
+#include "lqup.h"
 
 size_t mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int cutoff) {
   if (cutoff <= 0)
@@ -103,3 +103,5 @@ size_t _mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int c
   }
   
 }
+
+

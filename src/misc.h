@@ -174,7 +174,7 @@ typedef unsigned char BIT;
 * \param n Integer with 0 <= spot < RADIX
 */
 
-#define RIGHTMOST_BITS(w, n) ((w) &  ((ONE<<(n))-1))
+#define RIGHTMOST_BITS(w, n) (((w)<<(RADIX-(n)-1))>>(RADIX-(n)-1))
 
 /**
  * \brief return alignment of addr w.r.t. n. For example the address

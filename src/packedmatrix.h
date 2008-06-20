@@ -310,7 +310,7 @@ void mzd_print_matrix_tight(const packedmatrix *M );
  * \param coloffset Column offset
  */
 
-void mzd_row_add_offset(packedmatrix *M, const int sourcerow, const int destrow, const int coloffset );
+void mzd_row_add_offset(packedmatrix *M,  const int destrow, const int sourcerow, const int coloffset );
 
 /**
  * \brief Clear the given row, but only begins at the column coloffset.
@@ -710,6 +710,51 @@ static inline void mzd_clear_bits(const packedmatrix *m, const int x, const int 
  */
 
 permutation *mzd_col_block_rotate(packedmatrix *M, int zs, int ze, int de, int zero_out, permutation *P);
+
+/**
+ * Apply the permutation P to A from the left.
+ *
+ * This is equivalent to row swaps walking from 0 to length-1.
+ *
+ * \param A Matrix.
+ * \param P Permutation.
+ */
+
+void mzd_apply_p_left(packedmatrix *A, permutation *P);
+
+/**
+ * Apply the permutation P to A from the left but transpose P before.
+ *
+ * This is equivalent to row swaps walking from length-1 to 0.
+ *
+ * \param A Matrix.
+ * \param P Permutation.
+ */
+
+void mzd_apply_p_left_trans(packedmatrix *A, permutation *P);
+
+/**
+ * Apply the permutation P to A from the right.
+ *
+ * This is equivalent to column swaps walking from length-1 to 0.
+ *
+ * \param A Matrix.
+ * \param P Permutation.
+ */
+
+void mzd_apply_p_right(packedmatrix *A, permutation *P);
+
+/**
+ * Apply the permutation P to A from the right but transpose P before.
+ *
+ * This is equivalent to column swaps walking from 0 to length-1.
+ *
+ * \param A Matrix.
+ * \param P Permutation.
+ */
+
+void mzd_apply_p_right_trans(packedmatrix *A, permutation *P);
+
 
 #ifdef HAVE_SSE2
 /**
