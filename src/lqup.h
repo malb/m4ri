@@ -31,6 +31,8 @@
 #include "misc.h"
 #include "packedmatrix.h"
 
+#define _LQUP_CUTOFF 1024
+
 /**
  * \brief LQUP matrix decomposition.
  *
@@ -50,8 +52,8 @@
  * \param Q Output column permutation matrix
  * \cutoff Minimal dimension for Strassen recursion.
  */
-size_t mzd_lqup (packedmatrix *A, permutation * P, permutation * Q);
+size_t mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int cutoff);
 
-size_t _mzd_lqup (packedmatrix *a, permutation * P, permutation * Q);
+size_t _mzd_lqup (packedmatrix *a, permutation * P, permutation * Q, const int cutoff);
 
 #endif

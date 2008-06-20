@@ -45,7 +45,7 @@ packedmatrix *mzd_init(int r, int c) {
 
   newmatrix->ncols=c;
   newmatrix->nrows=r;
-
+  newmatrix->offset = 0;
   newmatrix->values=(word *)m4ri_mm_calloc( (newmatrix->width)*r, sizeof(word));
 
   newmatrix->rowswap=(int *)m4ri_mm_malloc( r * sizeof(int));
@@ -70,7 +70,7 @@ packedmatrix *mzd_init(int r, int c) {
 }
 
 /* We don't perform any sanity checks! */
-packedmatrix *mzd_init_window(const packedmatrix *m, int lowr, int lowc, int highr, int highc) {
+packedmatrix *mzd_init_window (const packedmatrix *m, int lowr, int lowc, int highr, int highc) {
   int nrows, ncols, i, offset; 
   packedmatrix *window = (packedmatrix *)m4ri_mm_malloc(sizeof(packedmatrix));
   nrows = MIN(highr - lowr, m->nrows - lowr);
@@ -78,31 +78,21 @@ packedmatrix *mzd_init_window(const packedmatrix *m, int lowr, int lowc, int hig
   
   window->ncols = ncols;
   window->nrows = nrows;
-  window->width = ncols/RADIX;
-  window->offset = 0;
-  if (ncols%RADIX)
+
+  window->offset = (m->offset + lowc) % RADIX;
+  offset = (m->offset + lowc) / RADIX;
+  
+  window->width = (window->offset + ncols) / RADIX;
+  if ((window->offset + ncols) % RADIX)
     window->width++;
+  
   window->values = m->values;
+
   window->rowswap = (int *)m4ri_mm_malloc( nrows * sizeof(int));
-
-  offset = lowc / RADIX;
-
   for(i=0; i<nrows; i++) {
     window->rowswap[i] = m->rowswap[lowr + i] + offset;
   }
   
-  return window;
-}
-
-packedmatrix *mzd_init_window_weird (const packedmatrix *m, int lowr, int lowc, int highr, int highc, int begin_offset) {
-  packedmatrix * window =  mzd_init_window(m, lowr, lowc, highr, highc);
-  if ((window-> offset = m->offset + begin_offset) >= RADIX)
-    window->offset -= RADIX;
-
-  //TODO : seems wrong
-  window->width = (window->offset + window->ncols) / RADIX;
-  if (window->ncols % RADIX)
-    window->width++;
   return window;
 }
 

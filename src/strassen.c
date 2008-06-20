@@ -19,8 +19,8 @@
 
 #include "grayflex.h"
 #include "strassen.h"
-
-
+#include "misc.h"
+#include "parity.h"
 #define CLOSER(a,b,target) (abs((long)a-(long)target)<abs((long)b-(long)target))
 
 packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
@@ -511,12 +511,91 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   return C;
 }
 
-packedmatrix *mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+packedmatrix *_mzd_addmul_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff){
+  /**
+   * Assumes that B and C are aligned in the same manner(as in a Schur complement)
+   */
+  if (A->offset){
+    if (B->offset) {
+      int anc = RADIX - A->offset;
+      int bnc = RADIX - B->offset;
+      packedmatrix * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
+      packedmatrix * A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
+      packedmatrix * B00 = mzd_init_window (B, 0, 0, anc, bnc);
+      packedmatrix * B01 = mzd_init_window (B, 0, bnc, anc, B->ncols);
+      packedmatrix * B10 = mzd_init_window (B, anc, 0, B->nrows, bnc);
+      packedmatrix * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
+      packedmatrix * C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
+
+      _mzd_addmul_weird_weird (C0, A0, B00, cutoff);
+      _mzd_addmul_weird_even  (C1,  A0, B01, cutoff);
+      _mzd_addmul_even_weird  (C0,  A1, B10, cutoff);
+
+      mzd_free (A0);  mzd_free (A1);
+      mzd_free (C0);  mzd_free (C1);
+      mzd_free (B00); mzd_free (B01); mzd_free (B10);
+
+    } else {
+
+      int anc = RADIX - A->offset;
+      packedmatrix * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
+      packedmatrix * B0 = mzd_init_window (B, 0, 0, anc, B->ncols);
+      _mzd_addmul_weird_even  (C,  A0, B0, cutoff);
+      mzd_free (A0);
+      mzd_free (B0);
+    }
+  } else {
+    int bnc = RADIX - B->offset;
+    packedmatrix * B0 = mzd_init_window (B, 0, 0, B->nrows, bnc);
+    packedmatrix * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
+    _mzd_addmul_even_weird  (C0,  A, B0, cutoff);
+    mzd_free (B0);
+    mzd_free (C0);
+  }
+  return C;
+}
+
+packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff){
+  packedmatrix * tmp = mzd_init (A->nrows, RADIX - A->offset);
+  for (size_t i=0; i < A->nrows; ++i)
+    tmp->values [i] = (A->values [A->rowswap [i]] << A->offset);
+  _mzd_addmul_even (C, tmp, B, cutoff);
+  mzd_free(tmp);
+  return C;
+}
+
+ packedmatrix *_mzd_addmul_even_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff){
+  packedmatrix * tmp = mzd_init (B->nrows, RADIX);
+  for (size_t i=0; i < B->nrows; ++i)
+    tmp->values [tmp->rowswap[i]] = RIGHTMOST_BITS (B->values [B->rowswap [i]], RADIX - B->offset);
+  _mzd_addmul_even (C, A, tmp, cutoff);
+  return C;
+}
+
+ packedmatrix* _mzd_addmul_weird_weird (packedmatrix* C, packedmatrix* A, packedmatrix *B, int cutoff){
+   packedmatrix *BT = mzd_transpose(NULL, B);
+   word parity[64];
+   for (size_t i = 0; i < 64; i++) {
+     parity[i] = 0;
+   }
+   for (size_t i = 0; i < RADIX; ++i) {
+     word * a = A->values + A->rowswap[i];
+     word * c = C->values + C->rowswap[i];
+     for (size_t k=RADIX-1; k>=BT->offset; k--) {
+       word *b = BT->values + BT->rowswap[k];
+       parity[k] = (*a) & (*b);
+     }
+     *c ^= parity64(parity);
+   }
+   return C;
+ }
+
+ packedmatrix *mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   if(A->ncols != B->nrows)
-    m4ri_die("mzd_addmul_strassen: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
+    m4ri_die("mzd_addmul: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
   
   if (cutoff < 0)
-    m4ri_die("mzd_addmul_strassen: cutoff must be >= 0.\n");
+    m4ri_die("mzd_addmul: cutoff must be >= 0.\n");
 
   if(cutoff == 0) {
     cutoff = STRASSEN_MUL_CUTOFF;
@@ -530,7 +609,7 @@ packedmatrix *mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int 
   if (C == NULL) {
     C = mzd_init(A->nrows, B->ncols);
   } else if (C->nrows != A->nrows || C->ncols != B->ncols){
-    m4ri_die("mzd_addmul_strassen: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
+    m4ri_die("mzd_addmul: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
 	     C->nrows, C->ncols, A->nrows, B->ncols);
   }
   return _mzd_addmul_even(C, A, B, cutoff);

@@ -57,15 +57,14 @@ void _mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) 
    * The first column of U01, U11, B1 are aligned to words.
    */
 
-  size_t trail_dim_b =  (B->ncols + B->offset) % RADIX;
   size_t nb = B->ncols;
   size_t mb = B->nrows;
   size_t n1 = RADIX-B->offset;
-  packedmatrix *B0  = mzd_init_window_weird (B,  0,  0, mb, n1, B->offset);
-  packedmatrix *B1  = mzd_init_window_weird (B,  0, n1, mb, nb,         0);
-  packedmatrix *U00 = mzd_init_window_weird (U,  0,  0, n1, n1, U->offset);
-  packedmatrix *U01 = mzd_init_window_weird (U,  0, n1, n1, nb,         0);
-  packedmatrix *U11 = mzd_init_window_weird (U, n1, n1, nb, nb,         0);
+  packedmatrix *B0  = mzd_init_window (B,  0,  0, mb, n1);
+  packedmatrix *B1  = mzd_init_window (B,  0, n1, mb, nb);
+  packedmatrix *U00 = mzd_init_window (U,  0,  0, n1, n1);
+  packedmatrix *U01 = mzd_init_window (U,  0, n1, n1, nb);
+  packedmatrix *U11 = mzd_init_window (U, n1, n1, nb, nb);
   
   _mzd_trsm_upper_right_weird (U00, B0, cutoff);
   mzd_addmul (B1, B0, U01, cutoff);

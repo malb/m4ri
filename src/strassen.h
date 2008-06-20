@@ -107,6 +107,31 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
 packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 
 /**
+ * \brief Matrix multiplication and in-place addition via the
+ * Strassen-Winograd matrix multiplication algorithm, i.e. compute 
+ * C = C + AB.
+ * 
+ * The matrices A and B are respectively m x k and k x n, and at least one of them
+ * is supposed to be not aligned on the RADIX grid.
+ * Only the unaligned part of the product will be computed. The aligned part has to be computed by
+ * _mzd_addmul_even.
+ * 
+ * \param C Preallocated product matrix, may be NULL for automatic creation.
+ * \param A Input matrix A
+ * \param B Input matrix B
+ * \param cutoff Minimal dimension for Strassen recursion.
+ *
+ */
+
+packedmatrix *_mzd_addmul_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+
+packedmatrix *_mzd_addmul_weird_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+
+packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+
+packedmatrix *_mzd_addmul_even_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+
+/**
  * The default cutoff for Strassen-Winograd multiplication. It should
  * hold hold that 2 * (n^2)/8 fits into the L2 cache.
  */

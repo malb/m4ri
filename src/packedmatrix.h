@@ -99,6 +99,9 @@ packedmatrix *mzd_init(const int r, const int c);
 
 void mzd_free(packedmatrix *A);
 
+
+packedmatrix *mzd_init_window(const packedmatrix *M, const int lowr, const int lowc, const int highr, const int highc);
+
 /**
  * \brief Create a window/view into the matrix M.
  *
@@ -109,8 +112,6 @@ void mzd_free(packedmatrix *A);
  * This function puts restrictions on the provided parameters which
  * are not enforced currently.
  *
- *  - lowc must be divisible by RADIX
- *  - highc must be divisible by RADIX
  *  - all parameters must be within range for M
  *
  * Use mzd_free_free to free the window.
@@ -123,36 +124,7 @@ void mzd_free(packedmatrix *A);
  *
  */
 
-packedmatrix *mzd_init_window(const packedmatrix *M, const int lowr, const int lowc, const int highr, const int highc);
-
-/**
- * \brief Create a window/view into the matrix M.
- *
- * A matrix window for m is a meta structure on the matrix M. It is
- * setup to point into the matrix so M \em must \em not be freed while the
- * matrix window is used.
- *
- * This function is used for windows starting at a column index out of the
- * RADIX grid.
- * This function puts restrictions on the provided parameters which
- * are not enforced currently.
- *
- *  - lowc must be divisible by RADIX
- *  - highc must be divisible by RADIX
- *  - all parameters must be within range for M
- *
- * Use mzd_free_window to free the window.
- *
- * \param M Matrix
- * \param lowr Starting row (inclusive)
- * \param lowc Starting column (inclusive)
- * \param highr End row (exclusive)
- * \param highc End column (exclusive)
- * \param begin_offset Offset of the first column
- *
- */
-
-packedmatrix *mzd_init_window_weird (const packedmatrix *M, const int lowr, const int lowc, const int highr, const int highc, const int begin_offset);
+packedmatrix *mzd_init_window (const packedmatrix *M, const int lowr, const int lowc, const int highr, const int highc);
 
 /**
  * \brief Free a matrix window created with mzd_init_window.
