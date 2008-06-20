@@ -60,8 +60,8 @@ size_t _mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int c
     packedmatrix *A11  = mzd_init_window (A,  r1, n1, nrows, ncols);
     if (r1) {
       /* Computation of the Schur complement */
-      _mzd_apply_p_left (A1, P, 0, r1);
-      _mzd_trsm_lower_left (U0, A01, cutoff);
+      //_mzd_apply_p_left (A1, P, 0, r1);
+      //_mzd_trsm_lower_left (U0, A01, cutoff);
       _mzd_addmul (A11, A10, A01, cutoff);
     }
 
