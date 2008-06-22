@@ -1,9 +1,13 @@
 /**
  * \file trsm.h
  *
+ * This is scratch, experimental, unfinished code.
+ *
  * \brief Triangular system solving with matrix routines.
  *
  * \author Clement Pernet <clement.pernet@gmail.com>
+ *
+ * \internal
  */
 
 
@@ -44,8 +48,11 @@
  *
  * \param U Input upper triangular matrix.
  * \param B Input matrix, being overwritten by the solution matrix X
- * \cutoff Minimal dimension for Strassen recursion.
+ * \param cutoff Minimal dimension for Strassen recursion.
+ *
+ * \internal
  */
+
 void mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff);
 
 /**
@@ -58,7 +65,9 @@ void mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff);
  *
  * \param U Input upper triangular matrix.
  * \param B Input matrix, being overwritten by the solution matrix X
- * \cutoff Minimal dimension for Strassen recursion.
+ * \param cutoff Minimal dimension for Strassen recursion.
+ *
+ * \internal
  */
 void _mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff);
 

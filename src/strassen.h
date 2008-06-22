@@ -123,9 +123,33 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
 
 packedmatrix *_mzd_addmul (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 
+/**
+ * C = A*B + C for matrices with offsets != 0
+ *
+ * This is scratch code.
+ *
+ * \internal
+ */
+
 packedmatrix *_mzd_addmul_weird_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 
+/**
+ * C = A*B + C for A with offset == 0 and B with offset != 0.
+ *
+ * This is scratch code.
+ *
+ * \internal
+ */
+
 packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+
+/**
+ * C = A*B + C for A with offset != 0 and B with offset == 0.
+ *
+ * This is scratch code.
+ *
+ * \internal
+ */
 
 packedmatrix *_mzd_addmul_even_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
 

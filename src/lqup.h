@@ -3,7 +3,11 @@
  *
  * \brief LQUP matrix decomposition routines
  *
+ * This is scratch, experimental code.
+ *
  * \author Clement Pernet <clement.pernet@gmail.com>
+ *
+ * \internal
  */
 
 
@@ -31,10 +35,14 @@
 #include "misc.h"
 #include "packedmatrix.h"
 
-#define _LQUP_CUTOFF 1024
+/**
+ * Crossover point for LQUP factorization.
+ */
+
+#define LQUP_CUTOFF 1024
 
 /**
- * \brief LQUP matrix decomposition.
+ * \brief LQUP matrix decomposition (unfinished).
  *
  * Computes the transposed LQUP matrix decomposition using a block recursive algorithm
  *
@@ -50,10 +58,34 @@
  * \param A Input matrix
  * \param P Output row permutation matrix
  * \param Q Output column permutation matrix
- * \cutoff Minimal dimension for Strassen recursion.
+ * \param cutoff Minimal dimension for Strassen recursion.
+ *
+ * \internal
  */
-size_t mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int cutoff);
+size_t mzd_lqup(packedmatrix *A, permutation *P, permutation * Q, const int cutoff);
 
-size_t _mzd_lqup (packedmatrix *a, permutation * P, permutation * Q, const int cutoff);
+/**
+ * \brief LQUP matrix decomposition (unfinished).
+ *
+ * Computes the transposed LQUP matrix decomposition using a block recursive algorithm
+ *
+ * If (L,Q,U,P) satisfy LQUP = A^T, it returns (L^T, Q^T, U^T, P^T).
+ * The Row echelon form (not reduced) can be read from the upper triangular matrix L^T.
+ * 
+ * This is the wrapper function including bounds checks. See
+ * _mzd_lqup for implementation details.
+ *
+ * The matrix L and U are stored in place over A.
+ * L^T is represented by the matrix Q^T L^T Q
+ * 
+ * \param A Input matrix
+ * \param P Output row permutation matrix
+ * \param Q Output column permutation matrix
+ * \param cutoff Minimal dimension for Strassen recursion.
+ *
+ * \internal
+ */
+
+size_t _mzd_lqup(packedmatrix *A, permutation * P, permutation * Q, const int cutoff);
 
 #endif

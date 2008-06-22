@@ -57,6 +57,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Define whether debugging is enabled */
+#undef NDEBUG
+
 /* Name of package */
 #undef PACKAGE
 

@@ -1,8 +1,13 @@
 /**
  * \file permutation.h
+ *
+ * This is scratch, experimental, unfinished code.
+ *
  * \brief Permutation matrices for the M4RI library.
  * 
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
+ *
+ * \internal
  */
 /******************************************************************************
 *
@@ -26,9 +31,22 @@
 
 #include "misc.h"
 
+/**
+ * \brief Permutations.
+ */
+
 typedef struct {
+  /**
+   * The swap operations in LAPACK format.
+   */
   size_t *values;
+
+  /**
+   * The length of the swap array.
+   */
+
   size_t length;
+
 } permutation;
 
 /**
@@ -46,7 +64,5 @@ permutation *mzp_init(size_t length);
  */
 
 void mzp_free(permutation *P);
-
-
 
 #endif //PERMUTATION_H

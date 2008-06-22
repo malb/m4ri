@@ -24,8 +24,8 @@
 #define CLOSER(a,b,target) (abs((long)a-(long)target)<abs((long)b-(long)target))
 
 packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
-  unsigned int a,b,c;
-  unsigned int anr, anc, bnr, bnc;
+  size_t a,b,c;
+  size_t anr, anc, bnr, bnc;
   
   a = A->nrows;
   b = A->ncols;
@@ -45,7 +45,7 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
 
   /* adjust cutting numbers to work on words */
   unsigned long mult = 1;
-  long width = a;
+  size_t width = a;
   while (width > 2*cutoff) {
     width/=2;
     mult*=2;
@@ -171,8 +171,8 @@ packedmatrix *_mzd_mul_mp_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   /**
    * \todo: make sure not to overwrite crap after ncols and before width*RADIX
    */
-  unsigned int a,b,c;
-  unsigned int anr, anc, bnr, bnc;
+  size_t a,b,c;
+  size_t anr, anc, bnr, bnc;
   
   a = A->nrows;
   b = A->ncols;
@@ -379,8 +379,8 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
    * \todo: make sure not to overwrite crap after ncols and before width*RADIX
    */
 
-  unsigned int a,b,c;
-  unsigned int anr, anc, bnr, bnc;
+  size_t a,b,c;
+  size_t anr, anc, bnr, bnc;
   
   a = A->nrows;
   b = A->ncols;
@@ -399,7 +399,7 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
 
   /* adjust cutting numbers to work on words */
   unsigned long mult = 1;
-  long width = a;
+  size_t width = a;
   while (width > 2*cutoff) {
     width/=2;
     mult*=2;
@@ -469,14 +469,14 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   _mzd_add(C10, X2, C10);                  /* 21 U6 = U3 - C21        C21 */
 
   /* deal with rest */
-  if (B->ncols > (int)(2*bnc)) {
+  if (B->ncols > 2*bnc) {
     packedmatrix *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
     packedmatrix *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
     mzd_addmul_m4rm(C_last_col, A, B_last_col, 0);
     mzd_free_window(B_last_col);
     mzd_free_window(C_last_col);
   }
-  if (A->nrows > (int)(2*anr)) {
+  if (A->nrows > 2*anr) {
     packedmatrix *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
     packedmatrix *B_bulk = mzd_init_window(B, 0, 0, B->nrows, 2*bnc);
     packedmatrix *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, 2*bnc);
@@ -485,7 +485,7 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
     mzd_free_window(B_bulk);
     mzd_free_window(C_last_row);
   }
-  if (A->ncols > (int)(2*anc)) {
+  if (A->ncols > 2*anc) {
     packedmatrix *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
     packedmatrix *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
     packedmatrix *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2);
@@ -523,7 +523,7 @@ packedmatrix *_mzd_addmul (packedmatrix *C, packedmatrix *A, packedmatrix *B, in
       return _mzd_addmul_even (C, A, B, cutoff);
 
     } else {
-      int bnc = RADIX - B->offset;
+      size_t bnc = RADIX - B->offset;
       packedmatrix * B0 = mzd_init_window (B, 0, 0, B->nrows, bnc);
       packedmatrix * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
       _mzd_addmul_even_weird  (C0,  A, B0, cutoff);
@@ -532,8 +532,8 @@ packedmatrix *_mzd_addmul (packedmatrix *C, packedmatrix *A, packedmatrix *B, in
     }
   } else {
     if (B->offset) {
-      int anc = RADIX - A->offset;
-      int bnc = RADIX - B->offset;
+      size_t anc = RADIX - A->offset;
+      size_t bnc = RADIX - B->offset;
       packedmatrix * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
       packedmatrix * A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
       packedmatrix * B00 = mzd_init_window (B, 0, 0, anc, bnc);
@@ -551,7 +551,7 @@ packedmatrix *_mzd_addmul (packedmatrix *C, packedmatrix *A, packedmatrix *B, in
       mzd_free (B00); mzd_free (B01); mzd_free (B10);
 
     } else {
-      int anc = RADIX - A->offset;
+      size_t anc = RADIX - A->offset;
       packedmatrix * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
       packedmatrix * B0 = mzd_init_window (B, 0, 0, anc, B->ncols);
       _mzd_addmul_weird_even  (C,  A0, B0, cutoff);

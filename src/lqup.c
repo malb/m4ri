@@ -39,7 +39,7 @@ size_t _mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int c
   size_t nrows = A->nrows;
   size_t ncols = A->ncols;
 
-  if (ncols < _LQUP_CUTOFF){
+  if (ncols < LQUP_CUTOFF){
     /* Base case */
     return 0;//mzd_reduce_m4ri (A, 0, 0, NULL, NULL);
     
