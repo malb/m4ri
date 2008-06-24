@@ -45,7 +45,7 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
 
   /* adjust cutting numbers to work on words */
   unsigned long mult = 1;
-  size_t width = a;
+  long width = a;
   while (width > 2*cutoff) {
     width/=2;
     mult*=2;
@@ -399,7 +399,7 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
 
   /* adjust cutting numbers to work on words */
   unsigned long mult = 1;
-  size_t width = a;
+  long width = a;
   while (width > 2*cutoff) {
     width/=2;
     mult*=2;

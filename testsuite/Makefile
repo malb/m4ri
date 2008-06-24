@@ -1,4 +1,4 @@
-CFLAGS=-I../src
+CFLAGS=-I../src -fopenmp
 LDFLAGS=-L../.libs/ -lm4ri
 DEBUG=-ggdb
 

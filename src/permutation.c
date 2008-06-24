@@ -21,7 +21,7 @@
 
 permutation *mzp_init(size_t length) {
   size_t i;
-  permutation *P = m4ri_mm_malloc(sizeof(permutation));
+  permutation *P = (permutation*)m4ri_mm_malloc(sizeof(permutation));
   P->values = (size_t*)m4ri_mm_malloc(sizeof(size_t)*length);
   P->length = length;
   for (i=0; i<length; i++) {

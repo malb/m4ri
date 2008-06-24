@@ -220,7 +220,7 @@ void mzd_make_table( packedmatrix *M, size_t r, size_t c, int k, packedmatrix *T
 }
 
 void mzd_process_rows(packedmatrix *M, size_t startrow, size_t stoprow, size_t startcol, int k, packedmatrix *T, size_t *L) {
-  int r;
+  size_t r;
   const size_t blocknum=startcol/RADIX;
   size_t wide = M->width - blocknum;
 
@@ -269,7 +269,7 @@ void mzd_process_rows(packedmatrix *M, size_t startrow, size_t stoprow, size_t s
 }
 
 void mzd_process_rows2(packedmatrix *M, size_t startrow, size_t stoprow, size_t startcol, int k, packedmatrix *T0, size_t *L0, packedmatrix *T1, size_t *L1) {
-  int r;
+  size_t r;
   const size_t blocknum=startcol/RADIX;
   const size_t wide = M->width - blocknum;
 
@@ -301,7 +301,7 @@ void mzd_process_rows2(packedmatrix *M, size_t startrow, size_t stoprow, size_t 
 }
 
 void mzd_process_rows3(packedmatrix *M, size_t startrow, size_t stoprow, size_t startcol, int k, packedmatrix *T0, size_t *L0, packedmatrix *T1, size_t *L1, packedmatrix *T2, size_t *L2) {
-  int r;
+  size_t r;
   const size_t blocknum=startcol/RADIX;
   const size_t wide = M->width - blocknum;
 
@@ -340,7 +340,7 @@ void mzd_process_rows3(packedmatrix *M, size_t startrow, size_t stoprow, size_t 
 
 void mzd_process_rows4(packedmatrix *M, size_t startrow, size_t stoprow, size_t startcol, int k, 
                        packedmatrix *T0, size_t *L0, packedmatrix *T1, size_t *L1, packedmatrix *T2, size_t *L2, packedmatrix *T3, size_t *L3) {
-  int r;
+  size_t r;
   const size_t blocknum=startcol/RADIX;
   const size_t wide = M->width - blocknum;
 
@@ -383,7 +383,7 @@ void mzd_process_rows4(packedmatrix *M, size_t startrow, size_t stoprow, size_t 
 void mzd_process_rows5(packedmatrix *M, size_t startrow, size_t stoprow, size_t startcol, int k, 
                        packedmatrix *T0, size_t *L0, packedmatrix *T1, size_t *L1, packedmatrix *T2, size_t *L2, packedmatrix *T3, size_t *L3,
                        packedmatrix *T4, size_t *L4) {
-  int r;
+  size_t r;
   const size_t blocknum=startcol/RADIX;
   const size_t wide = M->width - blocknum;
 
@@ -430,7 +430,7 @@ void mzd_process_rows5(packedmatrix *M, size_t startrow, size_t stoprow, size_t 
 void mzd_process_rows6(packedmatrix *M, size_t startrow, size_t stoprow, size_t startcol, int k, 
                        packedmatrix *T0, size_t *L0, packedmatrix *T1, size_t *L1, packedmatrix *T2, size_t *L2, packedmatrix *T3, size_t *L3,
                        packedmatrix *T4, size_t *L4, packedmatrix *T5, size_t *L5) {
-  int r;
+  size_t r;
   const size_t blocknum=startcol/RADIX;
   const size_t wide = M->width - blocknum;
 
@@ -450,10 +450,10 @@ void mzd_process_rows6(packedmatrix *M, size_t startrow, size_t stoprow, size_t 
     const int x3 = L3[ (int)mzd_read_bits(M, r, startcol+ka+kb+kc, kd)];
     const int x4 = L4[ (int)mzd_read_bits(M, r, startcol+ka+kb+kc+kd, ke)];
     const int x5 = L5[ (int)mzd_read_bits(M, r, startcol+ka+kb+kc+kd+ke, kf)];
-
+    
     if(x0 == 0 && x1 == 0 && x2 == 0 && x3 == 0 && x4 == 0 && x5 == 0) 
       continue;
-
+    
     word * m0 = M->values + M->rowswap[r] + blocknum;
     const word *t0 = T0->values + T0->rowswap[x0] + blocknum;
     const word *t1 = T1->values + T1->rowswap[x1] + blocknum;
@@ -523,6 +523,7 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L
       k -= 4;
     }
   }
+  /*printf("k: %d\n",k);*/
   int kk = 6*k;
 
   packedmatrix *U  = mzd_init(kk, A->ncols);
@@ -849,8 +850,8 @@ packedmatrix *_mzd_mul_m4rm_old(packedmatrix *C, packedmatrix *A, packedmatrix *
   packedmatrix *T = mzd_init(TWOPOW(k), b_nc);
   size_t *L = (size_t *)m4ri_mm_malloc(TWOPOW(k) * sizeof(size_t));
 
-  long s, start;
-  const long end = a_nc/k;
+  size_t s, start;
+  const size_t end = a_nc/k;
 
     for (start=0; start + blocksize <= a_nr; start += blocksize) {
       for(i=0; i < end; i++) {
@@ -1055,9 +1056,9 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   }
 
 #ifndef M4RM_GRAY8
-  size_t *buffer = m4ri_mm_malloc(4 * TWOPOW(k) * sizeof(size_t));
+  size_t *buffer = (size_t*)m4ri_mm_malloc(4 * TWOPOW(k) * sizeof(size_t));
 #else
-  size_t *buffer = m4ri_mm_malloc(8 * TWOPOW(k) * sizeof(size_t));
+  size_t *buffer = (size_t*)m4ri_mm_malloc(8 * TWOPOW(k) * sizeof(size_t));
 #endif
 
   packedmatrix *T1 = mzd_init(TWOPOW(k), b_nc);
@@ -1081,13 +1082,13 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
 #endif
 
   /* process stuff that fits into multiple of k first, but blockwise (babystep-giantstep)*/
-  long babystep, giantstep;
+  size_t babystep, giantstep;
 #ifdef M4RM_GRAY8
   const int kk = 8*k;
 #else
   const int kk = 4*k;
 #endif
-  const long end = a_nc/kk;
+  const size_t end = a_nc/kk;
 
   for (giantstep=0; giantstep + blocksize <= a_nr; giantstep += blocksize) {
     for(i=0; i < end; i++) {
@@ -1214,7 +1215,7 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
 
 void _mzd_lqup_submatrix_finish(packedmatrix *A, size_t r, size_t c, int kbar) {
   size_t i, j;
-  for(i=0 ; i < kbar; i++) {
+  for(i=0 ; i < (size_t)kbar; i++) {
     // clear L first
     for (j=0; j<i; i++) {
       mzd_write_bit(A, r+i, c+j, 0);

@@ -176,6 +176,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\lqup.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\m4ri.h"
 				>
 			</File>
@@ -192,7 +196,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\permutation.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\strassen.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\trsm.h"
 				>
 			</File>
 			<File
@@ -220,6 +232,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\lqup.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\misc.c"
 				>
 			</File>
@@ -228,7 +244,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\permutation.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\strassen.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\trsm.c"
 				>
 			</File>
 			<File
