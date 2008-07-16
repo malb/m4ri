@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 /*
  * These define entirely the word width used in the library.
  */
@@ -219,6 +221,14 @@ void m4ri_die(char *errormessage, ...);
  */
 void m4ri_word_to_str( char *destination, word data, int colon);
 
+/**
+ * \brief Return 1 or 0 uniformly randomly distributed.
+ *
+ * \todo Allow user to provide her own random() function.
+ */
+
+BIT m4ri_coin_flip();
+
 /***** Memory Management *****/
 
 /**
@@ -253,11 +263,119 @@ void *m4ri_mm_malloc( int size );
 void m4ri_mm_free(void *condemned);
 
 /**
- * \brief Return 1 or 0 uniformly randomly distributed.
- *
- * \todo Allow user to provide her own random() function.
+ * Number of blocks that are cached.
  */
 
-BIT m4ri_coin_flip();
+#define M4RI_MMC_NBLOCKS 16
+
+/**
+ * Maximal size of blocks stored in cache.
+ */
+
+#ifdef CPU_L2_CACHE
+#define M4RI_MMC_THRESHOLD CPU_L2_CACHE
+#else
+#define M4RI_MMC_THRESHOLD 1024*1024
+#endif
+
+/**
+ * The mmc memory management functions check a cache for re-usable
+ * unused memory before asking the system for it.
+ */
+
+typedef struct _mm_block {
+  /**
+   * Size in bytes of the data.
+   */
+  size_t size;
+
+  /**
+   * Pointer to buffer of data.
+   */
+  void *data;
+
+} mm_block;
+
+extern mm_block m4ri_mmc_cache[M4RI_MMC_NBLOCKS];
+
+/**
+ * Return handle for locale memory management cache.
+ * 
+ * \todo Make thread safe.
+ */
+
+static inline mm_block *m4ri_mmc_handle() {
+  return m4ri_mmc_cache;
+}
+
+/**
+ * Allocate size bytes.
+ *
+ * \param size Number of bytes.
+ */
+
+static inline void *m4ri_mmc_malloc(size_t size) {
+  mm_block *mm = m4ri_mmc_handle();
+  if (size <= M4RI_MMC_THRESHOLD) {
+    size_t i;
+    for (i=0; i<M4RI_MMC_NBLOCKS; i++) {
+      if(mm[i].size == size) {
+        void *ret = mm[i].data;
+        mm[i].data = NULL;
+        mm[i].size = 0;
+        return ret;
+      }
+    }
+  }
+  return m4ri_mm_malloc(size);
+}
+
+/**
+ * Allocate size zeroes bytes.
+ *
+ * \param size Number of bytes.
+ */
+
+static inline void *m4ri_mmc_calloc(size_t size, size_t count) {
+  void *ret = m4ri_mmc_malloc(size*count);
+  memset(ret, 0, count*size);
+  return ret;
+}
+
+/**
+ * Free the data pointed to by condemned of the given size.
+ *
+ * \param condemned Pointer to memory.
+ * \param size Number of bytes.
+ */
+
+static inline void m4ri_mmc_free(void *condemned, size_t size) {
+  mm_block *mm = m4ri_mmc_handle();
+  if (size < M4RI_MMC_THRESHOLD) {
+    size_t i;
+    for(i=0; i<M4RI_MMC_NBLOCKS; i++) {
+      if(mm[i].size == 0) {
+        mm[i].size = size;
+        mm[i].data = condemned;
+        return;
+      }
+    }
+  }
+  m4ri_mm_free(condemned);
+}
+
+/**
+ * Cleans up the cache.
+ */
+
+static inline void m4ri_mmc_cleanup() {
+  mm_block *mm = m4ri_mmc_handle();
+  size_t i;
+  for(i=0; i < M4RI_MMC_NBLOCKS; i++) {
+    if (mm[i].size)
+      m4ri_mm_free(mm[i].data);
+    mm[i].size = 0;
+  }
+}
 
 #endif //MISC_H

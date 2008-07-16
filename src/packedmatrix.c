@@ -46,9 +46,9 @@ packedmatrix *mzd_init(size_t r, size_t c) {
   newmatrix->ncols=c;
   newmatrix->nrows=r;
   newmatrix->offset = 0;
-  newmatrix->values=(word *)m4ri_mm_calloc( (newmatrix->width)*r, sizeof(word));
+  newmatrix->values=(word *)m4ri_mm_calloc( (newmatrix->width)*r, sizeof(word) );
 
-  newmatrix->rowswap=(size_t *)m4ri_mm_malloc( r * sizeof(size_t));
+  newmatrix->rowswap=(size_t *)m4ri_mm_malloc( r * sizeof(size_t) );
 
   /* Rowswap does not contain the rowswap index i but the correct
    * offset in the values table. Rowswap is exclusively used to access

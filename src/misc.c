@@ -23,13 +23,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <string.h>
 #include "misc.h"
 #ifdef HAVE_MM_MALLOC
 #include <mm_malloc.h>
 #endif
 
-
+/* blocks of memory we like to keep around for later re-use */
+mm_block m4ri_mmc_cache[M4RI_MMC_NBLOCKS];
 
 void m4ri_die(char *errormessage, ...) {
   /*This function prints the error message and raises SIGABRT.*/
@@ -81,6 +81,7 @@ void m4ri_word_to_str( char *destination, word data, int colon) {
     destination[j]='\0';
   }
 }
+
 
 void *m4ri_mm_calloc( int count, int size ) {
   /* this function calls calloc with the given inputs, 
