@@ -31,7 +31,15 @@ packedmatrix *mzd_init(size_t r, size_t c) {
   packedmatrix *newmatrix;
   size_t i;
 
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
   newmatrix=(packedmatrix *)m4ri_mmc_malloc(sizeof(packedmatrix));
+#ifdef HAVE_OPENMP
+ }
+#endif
+
   newmatrix->width=DIV_CEIL(c,RADIX);
 
 #ifdef HAVE_SSE2
@@ -46,9 +54,23 @@ packedmatrix *mzd_init(size_t r, size_t c) {
   newmatrix->ncols=c;
   newmatrix->nrows=r;
   newmatrix->offset = 0;
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
   newmatrix->values=(word *)m4ri_mmc_calloc( (newmatrix->width)*r, sizeof(word) );
+#ifdef HAVE_OPENMP
+ }
+#endif
 
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
   newmatrix->rowswap=(size_t *)m4ri_mmc_malloc( r * sizeof(size_t) );
+#ifdef HAVE_OPENMP
+ }
+#endif
 
   /* Rowswap does not contain the rowswap index i but the correct
    * offset in the values table. Rowswap is exclusively used to access
@@ -71,7 +93,15 @@ packedmatrix *mzd_init(size_t r, size_t c) {
 
 packedmatrix *mzd_init_window (const packedmatrix *m, size_t lowr, size_t lowc, size_t highr, size_t highc) {
   size_t nrows, ncols, i, offset; 
-  packedmatrix *window = (packedmatrix *)m4ri_mmc_malloc(sizeof(packedmatrix));
+  packedmatrix *window;
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
+  window = (packedmatrix *)m4ri_mmc_malloc(sizeof(packedmatrix));
+#ifdef HAVE_OPENMP
+}
+#endif
   nrows = MIN(highr - lowr, m->nrows - lowr);
   ncols = highc - lowc;
   
@@ -87,7 +117,14 @@ packedmatrix *mzd_init_window (const packedmatrix *m, size_t lowr, size_t lowc, 
   
   window->values = m->values;
 
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
   window->rowswap = (size_t *)m4ri_mmc_malloc( nrows * sizeof(size_t));
+#ifdef HAVE_OPENMP
+}
+#endif
   for(i=0; i<nrows; i++) {
     window->rowswap[i] = m->rowswap[lowr + i] + offset;
   }
@@ -103,14 +140,28 @@ permutation *mzd_init_permutation_window (permutation* P, size_t begin, size_t e
 }
 
 void mzd_free( packedmatrix *condemned) {
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
   m4ri_mmc_free(condemned->values, condemned->width*condemned->nrows*sizeof(word));
   m4ri_mmc_free(condemned->rowswap, condemned->nrows * sizeof(size_t));
   m4ri_mmc_free(condemned, sizeof(packedmatrix));
+#ifdef HAVE_OPENMP
+}
+#endif
 }
 
 void mzd_free_window( packedmatrix *condemned) {
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
   m4ri_mmc_free(condemned->rowswap, condemned->nrows * sizeof(size_t));
   m4ri_mmc_free(condemned, sizeof(packedmatrix));
+#ifdef HAVE_OPENMP
+}
+#endif
 }
 
 void mzd_free_permutation_window (permutation* condemned){

@@ -34,8 +34,6 @@
 mm_block m4ri_mmc_cache[M4RI_MMC_NBLOCKS];
 
 void m4ri_die(char *errormessage, ...) {
-  /*This function prints the error message and raises SIGABRT.*/
-
   va_list lst;
   va_start(lst, errormessage);
   vfprintf(stderr, errormessage, lst);
@@ -86,9 +84,6 @@ void m4ri_word_to_str( char *destination, word data, int colon) {
 
 
 void *m4ri_mm_calloc( int count, int size ) {
-  /* this function calls calloc with the given inputs, 
-     but dies with an error message if a NULL is returned */
-
 #ifdef HAVE_MM_MALLOC
   void *newthing = _mm_malloc(count*size, 16);
 #else
@@ -100,10 +95,6 @@ void *m4ri_mm_calloc( int count, int size ) {
   }
 #ifdef HAVE_MM_MALLOC
   char *b = (char*)newthing;
-/*   int i; */
-/*   for(i=0; i< count*size; i++) { */
-/*     b[i] = 0; */
-/*   } */
   memset(b, 0, count*size);
 #endif
   return newthing;
@@ -138,7 +129,7 @@ BIT m4ri_coin_flip() {
   }
 }
 
-#if defined(__GNUC__)
+#ifdef __GNUC__
 void __attribute__ ((constructor)) m4ri_init()
 #else
 void m4ri_init()
@@ -146,11 +137,11 @@ void m4ri_init()
 {
   m4ri_build_all_codes();
 }
-#if defined(__SUNCC__)
+#ifdef __SUNCC__
 #pragma init(m4ri_init)
 #endif
 
-#if defined(__GNUC__)
+#ifdef __GNUC__
 void __attribute__ ((destructor)) m4ri_fini()
 #else
 void m4ri_fini()
@@ -159,6 +150,36 @@ void m4ri_fini()
   m4ri_mmc_cleanup();
   m4ri_destroy_all_codes();
 }
-#if defined(__SUNCC__)
+#ifdef __SUNCC__
 #pragma fini(m4ri_fini)
+#endif
+
+#ifdef _MSC_VER
+BOOL WINAPI DllMain(
+                    HINSTANCE hinstDLL,  // handle to DLL module
+                    DWORD fdwReason,     // reason for calling function
+                    LPVOID lpReserved )  // reserved
+{
+    // Perform actions based on the reason for calling.
+  switch( fdwReason ) 
+    { 
+    case DLL_PROCESS_ATTACH:
+      m4ri_build_all_codes();
+       break;
+      
+    case DLL_THREAD_ATTACH:
+      // Do thread-specific initialization.
+      break;
+      
+    case DLL_THREAD_DETACH:
+      // Do thread-specific cleanup.
+      break;
+      
+    case DLL_PROCESS_DETACH:
+      m4ri_mmc_cleanup();
+      m4ri_destroy_all_codes();
+      break;
+    }
+  return TRUE;  // Successful DLL_PROCESS_ATTACH.
+}
 #endif

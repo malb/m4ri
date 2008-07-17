@@ -362,6 +362,8 @@ static inline void *m4ri_mmc_malloc(size_t size) {
  * Allocate size zeroes bytes.
  *
  * \param size Number of bytes.
+ *
+ * \warning Not thread safe.
  */
 
 static inline void *m4ri_mmc_calloc(size_t size, size_t count) {
@@ -375,6 +377,8 @@ static inline void *m4ri_mmc_calloc(size_t size, size_t count) {
  *
  * \param condemned Pointer to memory.
  * \param size Number of bytes.
+ *
+ * \warning Not thread safe.
  */
 
 static inline void m4ri_mmc_free(void *condemned, size_t size) {
@@ -400,6 +404,11 @@ static inline void m4ri_mmc_free(void *condemned, size_t size) {
 
 /**
  * Cleans up the cache.
+ *
+ * This function is called automatically when the shared library is
+ * loaded.
+ *
+ * \warning Not thread safe.
  */
 
 static inline void m4ri_mmc_cleanup() {
