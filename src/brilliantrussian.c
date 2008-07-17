@@ -896,7 +896,7 @@ packedmatrix *_mzd_mul_m4rm_old(packedmatrix *C, packedmatrix *A, packedmatrix *
 }
 
 #ifdef HAVE_SSE2
-static inline void _mzd_combine8_sse2(word *c, word *t1, word *t2, word *t3, word *t4, word *t5, word *t6, word *t7, word *t8, int wide) {
+static inline void _mzd_combine8(word *c, word *t1, word *t2, word *t3, word *t4, word *t5, word *t6, word *t7, word *t8, int wide) {
   size_t i;
   /* assuming t1 ... t8 are aligned, but c might not be */
   if (ALIGNMENT(c,16)==0) {
@@ -938,12 +938,16 @@ static inline void _mzd_combine8_sse2(word *c, word *t1, word *t2, word *t3, wor
     c[i] ^= t1[i] ^ t2[i] ^ t3[i] ^ t4[i] ^ t5[i] ^ t6[i] ^ t7[i] ^ t8[i];
   }
 }
+#else
+
+#define _mzd_combine8(c,t1,t2,t3,t4,t5,t6,t7,t8,wide) for(ii=0; ii<wide ; ii++) c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii] ^ t5[ii] ^ t6[ii] ^ t7[ii] ^ t8[ii]
+
 #endif
 
 #ifdef HAVE_SSE2
-static inline void _mzd_combine4_sse2(word *c, word *t1, word *t2, word *t3, word *t4, size_t wide) {
+static inline void _mzd_combine4(word *c, word *t1, word *t2, word *t3, word *t4, size_t wide) {
   size_t i;
-  /* assuming t1 ... t8 are aligned, but c might not be */
+  /* assuming t1 ... t4 are aligned, but c might not be */
   if (ALIGNMENT(c,16)==0) {
     __m128i *__c = (__m128i*)c;
     __m128i *__t1 = (__m128i*)t1;
@@ -971,25 +975,49 @@ static inline void _mzd_combine4_sse2(word *c, word *t1, word *t2, word *t3, wor
     c[i] ^= t1[i] ^ t2[i] ^ t3[i] ^ t4[i];
   }
 }
+#else
+
+#define _mzd_combine4(c, t1, t2, t3, t4, wide) for(ii=0; ii<wide ; ii++) c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii]
+
 #endif //HAVE_SSE2
 
 #ifdef HAVE_SSE2
+static inline void _mzd_combine2(word *c, word *t1, word *t2, size_t wide) {
+  size_t i;
+  /* assuming t1 ... t2 are aligned, but c might not be */
+  if (ALIGNMENT(c,16)==0) {
+    __m128i *__c = (__m128i*)c;
+    __m128i *__t1 = (__m128i*)t1;
+    __m128i *__t2 = (__m128i*)t2;
+    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xF);
+    __m128i xmm1;
+    
+    while(__c < eof) {
+      xmm1 = _mm_xor_si128(*__c, *__t1++);
+      xmm1 = _mm_xor_si128(xmm1, *__t2++);
+      *__c++ = xmm1;
+    }
+    c  = (word*)__c;
+    t1 = (word*)__t1;
+    t2 = (word*)__t2;
+    wide = ((sizeof(word)*wide)%16)/sizeof(word);
+  }
+  for(i=0; i<wide; i++) {
+    c[i] ^= t1[i] ^ t2[i];
+  }
+}
+#else
 
-#ifdef M4RM_GRAY8
-#define _MZD_COMBINE _mzd_combine8_sse2(c, t1, t2, t3, t4, t5, t6, t7, t8, wide)
-#else //M4RM_GRAY8
-#define _MZD_COMBINE _mzd_combine4_sse2(c, t1, t2, t3, t4, wide)
-#endif //M4RM_GRAY8
-
-#else //HAVE_SSE2
-
-#ifdef M4RM_GRAY8
-#define _MZD_COMBINE for(ii=0; ii<wide ; ii++) c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii] ^ t5[ii] ^ t6[ii] ^ t7[ii] ^ t8[ii]
-#else //M4RM_GRAY8
-#define _MZD_COMBINE for(ii=0; ii<wide ; ii++) c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii]
-#endif //M4RM_GRAY8
+#define _mzd_combine2(c, t1, t2, wide) for(ii=0; ii<wide ; ii++) c[ii] ^= t1[ii] ^ t2[ii]
 
 #endif //HAVE_SSE2
+
+
+#ifdef M4RM_GRAY8
+#define _MZD_COMBINE _mzd_combine8(c, t1, t2, t3, t4, t5, t6, t7, t8, wide)
+#else //M4RM_GRAY8
+#define _MZD_COMBINE _mzd_combine4(c, t1, t2, t3, t4, wide)
+#endif //M4RM_GRAY8
 
 packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear) {
   /**
@@ -1102,13 +1130,14 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
       mzd_make_table( B, i*kk+k+k+k+k+k+k, 0, k, T7, L7);
       mzd_make_table( B, i*kk+k+k+k+k+k+k+k, 0, k, T8, L8);
 #endif   
+
       for(babystep = 0; babystep < blocksize; babystep++) {
         j = giantstep + babystep;
         x1 = L1[ (int)mzd_read_bits(A, j, i*kk, k) ];
         x2 = L2[ (int)mzd_read_bits(A, j, i*kk+k, k) ];
         x3 = L3[ (int)mzd_read_bits(A, j, i*kk+k+k, k) ];
         x4 = L4[ (int)mzd_read_bits(A, j, i*kk+k+k+k, k) ];
-#ifdef M4RM_GRAY8 
+#ifdef M4RM_GRAY8
         x5 = L5[ (int)mzd_read_bits(A, j, i*kk+k+k+k+k, k) ];
         x6 = L6[ (int)mzd_read_bits(A, j, i*kk+k+k+k+k+k, k) ];
         x7 = L7[ (int)mzd_read_bits(A, j, i*kk+k+k+k+k+k+k, k) ];
