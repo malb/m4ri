@@ -28,6 +28,8 @@
 #include <mm_malloc.h>
 #endif
 
+#include "grayflex.h"
+
 /* blocks of memory we like to keep around for later re-use */
 mm_block m4ri_mmc_cache[M4RI_MMC_NBLOCKS];
 
@@ -120,7 +122,7 @@ void *m4ri_mm_malloc( int size ) {
   else return newthing;
 }
 
-void m4ri_mm_free(void *condemned) { 
+void m4ri_mm_free(void *condemned, ...) { 
 #ifdef HAVE_MM_MALLOC
   _mm_free(condemned); 
 #else
@@ -135,3 +137,28 @@ BIT m4ri_coin_flip() {
     return 1;
   }
 }
+
+#if defined(__GNUC__)
+void __attribute__ ((constructor)) m4ri_init()
+#else
+void m4ri_init()
+#endif
+{
+  m4ri_build_all_codes();
+}
+#if defined(__SUNCC__)
+#pragma init(m4ri_init)
+#endif
+
+#if defined(__GNUC__)
+void __attribute__ ((destructor)) m4ri_fini()
+#else
+void m4ri_fini()
+#endif
+{
+  m4ri_mmc_cleanup();
+  m4ri_destroy_all_codes();
+}
+#if defined(__SUNCC__)
+#pragma fini(m4ri_fini)
+#endif

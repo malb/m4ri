@@ -368,10 +368,11 @@ packedmatrix *mzd_mul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cut
   }
 #ifdef HAVE_OPENMP
   /* this one isn't optimal */
-  return _mzd_mul_mp_even(C, A, B, cutoff);
+  C = _mzd_mul_mp_even(C, A, B, cutoff);
 #else
-  return _mzd_mul_even(C, A, B, cutoff);
+  C = _mzd_mul_even(C, A, B, cutoff);
 #endif  
+  return C;
 }
 
 packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
@@ -619,7 +620,8 @@ packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedma
     m4ri_die("mzd_addmul: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
 	     C->nrows, C->ncols, A->nrows, B->ncols);
   }
-  return _mzd_addmul(C, A, B, cutoff);
+  C = _mzd_addmul(C, A, B, cutoff);
+  return C;
 }
 
 

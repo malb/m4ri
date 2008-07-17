@@ -229,6 +229,34 @@ void m4ri_word_to_str( char *destination, word data, int colon);
 
 BIT m4ri_coin_flip();
 
+/***** Initialization *****/
+
+/**
+ * Initialize global data structures for the M4RI library. 
+ *
+ * On Linux/Solaris this is called automatically when the shared
+ * library is loaded, but it doesn't harm if it is called twice.
+ */
+
+#if defined(__GNUC__)
+void __attribute__ ((constructor)) m4ri_init();
+#else
+void m4ri_init();
+#endif
+
+/**
+ * De-initialize global data structures from the M4RI library. 
+ *
+ * On Linux/Solaris this is called automatically when the shared
+ * library is unloaded, but it doesn't harm if it is called twice.
+ */
+
+#if defined(__GNUC__)
+void __attribute__ ((destructor)) m4ri_fini();
+#else
+void m4ri_fini();
+#endif
+
 /***** Memory Management *****/
 
 /**
@@ -260,7 +288,7 @@ void *m4ri_mm_malloc( int size );
  * \todo Allow user to register free function.
  */
 
-void m4ri_mm_free(void *condemned);
+void m4ri_mm_free(void *condemned, ...);
 
 /**
  * Number of blocks that are cached.
@@ -350,6 +378,7 @@ static inline void *m4ri_mmc_calloc(size_t size, size_t count) {
  */
 
 static inline void m4ri_mmc_free(void *condemned, size_t size) {
+  static size_t j = 0;
   mm_block *mm = m4ri_mmc_handle();
   if (size < M4RI_MMC_THRESHOLD) {
     size_t i;
@@ -360,6 +389,11 @@ static inline void m4ri_mmc_free(void *condemned, size_t size) {
         return;
       }
     }
+    m4ri_mm_free(mm[j].data);
+    mm[j].size = size;
+    mm[j].data = condemned;
+    j = (j+1) % M4RI_MMC_NBLOCKS;
+    return;
   }
   m4ri_mm_free(condemned);
 }

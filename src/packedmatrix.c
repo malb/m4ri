@@ -31,7 +31,7 @@ packedmatrix *mzd_init(size_t r, size_t c) {
   packedmatrix *newmatrix;
   size_t i;
 
-  newmatrix=(packedmatrix *)m4ri_mm_malloc(sizeof(packedmatrix));
+  newmatrix=(packedmatrix *)m4ri_mmc_malloc(sizeof(packedmatrix));
   newmatrix->width=DIV_CEIL(c,RADIX);
 
 #ifdef HAVE_SSE2
@@ -46,9 +46,9 @@ packedmatrix *mzd_init(size_t r, size_t c) {
   newmatrix->ncols=c;
   newmatrix->nrows=r;
   newmatrix->offset = 0;
-  newmatrix->values=(word *)m4ri_mm_calloc( (newmatrix->width)*r, sizeof(word) );
+  newmatrix->values=(word *)m4ri_mmc_calloc( (newmatrix->width)*r, sizeof(word) );
 
-  newmatrix->rowswap=(size_t *)m4ri_mm_malloc( r * sizeof(size_t) );
+  newmatrix->rowswap=(size_t *)m4ri_mmc_malloc( r * sizeof(size_t) );
 
   /* Rowswap does not contain the rowswap index i but the correct
    * offset in the values table. Rowswap is exclusively used to access
@@ -71,7 +71,7 @@ packedmatrix *mzd_init(size_t r, size_t c) {
 
 packedmatrix *mzd_init_window (const packedmatrix *m, size_t lowr, size_t lowc, size_t highr, size_t highc) {
   size_t nrows, ncols, i, offset; 
-  packedmatrix *window = (packedmatrix *)m4ri_mm_malloc(sizeof(packedmatrix));
+  packedmatrix *window = (packedmatrix *)m4ri_mmc_malloc(sizeof(packedmatrix));
   nrows = MIN(highr - lowr, m->nrows - lowr);
   ncols = highc - lowc;
   
@@ -87,7 +87,7 @@ packedmatrix *mzd_init_window (const packedmatrix *m, size_t lowr, size_t lowc, 
   
   window->values = m->values;
 
-  window->rowswap = (size_t *)m4ri_mm_malloc( nrows * sizeof(size_t));
+  window->rowswap = (size_t *)m4ri_mmc_malloc( nrows * sizeof(size_t));
   for(i=0; i<nrows; i++) {
     window->rowswap[i] = m->rowswap[lowr + i] + offset;
   }
@@ -103,14 +103,14 @@ permutation *mzd_init_permutation_window (permutation* P, size_t begin, size_t e
 }
 
 void mzd_free( packedmatrix *condemned) {
-  m4ri_mm_free(condemned->values);
-  m4ri_mm_free(condemned->rowswap);
-  m4ri_mm_free(condemned);
+  m4ri_mmc_free(condemned->values, condemned->width*condemned->nrows*sizeof(word));
+  m4ri_mmc_free(condemned->rowswap, condemned->nrows * sizeof(size_t));
+  m4ri_mmc_free(condemned, sizeof(packedmatrix));
 }
 
 void mzd_free_window( packedmatrix *condemned) {
-  m4ri_mm_free(condemned->rowswap);
-  m4ri_mm_free(condemned);
+  m4ri_mmc_free(condemned->rowswap, condemned->nrows * sizeof(size_t));
+  m4ri_mmc_free(condemned, sizeof(packedmatrix));
 }
 
 void mzd_free_permutation_window (permutation* condemned){
