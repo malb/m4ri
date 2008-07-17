@@ -78,12 +78,16 @@ void m4ri_build_all_codes() {
 
 void m4ri_destroy_all_codes() {
   int i;
+  if (!codebook) {
+    return;
+  }
   for(i=1; i<MAXKAY+1; i++) {
     m4ri_mm_free(codebook[i]->inc);
     m4ri_mm_free(codebook[i]->ord);
     m4ri_mm_free(codebook[i]);
   }
   m4ri_mm_free(codebook);
+  codebook = NULL;
 }
 
 static int log2_floor(int n){
