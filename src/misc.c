@@ -137,7 +137,7 @@ void m4ri_init()
 {
   m4ri_build_all_codes();
 }
-#ifdef __SUNCC__
+#ifdef __SUNPRO_C
 #pragma init(m4ri_init)
 #endif
 
@@ -150,7 +150,7 @@ void m4ri_fini()
   m4ri_mmc_cleanup();
   m4ri_destroy_all_codes();
 }
-#ifdef __SUNCC__
+#ifdef __SUNPRO_C
 #pragma fini(m4ri_fini)
 #endif
 
