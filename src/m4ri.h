@@ -41,6 +41,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
 #include "watch.h"
 #include "permutation.h"
 #include "packedmatrix.h"
@@ -48,5 +53,9 @@
 #include "strassen.h"
 #include "grayflex.h"
 #include "parity.h"
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
 
 #endif //M4RI_H
