@@ -54,7 +54,7 @@ size_t _mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int c
     /* First recursive call */
     r1 = _mzd_lqup (A0, P, Q, cutoff);
 
-    packedmatrix *U0  = mzd_init_window (A,   0, 0, r1, r1);
+    packedmatrix *A00  = mzd_init_window (A,   0, 0, r1, r1);
     packedmatrix *A10  = mzd_init_window (A,  r1, 0, nrows, r1);
     packedmatrix *A01  = mzd_init_window (A,  0, n1, r1, ncols);
     packedmatrix *A11  = mzd_init_window (A,  r1, n1, nrows, ncols);
