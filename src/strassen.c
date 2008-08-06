@@ -23,6 +23,129 @@
 #include "parity.h"
 #define CLOSER(a,b,target) (abs((long)a-(long)target)<abs((long)b-(long)target))
 
+packedmatrix *_mzd_mul_even_three_extra(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+  size_t a,b,c;
+  size_t anr, anc, bnr, bnc;
+  
+  a = A->nrows;
+  b = A->ncols;
+  c = B->ncols;
+  /* handle case first, where the input matrices are too small already */
+  if (CLOSER(A->nrows, A->nrows/2, cutoff) || CLOSER(A->ncols, A->ncols/2, cutoff) || CLOSER(B->ncols, B->ncols/2, cutoff)) {
+    /* we copy the matrix first since it is only constant memory
+       overhead and improves data locality, if you remove it make sure
+       there are no speed regressions */
+    /* C = _mzd_mul_m4rm(C, A, B, 0, TRUE); */
+    packedmatrix *Cbar = mzd_init(C->nrows, C->ncols);
+    Cbar = _mzd_mul_m4rm(Cbar, A, B, 0, FALSE);
+    mzd_copy(C, Cbar);
+    mzd_free(Cbar);
+    return C;
+  }
+
+  /* adjust cutting numbers to work on words */
+  unsigned long mult = 1;
+  long width = a;
+  while (width > 2*cutoff) {
+    width/=2;
+    mult*=2;
+  }
+  a -= a%(RADIX*mult);
+  b -= b%(RADIX*mult);
+  c -= c%(RADIX*mult);
+
+  anr = ((a/RADIX) >> 1) * RADIX;
+  anc = ((b/RADIX) >> 1) * RADIX;
+  bnr = anc;
+  bnc = ((c/RADIX) >> 1) * RADIX;
+
+  packedmatrix *A00 = mzd_init_window(A,   0,   0,   anr,   anc);
+  packedmatrix *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc);
+  packedmatrix *A10 = mzd_init_window(A, anr,   0, 2*anr,   anc);
+  packedmatrix *A11 = mzd_init_window(A, anr, anc, 2*anr, 2*anc);
+
+  packedmatrix *B00 = mzd_init_window(B,   0,   0,   bnr,   bnc);
+  packedmatrix *B01 = mzd_init_window(B,   0, bnc,   bnr, 2*bnc);
+  packedmatrix *B10 = mzd_init_window(B, bnr,   0, 2*bnr,   bnc);
+  packedmatrix *B11 = mzd_init_window(B, bnr, bnc, 2*bnr, 2*bnc);
+
+  packedmatrix *C00 = mzd_init_window(C,   0,   0,   anr,   bnc);
+  packedmatrix *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc);
+  packedmatrix *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
+  packedmatrix *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
+  
+  packedmatrix *X0 = mzd_init(anr, bnc);
+  packedmatrix *X1 = mzd_init(anr, anc);
+  packedmatrix *X2 = mzd_init(bnr, bnc);
+  
+  //http://ljk.imag.fr/membres/Jean-Guillaume.Dumas/FFLAS/FFLAS_Download/FFLAS_technical_report.ps.gz
+
+  _mzd_mul_even(C00, A01, B10, cutoff); // 1
+  _mzd_mul_even(C01, A00, B00, cutoff); // 2
+  _mzd_add(X2, B11, B01);               // 3
+  _mzd_add(X1, A00, A10);               // 4
+  _mzd_add(C00, C00, C01);              // 5
+  _mzd_mul_even(C10, X1, X2, cutoff);   // 6
+  _mzd_add(X1, A10, A11);               // 7
+  _mzd_add(X2, B01, B00);               // 8
+  _mzd_mul_even(C11, X1, X2, cutoff);   // 9
+  _mzd_add(X2, B11, X2);                //10
+  _mzd_add(X1, X1, A00);                //11
+  _mzd_mul_even(X0, X1, X2, cutoff);    //12
+  _mzd_add(X2, X2, B10);                //13
+  _mzd_add(X1, A01, X1);                //14
+
+  _mzd_add(X0, C01, X0);                //15
+  _mzd_add(C10, C10, X0);               //16
+  _mzd_add(C01, X0, C11);               //17
+  _mzd_mul_even(X0, X1, B11, cutoff);   //18
+  _mzd_add(C01, C01, X0);               //19
+  _mzd_mul_even(X0, A11, X2, cutoff);   //20
+  _mzd_add(C11, C11, C10);              //21
+  _mzd_add(C10, C10, X0);               //22
+    
+  /* deal with rest */
+  if (B->ncols > (int)(2*bnc)) {
+    packedmatrix *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
+    packedmatrix *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
+    _mzd_mul_m4rm(C_last_col, A, B_last_col, 0, TRUE);
+    mzd_free_window(B_last_col);
+    mzd_free_window(C_last_col);
+  }
+  if (A->nrows > (int)(2*anr)) {
+    packedmatrix *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
+    packedmatrix *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, C->ncols);
+    _mzd_mul_m4rm(C_last_row, A_last_row, B, 0, TRUE);
+    mzd_free_window(A_last_row);
+    mzd_free_window(C_last_row);
+  }
+  if (A->ncols > (int)(2*anc)) {
+    packedmatrix *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
+    packedmatrix *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
+    packedmatrix *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2);
+    mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0);
+    mzd_free_window(A_last_col);
+    mzd_free_window(B_last_row);
+    mzd_free_window(C_bulk);
+  }
+
+  /* clean up */
+  mzd_free_window(A00); mzd_free_window(A01);
+  mzd_free_window(A10); mzd_free_window(A11);
+
+  mzd_free_window(B00); mzd_free_window(B01);
+  mzd_free_window(B10); mzd_free_window(B11);
+
+  mzd_free_window(C00); mzd_free_window(C01);
+  mzd_free_window(C10); mzd_free_window(C11);
+  
+  mzd_free(X0);
+  mzd_free(X1);
+  mzd_free(X2);
+
+  return C;
+}
+
 packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   size_t a,b,c;
   size_t anr, anc, bnr, bnc;
