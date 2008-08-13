@@ -23,6 +23,12 @@
 #include "parity.h"
 #define CLOSER(a,b,target) (abs((long)a-(long)target)<abs((long)b-(long)target))
 
+#ifdef HAVE_OPENMP
+#include <omp.h>
+#endif
+
+
+
 packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   size_t a,b,c;
   size_t anr, anc, bnr, bnc;
@@ -30,12 +36,14 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   a = A->nrows;
   b = A->ncols;
   c = B->ncols;
+
   /* handle case first, where the input matrices are too small already */
   if (CLOSER(A->nrows, A->nrows/2, cutoff) || CLOSER(A->ncols, A->ncols/2, cutoff) || CLOSER(B->ncols, B->ncols/2, cutoff)) {
     /* we copy the matrix first since it is only constant memory
        overhead and improves data locality, if you remove it make sure
        there are no speed regressions */
     /* C = _mzd_mul_m4rm(C, A, B, 0, TRUE); */
+    /* return C; */
     packedmatrix *Cbar = mzd_init(C->nrows, C->ncols);
     Cbar = _mzd_mul_m4rm(Cbar, A, B, 0, FALSE);
     mzd_copy(C, Cbar);
@@ -191,12 +199,12 @@ packedmatrix *_mzd_mul_mp_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   }
 
   /* adjust cutting numbers to work on words */
-  unsigned long mult = 1;
-  long width = a;
-  while (width > 2*cutoff) {
-    width/=2;
-    mult*=2;
-  }
+  unsigned long mult = 2;
+/*   long width = a; */
+/*   while (width > 2*cutoff) { */
+/*     width/=2; */
+/*     mult*=2; */
+/*   } */
   a -= a%(RADIX*mult);
   b -= b%(RADIX*mult);
   c -= c%(RADIX*mult);
@@ -221,82 +229,27 @@ packedmatrix *_mzd_mul_mp_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   packedmatrix *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
   packedmatrix *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
   
-  /**
-   * \note See Jean-Guillaume Dumas, Clement Pernet, Wei Zhou; "Memory
-   * efficient scheduling of Strassen-Winograd's matrix multiplication
-   * algorithm"; http://arxiv.org/pdf/0707.2347v3 for reference on the
-   * used operation scheduling.
-   */
-
-  /* change this to mzd_init(anr, MAX(bnc,anc)) to fix the todo below */
-  packedmatrix *X0 = mzd_init(anr, anc);
-  packedmatrix *X1 = mzd_init(bnr, bnc);
-
-  packedmatrix *X2 = mzd_init(anr, anc);
-  packedmatrix *X3 = mzd_init(bnr, bnc);
-  
 #pragma omp parallel sections
   {
 #pragma omp section
     {
-  _mzd_add(X2, A00, A10);              /*1    X0 = A00 + A10 */
-  _mzd_add(X3, B11, B01);              /*2    X1 = B11 + B01 */
-  _mzd_mul_mp_even(C10, X2, X3, cutoff);  /*3   C10 = X0*X1 */
+      _mzd_mul_even(C00, A00, B00, cutoff);
+      _mzd_addmul_even(C00, A01, B10, cutoff);
     }
 #pragma omp section 
     {
-  _mzd_add(X0, A10, A11);              /*4    X0 = A10 + A11 */
-  _mzd_add(X1, B01, B00);              /*5    X1 = B01 + B00*/
-  _mzd_mul_mp_even(C11, X0, X1, cutoff);  /*6   C11 = X0*X1 */
-    }
-  }
-  _mzd_add(X0, X0, A00);               /*7    X0 = X0 + A00 */
-
-#pragma omp parallel sections
-  {
-#pragma omp section
-    {
-  _mzd_add(X1, X1, B11);               /*8    X1 = B11 + X1 */
-  _mzd_mul_mp_even(C01, X0, X1, cutoff);  /*9   C01 = X0*X1 */
-    }
-
-#pragma omp section
-    {
-  _mzd_add(X2, X0, A01);               /*10   X0 = A01 + X0 */
-  _mzd_mul_mp_even(C00, X2, B11, cutoff); /*11  C00 = X0*B11 */
-    }
-  }
-  /**
-   * \todo ideally we would use the same X0 throughout the function
-   * but some called function doesn't like that and we end up with a
-   * wrong result if we use virtual X0 matrices. Ideally, this should
-   * be fixed not worked around. The check whether the bug has been
-   * fixed, use only one X0 and check if mzd_mul_strassen(4096, 3528,
-   * 4096, 1024) still returns the correct answer.
-   */
-
-  mzd_free(X0);
-  X0 = mzd_mul(NULL, A00, B00, cutoff);/*12  X0 = A00*B00*/
-
-  _mzd_add(C01, X0, C01);              /*13  C01 =  X0 + C01 */
-  _mzd_add(C10, C01, C10);             /*14  C10 = C01 + C10 */
-  _mzd_add(C01, C01, C11);             /*15  C01 = C01 + C11 */
-  _mzd_add(C11, C10, C11);             /*16  C11 = C10 + C11 */
-  _mzd_add(C01, C01, C00);             /*17  C01 = C01 + C00 */
-  _mzd_add(X1, X1, B10);               /*18   X1 = X1 + B10 */
-
-#pragma omp parallel sections
-  {
-#pragma omp section
-    {
-  _mzd_addmul_even(C10, A11, X1, cutoff); /*19  C00 = A11*X1 */
-  //_mzd_add(C10, C10, C00);              /*20  C10 = C10 + C00 */
+      _mzd_mul_even(C01, A00, B01, cutoff);
+      _mzd_addmul_even(C01, A01, B11, cutoff);
     }
 #pragma omp section
     {
-  _mzd_addmul_even(X0, A01, B10, cutoff);/*21  C00 = A01*B10 */
-  //_mzd_add(C00, X2, X0);               /*22  C00 = X0 + C00 */
-  mzd_copy(C00, X0);
+      _mzd_mul_even(C10, A10, B00, cutoff);
+      _mzd_addmul_even(C10, A11, B10, cutoff);
+    }
+#pragma omp section
+    {
+      _mzd_mul_even(C11, A10, B01, cutoff);
+      _mzd_addmul_even(C11, A11, B11, cutoff);
     }
   }
 
@@ -335,11 +288,6 @@ packedmatrix *_mzd_mul_mp_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   mzd_free_window(C00); mzd_free_window(C01);
   mzd_free_window(C10); mzd_free_window(C11);
   
-  mzd_free(X0);
-  mzd_free(X1);
-  mzd_free(X2);
-  mzd_free(X3);
-
   return C;
 }
 #endif
@@ -368,7 +316,11 @@ packedmatrix *mzd_mul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cut
   }
 #ifdef HAVE_OPENMP
   /* this one isn't optimal */
-  C = _mzd_mul_mp_even(C, A, B, cutoff);
+  if (omp_get_max_threads() > 1) {
+    C = _mzd_mul_mp_even(C, A, B, cutoff);
+  } else {
+    C = _mzd_mul_even(C, A, B, cutoff);
+  }
 #else
   C = _mzd_mul_even(C, A, B, cutoff);
 #endif  
