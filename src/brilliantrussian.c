@@ -1075,8 +1075,8 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   if (k == 0) {
     k = m4ri_opt_k(blocksize, a_nc, b_nc);
 #ifdef M4RM_GRAY8
-    if (k>3)
-      k -= 2;
+    if (k>4)
+      k -= 3;
 #else
     if (k>2)
       k -= 1;

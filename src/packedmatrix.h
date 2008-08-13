@@ -844,7 +844,7 @@ void mzd_apply_p_right_trans(packedmatrix *A, permutation *P);
  * one block during the execution of a multiplication algorithm.
  */
 
-#define MZD_MUL_BLOCKSIZE 768
+#define MZD_MUL_BLOCKSIZE 1024
 
 
 #endif //PACKEDMATRIX_H
