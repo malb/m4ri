@@ -276,6 +276,9 @@ void mzd_process_rows2(packedmatrix *M, size_t startrow, size_t stoprow, size_t 
   const int ka = k/2;
   const int kb = k-k/2;
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
+#endif
   for(r=startrow; r<stoprow; r++) {
     const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
     const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb)];
@@ -311,6 +314,9 @@ void mzd_process_rows3(packedmatrix *M, size_t startrow, size_t stoprow, size_t 
   const int kb = k/3 + ((rem>=1) ? 1 : 0);
   const int kc = k/3;
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
+#endif
   for(r=startrow; r<stoprow; r++) {
     const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
     const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb)];
@@ -351,6 +357,9 @@ void mzd_process_rows4(packedmatrix *M, size_t startrow, size_t stoprow, size_t 
   const int kc = k/4 + ((rem>=1) ? 1 : 0);
   const int kd = k/4;
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
+#endif
   for(r=startrow; r<stoprow; r++) {
     const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
     const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb)];
@@ -395,6 +404,9 @@ void mzd_process_rows5(packedmatrix *M, size_t startrow, size_t stoprow, size_t 
   const int kd = k/5 + ((rem>=1) ? 1 : 0);
   const int ke = k/5;
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
+#endif
   for(r=startrow; r<stoprow; r++) {
     const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
     const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb)];
@@ -443,6 +455,9 @@ void mzd_process_rows6(packedmatrix *M, size_t startrow, size_t stoprow, size_t 
   const int ke = k/6 + ((rem>=1) ? 1 : 0);;
   const int kf = k/6;
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
+#endif
   for(r=startrow; r<stoprow; r++) {
     const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
     const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb)];
@@ -519,7 +534,9 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L
 
   if (k == 0) {
     k = m4ri_opt_k(A->nrows, A->ncols, 0);
-    if (k>5) {
+    if (k>6) {
+      k -= 5;
+    } else if (k>5) {
       k -= 4;
     }
   }

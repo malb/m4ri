@@ -4,7 +4,7 @@ DEBUG=-ggdb
 
 
 
-PRGS=test_reduction test_multiplication bench_reduction bench_multiplication bench_addition
+PRGS=test_elimination test_multiplication bench_elimination bench_multiplication bench_addition
 
 CPUCYCLES_DIR=./cpucycles-20060326
 
