@@ -534,11 +534,12 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L
 
   if (k == 0) {
     k = m4ri_opt_k(A->nrows, A->ncols, 0);
-    if (k>6) {
-      k -= 5;
-    } else if (k>5) {
-      k -= 4;
-    }
+    if (k>=7)
+      k = 7;
+    if ( (6*(1<<k)*A->ncols / 8.0) > CPU_L2_CACHE / 2.0 )
+      k -= 1;
+    if ( (6*(1<<k)*A->ncols / 8.0) > CPU_L2_CACHE / 2.0 )
+      k -= 1;
   }
   /*printf("k: %d\n",k);*/
   int kk = 6*k;
