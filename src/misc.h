@@ -259,6 +259,14 @@ void m4ri_fini();
 
 /***** Memory Management *****/
 
+#ifndef CPU_L2_CACHE
+/**
+ * Fix some standard value for L2 cache size if it couldn't be
+ * determined by configure.
+ */
+#define CPU_L2_CACHE 524288
+#endif //CPU_L2_CACHE
+
 /**
  * \brief Calloc wrapper.
  *
@@ -300,11 +308,7 @@ void m4ri_mm_free(void *condemned, ...);
  * Maximal size of blocks stored in cache.
  */
 
-#ifdef CPU_L2_CACHE
 #define M4RI_MMC_THRESHOLD CPU_L2_CACHE
-#else
-#define M4RI_MMC_THRESHOLD 1024*1024
-#endif
 
 /**
  * The mmc memory management functions check a cache for re-usable

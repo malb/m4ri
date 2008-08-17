@@ -159,10 +159,6 @@ packedmatrix *_mzd_addmul_even_weird (packedmatrix *C, packedmatrix *A, packedma
  */
 
 #ifndef STRASSEN_MUL_CUTOFF
-#ifndef CPU_L2_CACHE
-#define CPU_L2_CACHE 524288
-#endif //CPU_L2_CACHE
-
 #define STRASSEN_MUL_CUTOFF ((int)sqrt((double)(4*CPU_L2_CACHE)))
 #endif// STRASSEN_MUL_CUTOFF
 
