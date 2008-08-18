@@ -47,13 +47,13 @@
 typedef unsigned long long word;
 
 /**
- * The number of bits in a word.
+ * \brief The number of bits in a word.
  */
 
 #define RADIX (sizeof(word)<<3)
 
 /**
- * The number one as a word.
+ * \brief The number one as a word.
  */
 
 #define ONE ((word)1)
@@ -103,7 +103,7 @@ typedef unsigned long long word;
 #define FALSE 0
 
 /**
- * \brief 2^i
+ * \brief $2^i$
  *
  * \param i Integer.
  */ 
@@ -111,7 +111,7 @@ typedef unsigned long long word;
 #define TWOPOW(i) (1<<(i))
 
 /**
- * Pretty for unsigned char.
+ * \brief Pretty for unsigned char.
  */
 
 typedef unsigned char BIT;
@@ -181,7 +181,7 @@ typedef unsigned char BIT;
 #define RIGHTMOST_BITS(w, n) (((w)<<(RADIX-(n)-1))>>(RADIX-(n)-1))
 
 /**
- * \brief return alignment of addr w.r.t. n. For example the address
+ * \brief Return alignment of addr w.r.t. n. For example the address
  * 17 would be 1 aligned w.r.t. 16.
  *
  * \param addr
@@ -232,7 +232,7 @@ BIT m4ri_coin_flip();
 /***** Initialization *****/
 
 /**
- * Initialize global data structures for the M4RI library. 
+ * \brief Initialize global data structures for the M4RI library.
  *
  * On Linux/Solaris this is called automatically when the shared
  * library is loaded, but it doesn't harm if it is called twice.
@@ -244,8 +244,12 @@ void __attribute__ ((constructor)) m4ri_init();
 void m4ri_init();
 #endif
 
+#ifdef __SUNPRO_C
+#pragma init(m4ri_init)
+#endif
+
 /**
- * De-initialize global data structures from the M4RI library. 
+ * \brief De-initialize global data structures from the M4RI library. 
  *
  * On Linux/Solaris this is called automatically when the shared
  * library is unloaded, but it doesn't harm if it is called twice.
@@ -255,6 +259,10 @@ void m4ri_init();
 void __attribute__ ((destructor)) m4ri_fini();
 #else
 void m4ri_fini();
+#endif
+
+#ifdef __SUNPRO_C
+#pragma fini(m4ri_fini)
 #endif
 
 /***** Memory Management *****/
@@ -299,13 +307,18 @@ void *m4ri_mm_malloc( int size );
 void m4ri_mm_free(void *condemned, ...);
 
 /**
- * Number of blocks that are cached.
+ * \brief Enable memory block cache
+ */
+#define ENABLE_MMC
+
+/**
+ * \brief Number of blocks that are cached.
  */
 
 #define M4RI_MMC_NBLOCKS 16
 
 /**
- * Maximal size of blocks stored in cache.
+ * \brief Maximal size of blocks stored in cache.
  */
 
 #define M4RI_MMC_THRESHOLD CPU_L2_CACHE
@@ -328,10 +341,14 @@ typedef struct _mm_block {
 
 } mm_block;
 
+/**
+ * The actual memory block cache.
+ */
+
 extern mm_block m4ri_mmc_cache[M4RI_MMC_NBLOCKS];
 
 /**
- * Return handle for locale memory management cache.
+ * \brief Return handle for locale memory management cache.
  * 
  * \todo Make thread safe.
  */
@@ -341,12 +358,13 @@ static inline mm_block *m4ri_mmc_handle() {
 }
 
 /**
- * Allocate size bytes.
+ * \brief Allocate size bytes.
  *
  * \param size Number of bytes.
  */
 
 static inline void *m4ri_mmc_malloc(size_t size) {
+#ifdef ENABLE_MMC
   mm_block *mm = m4ri_mmc_handle();
   if (size <= M4RI_MMC_THRESHOLD) {
     size_t i;
@@ -359,13 +377,15 @@ static inline void *m4ri_mmc_malloc(size_t size) {
       }
     }
   }
+#endif //ENABLE_MMC
   return m4ri_mm_malloc(size);
 }
 
 /**
- * Allocate size zeroes bytes.
+ * \brief Allocate size times count zeroed bytes.
  *
- * \param size Number of bytes.
+ * \param size Number of bytes per block.
+ * \param count Number of blocks.
  *
  * \warning Not thread safe.
  */
@@ -377,7 +397,7 @@ static inline void *m4ri_mmc_calloc(size_t size, size_t count) {
 }
 
 /**
- * Free the data pointed to by condemned of the given size.
+ * \brief Free the data pointed to by condemned of the given size.
  *
  * \param condemned Pointer to memory.
  * \param size Number of bytes.
@@ -386,6 +406,7 @@ static inline void *m4ri_mmc_calloc(size_t size, size_t count) {
  */
 
 static inline void m4ri_mmc_free(void *condemned, size_t size) {
+#ifdef ENABLE_MMC
   static size_t j = 0;
   mm_block *mm = m4ri_mmc_handle();
   if (size < M4RI_MMC_THRESHOLD) {
@@ -403,11 +424,12 @@ static inline void m4ri_mmc_free(void *condemned, size_t size) {
     j = (j+1) % M4RI_MMC_NBLOCKS;
     return;
   }
+#endif //ENABLE_MMC
   m4ri_mm_free(condemned);
 }
 
 /**
- * Cleans up the cache.
+ * \brief Cleans up the cache.
  *
  * This function is called automatically when the shared library is
  * loaded.
