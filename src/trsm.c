@@ -39,19 +39,21 @@ void mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) {
 void _mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) {
 
   /**
-   *  _________ 
-   *  \U00|   |
-   *   \  |U01|
-   *    \ |   |
-   *     \|___|
-   *      \U11|
-   *       \  |
-   *        \ |
-   *         \|
-   *   _______
-   *  |B0 |B1 |
-   *  |___|___|
-   *  
+   \verbatim  
+     _________ 
+     \U00|   |
+      \  |U01|
+       \ |   |
+        \|___|
+         \U11|
+          \  |
+           \ |
+            \|
+      _______
+     |B0 |B1 |
+     |___|___|
+   \endverbatim
+  
    * U00 and B0 are possibly located at uneven locations.
    * Their column dimension is lower than 64
    * The first column of U01, U11, B1 are aligned to words.
