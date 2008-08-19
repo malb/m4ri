@@ -114,7 +114,6 @@ packedmatrix *mzd_init_window (const packedmatrix *m, size_t lowr, size_t lowc, 
   window->width = (window->offset + ncols) / RADIX;
   if ((window->offset + ncols) % RADIX)
     window->width++;
-  
   window->values = m->values;
 
 #ifdef HAVE_OPENMP
@@ -169,8 +168,7 @@ void mzd_free_permutation_window (permutation* condemned){
 }
 
 void mzd_print_matrix( const packedmatrix *M ) {
-  assert(M->offset == 0);
-
+  
   size_t i, j;
   char temp[SAFECHAR];
   word *row;
@@ -178,12 +176,12 @@ void mzd_print_matrix( const packedmatrix *M ) {
   for (i=0; i< M->nrows; i++ ) {
     printf("[ ");
     row = M->values + M->rowswap[i];
-    for (j=0; j< M->ncols/RADIX; j++) {
+    for (j=0; j< (M->ncols+M->offset)/RADIX; j++) {
       m4ri_word_to_str(temp, row[j], 1);
       printf("%s ", temp);
     }
     row = row + M->width - 1;
-    for (j=0; j< (size_t)(M->ncols%RADIX); j++) {
+    for (j=0; j< (size_t)((M->ncols+M->offset)%RADIX); j++) {
       printf("%d", (int)GET_BIT(*row, j));
       if (((j % 4)==3) && (j!=RADIX-1))
         printf(":");
@@ -324,15 +322,16 @@ static inline packedmatrix *_mzd_transpose_direct(packedmatrix *DST, const packe
     temp = DST->values + DST->rowswap[i];
     for (j=0; j < eol; j+=RADIX) {
       for (k=0; k<RADIX; k++) {
-        *temp |= ((word)mzd_read_bit(A, j+k, i))<<(RADIX-1-k);
+        *temp |= ((word)mzd_read_bit(A, j+k, i+A->offset))<<(RADIX-1-k);
       }
       temp++;
     }
     j = A->nrows - (A->nrows%RADIX);
     for (k=0; k<(size_t)(A->nrows%RADIX); k++) {
-      *temp |= ((word)mzd_read_bit(A, j+k, i))<<(RADIX-1-k);
+      *temp |= ((word)mzd_read_bit(A, j+k, i+A->offset))<<(RADIX-1-k);
     }
   }
+  DST->offset = 0;
   return DST;
 }
 
@@ -390,9 +389,9 @@ packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A) {
   return _mzd_transpose(DST, A);
 }
 
-packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
-  assert(A->offset == 0);
-  assert(B->offset == 0);
+packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B, const int clear) {
+  //assert(A->offset == 0);
+  //assert(B->offset == 0);
 
   packedmatrix *BT = mzd_transpose(NULL, B);
 
@@ -404,17 +403,17 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
       m4ri_die("mzd_mul_naiv: Provided return matrix has wrong dimensions.\n");
     }
   }
-  _mzd_mul_naiv(C, A, BT);
+  _mzd_mul_naiv(C, A, BT, clear);
   mzd_free (BT);
   return C;
 }
 
 
 
-packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
-  assert(A->offset == 0);
-  assert(B->offset == 0);
-  assert(C->offset == 0);
+packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B, const int clear) {
+  //assert(A->offset == 0);
+  //assert(B->offset == 0);
+  //assert(C->offset == 0);
 
   size_t i, j, k, ii, eol;
   word *a, *b, *c;
@@ -437,11 +436,11 @@ packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packed
       a = A->values + A->rowswap[i];
       c = C->values + C->rowswap[i];
       for (j=0; j<RADIX*eol; j+=RADIX) {
-        for (k=0; k<RADIX; k++) {
+	for (k=0; k<RADIX; k++) {
           b = B->values + B->rowswap[j+k];
           parity[k] = a[0] & b[0];
           for (ii=wide-1; ii>=1; ii--)
-          parity[k] ^= a[ii] & b[ii];
+	    parity[k] ^= a[ii] & b[ii];
         }
         c[j/RADIX] ^= parity64(parity);
       }
@@ -560,25 +559,82 @@ int mzd_cmp(const packedmatrix *A, const packedmatrix *B) {
 }
 
 packedmatrix *mzd_copy(packedmatrix *n, const packedmatrix *p) {
-  if (n == NULL) {
-    n = mzd_init(p->nrows, p->ncols);
-  } else {
-    if (n == p) {
-      return n;
-    } else if (n->nrows < p->nrows || n->ncols < p->ncols) {
-      m4ri_die("mzd_copy: Target matrix is too small.");
-    }
-  }
-  size_t i, j, p_truerow, n_truerow;
-  
-  for (i=0; i<p->nrows; i++) {
-    p_truerow = p->rowswap[i];
-    n_truerow = n->rowswap[i];
-    for (j=0; j<p->width; j++) {
-      n->values[n_truerow + j] = p->values[p_truerow + j];
-    }
-  }
 
+  if (!p->offset){
+    if (n == NULL) {
+      n = mzd_init(p->nrows, p->ncols);
+    } else {
+      if (n == p) {
+	return n;
+      } else if (n->nrows < p->nrows || n->ncols < p->ncols) {
+	m4ri_die("mzd_copy: Target matrix is too small.");
+      }
+    }
+    size_t i, j, p_truerow, n_truerow;
+
+    if (p->ncols < RADIX) {
+      // All columns fit in one word
+      word mask = (ONE << (RADIX - p->ncols))-1;
+
+      for (i=0; i<p->nrows; i++) {
+	p_truerow = p->rowswap[i];
+	n_truerow = n->rowswap[i];
+	n->values[n_truerow] = (n->values[n_truerow] & mask) | (p->values[p_truerow] & ~mask);
+      }
+    } else {
+
+      int r = p->ncols % RADIX;
+      word mask_end = (ONE << (RADIX - r)) - 1;
+
+      for (i=0; i<p->nrows; i++) {
+	p_truerow = p->rowswap[i];
+	n_truerow = n->rowswap[i];
+	for (j=0; j<p->width-1; j++) {
+	  n->values[n_truerow + j] = p->values[p_truerow + j];
+	}
+	n->values[n_truerow + j] = (n->values[n_truerow + j] & mask_end) | (p->values[p_truerow + j] & ~mask_end);
+      }
+    }
+  } else { // p->offset > 0
+    if (n == NULL) {
+      n = mzd_init(p->nrows, p->ncols+ p->offset);
+      n->ncols -= p->offset;
+    } else {
+      if (n == p) {
+	return n;
+      } else if (n->nrows < p->nrows || n->ncols < p->ncols) {
+	m4ri_die("mzd_copy: Target matrix is too small.");
+      }
+    }
+    size_t i, j, p_truerow, n_truerow;
+    int trailingdim =  RADIX - p->ncols - p->offset;
+
+    if (trailingdim >= 0) {
+      // All columns fit in one word
+      word mask = ((ONE << p->ncols) - 1) << trailingdim;
+      for (i=0; i<p->nrows; i++) {
+	p_truerow = p->rowswap[i];
+	n_truerow = n->rowswap[i];
+	n->values[n_truerow] = (n->values[n_truerow] & ~mask) | (p->values[p_truerow] & mask);
+      }
+    } else {
+      int r = (p->ncols + p->offset) % RADIX;
+      word mask_begin = (ONE << (RADIX - p->offset)) - 1;
+      word mask_end = (ONE << (RADIX - r)) - 1;
+      for (i=0; i<p->nrows; i++) {
+	p_truerow = p->rowswap[i];
+	n_truerow = n->rowswap[i];
+	n->values[n_truerow] = (n->values[n_truerow] & ~mask_begin) | (p->values[p_truerow] & mask_begin);
+	for (j=1; j<p->width-1; j++) {
+	  n->values[n_truerow + j] = p->values[p_truerow + j];
+	}
+	n->values[n_truerow + j] = (n->values[n_truerow + j] & mask_end) | (p->values[p_truerow + j] & ~mask_end);
+      }
+    }
+  }
+  n->offset = p->offset;
+  n->width=p->width;
+  
   return n;
 }
 

@@ -39,8 +39,6 @@
  * \brief TRiangular System solving with matrix.
  *
  * Solves X U = B where X and B are matrices, and U is upper triangular.
- * This version assumes that the matrices are at an even position on
- * the RADIX grid and that their dimension is a multiple of RADIX.
  * X is stored inplace on B
  * * 
  * This is the wrapper function including bounds checks. See
@@ -50,7 +48,6 @@
  * \param B Input matrix, being overwritten by the solution matrix X
  * \param cutoff Minimal dimension for Strassen recursion.
  *
- * \internal
  */
 
 void mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff);
@@ -74,5 +71,40 @@ void _mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff);
 void _mzd_trsm_upper_right_even (packedmatrix *U, packedmatrix *B, const int cutoff);
 
 void _mzd_trsm_upper_right_weird (packedmatrix *U, packedmatrix *B, const int cutoff);
+
+/**
+ * \brief TRiangular System solving with matrix.
+ *
+ * Solves L X = B where X and B are matrices, and L is lower triangular.
+ *  X is stored inplace on B
+ *  
+ * This is the wrapper function including bounds checks. See
+ * _mzd_trsm_lower_left for implementation details.
+ *
+ * \param L Input lower triangular matrix.
+ * \param B Input matrix, being overwritten by the solution matrix X
+ * \param cutoff Minimal dimension for Strassen recursion.
+ *
+ */
+
+void mzd_trsm_lower_left (packedmatrix *L, packedmatrix *B, const int cutoff);
+
+/**
+ * \brief TRiangular System solving with matrix.
+ *
+ * Solves L X = B where X and B are matrices, and L is lower triangular.
+ * X is stored inplace on B
+ *
+ * \param L Input lower triangular matrix.
+ * \param B Input matrix, being overwritten by the solution matrix X
+ * \param cutoff Minimal dimension for Strassen recursion.
+ *
+ * \internal
+ */
+void _mzd_trsm_lower_left (packedmatrix *L, packedmatrix *B, const int cutoff);
+
+void _mzd_trsm_lower_left_even (packedmatrix *L, packedmatrix *B, const int cutoff);
+
+void _mzd_trsm_lower_left_weird (packedmatrix *L, packedmatrix *B, const int cutoff);
 
 #endif

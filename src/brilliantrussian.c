@@ -831,86 +831,6 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
   return _mzd_mul_m4rm(C, A, B, k, FALSE);
 }
 
-packedmatrix *_mzd_mul_m4rm_old(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear) {
-  size_t i,j, a_nr, a_nc, b_nc;
-  size_t truerow;
-  unsigned int x;
-
-
-  a_nr = A->nrows;
-  a_nc = A->ncols;
-  b_nc = B->ncols;
-
-  if (b_nc < RADIX-10) {
-    return mzd_mul_naiv(C, A, B);
-  }
-
-  size_t wide = C->width;
-
-  /* clear first */
-  if (clear) {
-    for (i=0; i<C->nrows; i++) {
-      truerow = C->rowswap[i];
-      for (j=0; j<C->width; j++) {
-  	C->values[truerow + j] = 0;
-     }
-    }
-  }
-
-  const size_t blocksize = MZD_MUL_BLOCKSIZE;
-
-  if (k == 0) {
-    k = m4ri_opt_k(blocksize, a_nc, b_nc);
-  }
-
-  packedmatrix *T = mzd_init(TWOPOW(k), b_nc);
-  size_t *L = (size_t *)m4ri_mm_malloc(TWOPOW(k) * sizeof(size_t));
-
-  size_t s, start;
-  const size_t end = a_nc/k;
-
-    for (start=0; start + blocksize <= a_nr; start += blocksize) {
-      for(i=0; i < end; i++) {
-        mzd_make_table( B, i*k, 0, k, T, L);
-        for(s = 0; s < blocksize; s++) {
-          j = start + s;
-          x = L[ (int)mzd_read_bits(A, j, i*k, k) ];
-          word * const c = C->values + C->rowswap[j];
-          const word * const t = T->values + T->rowswap[x];
-          for(size_t ii=0; ii<wide ; ii++)
-            c[ii] ^= t[ii];
-        }
-      }
-    }
-  
-    for(i=0; i < a_nc/k; i++) {
-      mzd_make_table( B, i*k, 0, k, T, L);
-      for(s = 0; s < a_nr-start; s++) {
-        j = start + s;
-        x = L[ (int)mzd_read_bits(A, j, i*k, k) ];
-        /* mzd_combine( C,j,0, C,j,0,  T,x,0); */
-        word *c = C->values + C->rowswap[j];
-      const word *t = T->values + T->rowswap[x];
-      for(size_t ii=0; ii<wide ; ii++)
-        c[ii] ^= t[ii];
-      }
-    }
-    
-    /* handle rest */
-    if (a_nc%k) {
-      mzd_make_table( B, a_nc/k * k , 0, a_nc%k, T, L);
-    
-    for(j = 0; j<a_nr; j++) {
-      x = L[ (int)mzd_read_bits(A, j, i*k, a_nc%k) ];
-      mzd_combine(C,j,0, C,j,0, T,x,0);
-    }
-    }
-    
-    mzd_free(T);
-    m4ri_mm_free(L);
-    return C;
-}
-
 #ifdef HAVE_SSE2
 static inline void _mzd_combine8(word *c, word *t1, word *t2, word *t3, word *t4, word *t5, word *t6, word *t7, word *t8, int wide) {
   size_t i;
@@ -1070,7 +990,7 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   size_t b_nc = B->ncols;
 
   if (b_nc < RADIX-10) {
-    return mzd_mul_naiv(C, A, B);
+    return _mzd_mul_naiv(C, A, B, clear);
   }
 
   size_t wide = C->width;
@@ -1080,11 +1000,14 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   if (clear) {
     for (i=0; i<C->nrows; i++) {
       truerow = C->rowswap[i];
-      for (j=0; j<C->width; j++) {
+      for (j=0; j<C->width-1; j++) {
   	C->values[truerow + j] = 0;
-     }
+      }
     }
   }
+  //   C->values[truerow + j] &= ((ONE << (RADIX - (C->ncols % RADIX))) - 1);
+
+  
 
   const size_t blocksize = MZD_MUL_BLOCKSIZE;
 

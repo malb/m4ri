@@ -22,6 +22,9 @@
 #include "misc.h"
 #include "parity.h"
 #define CLOSER(a,b,target) (abs((long)a-(long)target)<abs((long)b-(long)target))
+#ifndef MIN
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#endif
 
 #ifdef HAVE_OPENMP
 #include <omp.h>
@@ -343,8 +346,9 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
     /* we copy the matrix first since it is only constant memory
        overhead and improves data locality, if you remove it make sure
        there are no speed regressions */
-    packedmatrix *Cbar = mzd_copy(NULL, C);
-    Cbar = mzd_addmul_m4rm(Cbar, A, B, 0);
+    packedmatrix *Cbar = mzd_copy (NULL, C);
+
+    mzd_addmul_m4rm (Cbar, A, B, 0);
     mzd_copy(C, Cbar);
     mzd_free(Cbar);
     return C;
@@ -466,87 +470,144 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
 
 packedmatrix *_mzd_addmul (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff){
   /**
-   * Assumes that B and C are aligned in the same manner(as in a Schur complement)
-   * TODO: add addmul_even after each weird call 
+   * Assumes that B and C are aligned in the same manner (as in a Schur complement)
    */
   
   if (!A->offset){
-    if (!B->offset){
-
+    if (!B->offset) /* A even, B even */
       return _mzd_addmul_even (C, A, B, cutoff);
-
-    } else {
+    else {  /* A even, B weird */
       size_t bnc = RADIX - B->offset;
-      packedmatrix * B0 = mzd_init_window (B, 0, 0, B->nrows, bnc);
-      packedmatrix * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
-      _mzd_addmul_even_weird  (C0,  A, B0, cutoff);
-      mzd_free (B0);
-      mzd_free (C0);
+      if (B->ncols <= bnc){
+	_mzd_addmul_even_weird  (C,  A, B, cutoff);
+      } else {
+	packedmatrix * B0 = mzd_init_window (B, 0, 0, B->nrows, bnc);
+	packedmatrix * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
+	packedmatrix * B1 = mzd_init_window (B, 0, bnc, B->nrows, B->ncols);
+	packedmatrix * C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
+	_mzd_addmul_even_weird  (C0,  A, B0, cutoff);
+	_mzd_addmul_even (C1, A, B1, cutoff);
+	mzd_free_window (B0); mzd_free_window (B1);
+	mzd_free_window (C0); mzd_free_window (C1);
+      }
     }
-  } else {
-    if (B->offset) {
-      size_t anc = RADIX - A->offset;
-      size_t bnc = RADIX - B->offset;
+  } else if (B->offset) { /* A weird, B weird */
+    size_t anc = RADIX - A->offset;
+    size_t bnc = RADIX - B->offset;
+    if (B->ncols <= bnc){
+      if (A->ncols <= anc)
+	_mzd_addmul_weird_weird (C, A, B, cutoff);
+      else {
+	packedmatrix * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
+	packedmatrix * A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
+	packedmatrix * B0  = mzd_init_window (B, 0, 0, anc, B->ncols);
+	packedmatrix * B1  = mzd_init_window (B, anc, 0, B->nrows, B->ncols);
+	_mzd_addmul_weird_weird (C, A0, B0, cutoff);
+	_mzd_addmul_even_weird  (C, A1, B1, cutoff);
+	mzd_free_window (A0);  mzd_free_window (A1);
+	mzd_free_window (B0);  mzd_free_window (B1);
+      }
+    } else if (A->ncols <= anc) {
+      packedmatrix * B0 = mzd_init_window (B, 0, 0, B->nrows, bnc);
+      packedmatrix * B1 = mzd_init_window (B, 0, bnc, B->nrows, B->ncols);
+      packedmatrix * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
+      packedmatrix * C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
+      _mzd_addmul_weird_weird (C0, A, B0, cutoff);
+      _mzd_addmul_weird_even  (C1, A, B1, cutoff);
+      mzd_free_window (B0); mzd_free_window (B1);
+      mzd_free_window (C0); mzd_free_window (C1);
+    } else {
       packedmatrix * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
       packedmatrix * A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
       packedmatrix * B00 = mzd_init_window (B, 0, 0, anc, bnc);
       packedmatrix * B01 = mzd_init_window (B, 0, bnc, anc, B->ncols);
       packedmatrix * B10 = mzd_init_window (B, anc, 0, B->nrows, bnc);
+      packedmatrix * B11 = mzd_init_window (B, anc, bnc, B->nrows, B->ncols);
       packedmatrix * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
       packedmatrix * C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
-
+      
       _mzd_addmul_weird_weird (C0, A0, B00, cutoff);
-      _mzd_addmul_weird_even  (C1,  A0, B01, cutoff);
       _mzd_addmul_even_weird  (C0,  A1, B10, cutoff);
+      _mzd_addmul_weird_even  (C1,  A0, B01, cutoff);
+      _mzd_addmul_even  (C1,  A1, B11, cutoff);
 
-      mzd_free (A0);  mzd_free (A1);
-      mzd_free (C0);  mzd_free (C1);
-      mzd_free (B00); mzd_free (B01); mzd_free (B10);
-
+      mzd_free_window (A0);  mzd_free_window (A1);
+      mzd_free_window (C0);  mzd_free_window (C1);
+      mzd_free_window (B00); mzd_free_window (B01);
+      mzd_free_window (B10); mzd_free_window (B11);
+    }
+  } else { /* A weird, B even */
+    int anc = RADIX - A->offset;
+    if (A->ncols <= anc){
+      _mzd_addmul_weird_even  (C,  A, B, cutoff);
     } else {
-      size_t anc = RADIX - A->offset;
       packedmatrix * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
-      packedmatrix * B0 = mzd_init_window (B, 0, 0, anc, B->ncols);
-      _mzd_addmul_weird_even  (C,  A0, B0, cutoff);
-      mzd_free (A0);
-      mzd_free (B0);
+      packedmatrix * A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
+      packedmatrix * B0  = mzd_init_window (B, 0, 0, anc, B->ncols);
+      packedmatrix * B1  = mzd_init_window (B, anc, 0, B->nrows, B->ncols);
+      _mzd_addmul_weird_even (C, A0, B0, cutoff);
+      _mzd_addmul_even  (C, A1, B1, cutoff);
+      mzd_free_window (A0); mzd_free_window (A1);
+      mzd_free_window (B0); mzd_free_window (B1);
     }
   }
   return C;
 }
 
 packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff){
-  packedmatrix * tmp = mzd_init (A->nrows, RADIX - A->offset);
-  for (size_t i=0; i < A->nrows; ++i)
-    tmp->values [i] = (A->values [A->rowswap [i]] << A->offset);
+  packedmatrix * tmp = mzd_init (A->nrows, MIN(RADIX- A->offset, A->ncols));
+  for (size_t i=0; i < A->nrows; ++i){
+    tmp->values [tmp->rowswap[i]] = (A->values [A->rowswap [i]] << A->offset);
+  }
   _mzd_addmul_even (C, tmp, B, cutoff);
   mzd_free(tmp);
   return C;
 }
 
  packedmatrix *_mzd_addmul_even_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff){
-  packedmatrix * tmp = mzd_init (B->nrows, RADIX);
-  for (size_t i=0; i < B->nrows; ++i)
-    tmp->values [tmp->rowswap[i]] = RIGHTMOST_BITS (B->values [B->rowswap [i]], RADIX - B->offset);
-  _mzd_addmul_even (C, A, tmp, cutoff);
-  return C;
+   packedmatrix * tmp = mzd_init (B->nrows, RADIX);
+   size_t offset = C->offset;
+   size_t cncols = C->ncols;
+   C->offset=0;
+   C->ncols = RADIX;
+   word mask = ((ONE << B->ncols) - 1) << (RADIX-B->offset - B->ncols);
+   for (size_t i=0; i < B->nrows; ++i)
+     tmp->values [tmp->rowswap[i]] = B->values [B->rowswap [i]] & mask;
+   _mzd_addmul_even (C, A, tmp, cutoff);
+   C->offset=offset;
+   C->ncols = cncols;
+   mzd_free (tmp);
+   return C;
 }
 
  packedmatrix* _mzd_addmul_weird_weird (packedmatrix* C, packedmatrix* A, packedmatrix *B, int cutoff){
-   packedmatrix *BT = mzd_transpose(NULL, B);
+   packedmatrix *BT;
+   word* temp;
+   BT = mzd_init( B->ncols, B->nrows );
+   
+   for (int i = 0; i < B->ncols; ++i) {
+     temp = BT->values + BT->rowswap[i];
+     for (size_t k = 0; k < B->nrows; k++) {
+      *temp |= ((word)mzd_read_bit (B, k, i)) << (RADIX-1-k-A->offset);
+
+     }
+   }
+   
    word parity[64];
    for (size_t i = 0; i < 64; i++) {
      parity[i] = 0;
    }
-   for (size_t i = 0; i < RADIX; ++i) {
+   for (size_t i = 0; i < A->nrows; ++i) {
      word * a = A->values + A->rowswap[i];
      word * c = C->values + C->rowswap[i];
-     for (size_t k=RADIX-1; k>=BT->offset; k--) {
+     for (size_t k=0; k< C->ncols; k++) {
        word *b = BT->values + BT->rowswap[k];
-       parity[k] = (*a) & (*b);
+       parity[k+C->offset] = (*a) & (*b);
      }
-     *c ^= parity64(parity);
+     word par = parity64(parity);
+     *c ^= par;//parity64(parity);
    }
+   mzd_free (BT);
    return C;
  }
 

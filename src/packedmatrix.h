@@ -100,8 +100,6 @@ packedmatrix *mzd_init(const size_t r, const size_t c);
 void mzd_free(packedmatrix *A);
 
 
-packedmatrix *mzd_init_window(const packedmatrix *M, const size_t lowr, const size_t lowc, const size_t highr, const size_t highc);
-
 /**
  * \brief Create a window/view into the matrix M.
  *
@@ -202,7 +200,7 @@ void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb);
  */
 
 static inline BIT mzd_read_bit(const packedmatrix *M, const size_t row, const size_t col ) {
-  return GET_BIT(M->values[ M->rowswap[row] + col/RADIX ], col%RADIX);
+  return GET_BIT(M->values[ M->rowswap[row] + (col+M->offset)/RADIX ], (col+M->offset) % RADIX);
 }
 
 /**
@@ -220,9 +218,9 @@ static inline BIT mzd_read_bit(const packedmatrix *M, const size_t row, const si
 
 static inline void mzd_write_bit(packedmatrix *M, const size_t row, const size_t col, const BIT value) {
   if (value==1)
-    SET_BIT(M->values[ M->rowswap[row] + col/RADIX ], col % RADIX);
+    SET_BIT(M->values[ M->rowswap[row] + (col+M->offset)/RADIX ], (col+M->offset) % RADIX);
   else
-    CLR_BIT(M->values[ M->rowswap[row] + col/RADIX ], col % RADIX);
+    CLR_BIT(M->values[ M->rowswap[row] + (col+M->offset)/RADIX ], (col+M->offset) % RADIX);
 }
 
 /**
@@ -243,7 +241,7 @@ static inline void mzd_write_bit(packedmatrix *M, const size_t row, const size_t
  */
 
 static inline void mzd_xor_block(packedmatrix *M, const size_t row, const size_t col, const word value) {
-  size_t block=col/RADIX;
+  size_t block=(col+M->offset)/RADIX;
   size_t truerow=M->rowswap[row];
 
   word *entry=M->values + block + truerow;
@@ -268,7 +266,7 @@ static inline void mzd_xor_block(packedmatrix *M, const size_t row, const size_t
  */
 
 static inline void mzd_write_block(packedmatrix *M, const size_t row, const size_t col, const word value) {
-  M->values[ M->rowswap[row] + col/RADIX ] = value;
+  M->values[ M->rowswap[row] + (col+M->offset)/RADIX ] = value;
 }
 
 /**
@@ -288,7 +286,7 @@ static inline void mzd_write_block(packedmatrix *M, const size_t row, const size
  */
 
 static inline word mzd_read_block(const packedmatrix *M, const size_t row, const size_t col ) {
-  return M->values[ M->rowswap[row] + col/RADIX ];
+  return M->values[ M->rowswap[row] + (col+M->offset)/RADIX ];
 }
 
 /**
@@ -374,6 +372,7 @@ packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A );
  * \param C Preallocated product matrix, may be NULL for automatic creation.
  * \param A Input matrix A.
  * \param B Input matrix B.
+ * \param clear Whether to clear C before accumulating AB
  *
  * \note Normally, if you will multiply several times by b, it is
  * smarter to calculate bT yourself, and keep it, and then use the
@@ -381,7 +380,7 @@ packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A );
  *
  * \wordoffset
  */
-packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
+packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B, const int clear);
 
 /**
  * \brief Naive cubic matrix multiplication with the pre-transposed B.
@@ -391,11 +390,12 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
  * \param C Preallocated product matrix.
  * \param A Input matrix A.
  * \param B Pre-transposed input matrix B.
+ * \param clear Whether to clear C before accumulating AB
  *
  * \wordoffset
  */
 
-packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
+packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B, const int clear);
 
 /**
  * \brief Fill matrix M with uniformly distributed bits.
@@ -659,17 +659,17 @@ static inline word mzd_read_bits(const packedmatrix *M, const size_t x, const si
   /* there are two possible situations. Either all bits are in one
    * word or they are spread across two words. */
 
-  if ( (y%RADIX + n - 1) < RADIX ) {
+  if ( ((y+M->offset)%RADIX + n - 1) < RADIX ) {
     /* everything happens in one word here */
-    temp =  M->values[ y / RADIX + truerow ]; /* get the value */
-    temp <<= y%RADIX; /* clear upper bits */
+    temp =  M->values[ (y+M->offset) / RADIX + truerow ]; /* get the value */
+    temp <<= (y+M->offset)%RADIX; /* clear upper bits */
     temp >>= RADIX - n; /* clear lower bits and move to correct position.*/
     return temp;
 
   } else {
     /* two words are affected */
-    const size_t block = y / RADIX + truerow; /* correct block */
-    const size_t spot = (y + n ) % RADIX; /* correct offset */
+    const size_t block = (y+M->offset) / RADIX + truerow; /* correct block */
+    const size_t spot = (y + +M->offset+n ) % RADIX; /* correct offset */
     /* make room by shifting spot times to the right, and add stuff from the second word */
     temp = (M->values[block] << spot) | ( M->values[block + 1] >> (RADIX - spot) ); 
     return (temp << (RADIX-n)) >> (RADIX-n); /* clear upper bits and return */
@@ -699,15 +699,15 @@ static inline void mzd_write_zeroed_bits(const packedmatrix *M, const size_t x, 
   /* there are two possible situations. Either all bits are in one
    * word or they are spread across two words. */
 
-  if ( (y%RADIX + n - 1) < RADIX ) {
+  if ( ((y+M->offset)%RADIX + n - 1) < RADIX ) {
     /* everything happens in one word here */
-    temp =  M->values +  y / RADIX + truerow;
-    *temp |= values<<(RADIX-(y%RADIX)-n);
+    temp =  M->values +  (y+M->offset) / RADIX + truerow;
+    *temp |= values<<(RADIX-((y+M->offset)%RADIX)-n);
 
   } else {
     /* two words are affected */
-    const size_t block = y / RADIX + truerow; /* correct block */
-    const size_t spot = (y + n ) % RADIX; /* correct offset */
+    const size_t block = (y+M->offset) / RADIX + truerow; /* correct block */
+    const size_t spot = (y +M->offset+ n ) % RADIX; /* correct offset */
     M->values[block] |= values >> (spot);
     M->values[block + 1] |= values<<(RADIX-spot);
   }
@@ -731,17 +731,17 @@ static inline void mzd_clear_bits(const packedmatrix *M, const size_t x, const s
   /* there are two possible situations. Either all bits are in one
    * word or they are spread across two words. */
 
-  if ( (y%RADIX + n - 1) < RADIX ) {
+  if ( ((y+M->offset)%RADIX + n - 1) < RADIX ) {
     /* everything happens in one word here */
-    temp =  M->values[ y / RADIX + truerow ];
-    temp <<= y%RADIX; /* clear upper bits */
+    temp =  M->values[ (y+M->offset) / RADIX + truerow ];
+    temp <<= (y+M->offset)%RADIX; /* clear upper bits */
     temp >>= RADIX-n; /* clear lower bits and move to correct position.*/
-    temp <<= RADIX-n - y%RADIX;
-    M->values[ y / RADIX + truerow ] ^= temp;
+    temp <<= RADIX-n - (y+M->offset)%RADIX;
+    M->values[ (y+M->offset) / RADIX + truerow ] ^= temp;
   } else {
     /* two words are affected */
-    const size_t block = y / RADIX + truerow; /* correct block */
-    const size_t spot = (y + n ) % RADIX; /* correct offset */
+    const size_t block = (y+M->offset) / RADIX + truerow; /* correct block */
+    const size_t spot = (y+M->offset + n ) % RADIX; /* correct offset */
     M->values[block] ^= M->values[block] & ((ONE<<(n-spot))-1);
     M->values[block+1] ^= (M->values[block+1]>>(RADIX-spot))<<(RADIX-spot);
   }
