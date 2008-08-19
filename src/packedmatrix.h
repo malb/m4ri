@@ -372,7 +372,6 @@ packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A );
  * \param C Preallocated product matrix, may be NULL for automatic creation.
  * \param A Input matrix A.
  * \param B Input matrix B.
- * \param clear Whether to clear C before accumulating AB
  *
  * \note Normally, if you will multiply several times by b, it is
  * smarter to calculate bT yourself, and keep it, and then use the
@@ -380,7 +379,25 @@ packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A );
  *
  * \wordoffset
  */
-packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B, const int clear);
+packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
+
+/**
+ * \brief Naive cubic matrix multiplication and addition
+ *
+ * That is, compute C such that C == C + AB.
+ *
+ * \param C Preallocated product matrix.
+ * \param A Input matrix A.
+ * \param B Input matrix B.
+ *
+ * \note Normally, if you will multiply several times by b, it is
+ * smarter to calculate bT yourself, and keep it, and then use the
+ * function called _mzd_mul_naiv
+ *
+ * \wordoffset
+ */
+
+packedmatrix *mzd_addmul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
 
 /**
  * \brief Naive cubic matrix multiplication with the pre-transposed B.

@@ -389,10 +389,7 @@ packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A) {
   return _mzd_transpose(DST, A);
 }
 
-packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B, const int clear) {
-  //assert(A->offset == 0);
-  //assert(B->offset == 0);
-
+packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
   packedmatrix *BT = mzd_transpose(NULL, B);
 
   if (C==NULL) {
@@ -403,20 +400,36 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
       m4ri_die("mzd_mul_naiv: Provided return matrix has wrong dimensions.\n");
     }
   }
-  _mzd_mul_naiv(C, A, BT, clear);
+  _mzd_mul_naiv(C, A, BT, 1);
   mzd_free (BT);
   return C;
 }
 
+packedmatrix *mzd_addmul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
+  packedmatrix *BT = mzd_transpose(NULL, B);
 
+  if (C->nrows != A->nrows || C->ncols != B->ncols) {
+    mzd_free (BT);
+    m4ri_die("mzd_mul_naiv: Provided return matrix has wrong dimensions.\n");
+  }
+  _mzd_mul_naiv(C, A, BT, 0);
+  mzd_free (BT);
+  return C;
+}
 
 packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B, const int clear) {
-  //assert(A->offset == 0);
-  //assert(B->offset == 0);
-  //assert(C->offset == 0);
-
   size_t i, j, k, ii, eol;
   word *a, *b, *c;
+
+  if (clear) {
+    for (i=0; i<C->nrows; i++) {
+      size_t truerow = C->rowswap[i];
+      for (j=0; j<C->width-1; j++) {
+  	C->values[truerow + j] = 0;
+      }
+      C->values[truerow + j] &= ((ONE << (RADIX - (C->ncols % RADIX))) - 1);
+    }
+  }
 
   if(C->ncols%RADIX) {
     eol = (C->width-1);

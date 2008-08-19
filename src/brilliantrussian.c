@@ -990,7 +990,10 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   size_t b_nc = B->ncols;
 
   if (b_nc < RADIX-10) {
-    return _mzd_mul_naiv(C, A, B, clear);
+    if(clear)
+      return mzd_mul_naiv(C, A, B);
+    else
+      return mzd_addmul_naiv(C, A, B);
   }
 
   size_t wide = C->width;
@@ -1003,11 +1006,9 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
       for (j=0; j<C->width-1; j++) {
   	C->values[truerow + j] = 0;
       }
+      C->values[truerow + j] &= ((ONE << (RADIX - (C->ncols % RADIX))) - 1);
     }
   }
-  //   C->values[truerow + j] &= ((ONE << (RADIX - (C->ncols % RADIX))) - 1);
-
-  
 
   const size_t blocksize = MZD_MUL_BLOCKSIZE;
 
