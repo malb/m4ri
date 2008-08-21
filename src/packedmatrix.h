@@ -64,8 +64,7 @@ typedef struct {
   size_t width; 
 
   /**
-   * column offset of the first column. This attribute is ignored by
-   * most functions!
+   * column offset of the first column.
    */
 
   size_t offset;
@@ -103,7 +102,7 @@ void mzd_free(packedmatrix *A);
 /**
  * \brief Create a window/view into the matrix M.
  *
- * A matrix window for m is a meta structure on the matrix M. It is
+ * A matrix window for M is a meta structure on the matrix M. It is
  * setup to point into the matrix so M \em must \em not be freed while the
  * matrix window is used.
  *
@@ -135,11 +134,10 @@ void mzd_free_window(packedmatrix *A);
 /**
  * \brief Create a window/view into the permutation matrix P.
  *
- * A matrix window for m is a meta structure on the matrix M. It is
+ * A matrix window for M is a meta structure on the matrix M. It is
  * setup to point into the matrix so M \em must \em not be freed while
  * the matrix window is used.
  *
- *  
  * Use mzd_free_permutation_window to free the window.
  *
  * \param P Permutaiton matrix
@@ -196,7 +194,6 @@ void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb);
  *
  * \note No bounds checks whatsoever are performed.
  *
- * \wordoffset
  */
 
 static inline BIT mzd_read_bit(const packedmatrix *M, const size_t row, const size_t col ) {
@@ -213,7 +210,6 @@ static inline BIT mzd_read_bit(const packedmatrix *M, const size_t row, const si
  *
  * \note No bounds checks whatsoever are performed.
  *
- * \wordoffset
  */
 
 static inline void mzd_write_bit(packedmatrix *M, const size_t row, const size_t col, const BIT value) {
@@ -237,7 +233,6 @@ static inline void mzd_write_bit(packedmatrix *M, const size_t row, const size_t
  *
  * \note No bounds checks whatsoever are performed.
  *
- * \wordoffset
  */
 
 static inline void mzd_xor_block(packedmatrix *M, const size_t row, const size_t col, const word value) {
@@ -262,7 +257,6 @@ static inline void mzd_xor_block(packedmatrix *M, const size_t row, const size_t
  *
  * \note No bounds checks whatsoever are performed.
  *
- * \wordoffset
  */
 
 static inline void mzd_write_block(packedmatrix *M, const size_t row, const size_t col, const word value) {
@@ -282,7 +276,6 @@ static inline void mzd_write_block(packedmatrix *M, const size_t row, const size
  *
  * \note No bounds checks whatsoever are performed.
  *
- * \wordoffset
  */
 
 static inline word mzd_read_block(const packedmatrix *M, const size_t row, const size_t col ) {
@@ -325,8 +318,6 @@ void mzd_row_add_offset(packedmatrix *M,  const size_t destrow, const size_t sou
  * \param M Matrix
  * \param row Index of row
  * \param coloffset Column offset
- *
- * \wordoffset
  */
 
 void mzd_row_clear_offset(packedmatrix *M, const size_t row, const size_t coloffset);
@@ -340,8 +331,6 @@ void mzd_row_clear_offset(packedmatrix *M, const size_t row, const size_t coloff
  * \param destrow Index of target row
  *
  * \note this can be done much faster with mzd_combine.
- *
- * \wordoffset
  */
 
 void mzd_row_add(packedmatrix *M, const size_t sourcerow, const size_t destrow);
@@ -358,8 +347,6 @@ void mzd_row_add(packedmatrix *M, const size_t sourcerow, const size_t destrow);
  *
  * \param DST Preallocated return matrix, may be NULL for automatic creation.
  * \param A Matrix
- *
- * \wordoffset
  */
 
 packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A );
@@ -377,7 +364,6 @@ packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A );
  * smarter to calculate bT yourself, and keep it, and then use the
  * function called _mzd_mul_naiv
  *
- * \wordoffset
  */
 packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
 
@@ -393,8 +379,6 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
  * \note Normally, if you will multiply several times by b, it is
  * smarter to calculate bT yourself, and keep it, and then use the
  * function called _mzd_mul_naiv
- *
- * \wordoffset
  */
 
 packedmatrix *mzd_addmul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
@@ -408,8 +392,6 @@ packedmatrix *mzd_addmul_naiv(packedmatrix *C, const packedmatrix *A, const pack
  * \param A Input matrix A.
  * \param B Pre-transposed input matrix B.
  * \param clear Whether to clear C before accumulating AB
- *
- * \wordoffset
  */
 
 packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B, const int clear);
@@ -665,8 +647,6 @@ void mzd_combine(packedmatrix * DST, const size_t row3, const size_t startblock3
  * \param x Starting row.
  * \param y Starting column.
  * \param n Number of bits (<= RADIX);
- *
- * \wordoffset
  */ 
 
 static inline word mzd_read_bits(const packedmatrix *M, const size_t x, const size_t y, const int n) {
@@ -705,8 +685,6 @@ static inline word mzd_read_bits(const packedmatrix *M, const size_t x, const si
  * \param y Starting column.
  * \param n Number of bits (<= RADIX);
  * \param values Word with values;
- *
- * \wordoffset
  */
 
 static inline void mzd_write_zeroed_bits(const packedmatrix *M, const size_t x, const size_t y, const int n, word values) {
@@ -737,8 +715,6 @@ static inline void mzd_write_zeroed_bits(const packedmatrix *M, const size_t x, 
  * \param x Starting row.
  * \param y Starting column.
  * \param n Number of bits (<= RADIX);
- *
- * \wordoffset
  */
 
 static inline void mzd_clear_bits(const packedmatrix *M, const size_t x, const size_t y, const int n) {

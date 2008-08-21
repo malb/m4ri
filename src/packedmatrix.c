@@ -168,7 +168,6 @@ void mzd_free_permutation_window (permutation* condemned){
 }
 
 void mzd_print_matrix( const packedmatrix *M ) {
-  
   size_t i, j;
   char temp[SAFECHAR];
   word *row;
@@ -176,6 +175,7 @@ void mzd_print_matrix( const packedmatrix *M ) {
   for (i=0; i< M->nrows; i++ ) {
     printf("[ ");
     row = M->values + M->rowswap[i];
+    /* TODO: This is not correct */
     for (j=0; j< (M->ncols+M->offset)/RADIX; j++) {
       m4ri_word_to_str(temp, row[j], 1);
       printf("%s ", temp);
@@ -418,6 +418,9 @@ packedmatrix *mzd_addmul_naiv(packedmatrix *C, const packedmatrix *A, const pack
 }
 
 packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B, const int clear) {
+  assert(A->offset == 0);
+  assert(B->offset == 0);
+  assert(C->offset == 0);
   size_t i, j, k, ii, eol;
   word *a, *b, *c;
 
@@ -620,6 +623,7 @@ packedmatrix *mzd_copy(packedmatrix *n, const packedmatrix *p) {
       }
     }
     size_t i, j, p_truerow, n_truerow;
+    /* TODO: This is wrong */
     int trailingdim =  RADIX - p->ncols - p->offset;
 
     if (trailingdim >= 0) {
@@ -653,6 +657,8 @@ packedmatrix *mzd_copy(packedmatrix *n, const packedmatrix *p) {
 
 /* This is sometimes called augment */
 packedmatrix *mzd_concat(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
+  assert(A->offset == 0);
+  assert(B->offset == 0);
   size_t i, j, src_truerow, dst_truerow;
   
   if (A->nrows != B->nrows) {

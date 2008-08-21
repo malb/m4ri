@@ -1234,8 +1234,8 @@ size_t _mzd_lqup_m4ri(packedmatrix *A, int k, permutation * P, permutation * Q) 
     k = m4ri_opt_k(A->nrows, A->ncols, 0);
   }
 
-  packedmatrix *I = mzd_init(k, A->ncols);
   packedmatrix *T = mzd_init(TWOPOW(k), A->ncols);
+  packedmatrix *I = mzd_init(k, A->ncols);
   size_t *L = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
 
   while(c<ncols) {
