@@ -28,6 +28,7 @@
  *
  ********************************************************************/
 
+#include <math.h>
 #include "misc.h"
 #include "permutation.h"
 #include <assert.h>
@@ -837,7 +838,7 @@ void mzd_apply_p_right_trans(packedmatrix *A, permutation *P);
  * one block during the execution of a multiplication algorithm.
  */
 
-#define MZD_MUL_BLOCKSIZE 1024
-
+//#define MZD_MUL_BLOCKSIZE 1024
+#define MZD_MUL_BLOCKSIZE ((int)sqrt((double)(4*CPU_L2_CACHE)))/2
 
 #endif //PACKEDMATRIX_H

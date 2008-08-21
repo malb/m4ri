@@ -275,6 +275,14 @@ void m4ri_fini();
 #define CPU_L2_CACHE 524288
 #endif //CPU_L2_CACHE
 
+#ifndef CPU_L1_CACHE
+/**
+ * Fix some standard value for L1 cache size if it couldn't be
+ * determined by configure.
+ */
+#define CPU_L1_CACHE 16384
+#endif //CPU_L1_CACHE
+
 /**
  * \brief Calloc wrapper.
  *
@@ -307,9 +315,9 @@ void *m4ri_mm_malloc( int size );
 void m4ri_mm_free(void *condemned, ...);
 
 /**
- * \brief Enable memory block cache
+ * \brief Enable memory block cache (default: disabled)
  */
-#define ENABLE_MMC
+//#define ENABLE_MMC
 
 /**
  * \brief Number of blocks that are cached.
