@@ -119,12 +119,26 @@ int main(int argc, char **argv) {
   status += mul_test_equality(2048, 2048, 4096, 0, 1024);
   status += mul_test_equality(4096, 3528, 4096, 0, 1024);
   status += mul_test_equality(1024, 1025, 1, 0, 1024);
+  status += mul_test_equality(1000,1000,1000, 0, 256);
+  status += mul_test_equality(1000,10,20, 0, 64);
+  status += mul_test_equality(1710,1290,1000, 0, 256);
+  status += mul_test_equality(1290, 1710, 200, 0, 64);
+  status += mul_test_equality(1290, 1710, 2000, 0, 256);
+  status += mul_test_equality(1290, 1290, 2000, 0, 64);
+  status += mul_test_equality(1000, 210, 200, 0, 64);
 
   status += addmul_test_equality(21, 171, 31, 0, 63);
   status += addmul_test_equality(21, 171, 31, 0, 131);
   status += addmul_test_equality(193, 65, 65, 10, 64);
   status += addmul_test_equality(1025, 1025, 1025, 3, 256);
   status += addmul_test_equality(4096, 4096, 4096, 0, 2048);
+  status += addmul_test_equality(1000,1000,1000, 0, 256);
+  status += addmul_test_equality(1000,10,20, 0, 64);
+  status += addmul_test_equality(1710,1290,1000, 0, 256);
+  status += addmul_test_equality(1290, 1710, 200, 0, 64);
+  status += addmul_test_equality(1290, 1710, 2000, 0, 256);
+  status += addmul_test_equality(1290, 1290, 2000, 0, 64);
+  status += addmul_test_equality(1000, 210, 200, 0, 64);
 
   if (status == 0) {
     printf("All tests passed.\n");

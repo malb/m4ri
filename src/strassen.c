@@ -56,7 +56,7 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
 
   /* adjust cutting numbers to work on words */
   unsigned long mult = 1;
-  long width = a;
+  long width = MIN(MIN(a,b),c);
   while (width > 2*cutoff) {
     width/=2;
     mult*=2;
@@ -116,8 +116,8 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
    * but some called function doesn't like that and we end up with a
    * wrong result if we use virtual X0 matrices. Ideally, this should
    * be fixed not worked around. The check whether the bug has been
-   * fixed, use only one X0 and check if mzd_mul_strassen(4096, 3528,
-   * 4096, 1024) still returns the correct answer.
+   * fixed, use only one X0 and check if mzd_mul(4096, 3528, 4096,
+   * 1024) still returns the correct answer.
    */
 
   mzd_free(X0);
@@ -297,24 +297,24 @@ packedmatrix *_mzd_mul_mp_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
 
 packedmatrix *mzd_mul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   if(A->ncols != B->nrows)
-    m4ri_die("mzd_mul_strassen: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
+    m4ri_die("mzd_mul: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
   
   if (cutoff < 0)
-    m4ri_die("mzd_mul_strassen: cutoff must be > 0.\n");
+    m4ri_die("mzd_mul: cutoff must be >= 0.\n");
 
   if(cutoff == 0) {
     cutoff = STRASSEN_MUL_CUTOFF;
   }
 
   cutoff = cutoff/RADIX * RADIX;
-  if (cutoff == 0) {
+  if (cutoff < RADIX) {
     cutoff = RADIX;
   };
 
   if (C == NULL) {
     C = mzd_init(A->nrows, B->ncols);
   } else if (C->nrows != A->nrows || C->ncols != B->ncols){
-    m4ri_die("mzd_mul_strassen: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
+    m4ri_die("mzd_mul: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
 	     C->nrows, C->ncols, A->nrows, B->ncols);
   }
 #ifdef HAVE_OPENMP
@@ -347,7 +347,6 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
        overhead and improves data locality, if you remove it make sure
        there are no speed regressions */
     packedmatrix *Cbar = mzd_copy (NULL, C);
-
     mzd_addmul_m4rm (Cbar, A, B, 0);
     mzd_copy(C, Cbar);
     mzd_free(Cbar);
@@ -356,7 +355,7 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
 
   /* adjust cutting numbers to work on words */
   unsigned long mult = 1;
-  long width = a;
+  long width = MIN(MIN(a,b),c);
   while (width > 2*cutoff) {
     width/=2;
     mult*=2;
@@ -468,7 +467,7 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   return C;
 }
 
-packedmatrix *_mzd_addmul (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff){
+packedmatrix *_mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff){
   /**
    * Assumes that B and C are aligned in the same manner (as in a Schur complement)
    */
@@ -623,7 +622,7 @@ packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedma
   }
   
   cutoff = cutoff/RADIX * RADIX;
-  if (cutoff == 0) {
+  if (cutoff < RADIX) {
     cutoff = RADIX;
   };
 
