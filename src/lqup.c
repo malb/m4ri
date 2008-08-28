@@ -104,4 +104,3 @@ size_t _mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int c
   
 }
 
-
