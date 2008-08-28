@@ -274,7 +274,7 @@ packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
  * \internal
  */
 
-size_t _mzd_lqup_m4ri(packedmatrix *A, int k, permutation * P, permutation * Q);
+size_t _mzd_lqup_m4rf(packedmatrix *A, int k, permutation * P, permutation * Q);
 
 /**
  * Perform LQUP factorization on a submatrix of up to dimension k

@@ -176,6 +176,7 @@ static inline void mzd_row_swap(packedmatrix *M, const size_t rowa, const size_t
   M->rowswap[rowb]=temp;
 }
 
+
 /**
  * \brief Swap the two columns cola and colb.
  * 
@@ -218,6 +219,26 @@ static inline void mzd_write_bit(packedmatrix *M, const size_t row, const size_t
     SET_BIT(M->values[ M->rowswap[row] + (col+M->offset)/RADIX ], (col+M->offset) % RADIX);
   else
     CLR_BIT(M->values[ M->rowswap[row] + (col+M->offset)/RADIX ], (col+M->offset) % RADIX);
+}
+
+
+/**
+ * \brief Swap the two rows rowa and rowb starting at the offset.
+ * 
+ * \param M Matrix
+ * \param rowa Row index.
+ * \param rowb Row index.
+ * \param offset column offset.
+ */
+ 
+static inline void mzd_row_swap_offset(packedmatrix *M, const size_t rowa, const size_t rowb, const size_t offset) {
+  size_t i;
+  /** \todo: this is pathetic/test code **/
+  for(i=offset; i<M->ncols; i++) {
+    const BIT temp = mzd_read_bit(M, rowa, i);
+    mzd_write_bit(M, rowa, i, mzd_read_bit(M, rowb, i));
+    mzd_write_bit(M, rowb, i, temp);
+  }
 }
 
 /**

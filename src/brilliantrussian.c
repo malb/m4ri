@@ -188,7 +188,7 @@ void mzd_make_table( packedmatrix *M, size_t r, size_t c, int k, packedmatrix *T
     L[id] = i;
 
     if (rowneeded >= M->nrows) {
-      for (j = wide-1; j >= 0; j--) {
+      for (j = 0; j < wide; j++) {
         *ti++ = *ti1++;
       }
 #ifdef HAVE_SSE2
@@ -1205,30 +1205,28 @@ size_t _mzd_lqup_submatrix(packedmatrix *A, size_t r, size_t c, size_t end_row, 
   size_t start_row = r;
   int found;
   for (j=c; j<c+k; j++) {
-    found = 0;
     for (i=start_row; i< end_row; i++) {
-      /* pivot? */
       if (mzd_read_bit(A, i, j)) {
         P->values[start_row] = i;
-        mzd_row_swap(A, i, start_row);
-        start_row++;
+        mzd_row_swap_offset(A, i, start_row, j);
         /* clear below but preserve transformation matrix */
-        for(l=start_row; l<end_row; l++) {
+        for(l=start_row+1; l<end_row; l++) {
           if (mzd_read_bit(A, l, j))
-            mzd_row_add_offset(A, l, i, j+1);
+            mzd_row_add_offset(A, l, start_row, j+1);
         }
+        start_row++;
         found = 1;
         break;
       }
     }
-    if(!found) {
-      return j-c;
-    }
+    //if(!found) {
+    //  return j-c;
+    //}
   }
   return j - c;
 }
 
-size_t _mzd_lqup_m4ri(packedmatrix *A, int k, permutation * P, permutation * Q) {
+size_t _mzd_lqup_m4rf(packedmatrix *A, int k, permutation * P, permutation * Q) {
   const size_t ncols = A->ncols; 
   size_t r = 0;
   size_t c = 0;
@@ -1237,6 +1235,10 @@ size_t _mzd_lqup_m4ri(packedmatrix *A, int k, permutation * P, permutation * Q) 
   if (k == 0) {
     k = m4ri_opt_k(A->nrows, A->ncols, 0);
   }
+  if (P == NULL)
+    P = mzp_init(A->nrows);
+  if (Q == NULL)
+    Q = mzp_init(A->ncols);
 
   packedmatrix *T = mzd_init(TWOPOW(k), A->ncols);
   packedmatrix *I = mzd_init(k, A->ncols);
@@ -1252,9 +1254,9 @@ size_t _mzd_lqup_m4ri(packedmatrix *A, int k, permutation * P, permutation * Q) 
       I = mzd_submatrix(I, A, r, 0, r+kbar, A->ncols);
       _mzd_lqup_submatrix_finish(I, 0, c, kbar);
       mzd_make_table(I, 0, c, kbar, T, L);
-      mzd_process_rows(A, r+3*kbar, A->nrows, c, kbar, T, L);
+      mzd_process_rows(A, r+kbar, A->nrows, c+1, kbar, T, L);
     }
-
+    
     r += kbar;
     c += kbar;
     if(kbar==0) {
