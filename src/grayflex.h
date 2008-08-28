@@ -126,7 +126,7 @@ void m4ri_build_code(int *ord, int *inc, int l);
  * \warning Not thread safe!
  */
 
-void m4ri_build_all_codes();
+void m4ri_build_all_codes(void);
 
 /**
  * Frees memory from the global code book.
@@ -137,7 +137,7 @@ void m4ri_build_all_codes();
  * \warning Not thread safe!
  */
 
-void m4ri_destroy_all_codes();
+void m4ri_destroy_all_codes(void);
 
 /**
  * \brief Return the optimal var k for the given parameters. 

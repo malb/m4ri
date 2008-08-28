@@ -227,7 +227,7 @@ void m4ri_word_to_str( char *destination, word data, int colon);
  * \todo Allow user to provide her own random() function.
  */
 
-BIT m4ri_coin_flip();
+BIT m4ri_coin_flip(void);
 
 /***** Initialization *****/
 
@@ -239,9 +239,9 @@ BIT m4ri_coin_flip();
  */
 
 #if defined(__GNUC__)
-void __attribute__ ((constructor)) m4ri_init();
+void __attribute__ ((constructor)) m4ri_init(void);
 #else
-void m4ri_init();
+void m4ri_init(void);
 #endif
 
 #ifdef __SUNPRO_C
@@ -256,9 +256,9 @@ void m4ri_init();
  */
 
 #if defined(__GNUC__)
-void __attribute__ ((destructor)) m4ri_fini();
+void __attribute__ ((destructor)) m4ri_fini(void);
 #else
-void m4ri_fini();
+void m4ri_fini(void);
 #endif
 
 #ifdef __SUNPRO_C
@@ -361,7 +361,7 @@ extern mm_block m4ri_mmc_cache[M4RI_MMC_NBLOCKS];
  * \todo Make thread safe.
  */
 
-static inline mm_block *m4ri_mmc_handle() {
+static inline mm_block *m4ri_mmc_handle(void) {
   return m4ri_mmc_cache;
 }
 
@@ -445,7 +445,7 @@ static inline void m4ri_mmc_free(void *condemned, size_t size) {
  * \warning Not thread safe.
  */
 
-static inline void m4ri_mmc_cleanup() {
+static inline void m4ri_mmc_cleanup(void) {
   mm_block *mm = m4ri_mmc_handle();
   size_t i;
   for(i=0; i < M4RI_MMC_NBLOCKS; i++) {

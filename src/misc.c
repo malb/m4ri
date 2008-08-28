@@ -45,14 +45,6 @@ void m4ri_die(char *errormessage, ...) {
   abort();
 }
 
-void m4ri_print_bit_string(int number, int length){
-  int i;
-  for(i=length-1 ; i>=0; i--) {
-    ((1<<i) & number) ? printf("1") : printf("0");
-  }
-  printf("\n");
-}
-
 /* Warning: I assume *destination has RADIX+1 bytes available */
 void m4ri_word_to_str( char *destination, word data, int colon) {
   int i;
