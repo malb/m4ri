@@ -46,7 +46,6 @@
 extern "C" {
 #endif //__cplusplus
 
-#include "watch.h"
 #include "permutation.h"
 #include "packedmatrix.h"
 #include "brilliantrussian.h"
