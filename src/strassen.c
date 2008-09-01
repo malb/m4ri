@@ -463,6 +463,7 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   
   mzd_free(X0);
   mzd_free(X1);
+  mzd_free(X2);
 
   return C;
 }
