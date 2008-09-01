@@ -302,7 +302,6 @@ size_t _mzd_lqup_submatrix(packedmatrix *A, size_t r, size_t c, size_t endrow, i
  * This code is a scratch only, do not call it.
  *
  * \param A Matrix.
- * \param r Row Offset.
  * \param c Column Offset.
  * \param k Size of Gray code tables.
  *
@@ -310,6 +309,6 @@ size_t _mzd_lqup_submatrix(packedmatrix *A, size_t r, size_t c, size_t endrow, i
  * \internal
  */
 
-void _mzd_lqup_submatrix_finish(packedmatrix *A, size_t r, size_t c, int k);
+void _mzd_lqup_submatrix_finish(packedmatrix *A, size_t c, int k);
 
 #endif //BRILLIANTRUSSIAN_H
