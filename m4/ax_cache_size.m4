@@ -58,18 +58,20 @@ AC_DEFUN([AX_CACHE_SIZE],
       ax_l2_size=$CPU0_L2_CACHE
 
     else
-      #Or use CPUID
-      if test $ax_xpu_vendor != "Intel"; then
-        AX_GCC_X86_CPUID(0x80000005) # For L1 cache (not available on intel !!!)
-
-        l1_hexval=$(( 16#`echo $ax_cv_gcc_x86_cpuid_0x80000005 | cut -d ":" -f 4`))
-        ax_l1_size=$(($l1_hexval >> 24))
+      if test "x$ax_cpu_vendor" != "xUnknown"; then
+        #Or use CPUID
+        if test "x$ax_cpu_vendor" != "xIntel"; then
+          AX_GCC_X86_CPUID(0x80000005) # For L1 cache (not available on intel !!!)
+        
+          l1_hexval=$(( 16#`echo $ax_cv_gcc_x86_cpuid_0x80000005 | cut -d ":" -f 4`))
+          ax_l1_size=$(($l1_hexval >> 24))
+        fi
+        
+        AX_GCC_X86_CPUID(0x80000006) # For L2 cache
+        
+        l2_hexval=$(( 16#`echo $ax_cv_gcc_x86_cpuid_0x80000006 | cut -d ":" -f 3`))
+        ax_l2_size=$(($l2_hexval >> 16))
       fi
-
-      AX_GCC_X86_CPUID(0x80000006) # For L2 cache
-
-      l2_hexval=$(( 16#`echo $ax_cv_gcc_x86_cpuid_0x80000006 | cut -d ":" -f 3`))
-      ax_l2_size=$(($l2_hexval >> 16))
     fi
 
     # Keep only digits if there is a unit (ie 1024K -> 1024) and convert in Bytes
