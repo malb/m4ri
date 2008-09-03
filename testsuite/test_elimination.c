@@ -74,6 +74,17 @@ int main(int argc, char **argv) {
   status += elim_test_equality(193, 65);
   status += elim_test_equality(1025, 1025);
   status += elim_test_equality(2048, 2048);
+  status += elim_test_equality(64, 64);
+  status += elim_test_equality(128, 128);
+  status += elim_test_equality(4096, 3528);
+  status += elim_test_equality(1024, 1025);
+  status += elim_test_equality(1000,1000);
+  status += elim_test_equality(1000,10);
+  status += elim_test_equality(1710,1290);
+  status += elim_test_equality(1290, 1710);
+  status += elim_test_equality(1290, 1710);
+  status += elim_test_equality(1290, 1290);
+  status += elim_test_equality(1000, 210);
 
   if (status == 0) {
     printf("All tests passed.\n");

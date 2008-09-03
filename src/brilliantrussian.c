@@ -1006,7 +1006,7 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
       for (j=0; j<C->width-1; j++) {
   	C->values[truerow + j] = 0;
       }
-      C->values[truerow + j] &= ((ONE << (RADIX - (C->ncols % RADIX))) - 1);
+      C->values[truerow + j] &= ~LEFT_BITMASK(C->ncols);
     }
   }
 

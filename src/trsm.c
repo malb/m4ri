@@ -336,7 +336,7 @@ void _mzd_trsm_lower_left_even (packedmatrix *L, packedmatrix *B, const int cuto
       // B is large
       word mask1;
       if (Boffset)
-	mask1 = ((ONE << (RADIX - B->offset)) - 1) ;
+	mask1 = ~LEFT_BITMASK(B->offset);
       else
 	mask1 = ~0;
       word mask2 = ~((ONE << (RADIX - nbrest)) - 1);

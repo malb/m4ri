@@ -225,7 +225,7 @@ void mzd_row_clear_offset(packedmatrix *M, size_t row, size_t coloffset) {
   /* make sure to start clearing at coloffset */
   if (coloffset%RADIX) {
     temp=mzd_read_block(M, row, coloffset);
-    temp &=  ~(((ONE<<(RADIX-coloffset%RADIX))) - ONE);
+    temp &=  LEFT_BITMASK(coloffset);
   } else {
     temp = 0;
   }
@@ -430,7 +430,7 @@ packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packed
       for (j=0; j<C->width-1; j++) {
   	C->values[truerow + j] = 0;
       }
-      C->values[truerow + j] &= ((ONE << (RADIX - (C->ncols % RADIX))) - 1);
+      C->values[truerow + j] &= ~LEFT_BITMASK(C->ncols);
     }
   }
 
@@ -468,7 +468,7 @@ packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packed
           for (ii=1; ii<A->width; ii++)
             parity[k] ^= a[ii] & b[ii];
         }
-        c[eol] ^= parity64(parity) & ~((ONE<<(RADIX-(C->ncols%RADIX)))-1);
+        c[eol] ^= parity64(parity) & LEFT_BITMASK(C->ncols);
       }
     }
   }
@@ -493,7 +493,7 @@ packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packed
         for (ii=1; ii<A->width; ii++)
           parity[k] ^= a[ii] & b[ii];
       }
-      c[eol] ^= parity64(parity) & ~((ONE<<(RADIX-(C->ncols%RADIX)))-1);
+      c[eol] ^= parity64(parity) & LEFT_BITMASK(C->ncols);
     }
   }
 
@@ -588,28 +588,14 @@ packedmatrix *mzd_copy(packedmatrix *n, const packedmatrix *p) {
     }
     size_t i, j, p_truerow, n_truerow;
 
-    if (p->ncols < RADIX) {
-      // All columns fit in one word
-      word mask = (ONE << (RADIX - p->ncols))-1;
-
-      for (i=0; i<p->nrows; i++) {
-	p_truerow = p->rowswap[i];
-	n_truerow = n->rowswap[i];
-	n->values[n_truerow] = (n->values[n_truerow] & mask) | (p->values[p_truerow] & ~mask);
+    word mask = LEFT_BITMASK(p->ncols);
+    for (i=0; i<p->nrows; i++) {
+      p_truerow = p->rowswap[i];
+      n_truerow = n->rowswap[i];
+      for (j=0; j<p->width-1; j++) {
+        n->values[n_truerow + j] = p->values[p_truerow + j];
       }
-    } else {
-
-      int r = p->ncols % RADIX;
-      word mask_end = (ONE << (RADIX - r)) - 1;
-
-      for (i=0; i<p->nrows; i++) {
-	p_truerow = p->rowswap[i];
-	n_truerow = n->rowswap[i];
-	for (j=0; j<p->width-1; j++) {
-	  n->values[n_truerow + j] = p->values[p_truerow + j];
-	}
-	n->values[n_truerow + j] = (n->values[n_truerow + j] & mask_end) | (p->values[p_truerow + j] & ~mask_end);
-      }
+      n->values[n_truerow + j] = (n->values[n_truerow + j] & ~mask) | (p->values[p_truerow + j] & mask);
     }
   } else { // p->offset > 0
     if (n == NULL) {
@@ -637,7 +623,7 @@ packedmatrix *mzd_copy(packedmatrix *n, const packedmatrix *p) {
     } else {
       int r = (p->ncols + p->offset) % RADIX;
       word mask_begin = (ONE << (RADIX - p->offset)) - 1;
-      word mask_end = (ONE << (RADIX - r)) - 1;
+      word mask_end = ~LEFT_BITMASK(r);
       for (i=0; i<p->nrows; i++) {
 	p_truerow = p->rowswap[i];
 	n_truerow = n->rowswap[i];
@@ -802,7 +788,7 @@ packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *M, const size_t
     if (ncols%RADIX) {
       for(x = startrow, i=0; i<nrows; i++, x++) {
         /* process remaining bits */
-	temp = M->values[M->rowswap[x] + startword + ncols/RADIX] & ~((ONE<<(RADIX-ncols%RADIX))-1);
+	temp = M->values[M->rowswap[x] + startword + ncols/RADIX] & LEFT_BITMASK(ncols);
 	S->values[S->rowswap[i] + ncols/RADIX] = temp;
       } 
     }

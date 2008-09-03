@@ -181,6 +181,15 @@ typedef unsigned char BIT;
 #define RIGHTMOST_BITS(w, n) (((w)<<(RADIX-(n)-1))>>(RADIX-(n)-1))
 
 /**
+* \brief creat a bit mask to zero out all but he n%RADIX leftmost
+* bits.
+*
+* \param n Integer
+*/
+
+#define LEFT_BITMASK(n) (~((ONE << ((RADIX - (n % RADIX))%RADIX) ) - 1))
+
+/**
  * \brief Return alignment of addr w.r.t. n. For example the address
  * 17 would be 1 aligned w.r.t. 16.
  *
