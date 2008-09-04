@@ -23,6 +23,11 @@
 #
 #   Copyright (c) 2008 Christophe Tournayre <turn3r@users.sourceforge.net>
 #
+# Patched by:
+#
+#   Copyright (c) 2008 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
+#   Copyright (c) 2008 Arnaud Bergeron <abergeron@gmail.com>
+#
 #   Copying and distribution of this file, with or without modification, are
 #   permitted in any medium without royalty provided the copyright notice
 #   and this notice are preserved.
@@ -36,6 +41,12 @@ AC_DEFUN([AX_CACHE_SIZE],
 
   AX_COUNT_CPUS
   AX_CPU_VENDOR
+
+    if test -e /usr/sbin/sysctl; then
+       ax_sysctl=/usr/sbin/sysctl
+    else
+       ax_sysctl=/sbin/sysctl
+    fi
 
     ax_l1_size=unknown
     ax_l2_size=unknown
@@ -71,6 +82,18 @@ AC_DEFUN([AX_CACHE_SIZE],
         
         l2_hexval=$(( 16#`echo $ax_cv_gcc_x86_cpuid_0x80000006 | cut -d ":" -f 3`))
         ax_l2_size=$(($l2_hexval >> 16))
+      else
+        #Or use sysctl
+        if $ax_sysctl -n hw.l2cachesize 2>/dev/null; then
+          ax_l2_size=$((`$ax_sysctl -n hw.l2cachesize` / 1024))
+        fi
+        
+        if $ax_sysctl -n hw.l1dcachesize 2>/dev/null; then
+          ax_l1_size=$((`$ax_sysctl -n hw.l1dcachesize` / 1024))
+        fi
+        if $ax_sysctl -n hw.l1cachesize 2>/dev/null; then
+          ax_l1_size=$((`$ax_sysctl -n hw.l1cachesize` / 1024))
+        fi
       fi
     fi
 
