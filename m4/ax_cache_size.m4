@@ -78,14 +78,14 @@ AC_DEFUN([AX_CACHE_SIZE],
         ax_l2_size=$(($l2_hexval >> 16))
       else
         #Or use sysctl
-        if /usr/sbin/sysctl -n hw.l2cachesize 2>/dev/null; then
+        if /usr/sbin/sysctl -n hw.l2cachesize 2>/dev/null 2>&1; then
           ax_l2_size=$((`/usr/sbin/sysctl -n hw.l2cachesize` / 1024))
         fi
         
-        if /usr/sbin/sysctl -n hw.l1dcachesize 2>/dev/null; then
+        if /usr/sbin/sysctl -n hw.l1dcachesize 2>/dev/null 2>&1; then
           ax_l1_size=$((`/usr/sbin/sysctl -n hw.l1dcachesize` / 1024))
         fi
-        if /usr/sbin/sysctl -n hw.l1cachesize 2>/dev/null; then
+        if /usr/sbin/sysctl -n hw.l1cachesize 2>/dev/null 2>&1; then
           ax_l1_size=$((`/usr/sbin/sysctl -n hw.l1cachesize` / 1024))
         fi
       fi
