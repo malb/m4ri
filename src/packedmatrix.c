@@ -225,7 +225,7 @@ void mzd_row_clear_offset(packedmatrix *M, size_t row, size_t coloffset) {
   /* make sure to start clearing at coloffset */
   if (coloffset%RADIX) {
     temp=mzd_read_block(M, row, coloffset);
-    temp &=  LEFT_BITMASK(coloffset);
+    temp &= RIGHT_BITMASK(RADIX-coloffset);
   } else {
     temp = 0;
   }
@@ -622,8 +622,8 @@ packedmatrix *mzd_copy(packedmatrix *n, const packedmatrix *p) {
       }
     } else {
       int r = (p->ncols + p->offset) % RADIX;
-      word mask_begin = (ONE << (RADIX - p->offset)) - 1;
-      word mask_end = ~LEFT_BITMASK(r);
+      word mask_begin = RIGHT_BITMASK(RADIX - p->offset); 
+      word mask_end = LEFT_BITMASK(r);
       for (i=0; i<p->nrows; i++) {
 	p_truerow = p->rowswap[i];
 	n_truerow = n->rowswap[i];
@@ -631,7 +631,7 @@ packedmatrix *mzd_copy(packedmatrix *n, const packedmatrix *p) {
 	for (j=1; j<p->width-1; j++) {
 	  n->values[n_truerow + j] = p->values[p_truerow + j];
 	}
-	n->values[n_truerow + j] = (n->values[n_truerow + j] & mask_end) | (p->values[p_truerow + j] & ~mask_end);
+	n->values[n_truerow + j] = (n->values[n_truerow + j] & ~mask_end) | (p->values[p_truerow + j] & mask_end);
       }
     }
   }

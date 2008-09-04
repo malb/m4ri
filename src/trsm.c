@@ -274,13 +274,8 @@ void _mzd_trsm_lower_left_weird (packedmatrix *L, packedmatrix *B, const int cut
   if (nb + B->offset >= RADIX) {
 
     // Large B
-    word mask1;
-
-    if (Boffset)
-      mask1 = ((ONE << (RADIX - B->offset)) - 1) ;
-    else
-      mask1 = ~0;
-    word mask2 = ~((ONE << (RADIX - nbrest)) - 1);
+    word mask_begin = RIGHT_BITMASK(RADIX-B->offset);
+    word mask_end = LEFT_BITMASK(nbrest);
 
     for (size_t i=1; i < mb; ++i) {
       
@@ -291,10 +286,10 @@ void _mzd_trsm_lower_left_weird (packedmatrix *L, packedmatrix *B, const int cut
 
       for (size_t k=0; k<i; ++k) {
 	if (GET_BIT (L->values [Lidx], k + L->offset)){
-	  B->values [Bidx] ^= B->values [B->rowswap [k]] & mask1;
+	  B->values [Bidx] ^= B->values [B->rowswap [k]] & mask_begin;
 	  for (size_t j = 1; j < B->width-1; ++j)
 	    B->values [Bidx + j] ^= B->values [B->rowswap [k] + j];
-	  B->values [Bidx + B->width - 1] ^= B->values [B->rowswap [k] + B->width - 1] & mask2;
+	  B->values [Bidx + B->width - 1] ^= B->values [B->rowswap [k] + B->width - 1] & mask_end;
 	}
       }
     }
@@ -334,12 +329,8 @@ void _mzd_trsm_lower_left_even (packedmatrix *L, packedmatrix *B, const int cuto
 
     if (nb + B->offset >= RADIX) {
       // B is large
-      word mask1;
-      if (Boffset)
-	mask1 = ~LEFT_BITMASK(B->offset);
-      else
-	mask1 = ~0;
-      word mask2 = ~((ONE << (RADIX - nbrest)) - 1);
+      word mask_begin = RIGHT_BITMASK(RADIX-B->offset);
+      word mask_end = LEFT_BITMASK(nbrest);
 
       for (size_t i=1; i < mb; ++i) {
 	/* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
@@ -349,10 +340,10 @@ void _mzd_trsm_lower_left_even (packedmatrix *L, packedmatrix *B, const int cuto
 
 	for (size_t k=0; k<i; ++k) {
 	  if (GET_BIT (L->values [Lidx], k)){
-	    B->values [Bidx] ^= B->values [B->rowswap [k]] & mask1;
+	    B->values [Bidx] ^= B->values [B->rowswap [k]] & mask_begin;
 	    for (size_t j = 1; j < B->width-1; ++j)
 	      B->values [Bidx + j] ^= B->values [B->rowswap [k] + j];
-	    B->values [Bidx + B->width - 1] ^= B->values [B->rowswap [k] + B->width - 1] & mask2;
+	    B->values [Bidx + B->width - 1] ^= B->values [B->rowswap [k] + B->width - 1] & mask_end;
 	  }
 	}
       }
