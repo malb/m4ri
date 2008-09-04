@@ -54,7 +54,7 @@ size_t _mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int c
     /* First recursive call */
     r1 = _mzd_lqup (A0, P, Q, cutoff);
 
-    packedmatrix *A00  = mzd_init_window (A,   0, 0, r1, r1);
+    //packedmatrix *A00  = mzd_init_window (A,   0, 0, r1, r1);
     packedmatrix *A10  = mzd_init_window (A,  r1, 0, nrows, r1);
     packedmatrix *A01  = mzd_init_window (A,  0, n1, r1, ncols);
     packedmatrix *A11  = mzd_init_window (A,  r1, n1, nrows, ncols);
@@ -104,3 +104,35 @@ size_t _mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int c
   
 }
 
+
+size_t _mzd_lqup_naiv(packedmatrix *A, permutation *P, permutation *Q)  {
+  size_t i, j, l, start_row, non_pivots;
+  int found;
+
+  non_pivots = 0;
+  start_row = 0;
+
+  for (j = 0; j<A->ncols; j++) {
+    found = 0;
+    for (i = start_row; i< A->nrows; i++ ) {
+      if (mzd_read_bit(A, i, j)) {
+        P->values[start_row] = i;
+        mzd_row_swap_offset(A, i, start_row, j);
+        /* clear below but preserve transformation matrix */
+        for(l=start_row+1; l<A->nrows; l++) {
+          if (mzd_read_bit(A, l, j))
+            mzd_row_add_offset(A, l, start_row, j+1);
+        }
+        start_row++;
+        found = 1;
+        break;
+      }
+    }
+    if (!found) {
+      non_pivots++;
+      mzd_col_swap(A, j, A->ncols - non_pivots);
+      Q->values[j] = A->ncols - non_pivots;
+    }
+  }
+  return A->nrows - non_pivots;
+}

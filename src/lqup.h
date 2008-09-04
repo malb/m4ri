@@ -72,9 +72,6 @@ size_t mzd_lqup(packedmatrix *A, permutation *P, permutation * Q, const int cuto
  * If (L,Q,U,P) satisfy LQUP = A^T, it returns (L^T, Q^T, U^T, P^T).
  * The Row echelon form (not reduced) can be read from the upper triangular matrix L^T.
  * 
- * This is the wrapper function including bounds checks. See
- * _mzd_lqup for implementation details.
- *
  * The matrix L and U are stored in place over A.
  * L^T is represented by the matrix Q^T L^T Q
  * 
@@ -87,5 +84,26 @@ size_t mzd_lqup(packedmatrix *A, permutation *P, permutation * Q, const int cuto
  */
 
 size_t _mzd_lqup(packedmatrix *A, permutation * P, permutation * Q, const int cutoff);
+
+/**
+ * \brief LQUP matrix decomposition (naiv base case).
+ *
+ * Computes the LQUP matrix decomposition using a block recursive
+ * algorithm
+ *
+ * If (L,Q,U,P) satisfy LQUP = A, it returns (L, Q, U, P).  The Row
+ * echelon form (not reduced) can be read from the upper triangular
+ * matrix L.
+ * 
+ * The matrix L and U are stored in place over A.  L is represented by
+ * the matrix Q L Q
+ * 
+ * \param A Input matrix
+ * \param P Output row permutation matrix
+ * \param Q Output column permutation matrix
+ * \internal
+ */
+
+size_t _mzd_lqup_naiv(packedmatrix *A, permutation * P, permutation * Q);
 
 #endif
