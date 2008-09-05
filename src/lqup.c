@@ -117,7 +117,8 @@ size_t _mzd_lqup_naiv(packedmatrix *A, permutation *P, permutation *Q)  {
     for (i = start_row; i< A->nrows; i++ ) {
       if (mzd_read_bit(A, i, j)) {
         P->values[start_row] = i;
-        mzd_row_swap_offset(A, i, start_row, j);
+        if (i!=start_row)
+          mzd_row_swap_offset(A, i, start_row, j);
         /* clear below but preserve transformation matrix */
         for(l=start_row+1; l<A->nrows; l++) {
           if (mzd_read_bit(A, l, j))
