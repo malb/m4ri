@@ -112,17 +112,18 @@ size_t _mzd_lqup_naiv(packedmatrix *A, permutation *P, permutation *Q)  {
   non_pivots = 0;
   start_row = 0;
 
-  for (j = 0; j<A->ncols; j++) {
+  for (j = 0; j<A->ncols; ) {
     found = 0;
     for (i = start_row; i< A->nrows; i++ ) {
       if (mzd_read_bit(A, i, j)) {
         P->values[start_row] = i;
         if (i!=start_row)
-          mzd_row_swap_offset(A, i, start_row, j);
+          mzd_row_swap(A, i, start_row);
         /* clear below but preserve transformation matrix */
         for(l=start_row+1; l<A->nrows; l++) {
-          if (mzd_read_bit(A, l, j))
+          if (mzd_read_bit(A, l, j)) {
             mzd_row_add_offset(A, l, start_row, j+1);
+          }
         }
         start_row++;
         found = 1;
@@ -131,9 +132,16 @@ size_t _mzd_lqup_naiv(packedmatrix *A, permutation *P, permutation *Q)  {
     }
     if (!found) {
       non_pivots++;
-      mzd_col_swap(A, j, A->ncols - non_pivots);
-      Q->values[j] = A->ncols - non_pivots;
+      if (j < A->ncols - non_pivots) {
+        mzd_col_swap(A, j, A->ncols - non_pivots);
+        Q->values[j] = A->ncols - non_pivots;
+      } else {
+        return A->nrows - non_pivots + 1;
+      }
+    } else {
+      j++;
     }
   }
   return A->nrows - non_pivots;
 }
+ 
