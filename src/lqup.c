@@ -106,42 +106,46 @@ size_t _mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int c
 
 
 size_t _mzd_lqup_naiv(packedmatrix *A, permutation *P, permutation *Q)  {
-  size_t i, j, l, start_row, non_pivots;
+  size_t i, j, l, start_row, start_col;
   int found;
 
-  non_pivots = 0;
   start_row = 0;
+  start_col = 0;
 
-  for (j = 0; j<A->ncols; ) {
+  for (start_col = 0; start_col < A->ncols; ) {
     found = 0;
-    for (i = start_row; i< A->nrows; i++ ) {
-      if (mzd_read_bit(A, i, j)) {
-        P->values[start_row] = i;
-        if (i!=start_row)
-          mzd_row_swap(A, i, start_row);
-        /* clear below but preserve transformation matrix */
-        for(l=start_row+1; l<A->nrows; l++) {
-          if (mzd_read_bit(A, l, j)) {
-            mzd_row_add_offset(A, l, start_row, j+1);
-          }
+    /* search for some pivot */
+    for (j = start_col; j < A->ncols; j++) {
+      for (i = start_row; i< A->nrows; i++ ) {
+        if (mzd_read_bit(A, i, j)) {
+          found = 1;
+          break;
         }
-        start_row++;
-        found = 1;
+      }
+      if(found)
         break;
-      }
     }
-    if (!found) {
-      non_pivots++;
-      if (j < A->ncols - non_pivots) {
-        mzd_col_swap(A, j, A->ncols - non_pivots);
-        Q->values[j] = A->ncols - non_pivots;
-      } else {
-        return A->nrows - non_pivots + 1;
+    
+    if(found) {
+      Q->values[start_col] = j;
+      P->values[start_row] = i;
+      if (i!=start_row)
+        mzd_row_swap(A, i, start_row);
+      if (j!=start_col)
+        mzd_col_swap(A, j, start_col);
+          
+      /* clear below but preserve transformation matrix */
+      for(l=start_row+1; l<A->nrows; l++) {
+        if (mzd_read_bit(A, l, start_col)) {
+          mzd_row_add_offset(A, l, start_row, start_col+1);
+        }
       }
+      start_row++;
+      start_col++;
     } else {
-      j++;
+      return start_col;
     }
   }
-  return A->nrows - non_pivots;
+  return start_col;
 }
  
