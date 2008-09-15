@@ -225,7 +225,7 @@ typedef unsigned char BIT;
  * \warning The provided string is not free'd.
  */
 
-void m4ri_die(char *errormessage, ...);
+void m4ri_die(const char *errormessage, ...);
 
 /**** IO *****/
 

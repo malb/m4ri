@@ -37,7 +37,7 @@
 /* blocks of memory we like to keep around for later re-use */
 mm_block m4ri_mmc_cache[M4RI_MMC_NBLOCKS];
 
-void m4ri_die(char *errormessage, ...) {
+void m4ri_die(const char *errormessage, ...) {
   va_list lst;
   va_start(lst, errormessage);
   vfprintf(stderr, errormessage, lst);
