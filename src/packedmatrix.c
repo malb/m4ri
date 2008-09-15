@@ -732,7 +732,7 @@ packedmatrix *mzd_add(packedmatrix *ret, const packedmatrix *left, const packedm
     m4ri_die("mzd_add: rows and columns must match.\n");
   }
   if (ret == NULL) {
-    ret = mzd_copy(ret, left);
+    ret = mzd_init(left->nrows, left->ncols);
   } else if (ret != left) {
     if (ret->nrows != left->nrows || ret->ncols != left->ncols) {
       m4ri_die("mzd_add: rows and columns of returned matrix must match.\n");
