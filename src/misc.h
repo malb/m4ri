@@ -194,6 +194,8 @@ typedef unsigned char BIT;
 * bits.
 *
 * \param n Integer
+*
+* \warn Does not handle multiples of RADIX correctly
 */
 
 #define RIGHT_BITMASK(n) ((ONE << (n % RADIX)) - 1)
