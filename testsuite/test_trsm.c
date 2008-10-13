@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "m4ri.h"
+#include "m4ri/m4ri.h"
 
 
 int test_trsm_upper_right (int m, int n, int offset){

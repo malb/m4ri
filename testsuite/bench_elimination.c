@@ -2,7 +2,7 @@
 
 #include "cpucycles.h"
 #include "walltime.h"
-#include "m4ri.h"
+#include "m4ri/m4ri.h"
 
 int main(int argc, char **argv) {
   int n;
