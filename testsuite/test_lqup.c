@@ -108,15 +108,8 @@ int test_lqup (int m, int n){
     mzd_write_bit(L2,i,i, 1);
     mzd_write_bit(U2,i,i, 1);
   }
-  printf("\n L2 = \n");
-  mzd_print_matrix(L2);
-  printf("\n U2 = \n");
-  mzd_print_matrix(U2);
-  printf("P = \n");
-  for (i = 0; i<A->nrows; ++i)
-    printf("P[%ld] = %ld\n",i,P->values[i]);
-  //  mzd_apply_p_left_trans (Acopy, P);
-  //mzd_apply_p_right_trans (Acopy, Q);
+  mzd_apply_p_left(Acopy, P);
+  mzd_apply_p_right(Acopy, Q);
   mzd_addmul(Acopy,L2,U2,0);
 
   int status = 0;
