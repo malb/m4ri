@@ -144,22 +144,22 @@ int test_lqup (int m, int n){
 int main(int argc, char **argv) {
   int status = 0;
 
-/*   printf("testing base case full rank n=37"); */
-/*   status += test_lqup_full_rank(37,37); */
-/*   printf("testing base case full rank n=64"); */
-/*   status += test_lqup_full_rank(64,64); */
+  printf("testing base case full rank n=37");
+  status += test_lqup_full_rank(37,37);
+  printf("testing base case full rank n=64");
+  status += test_lqup_full_rank(64,64);
   printf("testing base case half rank n=64");
   status += test_lqup (64,64);
-/*   printf("testing LU block recursive algorithm n=97"); */
-/*   status += test_lqup_full_rank(97,97); */
-/*   printf("testing LU block recursive algorithm full rank n=128"); */
-/*   status += test_lqup_full_rank(128,128); */
-/*   printf("testing LU block recursive algorithm full rank n=150"); */
-/*   status += test_lqup_full_rank(150,150); */
-/*   printf("testing LU block recursive algorithm full rank n=256"); */
-/*   status += test_lqup_full_rank(256,256); */
-/*   printf("testing LU block recursive algorithm full rank n=1024"); */
-/*   status += test_lqup_full_rank(1024,1024); */
+  printf("testing LU block recursive algorithm n=97");
+  status += test_lqup_full_rank(97,97);
+  printf("testing LU block recursive algorithm full rank n=128");
+  status += test_lqup_full_rank(128,128);
+  printf("testing LU block recursive algorithm full rank n=150");
+  status += test_lqup_full_rank(150,150);
+  printf("testing LU block recursive algorithm full rank n=256");
+  status += test_lqup_full_rank(256,256);
+  printf("testing LU block recursive algorithm full rank n=1024");
+  status += test_lqup_full_rank(1024,1024);
 
   if (!status) {
     printf("All tests passed.\n");
