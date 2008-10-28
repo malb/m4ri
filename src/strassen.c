@@ -537,7 +537,7 @@ packedmatrix *_mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int
       mzd_free_window (B10); mzd_free_window (B11);
     }
   } else { /* A weird, B even */
-    int anc = RADIX - A->offset;
+    size_t anc = RADIX - A->offset;
     if (A->ncols <= anc){
       _mzd_addmul_weird_even  (C,  A, B, cutoff);
     } else {
@@ -585,7 +585,7 @@ packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedma
    word* temp;
    BT = mzd_init( B->ncols, B->nrows );
    
-   for (int i = 0; i < B->ncols; ++i) {
+   for (size_t i = 0; i < B->ncols; ++i) {
      temp = BT->values + BT->rowswap[i];
      for (size_t k = 0; k < B->nrows; k++) {
       *temp |= ((word)mzd_read_bit (B, k, i)) << (RADIX-1-k-A->offset);
