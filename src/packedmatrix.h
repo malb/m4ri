@@ -787,7 +787,7 @@ permutation *mzd_col_block_rotate(packedmatrix *M, size_t zs, size_t ze, size_t 
 /**
  * Apply the permutation P to A from the left.
  *
- * This is equivalent to row swaps walking from 0 to length-1.
+ * This is equivalent to row swaps walking from length-1 to 0.
  *
  * This code is a scratch only, do not call it.
  *
@@ -802,7 +802,7 @@ void mzd_apply_p_left(packedmatrix *A, permutation *P);
 /**
  * Apply the permutation P to A from the left but transpose P before.
  *
- * This is equivalent to row swaps walking from length-1 to 0.
+ * This is equivalent to row swaps walking from 0 to length-1.
  *
  * This code is a scratch only, do not call it.
  *

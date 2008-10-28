@@ -65,8 +65,6 @@ int elim_test_equality(int nr, int nc) {
 }
 
 int main(int argc, char **argv) {
-  m4ri_build_all_codes();
-
   int status = 0;
   status += elim_test_equality(100, 100);
   status += elim_test_equality(21, 171);
@@ -88,8 +86,8 @@ int main(int argc, char **argv) {
 
   if (status == 0) {
     printf("All tests passed.\n");
+    return 0;
+  } else {
+    return -1;
   }
-
-  m4ri_destroy_all_codes();
-  return 0;
 }

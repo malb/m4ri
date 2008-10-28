@@ -1,3 +1,6 @@
+#ifndef PARITY_H
+#define PARITY_H
+
 /**
  * \file parity.h
  *
@@ -98,3 +101,5 @@ static inline word parity64(word* buf)
 
    return MIX1(e1, e0);
 }
+
+#endif

@@ -329,7 +329,7 @@ void _mzd_trsm_lower_left_even (packedmatrix *L, packedmatrix *B, const int cuto
   if (mb <= RADIX){
     /* base case */
 
-    if (nb + B->offset >= RADIX) {
+    if (nb + B->offset > RADIX) {
       // B is large
       word mask_begin = RIGHT_BITMASK(RADIX-B->offset);
       if (B->offset == 0)
@@ -353,6 +353,8 @@ void _mzd_trsm_lower_left_even (packedmatrix *L, packedmatrix *B, const int cuto
       }
     } else { // B is small
       word mask = ((ONE << nb) - 1) ;
+      if (nb==RADIX)
+	mask = 0xFFFFFFFFFFFFFFFFll;
       mask <<= (RADIX-nb-B->offset);
       for (size_t i=1; i < mb; ++i) {
 	/* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */

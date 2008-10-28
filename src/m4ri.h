@@ -52,6 +52,8 @@ extern "C" {
 #include "strassen.h"
 #include "grayflex.h"
 #include "parity.h"
+#include "trsm.h"
+#include "lqup.h"
 
 #ifdef __cplusplus
 }

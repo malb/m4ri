@@ -109,7 +109,6 @@ int addmul_test_equality(int m, int l, int n, int k, int cutoff) {
 
 int main(int argc, char **argv) {
   int status = 0;
-  m4ri_build_all_codes();
   
   status += mul_test_equality(1, 1, 1, 0, 1024);
   status += mul_test_equality(64, 64, 64, 0, 64);
@@ -146,8 +145,8 @@ int main(int argc, char **argv) {
 
   if (status == 0) {
     printf("All tests passed.\n");
+    return 0;
+  } else {
+    return -1;
   }
-
-  m4ri_destroy_all_codes();
-  return 0;
 }

@@ -72,7 +72,7 @@ int test_trsm_lower_left (int m, int n, int offsetL, int offsetB){
     for (j=i+1; j<m;++j)
       mzd_write_bit(L,i,j, 0);
     mzd_write_bit(L,i,i, 1);
-  }    
+  }
   mzd_trsm_lower_left(L, B, 2048);
   
   mzd_addmul(W, L, B, 2048);
@@ -174,8 +174,8 @@ int main(int argc, char **argv) {
   
   if (!status) {
     printf("All tests passed.\n");
+    return 0;
+  } else {
+    return -1;
   }
-
-  m4ri_destroy_all_codes();
-  return 0;
 }
