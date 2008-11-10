@@ -1029,3 +1029,4 @@ void mzd_apply_p_right(packedmatrix *A, permutation *P) {
       mzd_col_swap(A, i, P->values[i]);
   }
 }
+

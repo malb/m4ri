@@ -61,6 +61,12 @@ typedef unsigned long long word;
 
 
 /**
+ * \brief The number 2^64-1 as a word.
+ */
+
+#define FFFF ((word)0xffffffffffffffffull)
+
+/**
  * \brief Return the maximal element of x and y
  *
  * \param x Word
@@ -199,7 +205,7 @@ typedef unsigned char BIT;
 * \warn Does not handle multiples of RADIX correctly
 */
 
-#define RIGHT_BITMASK(n) ((ONE << (n % RADIX)) - 1)
+#define RIGHT_BITMASK(n) (FFFF>>( (RADIX - (n%RADIX))%RADIX ))
 
 /**
  * \brief Return alignment of addr w.r.t. n. For example the address

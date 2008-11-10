@@ -168,13 +168,32 @@ void mzd_free_permutation_window (permutation* condemned);
  */
  
 static inline void mzd_row_swap(packedmatrix *M, const size_t rowa, const size_t rowb) {
-  /**
-   * \todo it might be better to actually copy stuff around if the
-   * rows are far apart to improve data locality.
-   */
-  size_t temp=M->rowswap[rowa];
-  M->rowswap[rowa]=M->rowswap[rowb];
-  M->rowswap[rowb]=temp;
+  size_t width = M->width - 1;
+  word *a = M->values + M->rowswap[rowa];
+  word *b = M->values + M->rowswap[rowb];
+  word tmp; 
+  word mask_begin = RIGHT_BITMASK(RADIX - M->offset);
+  word mask_end = LEFT_BITMASK( (M->offset + M->ncols)%RADIX );
+
+  if (width != 0) {
+    tmp = a[0];
+    a[0] = (a[0] & ~mask_begin) | (b[0] & mask_begin);
+    b[0] = (b[0] & ~mask_begin) | (tmp & mask_begin);
+    
+    for(size_t i = 1; i<width; i++) {
+      tmp = a[i];
+      a[i] = b[i];
+      b[i] = tmp;
+    }
+    tmp = a[width];
+    a[width] = (a[width] & ~mask_end) | (b[width] & mask_end);
+    b[width] = (b[width] & ~mask_end) | (tmp & mask_end);
+    
+  } else {
+    tmp = a[0];
+    a[0] = (a[0] & ~mask_begin) | (b[0] & mask_begin & mask_end) | (a[0] & ~mask_end);
+    b[0] = (b[0] & ~mask_begin) | (tmp & mask_begin & mask_end) | (b[0] & ~mask_end);
+  }
 }
 
 
