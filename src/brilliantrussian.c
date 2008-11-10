@@ -186,7 +186,6 @@ void mzd_make_table( packedmatrix *M, size_t r, size_t c, int k, packedmatrix *T
     rowneeded = r + codebook[k]->inc[i-1];
     id = codebook[k]->ord[i];
     L[id] = i;
-
     if (rowneeded >= M->nrows) {
       for (j = 0; j < wide; j++) {
         *ti++ = *ti1++;
@@ -1182,62 +1181,128 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   return C;
 }
 
-/*
- * Experimental scratch code, do not call.
- */
-
-void _mzd_lqup_submatrix_finish(packedmatrix *A, size_t start_col, int k) {
-  size_t c,r2,r;
-  for(r=0 ; r < (size_t)k; r++) {
-
-    // clear up to submatrix up to start_col
-    if (start_col >= RADIX)
-      for(c=0; c<start_col/RADIX-1; c++)
-        A->values[A->rowswap[r] + c] = 0;
-    mzd_clear_bits(A, r, RADIX*(start_col/RADIX), start_col%RADIX);
-    
-    // clear L
-    for (c=0; c<r; c++)
-      mzd_write_bit(A, r, start_col + c, 0);
-
-    // clear U
-    for(r2=0; r2<r ; r2++) {
-      if(mzd_read_bit(A, r2, start_col + r))
-        mzd_row_add_offset(A, r2, r, start_col + r);
-    }
-    // clear the pivot bit
-    mzd_write_bit(A, r, start_col+r, 0);
-  }
-}
-
-size_t _mzd_lqup_submatrix(packedmatrix *A, size_t r, size_t c, size_t end_row, int k, permutation *P, permutation *Q)  {
-  size_t i,j,l;
-  size_t start_row = r;
+size_t _mzd_lqup_submatrix(packedmatrix *A, size_t start_row, size_t start_col, size_t end_row, int k, permutation *P, permutation *Q)  {
+  size_t i, j, l, sstart_row, sstart_col;
   int found;
-  for (j=c; j<c+k; j++) {
+
+  sstart_row = start_row;
+  sstart_col = start_col;
+
+  for ( ;start_col < sstart_col + k; ) {
     found = 0;
-    for (i=start_row; i< end_row; i++) {
-      if (mzd_read_bit(A, i, j)) {
-        P->values[start_row] = i;
-        mzd_row_swap_offset(A, i, start_row, j);
-        /* clear below but preserve transformation matrix */
-        for(l=start_row+1; l<end_row; l++) {
-          if (mzd_read_bit(A, l, j))
-            mzd_row_add_offset(A, l, start_row, j+1);
+    /* search for some pivot */
+    for (j = start_col; j < A->ncols; j++) {
+      for (i = start_row; i< sstart_row + k; i++ ) {
+	if (mzd_read_bit(A, i, j)) {
+          found = 1;
+          break;
         }
-        start_row++;
-        found = 1;
-        break;
       }
+      if(found)
+        break;
     }
-    if(!found) {
-      return j-c;
+    
+    if(found) {
+      P->values[start_row] = i;
+      if (i!=start_row)
+        mzd_row_swap(A, i, start_row);
+      Q->values[start_col] = j;
+      if (j!=start_col)
+        mzd_col_swap(A, j, start_col);
+          
+      /* clear below but preserve transformation matrix */
+      if (start_col +1 < A->ncols){
+	for(l=start_row+1; l<sstart_row+k; l++) {
+	  if (mzd_read_bit(A, l, start_col)) {
+	    mzd_row_add_offset(A, l, start_row, start_col+1);
+	  }
+	}
+      }
+      start_row++;
+      start_col++;
+    } else {
+      /* Inefficient: should be removed by changing the specs of permutations */
+      for (i=start_row; i<sstart_row + k; ++i)
+	P->values[i]=i;
+      return start_col - sstart_col;
     }
   }
-  return j - c;
+  for (i=start_row; i<sstart_row + k; ++i)
+    P->values[i]=i;
+  return start_col - sstart_col;
 }
 
-size_t _mzd_lqup_m4rf(packedmatrix *A, int k, permutation * P, permutation * Q) {
+void mzd_make_table_lqup( packedmatrix *M, size_t r, size_t c, int k, packedmatrix *T, size_t *L) {
+  const size_t homeblock= c/RADIX;
+  size_t i, j, rowneeded, id;
+  size_t twokay= TWOPOW(k);
+  size_t wide = T->width - homeblock;
+
+  word *ti, *ti1, *m;
+
+  mzd_set_ui(T, 0);
+
+  ti1 = T->values + homeblock;
+  ti = ti1 + T->width;
+#ifdef HAVE_SSE2
+  unsigned long incw = 0;
+  if (T->width & 1) incw = 1;
+  ti += incw;
+#endif
+
+  L[0]=0;
+  for (i=1; i<twokay; i++) {
+    rowneeded = r + codebook[k]->inc[i-1];
+    id = codebook[k]->ord[i];
+    if (rowneeded >= M->nrows) {
+      for (j = 0; j < wide; j++) {
+        *ti++ = *ti1++;
+      }
+#ifdef HAVE_SSE2
+      ti+=incw; ti1+=incw;
+#endif
+    } else {
+      m = M->values + M->rowswap[rowneeded] + homeblock;
+
+      /* Duff's device loop unrolling */
+      register int n = (wide + 7) / 8;
+      switch (wide % 8) {
+      case 0: do { *(ti++) = *(m++) ^ *(ti1++);
+      case 7:      *(ti++) = *(m++) ^ *(ti1++);
+      case 6:      *(ti++) = *(m++) ^ *(ti1++);
+      case 5:      *(ti++) = *(m++) ^ *(ti1++);
+      case 4:      *(ti++) = *(m++) ^ *(ti1++);
+      case 3:      *(ti++) = *(m++) ^ *(ti1++);
+      case 2:      *(ti++) = *(m++) ^ *(ti1++);
+      case 1:      *(ti++) = *(m++) ^ *(ti1++);
+        } while (--n > 0);
+      }
+#ifdef HAVE_SSE2
+      ti+=incw; ti1+=incw;
+#endif
+      ti += homeblock;
+      ti1 += homeblock;
+    }
+
+    /* fix table lookup */
+    L[(int)mzd_read_bits(T,i,c,k)] = i;
+  }
+  //fix table!
+}
+
+packedmatrix *_mzd_lqup_to_u(packedmatrix *U, packedmatrix *A, size_t r, size_t c, int k) {
+  size_t i, j;
+  mzd_set_ui(U, 0);
+  for (i=0; i<k; i++) {
+    for (j=c; j<A->ncols; j++) {
+      mzd_write_bit(U, i, j, mzd_read_bit(A, r+i, j));
+    }
+  }
+  return U;
+}
+
+/* method of many people factorisation */
+size_t _mzd_lqup_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) {
   const size_t ncols = A->ncols; 
   size_t r = 0;
   size_t c = 0;
@@ -1247,11 +1312,8 @@ size_t _mzd_lqup_m4rf(packedmatrix *A, int k, permutation * P, permutation * Q) 
     k = m4ri_opt_k(A->nrows, A->ncols, 0);
   }
 
-  if (Q == NULL)
-    Q = mzp_init(A->ncols);
-
   packedmatrix *T = mzd_init(TWOPOW(k), A->ncols);
-  packedmatrix *I = mzd_init(k, A->ncols);
+  packedmatrix *U = mzd_init(k, A->ncols);
   size_t *L = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
 
   while(c<ncols) {
@@ -1261,32 +1323,36 @@ size_t _mzd_lqup_m4rf(packedmatrix *A, int k, permutation * P, permutation * Q) 
     /* 1. compute LQUP factorisation for a kxk submatrix */
     kbar = _mzd_lqup_submatrix(A, r, c, MIN(A->nrows,r+k), k, P, Q);
     printf("kbar: %d c: %d\n",kbar, (int)c);
+    
+    /* 2. extract U */
+    _mzd_lqup_to_u(U, A, r, c, kbar);
+    printf("U \n");
+    mzd_print_matrix(U);
 
     if(kbar > 0) {
-      /* 2. compute RREF for LQUP submatrix to generate the table T */
-      mzd_set_ui(I, 0);
-      I = mzd_submatrix(I, A, r, 0, r+kbar, A->ncols);
-      _mzd_lqup_submatrix_finish(I, c, kbar);
-      mzd_print_matrix(I);
+      /* 2. generate table T */
+      mzd_make_table_lqup(U, 0, c, kbar, T, L);
+      printf("T \n");
+      mzd_print_matrix(T);
 
-      /* 3. generate table T */
-      mzd_make_table(I, 0, c, kbar, T, L);
-
-      /* 4. use that table to process remaining rows below */
+      /* 3. use that table to process remaining rows below */
       mzd_process_rows(A, r+kbar, A->nrows, c, kbar, T, L);
     }
     
     r += kbar;
     c += kbar;
-    if(kbar==0) {
-      // we would need to do something about Q[i]
-      c++;
+
+    if (kbar == 0) {
+      /* we didn't find a pivot so we fixup the column */
+      kbar = _mzd_lqup_submatrix(A, r, c, A->nrows, 1, P, Q);
+      if (kbar == 0) {
+        /* we still didn't find anything, so we give up */
+        break;
+      }
     }
-    printf("A\n");
-    mzd_print_matrix(A);
   }
 
-  mzd_free(I);
+  mzd_free(U);
   mzd_free(T);
   m4ri_mm_free(L);
   return r;
