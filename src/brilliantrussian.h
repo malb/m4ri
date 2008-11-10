@@ -15,12 +15,13 @@
 #define BRILLIANTRUSSIAN_H
  /*******************************************************************
  *
- *            M4RI: Method of the Four Russians Inversion
+ *                 M4RI:  Linear Algebra over GF(2)
  *
- *       Copyright (C) 2007, 2008 Gregory Bard <bard@fordham.edu>
- *       Copyright (C) 2008 Martin Albrecht <M.R.Albrecht@rhu.ac.uk>
+ *    Copyright (C) 2007, 2008 Gregory Bard <bard@fordham.edu>
+ *    Copyright (C) 2008 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
  *
  *  Distributed under the terms of the GNU General Public License (GPL)
+ *  version 2 or higher.
  *
  *    This code is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of

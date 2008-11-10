@@ -11,11 +11,12 @@
  */
 /******************************************************************************
 *
-*            M4RI: Method of the Four Russians Inversion
+*                 M4RI: Linear Algebra over GF(2)
 *
-*       Copyright (C) 2008 Martin Albrecht <malb@informatik.uni-bremen.de> 
+*    Copyright (C) 2008 Martin Albrecht <malb@informatik.uni-bremen.de> 
 *
 *  Distributed under the terms of the GNU General Public License (GPL)
+*  version 2 or higher.
 *
 *    This code is distributed in the hope that it will be useful,
 *    but WITHOUT ANY WARRANTY; without even the implied warranty of
