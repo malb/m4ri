@@ -5,16 +5,17 @@
 #include "walltime.h"
 
 int main(int argc, char **argv) {
-  int n;
+  size_t m, n;
   unsigned long long t;
   double wt;
   double clockZero = 0.0;
 
-  if (argc != 2) {
-    m4ri_die("Parameter n expected.\n");
+  if (argc != 3) {
+    m4ri_die("Parameters m,n expected.\n");
   }
-  n = atoi(argv[1]);
-  packedmatrix *A = mzd_init(n, n);
+  m = atoi(argv[1]);
+  n = atoi(argv[2]);
+  packedmatrix *A = mzd_init(m, n);
   mzd_randomize(A);
   
   wt = walltime(&clockZero);

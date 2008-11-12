@@ -31,9 +31,6 @@ void mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) {
   if(U->nrows != U->ncols)
     m4ri_die("mzd_trsm_upper_right: U must be square and is found to be (%d) x (%d).\n", U->nrows, U->ncols);
   
-  if (cutoff <= 0)
-    m4ri_die("mzd_trsm_upper_right: cutoff must be > 0.\n");
-
   _mzd_trsm_upper_right (U, B, cutoff);
 }
 
@@ -206,9 +203,6 @@ void mzd_trsm_lower_left (packedmatrix *L, packedmatrix *B, const int cutoff) {
   if(L->nrows != L->ncols)
     m4ri_die("mzd_trsm_lower_left: L must be square and is found to be (%d) x (%d).\n", L->nrows, L->ncols);
   
-  if (cutoff <= 0)
-    m4ri_die("mzd_trsm_lower_left: cutoff must be > 0.\n");
-
   _mzd_trsm_lower_left (L, B, cutoff);
 }
 
@@ -377,7 +371,7 @@ void _mzd_trsm_lower_left_even (packedmatrix *L, packedmatrix *B, const int cuto
 
     _mzd_trsm_lower_left_even (L00, B0, cutoff);
 
-    _mzd_addmul (B1, L10, B0, cutoff);
+    mzd_addmul (B1, L10, B0, cutoff);
 
     _mzd_trsm_lower_left_even (L11, B1, cutoff);
 

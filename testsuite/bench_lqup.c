@@ -25,6 +25,9 @@ int main(int argc, char **argv) {
     for (j=i+1; j<m;++j)
       mzd_write_bit(L,i,j, 0);
     mzd_write_bit(L,i,i, 1);
+  }
+
+  for(i=0; i<MIN(m,n); ++i) {
     for (j=0; j<i;++j)
       mzd_write_bit(U,i,j, 0);
     mzd_write_bit(U,i,i, 1);
@@ -38,7 +41,7 @@ int main(int argc, char **argv) {
   
   wt = walltime(&clockZero);
   t = cpucycles();
-  mzd_lqup (A, P, Q,  2048);
+  mzd_lqup (A, P, Q, 0);
   printf("n: %5d, cpu cycles: %12llu, wall time: %6.3lf\n",n, cpucycles() - t, walltime(&wt));
 
   mzp_free(P);

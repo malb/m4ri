@@ -27,8 +27,6 @@
 #include "lqup.h"
 
 size_t mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int cutoff) {
-  if (cutoff <= 0)
-    m4ri_die("mzd_lqup: cutoff must be > 0.\n");
   if (P->length != A->nrows)
     m4ri_die("mzd_lqup: Permutation P length (%d) must match A nrows (%d)\n",P->length, A->nrows);
   if (Q->length != A->ncols)
@@ -62,16 +60,15 @@ size_t _mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int c
 
     if (r1) {
       /* Computation of the Schur complement */
-      mzd_apply_p_left_trans (A1, P);
-      _mzd_trsm_lower_left (A00, A01, cutoff);
-      mzd_addmul_m4rm (A11, A10, A01, 0);
+      mzd_apply_p_left_trans(A1, P);
+      _mzd_trsm_lower_left(A00, A01, cutoff);
+      mzd_addmul(A11, A10, A01, 0);
     }
 
     /* Second recursive call */
     permutation * P2 = mzd_init_permutation_window (P, r1, nrows);
     permutation * Q2 = mzd_init_permutation_window (Q, n1, ncols);
     r2 = _mzd_lqup (A11, P2, Q2, cutoff);
-    //printf("r2 = %d\n",r2);
 
     /* Update Q */
     for (size_t i = 0; i < ncols - n1; ++i)
