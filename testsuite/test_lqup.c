@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "m4ri.h"
+#include "m4ri/m4ri.h"
 
 
 int test_lqup_full_rank (int m, int n){

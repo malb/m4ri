@@ -1,23 +1,33 @@
-CFLAGS=-I../src 
+CFLAGS=-I.. -std=c99
 LDFLAGS=-L../.libs/ -lm4ri
 DEBUG=-ggdb
 
-
-
-PRGS=test_elimination test_multiplication bench_elimination bench_multiplication bench_addition test_trsm test_lqup bench_lqup
+TEST_PRGS=test_elimination test_multiplication test_trsm test_lqup
+BENCH_PRGS=bench_elimination bench_multiplication bench_lqup
 
 CPUCYCLES_DIR=./cpucycles-20060326
 
-all: cpucycles.o $(PRGS)
+all: $(TEST_PRGS) $(BENCH_PRGS)
 
-# cpucycles.o should be a dependency here
 .c:	
-	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o $(LDFLAGS) -o $@
+	$(CC) $(DEBUG) $(CFLAGS) $@.c $(LDFLAGS) -o $@
+
+bench_elimination: cpucycles.o bench_elimination.c
+	$(CC) $(DEBUG) $(CFLAGS) bench_elimination.c cpucycles.o $(LDFLAGS) -o $@
+
+bench_multiplication: cpucycles.o bench_multiplication.c
+	$(CC) $(DEBUG) $(CFLAGS) bench_multiplication.c cpucycles.o $(LDFLAGS) -o $@
+
+bench_lqup: cpucycles.o bench_lqup.c
+	$(CC) $(DEBUG) $(CFLAGS) bench_lqup.c cpucycles.o $(LDFLAGS) -o $@
+
 clean:
-	rm -f $(PRGS)
-	rm -f cpucycles.o cpucycles.h
+	rm -f $(TEST_PRGS)
+	rm -f $(BENCH_PRGS)
+	rm -f *.o cpucycles.h
 	rm -f $(CPUCYCLES_DIR)/cpucycles.o
 	rm -f $(CPUCYCLES_DIR)/cpucycles.h
+
 
 cpucycles.h: cpucycles.o
 

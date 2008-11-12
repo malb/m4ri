@@ -16,7 +16,7 @@ int mul_test_equality(int m, int l, int n, int k, int cutoff) {
   int ret  = 0;
   packedmatrix *A, *B, *C, *D, *E;
   
-  printf("   mul: m: %4d, l: %4d, n: %4d, k: %2d, cutoff: %4d\n",m,l,n,k,cutoff);
+  printf("   mul: m: %4d, l: %4d, n: %4d, k: %2d, cutoff: %4d",m,l,n,k,cutoff);
 
   /* we create two random matrices */
   A = mzd_init(m, l);
@@ -37,23 +37,30 @@ int mul_test_equality(int m, int l, int n, int k, int cutoff) {
   mzd_free(B);
 
   if (mzd_equal(C, D) != TRUE) {
-    printf("FAIL: Strassen != M4RM\n");
+    printf(" Strassen != M4RM");
     ret -=1;
   }
 
   if (mzd_equal(D, E) != TRUE) {
-    printf("FAIL: M4RM != Naive\n");
+    printf(" M4RM != Naiv");
     ret -= 1;
   }
 
   if (mzd_equal(C, E) != TRUE) {
-    printf("FAIL: Strassen != Naive\n");
+    printf(" Strassen != Naiv");
     ret -= 1;
   }
 
   mzd_free(C);
   mzd_free(D);
   mzd_free(E);
+
+  if(ret==0) {
+    printf(" ... passed\n");
+  } else {
+    printf(" ... FAILED\n");
+  }
+
   return ret;
 
 }
@@ -62,7 +69,7 @@ int addmul_test_equality(int m, int l, int n, int k, int cutoff) {
   int ret  = 0;
   packedmatrix *A, *B, *C, *D, *E, *F;
   
-  printf("addmul: m: %4d, l: %4d, n: %4d, k: %2d, cutoff: %4d\n",m,l,n,k,cutoff);
+  printf("addmul: m: %4d, l: %4d, n: %4d, k: %2d, cutoff: %4d",m,l,n,k,cutoff);
 
   /* we create two random matrices */
   A = mzd_init(m, l);
@@ -89,17 +96,23 @@ int addmul_test_equality(int m, int l, int n, int k, int cutoff) {
   mzd_free(C);
 
   if (mzd_equal(D, E) != TRUE) {
-    printf("FAIL: addmul_m4rm != add,mul\n");
+    printf(" M4RM != add,mul");
     ret -=1;
   }
   if (mzd_equal(E, F) != TRUE) {
-    printf("FAIL: add,mul = addmul\n");
+    printf(" add,mul = addmul");
     ret -=1;
   }
   if (mzd_equal(F, D) != TRUE) {
-    printf("FAILL addmul_m4rm != addmul\n");
+    printf(" M4RM != addmul");
     ret -=1;
   }
+
+  if (ret==0)
+    printf(" ... passed\n");
+  else
+    printf(" ... FAILED\n");
+
 
   mzd_free(D);
   mzd_free(E);

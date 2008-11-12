@@ -5,7 +5,7 @@ int elim_test_equality(int nr, int nc) {
   packedmatrix *A, *B, *C, *D, *E, *F;
   int ret = 0; 
 
-  printf("red: m: %4d, n: %4d\n",nr,nc);
+  printf("elim: m: %4d, n: %4d ",nr,nc);
 
   A = mzd_init(nr, nc);
   mzd_randomize(A);
@@ -31,27 +31,27 @@ int elim_test_equality(int nr, int nc) {
   mzd_top_reduce_m4ri(F, 0, NULL, NULL);
   
   if(mzd_equal(A, B) != TRUE) {
-    printf("FAIL: A != B\n");
+    printf("A != B ");
     ret -= 1;
   }
  
   if(mzd_equal(B, C) != TRUE) {
-    printf("FAIL: B != C\n");
+    printf("B != C ");
     ret -= 1;
   }
 
   if(mzd_equal(D, E) != TRUE) {
-    printf("FAIL: D != E\n");
+    printf("D != E ");
     ret -= 1;
   }
 
   if(mzd_equal(E, F) != TRUE) {
-    printf("FAIL: E != F\n");
+    printf("E != F ");
     ret -= 1;
   }
 
   if(mzd_equal(F, A) != TRUE) {
-    printf("FAIL: F != A\n");
+    printf("F != A");
     ret -= 1;
   }
 
@@ -61,6 +61,11 @@ int elim_test_equality(int nr, int nc) {
   mzd_free(D);
   mzd_free(E);
 
+  if(ret == 0) {
+    printf(" ... passed\n");
+  } else {
+    printf(" ... FAILED\n");
+  }
   return ret;
 }
 

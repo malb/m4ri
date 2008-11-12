@@ -49,9 +49,9 @@ int test_trsm_upper_right (int m, int n, int offset){
   mzd_free(Bbasecopy);
 
   if (!status)
-    printf("passed\n");
+    printf(" ... passed\n");
   else
-    printf("failed\n");
+    printf(" ... FAILED\n");
   return status;
 }
 
@@ -104,71 +104,71 @@ int test_trsm_lower_left (int m, int n, int offsetL, int offsetB){
   mzd_free(Bbasecopy);
 
   if (!status)
-    printf("passed\n");
+    printf(" ... passed\n");
   else
-    printf("failed\n");
+    printf(" ... FAILED\n");
   return status;
 }
 
 int main(int argc, char **argv) {
   int status = 0;
 
-  printf("UpperRight: small, even placed ... ");
+  printf("UpperRight: small, even placed ");
   status += test_trsm_upper_right(57, 10, 0);
-  printf("UpperRight: large, even placed ... ");
+  printf("UpperRight: large, even placed ");
   status += test_trsm_upper_right(57, 150, 0);
-  printf("UpperRight: small, odd placed  ... ");
+  printf("UpperRight: small, odd placed  ");
   status += test_trsm_upper_right(57, 3, 4);
-  printf("UpperRight: medium, odd placed ... ");
+  printf("UpperRight: medium, odd placed ");
   status += test_trsm_upper_right(57, 4, 62);
-  printf("UpperRight: large, odd placed  ... ");
+  printf("UpperRight: large, odd placed  ");
   status += test_trsm_upper_right(57, 80, 60);
-  printf("UpperRight: larger, odd placed ... ");
+  printf("UpperRight: larger, odd placed ");
   status += test_trsm_upper_right(1577, 1802, 189);
 
-  printf("LowerLeft: small L even, small B even ... ");
+  printf("LowerLeft: small L even, small B even ");
   status += test_trsm_lower_left (10, 20, 0, 0);
-  printf("LowerLeft: small L even, large B even ... ");
+  printf("LowerLeft: small L even, large B even ");
   status += test_trsm_lower_left (10, 80, 0, 0);
 
-  printf("LowerLeft: small L even, small B odd  ... ");
+  printf("LowerLeft: small L even, small B odd  ");
   status += test_trsm_lower_left (10, 20, 0, 15);
-  printf("LowerLeft: small L even, large B odd  ... ");
+  printf("LowerLeft: small L even, large B odd  ");
   status += test_trsm_lower_left (10, 80, 0, 15);
 
-  printf("LowerLeft: small L odd, small B even  ... ");
+  printf("LowerLeft: small L odd, small B even  ");
   status += test_trsm_lower_left (10, 20, 15, 0);
-  printf("LowerLeft: small L odd, large B even  ... ");
+  printf("LowerLeft: small L odd, large B even  ");
   status += test_trsm_lower_left (10, 80, 15, 0);
 
-  printf("LowerLeft: small L odd, small B odd   ... ");
+  printf("LowerLeft: small L odd, small B odd   ");
   status += test_trsm_lower_left (10, 20, 15, 20);
-  printf("LowerLeft: small L odd, large B odd   ... ");
+  printf("LowerLeft: small L odd, large B odd   ");
   status += test_trsm_lower_left (10, 80, 15, 20);
 
-  printf("LowerLeft: large L even, small B even ... ");
+  printf("LowerLeft: large L even, small B even ");
   status += test_trsm_lower_left (70, 20, 0, 0);
-  printf("LowerLeft: large L even, large B even ... ");
+  printf("LowerLeft: large L even, large B even ");
   status += test_trsm_lower_left (70, 80, 0, 0);
 
-  printf("LowerLeft: large L even, small B odd  ... ");
+  printf("LowerLeft: large L even, small B odd  ");
   status += test_trsm_lower_left (70, 10, 0, 15);
-  printf("LowerLeft: large L even, large B odd  ... ");
+  printf("LowerLeft: large L even, large B odd  ");
   status += test_trsm_lower_left (70, 80, 0, 15);
 
-  printf("LowerLeft: large L odd, small B even  ... ");
+  printf("LowerLeft: large L odd, small B even  ");
   status += test_trsm_lower_left (70, 20, 15, 0);
-  printf("LowerLeft: large L odd, large B even  ... ");
+  printf("LowerLeft: large L odd, large B even  ");
   status += test_trsm_lower_left (70, 80, 15, 0);
 
-  printf("LowerLeft: large L odd, small B odd   ... ");
+  printf("LowerLeft: large L odd, small B odd   ");
   status += test_trsm_lower_left (70, 20, 15, 20);
-  printf("LowerLeft: large L odd, large B odd   ... ");
+  printf("LowerLeft: large L odd, large B odd   ");
   status += test_trsm_lower_left (70, 80, 15, 20);
 
-  printf("LowerLeft: larger L odd, larger B odd ... ");
+  printf("LowerLeft: larger L odd, larger B odd ");
   status += test_trsm_lower_left (770, 1600, 75, 89);
-  printf("LowerLeft: larger L odd, larger B odd ... ");
+  printf("LowerLeft: larger L odd, larger B odd ");
   status += test_trsm_lower_left (1764, 1345, 198, 123);
 
   

@@ -1,8 +1,8 @@
 #include <stdlib.h>
 
+#include "m4ri/m4ri.h"
 #include "cpucycles.h"
 #include "walltime.h"
-#include "m4ri.h"
 
 int main(int argc, char **argv) {
   int n,m;
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
   wt = walltime(&clockZero);
   t = cpucycles();
   mzd_lqup (A, P, Q,  2048);
-  printf("n: %5d, cpu cycles: %llu wall time: %lf\n",n, cpucycles() - t, walltime(&wt));
+  printf("n: %5d, cpu cycles: %12llu, wall time: %6.3lf\n",n, cpucycles() - t, walltime(&wt));
 
   mzp_free(P);
   mzp_free(Q);

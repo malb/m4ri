@@ -1,6 +1,7 @@
 /* wall clock */
 /* see "Software Optimization for High Performance Computing" p. 135 */
 
+#include <time.h>
 #include <sys/time.h>
 
 double walltime( double *t0 )
@@ -8,11 +9,10 @@ double walltime( double *t0 )
   double mic, time;
   double mega = 0.000001;
   struct timeval tp;
-  struct timezone tzp;
   static long base_sec = 0;
   static long base_usec = 0;
 
-  (void) gettimeofday(&tp,&tzp);
+  (void) gettimeofday(&tp,NULL);
   if (base_sec == 0)
     {
       base_sec = tp.tv_sec;
