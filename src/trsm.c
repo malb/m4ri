@@ -25,13 +25,41 @@
 #include "parity.h"
 #include "stdio.h"
 
+/* 
+ * This version assumes that the matrices are at an even position on
+ * the RADIX grid and that their dimension is a multiple of RADIX.
+ */
+
+void _mzd_trsm_upper_right_even (packedmatrix *U, packedmatrix *B, const int cutoff);
+
+/*
+ * Variant where U and B start at an odd bit position. Assumes that
+ * U->ncols < 64
+ */
+
+void _mzd_trsm_upper_right_weird (packedmatrix *U, packedmatrix *B, const int cutoff);
+
+/*
+ * Variant where U and B start at an odd bit position. Assumes that
+ * L->ncols < 64
+ */
+
+void _mzd_trsm_lower_left_weird (packedmatrix *L, packedmatrix *B, const int cutoff);
+
+/* 
+ * This version assumes that the matrices are at an even position on
+ * the RADIX grid and that their dimension is a multiple of RADIX.
+ */
+
+void _mzd_trsm_lower_left_even (packedmatrix *L, packedmatrix *B, const int cutoff);
+
 void mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) {
   if(U->nrows != B->ncols)
     m4ri_die("mzd_trsm_upper_right: U nrows (%d) need to match B ncols (%d).\n", U->nrows, B->ncols);
   if(U->nrows != U->ncols)
     m4ri_die("mzd_trsm_upper_right: U must be square and is found to be (%d) x (%d).\n", U->nrows, U->ncols);
   
-  _mzd_trsm_upper_right (U, B, cutoff);
+  _mzd_trsm_upper_right(U, B, cutoff);
 }
 
 void _mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) {
@@ -41,7 +69,7 @@ void _mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) 
   if (nb <= n1)
     _mzd_trsm_upper_right_weird (U, B, cutoff);
   else{
-  /**
+  /*
    \verbatim  
      _________ 
      \U00|   |
@@ -80,10 +108,6 @@ void _mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) 
   }
 }
 
-/**
- * Variant where U and B start at an odd bit position
- * Assumes that U->ncols < 64
- */
 void _mzd_trsm_upper_right_weird (packedmatrix *U, packedmatrix *B, const int cutoff) {
 
   size_t mb = B->nrows;
@@ -128,11 +152,11 @@ void _mzd_trsm_upper_right_weird (packedmatrix *U, packedmatrix *B, const int cu
   }
 }
 
-/**
+void _mzd_trsm_upper_right_even (packedmatrix *U, packedmatrix *B, const int cutoff) {
+/*
  * Variant where U and B start at an even bit position
  * Assumes that U->ncols < 64
  */
-void _mzd_trsm_upper_right_even (packedmatrix *U, packedmatrix *B, const int cutoff) {
 
   size_t mb = B->nrows;
   size_t nb = B->ncols;
@@ -207,8 +231,6 @@ void mzd_trsm_lower_left (packedmatrix *L, packedmatrix *B, const int cutoff) {
 }
 
 void _mzd_trsm_lower_left (packedmatrix *L, packedmatrix *B, const int cutoff) {
-
-
   if (!L->offset)
     _mzd_trsm_lower_left_even (L, B, cutoff);
   else{
@@ -218,7 +240,7 @@ void _mzd_trsm_lower_left (packedmatrix *L, packedmatrix *B, const int cutoff) {
     if (mb <= m1)
       _mzd_trsm_lower_left_weird (L, B, cutoff);
     else{
-      /**
+      /*
        *  
        * |\           ______
        * | \         |      |
@@ -256,9 +278,9 @@ void _mzd_trsm_lower_left (packedmatrix *L, packedmatrix *B, const int cutoff) {
   }
 }
 
-/**
+/*
  * Variant where L and B start at an odd bit position
- * Assumes that L->ncols < 64
+ * Assumes that L->ncols < 64.
  */
 void _mzd_trsm_lower_left_weird (packedmatrix *L, packedmatrix *B, const int cutoff) {
 
@@ -275,7 +297,7 @@ void _mzd_trsm_lower_left_weird (packedmatrix *L, packedmatrix *B, const int cut
     for (size_t i=1; i < mb; ++i) {
       
       /* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
-      // Need to be optimized !!!
+      /** TODO: Need to be optimized !!! **/ 
       size_t Lidx = L->rowswap[i];
       size_t Bidx = B->rowswap[i];
 
@@ -295,7 +317,7 @@ void _mzd_trsm_lower_left_weird (packedmatrix *L, packedmatrix *B, const int cut
 
     for (size_t i=1; i < mb; ++i) {
       /* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
-      // Need to be optimized !!!
+      /** TODO: Need to be optimized !!! **/
       size_t Lidx = L->rowswap[i];
       size_t Bidx = B->rowswap[i];
 
@@ -308,12 +330,7 @@ void _mzd_trsm_lower_left_weird (packedmatrix *L, packedmatrix *B, const int cut
   }
 }
 
-/**
- * Variant where L and B start at an odd bit position
- * Assumes that L->ncols < 64
- */
 void _mzd_trsm_lower_left_even (packedmatrix *L, packedmatrix *B, const int cutoff) {
-
   size_t mb = B->nrows;
   size_t nb = B->ncols;
   size_t Boffset = B->offset;
@@ -329,7 +346,7 @@ void _mzd_trsm_lower_left_even (packedmatrix *L, packedmatrix *B, const int cuto
 
       for (size_t i=1; i < mb; ++i) {
 	/* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
-	// Need to be optimized !!!
+	/** TODO: Need to be optimized !!! **/
 	size_t Lidx = L->rowswap[i];
 	size_t Bidx = B->rowswap[i];
 
@@ -349,7 +366,7 @@ void _mzd_trsm_lower_left_even (packedmatrix *L, packedmatrix *B, const int cuto
       mask <<= (RADIX-nb-B->offset);
       for (size_t i=1; i < mb; ++i) {
 	/* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
-	// Need to be optimized !!!
+	/** Need to be optimized !!! **/
 	size_t Lidx = L->rowswap [i];
 	size_t Bidx = B->rowswap [i];
 

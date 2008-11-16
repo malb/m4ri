@@ -57,7 +57,7 @@ void m4ri_word_to_str( char *destination, word data, int colon) {
       if (GET_BIT(data,i))
 	destination[i]='1';
       else 
-	destination[i]='0';
+	destination[i]=' ';
     }
     destination[RADIX]='\0';
 
@@ -67,7 +67,7 @@ void m4ri_word_to_str( char *destination, word data, int colon) {
       if (GET_BIT(data,i))
 	destination[j]='1';
       else 
-	destination[j]='0';
+	destination[j]=' ';
       j++;
       if (((i % 4)==3) && (i!=RADIX-1)) {
 	destination[j]=':';

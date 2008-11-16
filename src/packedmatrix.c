@@ -132,12 +132,6 @@ packedmatrix *mzd_init_window (const packedmatrix *m, size_t lowr, size_t lowc, 
   return window;
 }
 
-permutation *mzd_init_permutation_window (permutation* P, size_t begin, size_t end){
-  permutation *window = (permutation *)m4ri_mm_malloc(sizeof(permutation));
-  window->values = P->values + begin;
-  window->length = end-begin;
-  return window;
-}
 
 void mzd_free( packedmatrix *condemned) {
 #ifdef HAVE_OPENMP
@@ -164,10 +158,6 @@ void mzd_free_window( packedmatrix *condemned) {
 #endif
 }
 
-void mzd_free_permutation_window (permutation* condemned){
-  m4ri_mm_free(condemned);
-}
-
 void mzd_print_matrix( const packedmatrix *M ) {
   size_t i, j;
   char temp[SAFECHAR];
@@ -183,7 +173,10 @@ void mzd_print_matrix( const packedmatrix *M ) {
     }
     row = row + M->width - 1;
     for (j=0; j< (size_t)((M->ncols+M->offset)%RADIX); j++) {
-      printf("%d", (int)GET_BIT(*row, j));
+      if (GET_BIT(*row, j)) 
+        printf("1");
+      else
+        printf(" ");
       if (((j % 4)==3) && (j!=RADIX-1))
         printf(":");
     }
@@ -929,104 +922,6 @@ void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb) {
     tmp = GET_BIT(*ptr_b, dbb);
     WRITE_BIT(*ptr_b, dbb, GET_BIT(*ptr_a, dba));
     WRITE_BIT(*ptr_a, dba, tmp);
-  }
-}
-
-permutation *mzd_col_block_rotate(packedmatrix *M, size_t zs, size_t ze,
-size_t de, int copy, permutation *P) {
- assert(M->offset == 0);
- size_t i,j;
-
- const size_t ds = ze;
- const size_t ld_f = (de - ze)/RADIX;
- const size_t ld_r = (de - ds)%RADIX;
-
- const size_t lz_f = (ze - zs)/RADIX;
- const size_t lz_r = (ze - zs)%RADIX;
-
- word *data = (word*)m4ri_mm_calloc(DIV_CEIL(de-ze, RADIX), sizeof(word));
- word *begin = (word*)m4ri_mm_calloc(DIV_CEIL(ze-zs, RADIX), sizeof(word));
-
- for(i=0; i<M->nrows; i++) {
-
-   for(j=0; j < ld_f; j++) /* copy out */
-     data[j] = mzd_read_bits(M, i, ds + j*RADIX, RADIX);
-   if (ld_r)
-     data[ld_f] = mzd_read_bits(M, i, ds + ld_f*RADIX, ld_r);
-
-   for(j=0; j < lz_f; j++) /* copy out */
-     begin[j] = mzd_read_bits(M, i, zs + j*RADIX, RADIX);
-   if (lz_r)
-     begin[ld_f] = mzd_read_bits(M, i, zs + lz_f*RADIX, lz_r);
-
-   /* write */
-   for(j=0; j<ld_f; j++) {
-     mzd_clear_bits(M, i, zs + j*RADIX, RADIX);
-     mzd_write_zeroed_bits(M, i, zs + j*RADIX, RADIX, data[j]);
-   }
-   if(ld_r) {
-     mzd_clear_bits(M, i, zs + ld_f*RADIX, ld_r);
-     mzd_write_zeroed_bits(M, i, zs + ld_f*RADIX, ld_r, data[ld_f]);
-   }
-
-   if (copy) {
-     /* zero rest */
-     for(j=0; j<lz_f; j++) {
-       mzd_clear_bits(M, i, zs + (de - ds) + j*RADIX, RADIX);
-       mzd_write_zeroed_bits(M, i, zs + (de - ds) + j*RADIX, RADIX,
-begin[j]);
-     }
-     if(lz_r) {
-       mzd_clear_bits(M, i, zs + (de - ds) + lz_f*RADIX, lz_r);
-       mzd_write_zeroed_bits(M, i, zs + (de - ds) + lz_f*RADIX, lz_r,
-begin[lz_f]);
-     }
-   }
- }
-
- if (P) {
-   for(j=0; j<(de-ds); j++) {
-     P->values[j] = P->values[ze+j];
-   }
- }
- m4ri_mm_free(data);
- m4ri_mm_free(begin);
- return P;
-}
-
-void mzd_apply_p_left(packedmatrix *A, permutation *P) {
-  assert(A->offset == 0);
-  size_t i;
-  for (i=0; i<P->length; i++) {
-    if(P->values[i] != i) 
-      mzd_row_swap(A, i, P->values[i]);
-  }
-}
-
-void mzd_apply_p_left_trans(packedmatrix *A, permutation *P) {
-  assert(A->offset == 0);
-  int i;
-  for (i=P->length-1; i>=0; i--) {
-    if(P->values[i] != i) 
-      mzd_row_swap(A, i, P->values[i]);
-  }
-}
-
-void mzd_apply_p_right_trans(packedmatrix *A, permutation *P) {
-  assert(A->offset == 0);
-  int i;
-  for (i=P->length-1;i>=0; i--) {
-    if(P->values[i] != i) 
-      mzd_col_swap(A, i, P->values[i]);
-  }
-}
-
-void mzd_apply_p_right(packedmatrix *A, permutation *P) {
-  assert(A->offset == 0);
-  size_t i;
-  for (i=0; i<P->length; i++) {
-    if(P->values[i] != i) 
-      mzd_col_swap(A, i, P->values[i]);
   }
 }
 

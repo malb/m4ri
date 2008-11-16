@@ -30,10 +30,10 @@
 ********************************************************************/
 
 #include <math.h>
-#include "misc.h"
-#include "permutation.h"
 #include <assert.h>
 #include <stdio.h>
+
+#include "misc.h"
 
 /**
  * \brief Dense matrices over GF(2). 
@@ -133,31 +133,6 @@ packedmatrix *mzd_init_window (const packedmatrix *M, const size_t lowr, const s
 void mzd_free_window(packedmatrix *A);
 
  
-/**
- * \brief Create a window/view into the permutation matrix P.
- *
- * A matrix window for M is a meta structure on the matrix M. It is
- * setup to point into the matrix so M \em must \em not be freed while
- * the matrix window is used.
- *
- * Use mzd_free_permutation_window to free the window.
- *
- * \param P Permutaiton matrix
- * \param begin Starting index (inclusive)
- * \param end   Ending index   (exclusive)
- *
- */
-
-permutation *mzd_init_permutation_window (permutation* P, size_t begin, size_t end);
-
-/**
- * \brief Free a permutation matrix window created with
- * mzd_init_permutation_window.
- * 
- * \param condemned Permutation Matrix
- */
-
-void mzd_free_permutation_window (permutation* condemned);
 
 /**
  * \brief Swap the two rows rowa and rowb.
@@ -168,6 +143,7 @@ void mzd_free_permutation_window (permutation* condemned);
  */
  
 static inline void mzd_row_swap(packedmatrix *M, const size_t rowa, const size_t rowb) {
+  size_t i;
   size_t width = M->width - 1;
   word *a = M->values + M->rowswap[rowa];
   word *b = M->values + M->rowswap[rowb];
@@ -180,7 +156,7 @@ static inline void mzd_row_swap(packedmatrix *M, const size_t rowa, const size_t
     a[0] = (a[0] & ~mask_begin) | (b[0] & mask_begin);
     b[0] = (b[0] & ~mask_begin) | (tmp & mask_begin);
     
-    for(size_t i = 1; i<width; i++) {
+    for(i = 1; i<width; i++) {
       tmp = a[i];
       a[i] = b[i];
       b[i] = tmp;
@@ -782,87 +758,6 @@ static inline void mzd_clear_bits(const packedmatrix *M, const size_t x, const s
   }
 }
 
-/**
- * Rotate zero columns to the end.
- *
- * This code is a scratch only, do not call it.
- *
- * Given a matrix M with zero columns from zs up to ze (exclusive) and
- * nonzero columns from ze to de (excluse) with zs < ze < de rotate
- * the zero columns to the end such that the the nonzero block comes
- * before the zero block.
- *
- * \param M Matrix.
- * \param zs Start index of the zero columns.
- * \param ze End index of the zero columns (exclusive).
- * \param de End index of the nonzero columns (exclusive).
- * \param zero_out actually write zero to the end.
- * \param P permutation (will be written to).
- *
- * \wordoffset
- */
-
-permutation *mzd_col_block_rotate(packedmatrix *M, size_t zs, size_t ze, size_t de, int zero_out, permutation *P);
-
-/**
- * Apply the permutation P to A from the left.
- *
- * This is equivalent to row swaps walking from length-1 to 0.
- *
- * This code is a scratch only, do not call it.
- *
- * \param A Matrix.
- * \param P Permutation.
- *
- * \wordoffset
- */
-
-void mzd_apply_p_left(packedmatrix *A, permutation *P);
-
-/**
- * Apply the permutation P to A from the left but transpose P before.
- *
- * This is equivalent to row swaps walking from 0 to length-1.
- *
- * This code is a scratch only, do not call it.
- *
- * \param A Matrix.
- * \param P Permutation.
- *
- * \wordoffset
- */
-
-void mzd_apply_p_left_trans(packedmatrix *A, permutation *P);
-
-/**
- * Apply the permutation P to A from the right.
- *
- * This is equivalent to column swaps walking from length-1 to 0.
- *
- * This code is a scratch only, do not call it.
- *
- * \param A Matrix.
- * \param P Permutation.
- *
- * \wordoffset
- */
-
-void mzd_apply_p_right(packedmatrix *A, permutation *P);
-
-/**
- * Apply the permutation P to A from the right but transpose P before.
- *
- * This is equivalent to column swaps walking from 0 to length-1.
- *
- * This code is a scratch only, do not call it.
- *
- * \param A Matrix.
- * \param P Permutation.
- *
- * \wordoffset
- */
-
-void mzd_apply_p_right_trans(packedmatrix *A, permutation *P);
 
 
 #ifdef HAVE_SSE2

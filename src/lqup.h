@@ -40,48 +40,52 @@
  * Crossover point for LQUP factorization.
  */
 
-#define LQUP_CUTOFF 1024
+#define LQUP_CUTOFF 64
 
 /**
- * \brief LQUP matrix decomposition (unfinished).
+ * \brief PLUQ matrix decomposition.
  *
- * Computes the transposed LQUP matrix decomposition using a block recursive algorithm
+ * Computes the transposed LQUP matrix decomposition using a block
+ * recursive algorithm.
  *
- * If (L,Q,U,P) satisfy LQUP = A^T, it returns (L^T, Q^T, U^T, P^T).
- * The Row echelon form (not reduced) can be read from the upper triangular matrix L^T.
+ * If (P,L,U,Q) satisfy P^T LU Q^T = A, it returns (P, L, U, Q).
+ *
+ * The Row echelon form (not reduced) can be read from the upper
+ * triangular matrix U.
  * 
- * This is the wrapper function including bounds checks. See
- * _mzd_lqup for implementation details.
+ * This is the wrapper function including bounds checks. See _mzd_lqup
+ * for implementation details.
  *
- * The matrix L and U are stored in place over A.
- * L^T is represented by the matrix Q^T L^T Q
+ * The matrix L and U are stored in place over A.  U is represented
+ * by the matrix Q U Q^T
  * 
  * \param A Input matrix
  * \param P Output row permutation matrix
  * \param Q Output column permutation matrix
  * \param cutoff Minimal dimension for Strassen recursion.
  *
- * \internal
  */
+
 size_t mzd_lqup(packedmatrix *A, permutation *P, permutation * Q, const int cutoff);
 
 /**
- * \brief LQUP matrix decomposition (unfinished).
+ * \brief LQUP matrix decomposition.
  *
- * Computes the transposed LQUP matrix decomposition using a block recursive algorithm
+ * Computes the transposed LQUP matrix decomposition using a block
+ * recursive algorithm.
  *
  * If (L,Q,U,P) satisfy LQUP = A^T, it returns (L^T, Q^T, U^T, P^T).
- * The Row echelon form (not reduced) can be read from the upper triangular matrix L^T.
+ *
+ * The Row echelon form (not reduced) can be read from the upper
+ * triangular matrix L^T.
  * 
- * The matrix L and U are stored in place over A.
- * L^T is represented by the matrix Q^T L^T Q
+ * The matrix L and U are stored in place over A.  L^T is represented
+ * by the matrix Q^T L^T Q
  * 
  * \param A Input matrix
  * \param P Output row permutation matrix
  * \param Q Output column permutation matrix
  * \param cutoff Minimal dimension for Strassen recursion.
- *
- * \internal
  */
 
 size_t _mzd_lqup(packedmatrix *A, permutation * P, permutation * Q, const int cutoff);
@@ -89,20 +93,19 @@ size_t _mzd_lqup(packedmatrix *A, permutation * P, permutation * Q, const int cu
 /**
  * \brief LQUP matrix decomposition (naiv base case).
  *
- * Computes the LQUP matrix decomposition using a block recursive
- * algorithm
+ * Computes the LQUP matrix decomposition using the naive algorithm.
  *
- * If (L,Q,U,P) satisfy LQUP = A, it returns (L, Q, U, P).  The Row
- * echelon form (not reduced) can be read from the upper triangular
- * matrix L.
+ * If (L,Q,U,P) satisfy LQUP = A, it returns (L, Q, U, P). 
+ * 
+ * The Row echelon form (not reduced) can be read from the upper
+ * triangular matrix L.
  * 
  * The matrix L and U are stored in place over A.  L is represented by
- * the matrix Q L Q
+ * the matrix Q L Q.
  * 
  * \param A Input matrix
  * \param P Output row permutation matrix
  * \param Q Output column permutation matrix
- * \internal
  */
 
 size_t _mzd_lqup_naiv(packedmatrix *A, permutation * P, permutation * Q);

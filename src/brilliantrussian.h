@@ -40,7 +40,7 @@
 
 #include "misc.h"
 #include "packedmatrix.h"
-
+#include "permutation.h"
 
 /**
  * \brief Constructs all possible \f$2^k\f$ row combinations using the gray
