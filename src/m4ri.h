@@ -55,6 +55,7 @@ extern "C" {
 #include "parity.h"
 #include "trsm.h"
 #include "lqup.h"
+#include "solve.h"
 
 #ifdef __cplusplus
 }

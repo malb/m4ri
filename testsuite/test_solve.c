@@ -1,8 +1,5 @@
 #include <stdlib.h>
-#include "m4ri.h"
-#include "strassen.h"
-#include "trsm.h"
-#include "solve.h"
+#include "m4ri/m4ri.h"
 
 int test_pluq_solve_left (int m, int n, int offsetA, int offsetB){
   packedmatrix* Abase = mzd_init (2048,2048);
@@ -77,7 +74,7 @@ int test_pluq_solve_left (int m, int n, int offsetA, int offsetB){
   if (!status)
     printf("passed\n");
   else
-    printf("failed\n");
+    printf("FAILED\n");
   return status;
 }
 
@@ -135,6 +132,8 @@ int main(int argc, char **argv) {
   
   if (!status) {
     printf("All tests passed.\n");
+  } else {
+    return 1;
   }
 
   return 0;

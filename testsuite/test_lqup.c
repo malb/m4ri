@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include "m4ri/m4ri.h"
 
-int test_lqup_full_rank (int m, int n){
-  printf("pluq: testing full rank m: %5lld, n: %5lld",m,n);
+int test_lqup_full_rank (size_t m, size_t n){
+  printf("pluq: testing full rank m: %5zu, n: %5zu",m,n);
 
   packedmatrix* U = mzd_init (m,n);
   packedmatrix* L = mzd_init (m,m);
@@ -66,7 +66,7 @@ int test_lqup_full_rank (int m, int n){
 }
 
 int test_lqup_half_rank(size_t m, size_t n) {
-  printf("pluq: testing half rank m: %5lld, n: %5lld",m,n);
+  printf("pluq: testing half rank m: %5zd, n: %5zd",m,n);
 
   packedmatrix* U = mzd_init(m, n);
   packedmatrix* L = mzd_init(m, m);
@@ -111,11 +111,6 @@ int test_lqup_half_rank(size_t m, size_t n) {
     mzd_write_bit(U2,i,i, 1);
   }
 
-  if(m<150) {
-    printf("\n");
-    mzd_print_matrix(A);
-  }
-
   mzd_apply_p_left(Acopy, P);
   mzd_apply_p_right(Acopy, Q);
   mzd_addmul(Acopy,L2,U2,0);
@@ -144,7 +139,7 @@ int test_lqup_half_rank(size_t m, size_t n) {
 
 int test_lqup_structured(size_t m, size_t n) {
 
-  printf("pluq: testing structured m: %5llu, n: %5llu", m, n);
+  printf("pluq: testing structured m: %5zd, n: %5zd", m, n);
 
   size_t i,j;
   packedmatrix* A = mzd_init(m, n);
@@ -207,7 +202,7 @@ int test_lqup_structured(size_t m, size_t n) {
 }
 
 int test_lqup_random(size_t m, size_t n) {
-  printf("pluq: testing random m: %5llu, n: %5llu",m,n);
+  printf("pluq: testing random m: %5zd, n: %5zd",m,n);
 
   size_t i,j;
   packedmatrix* U = mzd_init(m, n);

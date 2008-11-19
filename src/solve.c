@@ -127,7 +127,7 @@ void _mzd_solve_left (packedmatrix *A, packedmatrix *B, const int cutoff, const 
   permutation * Q = mzp_init(A->ncols);
   
   /* PLUQ = A */
-  size_t rank = _mzd_pluq(A, P, Q, cutoff);  
+  size_t rank = _mzd_lqup(A, P, Q, cutoff);  
   /* 2, 3, 4, 5 */
   mzd_pluq_solve_left(A, rank, P, Q, B, cutoff, inconsistency_check);
   
