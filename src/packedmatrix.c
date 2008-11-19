@@ -234,8 +234,7 @@ void mzd_row_clear_offset(packedmatrix *M, size_t row, size_t coloffset) {
 
 
 void mzd_row_add_offset( packedmatrix *M, size_t dstrow, size_t srcrow, size_t coloffset) {
-  assert(M->offset == 0);
-
+  coloffset += M->offset;
   size_t startblock= coloffset/RADIX;
   size_t i;
   
@@ -900,14 +899,16 @@ void mzd_combine( packedmatrix * C, const size_t c_row, const size_t c_startbloc
 
 
 void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb) {
-  assert(M->offset == 0);
   if (cola == colb)
     return;
 
-  const size_t dwa = cola/RADIX;
-  const size_t dwb = colb/RADIX;
-  const size_t dba = cola%RADIX;
-  const size_t dbb = colb%RADIX;
+  const size_t _cola = cola + M->offset;
+  const size_t _colb = colb + M->offset;
+
+  const size_t dwa = _cola/RADIX;
+  const size_t dwb = _colb/RADIX;
+  const size_t dba = _cola%RADIX;
+  const size_t dbb = _colb%RADIX;
   
   register word tmp;
   word *ptr_a, *ptr_b, *base;

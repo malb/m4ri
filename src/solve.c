@@ -27,8 +27,6 @@
 void mzd_solve_left(packedmatrix *A, packedmatrix *B, const int cutoff, const int inconsistency_check) {    
   if(A->ncols > B->nrows)
     m4ri_die("mzd_solve_left: A ncols (%d) need to be lower than B nrows (%d).\n", A->ncols, B->nrows);
-  if (cutoff <= 0)
-    m4ri_die("mzd_solve_left: cutoff must be > 0.\n");
 
   _mzd_solve_left (A, B, cutoff, inconsistency_check);
 }
@@ -43,9 +41,6 @@ void mzd_pluq_solve_left (packedmatrix *A, size_t rank,
       m4ri_die("mzd_pluq_solve_left: A nrows (%d) need to match P size (%d).\n", A->nrows, P->length);
   if(Q->length != A->ncols)
       m4ri_die("mzd_pluq_solve_left: A ncols (%d) need to match Q size (%d).\n", A->ncols, P->length);
-
-  if (cutoff <= 0)
-    m4ri_die("mzd_pluq_solve_left: cutoff must be > 0.\n");
 
   _mzd_pluq_solve_left (A, rank, P, Q, B, cutoff, inconsistency_check);
 }
