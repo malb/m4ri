@@ -1198,7 +1198,7 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
         // clear before but preserve transformation matrix
         for(l = 0; l < curr_pos; l++)
 	  if (mzd_read_bit(A, i, start_col + l))
-	    mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
+	    mzd_row_add_offset(A, i, start_row + l, start_col + l );
         
 	if(mzd_read_bit(A, i, j))
           found = 1;
@@ -1210,7 +1210,7 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
            * add stuff to the actual matrix too?*/
           for(l = 0; l < curr_pos; l++)
             if(mzd_read_bit(A, i, start_col + l))
-              mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
+              mzd_row_add_offset(A, i, start_row + l, start_col + l );
         } else {
           break;
         }
@@ -1297,7 +1297,7 @@ packedmatrix *_mzd_pluq_to_u(packedmatrix *U, packedmatrix *A, size_t r, size_t 
   size_t i, j;
   mzd_set_ui(U, 0);
   for(i=0; i<k; i++) {
-    for(j=c; j<A->ncols; j++) {
+    for(j=c+i; j<A->ncols; j++) {
       mzd_write_bit(U, i, j, mzd_read_bit(A, r+i, j));
     }
   }
@@ -1306,7 +1306,8 @@ packedmatrix *_mzd_pluq_to_u(packedmatrix *U, packedmatrix *A, size_t r, size_t 
 
 /* method of many people factorisation */
 size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) {
-  const size_t ncols = A->ncols; 
+  const size_t nrows = A->nrows; 
+  size_t ncols = A->ncols; 
   size_t r = 0;
   size_t c = 0;
   int kbar = 0;
@@ -1315,28 +1316,38 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
     k = m4ri_opt_k(A->nrows, A->ncols, 0);
   }
 
+
+  for(size_t i = 0; i<ncols; i++) {
+    Q->values[i] = i;
+  }
+
   packedmatrix *T = mzd_init(TWOPOW(k), A->ncols);
   packedmatrix *U = mzd_init(k, A->ncols);
   size_t *L = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
 
-  while(c<ncols) {
+  while(c<ncols && r <A->nrows) {
+    //printf("A \n");
+    //mzd_print_matrix(A);
+    //printf("\n");
+
     if(c+k > A->ncols)
       k = ncols - c;
 
     /* 1. compute PLUQ factorisation for a kxk submatrix */
     kbar = _mzd_pluq_submatrix(A, r, c, k, P, Q);
-    printf("kbar: %d c: %d\n",kbar, (int)c);
+    //printf("k: %d, kbar: %d c: %d\n",k, kbar, (int)c);
     
     /* 2. extract U */
     _mzd_pluq_to_u(U, A, r, c, kbar);
-    printf("U \n");
-    mzd_print_matrix(U);
-
+    //printf("U \n");
+    //mzd_print_matrix(U);
+    //printf("\n");
     if(kbar > 0) {
       /* 2. generate table T */
       mzd_make_table_pluq(U, 0, c, kbar, T, L);
-      printf("T \n");
-      mzd_print_matrix(T);
+      //printf("T \n");
+      //mzd_print_matrix(T);
+      //printf("\n");
 
       /* 3. use that table to process remaining rows below */
       mzd_process_rows(A, r+kbar, A->nrows, c, kbar, T, L);
@@ -1345,15 +1356,16 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
     r += kbar;
     c += kbar;
 
-    if (kbar == 0) {
-      printf("foobar\n");
-      /* we didn't find a pivot so we fixup the column */
-      kbar = _mzd_pluq_submatrix(A, r, c, 1, P, Q);
-      if (kbar == 0) {
-        /* we still didn't find anything, so we give up */
+    if (kbar < k) {
+      if (c < ncols -1 && r < nrows) {
+        //this is wrong!
+        ncols--;
+        mzd_col_swap(A, c, ncols);
+      } else {
         break;
       }
     }
+      
   }
 
   mzd_free(U);

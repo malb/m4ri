@@ -164,7 +164,7 @@ void mzd_print_matrix( const packedmatrix *M ) {
   word *row;
 
   for (i=0; i< M->nrows; i++ ) {
-    printf("[ ");
+    printf("[");
     row = M->values + M->rowswap[i];
     /* TODO: This is not correct */
     for (j=0; j< (M->ncols+M->offset)/RADIX; j++) {
@@ -181,7 +181,7 @@ void mzd_print_matrix( const packedmatrix *M ) {
         printf(":");
     }
     if (M->ncols%RADIX)
-      printf(" ]\n");
+      printf("]\n");
     else
       printf("]\n");
   }
