@@ -25,7 +25,7 @@
 #include "parity.h"
 #include "stdio.h"
 
-#define TRSM_THRESHOLD 64
+#define TRSM_THRESHOLD RADIX
 
 /*****************
  * UPPER RIGHT
