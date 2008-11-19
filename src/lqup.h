@@ -1,7 +1,7 @@
 /**
  * \file lqup.h
  *
- * \brief LQUP matrix decomposition routines
+ * \brief PLUQ matrix decomposition routines
  *
  * This is scratch, experimental code.
  *
@@ -11,8 +11,8 @@
  */
 
 
-#ifndef LQUP_H
-#define LQUP_H
+#ifndef PLUQ_H
+#define PLUQ_H
 /*******************************************************************
 *
 *                 M4RI: Linear Algebra over GF(2)
@@ -37,15 +37,15 @@
 #include "packedmatrix.h"
 
 /**
- * Crossover point for LQUP factorization.
+ * Crossover point for PLUQ factorization.
  */
 
-#define LQUP_CUTOFF 256
+#define PLUQ_CUTOFF 256
 
 /**
  * \brief PLUQ matrix decomposition.
  *
- * Computes the transposed LQUP matrix decomposition using a block
+ * Computes the transposed PLUQ matrix decomposition using a block
  * recursive algorithm.
  *
  * If (P,L,U,Q) satisfy P^T LU Q^T = A, it returns (P, L, U, Q).
@@ -53,7 +53,7 @@
  * The Row echelon form (not reduced) can be read from the upper
  * triangular matrix U.
  * 
- * This is the wrapper function including bounds checks. See _mzd_lqup
+ * This is the wrapper function including bounds checks. See _mzd_pluq
  * for implementation details.
  *
  * The matrix L and U are stored in place over A.  U is represented
@@ -66,15 +66,15 @@
  *
  */
 
-size_t mzd_lqup(packedmatrix *A, permutation *P, permutation * Q, const int cutoff);
+size_t mzd_pluq(packedmatrix *A, permutation *P, permutation * Q, const int cutoff);
 
 /**
- * \brief LQUP matrix decomposition.
+ * \brief PLUQ matrix decomposition.
  *
- * Computes the transposed LQUP matrix decomposition using a block
+ * Computes the transposed PLUQ matrix decomposition using a block
  * recursive algorithm.
  *
- * If (L,Q,U,P) satisfy LQUP = A^T, it returns (L^T, Q^T, U^T, P^T).
+ * If (L,Q,U,P) satisfy PLUQ = A^T, it returns (L^T, Q^T, U^T, P^T).
  *
  * The Row echelon form (not reduced) can be read from the upper
  * triangular matrix L^T.
@@ -88,14 +88,14 @@ size_t mzd_lqup(packedmatrix *A, permutation *P, permutation * Q, const int cuto
  * \param cutoff Minimal dimension for Strassen recursion.
  */
 
-size_t _mzd_lqup(packedmatrix *A, permutation * P, permutation * Q, const int cutoff);
+size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cutoff);
 
 /**
- * \brief LQUP matrix decomposition (naiv base case).
+ * \brief PLUQ matrix decomposition (naiv base case).
  *
- * Computes the LQUP matrix decomposition using the naive algorithm.
+ * Computes the PLUQ matrix decomposition using the naive algorithm.
  *
- * If (L,Q,U,P) satisfy LQUP = A, it returns (L, Q, U, P). 
+ * If (L,Q,U,P) satisfy PLUQ = A, it returns (L, Q, U, P). 
  * 
  * The Row echelon form (not reduced) can be read from the upper
  * triangular matrix L.
@@ -108,6 +108,6 @@ size_t _mzd_lqup(packedmatrix *A, permutation * P, permutation * Q, const int cu
  * \param Q Output column permutation matrix
  */
 
-size_t _mzd_lqup_naiv(packedmatrix *A, permutation * P, permutation * Q);
+size_t _mzd_pluq_naiv(packedmatrix *A, permutation * P, permutation * Q);
 
 #endif

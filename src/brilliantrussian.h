@@ -294,6 +294,6 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k);
  * \internal
  */
 
-size_t _mzd_lqup_submatrix(packedmatrix *A, size_t r, size_t c, int k, permutation *P, permutation *Q);
+size_t _mzd_pluq_submatrix(packedmatrix *A, size_t r, size_t c, int k, permutation *P, permutation *Q);
 
 #endif //BRILLIANTRUSSIAN_H

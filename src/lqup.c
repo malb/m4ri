@@ -26,21 +26,21 @@
 #include "strassen.h"
 #include "lqup.h"
 
-size_t mzd_lqup (packedmatrix *A, permutation * P, permutation * Q, const int cutoff) {
+size_t mzd_pluq (packedmatrix *A, permutation * P, permutation * Q, const int cutoff) {
   if (P->length != A->nrows)
-    m4ri_die("mzd_lqup: Permutation P length (%d) must match A nrows (%d)\n",P->length, A->nrows);
+    m4ri_die("mzd_pluq: Permutation P length (%d) must match A nrows (%d)\n",P->length, A->nrows);
   if (Q->length != A->ncols)
-    m4ri_die("mzd_lqup: Permutation Q length (%d) must match A ncols (%d)\n",Q->length, A->ncols);
-  return _mzd_lqup(A, P, Q, cutoff);
+    m4ri_die("mzd_pluq: Permutation Q length (%d) must match A ncols (%d)\n",Q->length, A->ncols);
+  return _mzd_pluq(A, P, Q, cutoff);
 }
 
-size_t _mzd_lqup(packedmatrix *A, permutation * P, permutation * Q, const int cutoff) {
+size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cutoff) {
   size_t nrows = A->nrows;
   size_t ncols = A->ncols;
 
-  if (ncols <= LQUP_CUTOFF){
+  if (ncols <= PLUQ_CUTOFF){
     /* Base case */
-    return _mzd_lqup_naiv(A, P, Q);
+    return _mzd_pluq_naiv(A, P, Q);
     
   } else{
     /* Block divide and conquer algorithm */
@@ -62,7 +62,7 @@ size_t _mzd_lqup(packedmatrix *A, permutation * P, permutation * Q, const int cu
 
     size_t r1, r2;
     /* First recursive call */
-    r1 = _mzd_lqup (A0, P, Q, cutoff);
+    r1 = _mzd_pluq (A0, P, Q, cutoff);
 
 
     /*
@@ -93,7 +93,7 @@ size_t _mzd_lqup(packedmatrix *A, permutation * P, permutation * Q, const int cu
     /* Second recursive call */
     permutation * P2 = mzp_init_window(P, r1, nrows);
     permutation * Q2 = mzp_init_window(Q, n1, ncols);
-    r2 = _mzd_lqup(A11, P2, Q2, cutoff);
+    r2 = _mzd_pluq(A11, P2, Q2, cutoff);
 
 
     /* Update A01 */
@@ -144,7 +144,7 @@ size_t _mzd_lqup(packedmatrix *A, permutation * P, permutation * Q, const int cu
 }
 
 
-size_t _mzd_lqup_naiv(packedmatrix *A, permutation *P, permutation *Q)  {
+size_t _mzd_pluq_naiv(packedmatrix *A, permutation *P, permutation *Q)  {
   size_t i, j, l, curr_pos;
   int found;
 

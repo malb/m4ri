@@ -28,7 +28,7 @@ int test_lqup_full_rank (size_t m, size_t n){
 
   permutation* P = mzp_init(m);
   permutation* Q = mzp_init(n);
-  mzd_lqup (A, P, Q, 2048);
+  mzd_pluq(A, P, Q, 2048);
 
   for (i=0; i<m; ++i){
     for (j=0; j<i;++j)
@@ -95,7 +95,7 @@ int test_lqup_half_rank(size_t m, size_t n) {
 
   permutation* P = mzp_init(m);
   permutation* Q = mzp_init(n);
-  int r = mzd_lqup(A, P, Q, 0);
+  int r = mzd_pluq(A, P, Q, 0);
 
   for (i=0; i<r; ++i){
     for (j=0; j<i;++j)
@@ -158,7 +158,7 @@ int test_lqup_structured(size_t m, size_t n) {
   permutation* P = mzp_init(m);
   permutation* Q = mzp_init(n);
   int r;
-  r=mzd_lqup(A, P, Q, 0);
+  r=mzd_pluq(A, P, Q, 0);
   printf(", rank: %5d ",r);
 
   for (i=0; i<r; ++i){
@@ -215,7 +215,7 @@ int test_lqup_random(size_t m, size_t n) {
   permutation* P = mzp_init(m);
   permutation* Q = mzp_init(n);
   int r;
-  r=mzd_lqup(A, P, Q, 0);
+  r=mzd_pluq(A, P, Q, 0);
   printf(", rank: %5d ",r);
 
   for (i=0; i<r; ++i){

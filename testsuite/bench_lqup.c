@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
   
   wt = walltime(&clockZero);
   t = cpucycles();
-  mzd_lqup (A, P, Q, 0);
+  mzd_pluq(A, P, Q, 0);
   printf("n: %5d, cpu cycles: %12llu, wall time: %6.3lf\n",n, cpucycles() - t, walltime(&wt));
 
   mzp_free(P);
