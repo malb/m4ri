@@ -40,7 +40,7 @@
  * Crossover point for LQUP factorization.
  */
 
-#define LQUP_CUTOFF 64
+#define LQUP_CUTOFF 256
 
 /**
  * \brief PLUQ matrix decomposition.

@@ -119,7 +119,7 @@ size_t _mzd_lqup(packedmatrix *A, permutation * P, permutation * Q, const int cu
     mzd_col_block_rotate (A11b, 0, n1-r1, n1 - r1 + r2, 1);
 
     /* Update Q */
-    printf("n1: %llu, r1: %llu, r2: %llu\n",n1,r1, r2);
+    //printf("n1: %llu, r1: %llu, r2: %llu\n",n1,r1, r2);
     for(i=n1, j=r1; i<n1+r2; i++, j++) {
       size_t t = Q->values[j];
       Q->values[j] = Q->values[i];

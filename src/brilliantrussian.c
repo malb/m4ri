@@ -1182,20 +1182,36 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   return C;
 }
 
-size_t _mzd_lqup_submatrix(packedmatrix *A, size_t start_row, size_t start_col, size_t end_row, int k, permutation *P, permutation *Q)  {
-  size_t i, j, l, sstart_row, sstart_col;
+/****
+ * PLUQ 
+ *****/
+
+size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, int k, permutation *P, permutation *Q)  {
+  size_t i, j, l, curr_pos;
   int found;
 
-  sstart_row = start_row;
-  sstart_col = start_col;
-
-  for ( ;start_col < sstart_col + k; ) {
+  for(curr_pos = 0; curr_pos < k; curr_pos++) {
     found = 0;
     /* search for some pivot */
-    for (j = start_col; j < A->ncols; j++) {
-      for (i = start_row; i< sstart_row + k; i++ ) {
-	if (mzd_read_bit(A, i, j)) {
+    for(j = start_col + curr_pos; j < start_col + k; j++) {
+      for(i = start_row + curr_pos; i < A->nrows; i++) {
+        // clear before but preserve transformation matrix
+        for(l = 0; l < curr_pos; l++)
+	  if (mzd_read_bit(A, i, start_col + l))
+	    mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
+        
+	if(mzd_read_bit(A, i, j))
           found = 1;
+        
+        if(found==0) {
+          // undo clear, this is lame, any ideas?
+          /* alternative idea: copy out the stripe and do ordinary
+           * Gaussian elimination then use this stripe as a lookup but
+           * add stuff to the actual matrix too?*/
+          for(l = 0; l < curr_pos; l++)
+            if(mzd_read_bit(A, i, start_col + l))
+              mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
+        } else {
           break;
         }
       }
@@ -1203,37 +1219,22 @@ size_t _mzd_lqup_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
         break;
     }
     
-    if(found) {
-      P->values[start_row] = i;
-      if (i!=start_row)
-        mzd_row_swap(A, i, start_row);
-      Q->values[start_col] = j;
-      if (j!=start_col)
-        mzd_col_swap(A, j, start_col);
-          
-      /* clear below but preserve transformation matrix */
-      if (start_col +1 < A->ncols){
-	for(l=start_row+1; l<sstart_row+k; l++) {
-	  if (mzd_read_bit(A, l, start_col)) {
-	    mzd_row_add_offset(A, l, start_row, start_col+1);
-	  }
-	}
-      }
-      start_row++;
-      start_col++;
-    } else {
-      /* Inefficient: should be removed by changing the specs of permutations */
-      for (i=start_row; i<sstart_row + k; ++i)
-	P->values[i]=i;
-      return start_col - sstart_col;
-    }
+    if(!found) 
+      return curr_pos;
+
+    P->values[start_row + curr_pos] = i;
+    if (i != start_row + curr_pos)
+      mzd_row_swap(A, i, start_row + curr_pos);
+
+    Q->values[start_col + curr_pos] = j;
+    if (j != start_col)
+      mzd_col_swap(A, j, start_col + curr_pos);
   }
-  for (i=start_row; i<sstart_row + k; ++i)
-    P->values[i]=i;
-  return start_col - sstart_col;
+  return curr_pos;
 }
 
-void mzd_make_table_lqup( packedmatrix *M, size_t r, size_t c, int k, packedmatrix *T, size_t *L) {
+// make this more read-able for first version!
+void mzd_make_table_pluq( packedmatrix *M, size_t r, size_t c, int k, packedmatrix *T, size_t *L) {
   const size_t homeblock= c/RADIX;
   size_t i, j, rowneeded, id;
   size_t twokay= TWOPOW(k);
@@ -1291,11 +1292,12 @@ void mzd_make_table_lqup( packedmatrix *M, size_t r, size_t c, int k, packedmatr
   //fix table!
 }
 
-packedmatrix *_mzd_lqup_to_u(packedmatrix *U, packedmatrix *A, size_t r, size_t c, int k) {
+// REALLY SLOW! TODO: FIX THIS
+packedmatrix *_mzd_pluq_to_u(packedmatrix *U, packedmatrix *A, size_t r, size_t c, int k) {
   size_t i, j;
   mzd_set_ui(U, 0);
-  for (i=0; i<k; i++) {
-    for (j=c; j<A->ncols; j++) {
+  for(i=0; i<k; i++) {
+    for(j=c; j<A->ncols; j++) {
       mzd_write_bit(U, i, j, mzd_read_bit(A, r+i, j));
     }
   }
@@ -1303,7 +1305,7 @@ packedmatrix *_mzd_lqup_to_u(packedmatrix *U, packedmatrix *A, size_t r, size_t 
 }
 
 /* method of many people factorisation */
-size_t _mzd_lqup_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) {
+size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) {
   const size_t ncols = A->ncols; 
   size_t r = 0;
   size_t c = 0;
@@ -1321,18 +1323,18 @@ size_t _mzd_lqup_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
     if(c+k > A->ncols)
       k = ncols - c;
 
-    /* 1. compute LQUP factorisation for a kxk submatrix */
-    kbar = _mzd_lqup_submatrix(A, r, c, MIN(A->nrows,r+k), k, P, Q);
+    /* 1. compute PLUQ factorisation for a kxk submatrix */
+    kbar = _mzd_pluq_submatrix(A, r, c, MIN(A->nrows,r+k), k, P, Q);
     printf("kbar: %d c: %d\n",kbar, (int)c);
     
     /* 2. extract U */
-    _mzd_lqup_to_u(U, A, r, c, kbar);
+    _mzd_pluq_to_u(U, A, r, c, kbar);
     printf("U \n");
     mzd_print_matrix(U);
 
     if(kbar > 0) {
       /* 2. generate table T */
-      mzd_make_table_lqup(U, 0, c, kbar, T, L);
+      mzd_make_table_pluq(U, 0, c, kbar, T, L);
       printf("T \n");
       mzd_print_matrix(T);
 
@@ -1344,8 +1346,9 @@ size_t _mzd_lqup_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
     c += kbar;
 
     if (kbar == 0) {
+      printf("foobar\n");
       /* we didn't find a pivot so we fixup the column */
-      kbar = _mzd_lqup_submatrix(A, r, c, A->nrows, 1, P, Q);
+      kbar = _mzd_pluq_submatrix(A, r, c, A->nrows, 1, P, Q);
       if (kbar == 0) {
         /* we still didn't find anything, so we give up */
         break;
