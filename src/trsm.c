@@ -680,8 +680,6 @@ void _mzd_trsm_upper_left_weird (packedmatrix *U, packedmatrix *B, const int cut
 
     // Large B
     word mask_begin = RIGHT_BITMASK(RADIX-B->offset);
-    if (B->offset == 0)
-      mask_begin = ~mask_begin;
     word mask_end = LEFT_BITMASK(nbrest);
 
     // U[mb-1,mb-1] = 1, so no work required for i=mb-1
@@ -732,8 +730,6 @@ void _mzd_trsm_upper_left_even(packedmatrix *U, packedmatrix *B, const int cutof
     if (nb + B->offset >= RADIX) {
       // B is large
       word mask_begin = RIGHT_BITMASK(RADIX-B->offset);
-      if (B->offset == 0)
-        mask_begin = ~mask_begin;
       word mask_end = LEFT_BITMASK(nbrest);
 
       // U[mb-1,mb-1] = 1, so no work required for i=mb-1

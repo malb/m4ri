@@ -222,6 +222,9 @@ int test_trsm_upper_left (int m, int n, int offsetU, int offsetB){
 int main(int argc, char **argv) {
   int status = 0;
 
+  printf("UpperLeft: small U even, large B even ... ");
+  status += test_trsm_upper_left (10, 80, 0, 0);
+
   printf("UpperRight: small, even placed ... ");
   status += test_trsm_upper_right(57, 10, 0);
   printf("UpperRight: large, even placed ... ");
@@ -293,8 +296,6 @@ int main(int argc, char **argv) {
 
   printf("UpperLeft: small U even, small B even ... ");
   status += test_trsm_upper_left (10, 20, 0, 0);
-  printf("UpperLeft: small U even, large B even ... ");
-  status += test_trsm_upper_left (10, 80, 0, 0);
   printf("UpperLeft: small U even, small B odd  ... ");
   status += test_trsm_upper_left (10, 20, 0, 15);
   printf("UpperLeft: small U even, large B odd  ... ");
