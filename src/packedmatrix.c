@@ -925,3 +925,37 @@ void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb) {
   }
 }
 
+int mzd_is_zero(packedmatrix *A) {
+  /* Could be improved: stopping as the first non zero value is found (status!=0)*/
+  size_t mb = A->nrows;
+  size_t nb = A->ncols;
+  size_t Aoffset = A->offset;
+  size_t nbrest = (nb + Aoffset) % RADIX;
+  int status=0;
+  if (nb + Aoffset >= RADIX) {
+          // Large A
+    word mask_begin = RIGHT_BITMASK(RADIX-Aoffset);
+    if (Aoffset == 0)
+      mask_begin = ~mask_begin;
+    word mask_end = LEFT_BITMASK(nbrest);
+    size_t i;
+    for (i=0; i<mb; ++i) {
+        status |= A->values [A->rowswap [i]] & mask_begin;
+        size_t j;
+        for ( j = 1; j < A->width-1; ++j)
+            status |= A->values [A->rowswap [i] + j];
+        status |= A->values [A->rowswap [i] + A->width - 1] & mask_end;
+    }
+  } else {
+          // Small A
+    word mask = ((ONE << nb) - 1) ;
+    mask <<= (RADIX-nb-Aoffset);
+
+    size_t i;
+    for (i=0; i < mb; ++i) {
+        status |= A->values [A->rowswap [i]] & mask;
+    }
+  }
+  
+  return !status;
+}

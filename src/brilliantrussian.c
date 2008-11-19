@@ -1324,7 +1324,7 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
       k = ncols - c;
 
     /* 1. compute PLUQ factorisation for a kxk submatrix */
-    kbar = _mzd_pluq_submatrix(A, r, c, MIN(A->nrows,r+k), k, P, Q);
+    kbar = _mzd_pluq_submatrix(A, r, c, k, P, Q);
     printf("kbar: %d c: %d\n",kbar, (int)c);
     
     /* 2. extract U */
@@ -1348,7 +1348,7 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
     if (kbar == 0) {
       printf("foobar\n");
       /* we didn't find a pivot so we fixup the column */
-      kbar = _mzd_pluq_submatrix(A, r, c, A->nrows, 1, P, Q);
+      kbar = _mzd_pluq_submatrix(A, r, c, 1, P, Q);
       if (kbar == 0) {
         /* we still didn't find anything, so we give up */
         break;

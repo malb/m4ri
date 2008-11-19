@@ -774,7 +774,14 @@ static inline void mzd_clear_bits(const packedmatrix *M, const size_t x, const s
  * one block during the execution of a multiplication algorithm.
  */
 
-//#define MZD_MUL_BLOCKSIZE 1024
 #define MZD_MUL_BLOCKSIZE ((int)sqrt((double)(4*CPU_L2_CACHE)))/2
+
+/**
+ * \brief Zero test for matrix.
+ *
+ * \param A Input matrix.
+ *
+ */
+int mzd_is_zero(packedmatrix *A);
 
 #endif //PACKEDMATRIX_H

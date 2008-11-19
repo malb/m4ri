@@ -53,7 +53,7 @@ void _mzd_trsm_lower_left_weird (packedmatrix *L, packedmatrix *B, const int cut
 
 void _mzd_trsm_lower_left_even (packedmatrix *L, packedmatrix *B, const int cutoff);
 
-void mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) {
+void mzd_trsm_upper_right(packedmatrix *U, packedmatrix *B, const int cutoff) {
   if(U->nrows != B->ncols)
     m4ri_die("mzd_trsm_upper_right: U nrows (%d) need to match B ncols (%d).\n", U->nrows, B->ncols);
   if(U->nrows != U->ncols)
@@ -62,7 +62,7 @@ void mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) {
   _mzd_trsm_upper_right(U, B, cutoff);
 }
 
-void _mzd_trsm_upper_right (packedmatrix *U, packedmatrix *B, const int cutoff) {
+void _mzd_trsm_upper_right(packedmatrix *U, packedmatrix *B, const int cutoff) {
   size_t nb = B->ncols;
   size_t mb = B->nrows;
   size_t n1 = RADIX-B->offset;
