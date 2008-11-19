@@ -103,7 +103,7 @@ void *m4ri_mm_malloc( int size ) {
 #else
   void *newthing=malloc( size );
 #endif  
-  if (newthing==NULL) {
+  if (newthing==NULL && (size>0)) {
     m4ri_die("m4ri_mm_malloc: malloc returned NULL\n");
     return NULL; /* unreachable */
   }
