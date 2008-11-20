@@ -149,4 +149,12 @@ void mzd_apply_p_right_trans(packedmatrix *A, permutation *P);
 
 void mzd_col_block_rotate(packedmatrix *M, size_t zs, size_t ze, size_t de, int zero_out);
 
+/**
+ * Print the permutation P
+ *
+ * \param P Permutation.
+ */
+
+void mzp_print(permutation *P);
+
 #endif //PERMUTATION_H

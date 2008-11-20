@@ -131,3 +131,10 @@ void mzd_col_block_rotate(packedmatrix *M, size_t zs, size_t ze, size_t de, int 
   m4ri_mm_free(begin);
 }
 
+void mzp_print(permutation *P) {
+  printf("[ ");
+  for(size_t i=0; i<P->length; i++) {
+    printf("%zu ",P->values[i]);
+  }
+  printf("]");
+}
