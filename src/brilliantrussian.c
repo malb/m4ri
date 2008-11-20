@@ -1226,7 +1226,8 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
     if (i != start_row + curr_pos)
       mzd_row_swap(A, i, start_row + curr_pos);
 
-    Q->values[start_col + curr_pos] = j;
+    if (j > Q->values[start_col + curr_pos])
+      Q->values[start_col + curr_pos] = j;
     if (j != start_col)
       mzd_col_swap(A, j, start_col + curr_pos);
   }
@@ -1326,28 +1327,18 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
   size_t *L = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
 
   while(c<ncols && r <A->nrows) {
-    //printf("A \n");
-    //mzd_print_matrix(A);
-    //printf("\n");
-
     if(c+k > A->ncols)
       k = ncols - c;
 
     /* 1. compute PLUQ factorisation for a kxk submatrix */
     kbar = _mzd_pluq_submatrix(A, r, c, k, P, Q);
-    //printf("k: %d, kbar: %d c: %d\n",k, kbar, (int)c);
+    /* printf("k: %d, kbar: %d c: %d\n",k, kbar, (int)c); */
     
     /* 2. extract U */
     _mzd_pluq_to_u(U, A, r, c, kbar);
-    //printf("U \n");
-    //mzd_print_matrix(U);
-    //printf("\n");
     if(kbar > 0) {
       /* 2. generate table T */
       mzd_make_table_pluq(U, 0, c, kbar, T, L);
-      //printf("T \n");
-      //mzd_print_matrix(T);
-      //printf("\n");
 
       /* 3. use that table to process remaining rows below */
       mzd_process_rows(A, r+kbar, A->nrows, c, kbar, T, L);
@@ -1356,10 +1347,17 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
     r += kbar;
     c += kbar;
 
-    if (kbar < k) {
+    if (kbar == 0) {
       if (c < ncols -1 && r < nrows) {
-        //this is wrong!
         ncols--;
+        if (Q->values[c] < Q->values[ncols]) {
+          Q->values[c] = Q->values[ncols];
+        } else {
+          size_t tmp = Q->values[c];
+          Q->values[c] = Q->values[ncols];
+          Q->values[ncols] = tmp;
+        };
+
         mzd_col_swap(A, c, ncols);
       } else {
         break;
