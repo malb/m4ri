@@ -972,7 +972,7 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
    * Step 3. for \f$h = 1,2, ... , c\f$ do
    *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
    */
-
+  assert(C->offset==0);
   size_t i,j;
   size_t ii;
   unsigned int x1, x2, x3, x4;
@@ -994,20 +994,15 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
       return mzd_mul_naiv(C, A, B);
     else
       return mzd_addmul_naiv(C, A, B);
+  } else if (a_nr < 16) {
+    return _mzd_mul_va(C, A, B, clear);
   }
 
   size_t wide = C->width;
 
   /* clear first */
-  size_t truerow;
   if (clear) {
-    for (i=0; i<C->nrows; i++) {
-      truerow = C->rowswap[i];
-      for (j=0; j<C->width-1; j++) {
-  	C->values[truerow + j] = 0;
-      }
-      C->values[truerow + j] &= ~LEFT_BITMASK(C->ncols);
-    }
+    mzd_set_ui(C, 0);
   }
 
   const size_t blocksize = MZD_MUL_BLOCKSIZE;

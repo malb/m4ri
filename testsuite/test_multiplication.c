@@ -124,6 +124,8 @@ int main(int argc, char **argv) {
   int status = 0;
   
   status += mul_test_equality(1, 1, 1, 0, 1024);
+  status += mul_test_equality(1, 128, 128, 0, 0);
+  status += mul_test_equality(3, 131, 257, 0, 0);
   status += mul_test_equality(64, 64, 64, 0, 64);
   status += mul_test_equality(128, 128, 128, 0, 64);
   status += mul_test_equality(21, 171, 31, 0, 63); 
@@ -141,6 +143,8 @@ int main(int argc, char **argv) {
   status += mul_test_equality(1290, 1290, 2000, 0, 64);
   status += mul_test_equality(1000, 210, 200, 0, 64);
 
+  status += addmul_test_equality(1, 128, 128, 0, 0);
+  status += addmul_test_equality(3, 131, 257, 0, 0);
   status += addmul_test_equality(64, 64, 64, 0, 64);
   status += addmul_test_equality(128, 128, 128, 0, 64);
   status += addmul_test_equality(21, 171, 31, 0, 63);

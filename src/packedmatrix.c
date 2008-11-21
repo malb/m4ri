@@ -493,8 +493,27 @@ packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packed
   return C;
 }
 
-void mzd_randomize(packedmatrix *A) {
+packedmatrix *_mzd_mul_va(packedmatrix *C, const packedmatrix *v, const packedmatrix *A, const int clear) {
+  assert(C->offset == 0);
   assert(A->offset == 0);
+  assert(v->offset == 0);
+
+  if(clear)
+    mzd_set_ui(C,0);
+
+  size_t i,j;
+  const size_t m=v->nrows;
+  const size_t n=v->ncols;
+  
+  for(i=0; i<m; i++)
+    
+    for(j=0;j<n;j++)
+      if (mzd_read_bit(v,i,j))
+        mzd_combine(C,i,0,C,i,0,A,j,0);
+  return C;
+}
+
+void mzd_randomize(packedmatrix *A) {
   size_t i, j;
   for (i=0; i < A->nrows; i++) {
     for (j=0; j < A->ncols; j++) {
@@ -504,16 +523,18 @@ void mzd_randomize(packedmatrix *A) {
 }
 
 void mzd_set_ui( packedmatrix *A, unsigned int value) {
-  assert(A->offset == 0);
-
   size_t i,j;
   size_t stop = MIN(A->nrows, A->ncols);
 
-  for (i=0; i< (A->nrows); i++) {
-    for (j=0; j< (A->width); j++) {
-      
-      mzd_write_block(A, i, j*RADIX, 0);
-    }
+  word mask_begin = RIGHT_BITMASK(RADIX - A->offset);
+  word mask_end = LEFT_BITMASK((A->offset + A->ncols)%RADIX);
+  
+  for (i=0; i<A->nrows; i++) {
+    size_t truerow = A->rowswap[i];
+    A->values[truerow] = ~mask_begin;
+    for(j=1 ; j<A->width-1; j++)
+      A->values[truerow + j] = 0;
+    A->values[truerow + A->width - 1] &= ~mask_end;
   }
 
   if(value%2 == 0)

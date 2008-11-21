@@ -415,6 +415,17 @@ packedmatrix *mzd_addmul_naiv(packedmatrix *C, const packedmatrix *A, const pack
 packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B, const int clear);
 
 /**
+ * \brief Matrix multiplication optimized for v*A where v is a vector.
+ *
+ * \param C Preallocated product matrix.
+ * \param v Input matrix v.
+ * \param A Input matrix A.
+ * \param clear If set clear C first, otherwise add result to C.
+ *
+ */
+packedmatrix *_mzd_mul_va(packedmatrix *C, const packedmatrix *v, const packedmatrix *A, const int clear);
+
+/**
  * \brief Fill matrix M with uniformly distributed bits.
  *
  * \param M Matrix
@@ -438,8 +449,6 @@ void mzd_randomize(packedmatrix *M);
  *
  * \param M Matrix
  * \param value Either 0 or 1
- *
- * \wordoffset
  */
 
 void mzd_set_ui(packedmatrix *M, const unsigned value);

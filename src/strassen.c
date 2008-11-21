@@ -348,8 +348,8 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
     /* we copy the matrix first since it is only constant memory
        overhead and improves data locality, if you remove it make sure
        there are no speed regressions */
-    packedmatrix *Cbar = mzd_copy (NULL, C);
-    mzd_addmul_m4rm (Cbar, A, B, 0);
+    packedmatrix *Cbar = mzd_copy(NULL, C);
+    mzd_addmul_m4rm(Cbar, A, B, 0);
     mzd_copy(C, Cbar);
     mzd_free(Cbar);
     return C;
