@@ -10,7 +10,7 @@ pkgincludesubdir = $(includedir)/m4ri
 pkgincludesub_HEADERS = src/m4ri.h src/brilliantrussian.h src/misc.h src/packedmatrix.h src/grayflex.h src/strassen.h src/parity.h src/permutation.h src/config.h src/trsm.h src/lqup.h src/solve.h
 
 #libm4ri_la_LDFLAGS = -version-info 0:0:0
-libm4ri_la_LDFLAGS = -release 0.0.20081029
+libm4ri_la_LDFLAGS = -release 0.0.20081130
 
 check_PROGRAMS=test_multiplication test_elimination test_trsm test_lqup test_solve
 test_multiplication_SOURCES=testsuite/test_multiplication.c
