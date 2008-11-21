@@ -977,3 +977,24 @@ void mzd_copy_row(packedmatrix* B, size_t i, packedmatrix* A, size_t j) {
     b[0] = (b[0] & ~mask_begin) | (a[0] & mask_begin & mask_end) | (b[0] & ~mask_end);
   }
 }
+
+
+void mzd_row_clear_offset(packedmatrix *M, size_t row, size_t coloffset) {
+  coloffset += M->offset;
+  size_t startblock= coloffset/RADIX;
+  size_t i;
+  word temp;
+
+  /* make sure to start clearing at coloffset */
+  if (coloffset%RADIX) {
+    temp = M->values[M->rowswap[row] + startblock];
+    temp &= RIGHT_BITMASK(RADIX - coloffset);
+  } else {
+    temp = 0;
+  }
+  M->values[M->rowswap[row] + startblock] = temp;
+  temp=0;
+  for ( i=startblock+1; i < M->width; i++ ) {
+    M->values[M->rowswap[row] + i] = temp;
+  }
+}

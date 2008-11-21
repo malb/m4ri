@@ -733,4 +733,14 @@ static inline void mzd_clear_bits(const packedmatrix *M, const size_t x, const s
  */
 int mzd_is_zero(packedmatrix *A);
 
+/**
+ * \brief Clear the given row, but only begins at the column coloffset.
+ *
+ * \param M Matrix
+ * \param row Index of row
+ * \param coloffset Column offset
+ */
+
+void mzd_row_clear_offset(packedmatrix *M, const size_t row, const size_t coloffset);
+
 #endif //PACKEDMATRIX_H
