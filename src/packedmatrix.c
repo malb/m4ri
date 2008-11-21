@@ -954,3 +954,26 @@ int mzd_is_zero(packedmatrix *A) {
   
   return !status;
 }
+
+void mzd_copy_row(packedmatrix* B, size_t i, packedmatrix* A, size_t j) {
+  assert(B->offset == A->offset);
+  assert(B->ncols >= A->ncols);
+  size_t k;
+  const size_t width= MIN(B->width, A->width) - 1;
+
+  word* a=A->values + A->rowswap[j];
+  word* b=B->values + B->rowswap[i];
+ 
+  word mask_begin = RIGHT_BITMASK(RADIX - A->offset);
+  word mask_end = LEFT_BITMASK( (A->offset + A->ncols)%RADIX );
+
+  if (width != 0) {
+    b[0] = (b[0] & ~mask_begin) | (a[0] & mask_begin);
+    for(k = 1; k<width; k++)
+      b[k] = a[k];
+    b[width] = (b[width] & ~mask_end) | (a[width] & mask_end);
+    
+  } else {
+    b[0] = (b[0] & ~mask_begin) | (a[0] & mask_begin & mask_end) | (b[0] & ~mask_end);
+  }
+}

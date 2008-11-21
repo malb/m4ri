@@ -35,6 +35,28 @@
 
 #include "misc.h"
 
+#ifdef HAVE_SSE2
+/**
+ * \brief SSE2 curoff in words.
+ *
+ * Cutoff in words after which row length SSE2 instructions should be
+ * used.
+ */
+
+#define SSE2_CUTOFF 20
+#endif
+
+/**
+ * \brief Matrix multiplication block-ing dimension.
+ * 
+ * Defines the number of rows of the matrix A that are
+ * processed as one block during the execution of a multiplication
+ * algorithm.
+ */
+
+#define MZD_MUL_BLOCKSIZE ((int)sqrt((double)(4*CPU_L2_CACHE)))/2
+
+
 /**
  * \brief Dense matrices over GF(2). 
  * 
@@ -170,6 +192,19 @@ static inline void mzd_row_swap(packedmatrix *M, const size_t rowa, const size_t
   }
 }
 
+/**
+ * \brief copy row j from A to row i from B.
+ *
+ * The offsets of A and B must match and the number of columns of A
+ * must be less than or equal to the number of columns of B.
+ *
+ * \param B Target matrix.
+ * \param i Target row index.
+ * \param A Source matrix.
+ * \param j Source row index.
+ */
+
+void mzd_copy_row(packedmatrix* B, size_t i, packedmatrix* A, size_t j);
 
 /**
  * \brief Swap the two columns cola and colb.
@@ -627,10 +662,8 @@ static inline word mzd_read_bits(const packedmatrix *M, const size_t x, const si
 
 
 /**
- * Write n bits from values to M starting a position (x,y). The
+ * \brief Write n bits from values to M starting a position (x,y). The
  * positions written to are expected to be zero.
- *
- * This code is a scratch only, do not call it.
  *
  * \param M Source matrix.
  * \param x Starting row.
@@ -661,7 +694,7 @@ static inline void mzd_write_zeroed_bits(const packedmatrix *M, const size_t x, 
 }
 
 /**
- * Clear n bits in M starting a position (x,y).
+ * \brief Clear n bits in M starting a position (x,y).
  *
  * \param M Source matrix.
  * \param x Starting row.
@@ -691,24 +724,6 @@ static inline void mzd_clear_bits(const packedmatrix *M, const size_t x, const s
     M->values[block+1] ^= (M->values[block+1]>>(RADIX-spot))<<(RADIX-spot);
   }
 }
-
-
-
-#ifdef HAVE_SSE2
-/**
- * Cutoff in words after which row length SSE2 instructions should be
- * used.
- */
-
-#define SSE2_CUTOFF 20
-#endif
-
-/**
- * Defines the number of rows of the matrix A that are processed as
- * one block during the execution of a multiplication algorithm.
- */
-
-#define MZD_MUL_BLOCKSIZE ((int)sqrt((double)(4*CPU_L2_CACHE)))/2
 
 /**
  * \brief Zero test for matrix.
