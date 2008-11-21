@@ -122,7 +122,7 @@ void mzd_free(packedmatrix *A);
  *
  */
 
-packedmatrix *mzd_init_window (const packedmatrix *M, const size_t lowr, const size_t lowc, const size_t highr, const size_t highc);
+packedmatrix *mzd_init_window(const packedmatrix *M, const size_t lowr, const size_t lowc, const size_t highr, const size_t highc);
 
 /**
  * \brief Free a matrix window created with mzd_init_window.
@@ -131,8 +131,6 @@ packedmatrix *mzd_init_window (const packedmatrix *M, const size_t lowr, const s
  */
 
 void mzd_free_window(packedmatrix *A);
-
- 
 
 /**
  * \brief Swap the two rows rowa and rowb.
@@ -238,69 +236,6 @@ static inline void mzd_row_swap_offset(packedmatrix *M, const size_t rowa, const
 }
 
 /**
- * \brief Add value to the word at position M[row,col].
- *
- * \param M Matrix
- * \param row Row index
- * \param col Column index
- * \param value Word of BITs.
- *
- * \note Keep in mind that the row, col refer to a row and column (of
- *  bits), and you can address the block by any of the RADIX (usually
- *  64) & A[i,j] there.
- *
- * \note No bounds checks whatsoever are performed.
- *
- */
-
-static inline void mzd_xor_block(packedmatrix *M, const size_t row, const size_t col, const word value) {
-  size_t block=(col+M->offset)/RADIX;
-  size_t truerow=M->rowswap[row];
-
-  word *entry=M->values + block + truerow;
-  *entry ^= value;
-}
-
-/**
- * \brief Write value to the word at position M[row,col].
- *
- * \param M Matrix
- * \param row Row index
- * \param col Column index
- * \param value Word of BITs.
- *
- * \note Keep in mind that the row, col refer to a row and column (of
- * bits), and you can address the block by any of the RADIX (usually
- * 64) A[i,j] there.
- *
- * \note No bounds checks whatsoever are performed.
- *
- */
-
-static inline void mzd_write_block(packedmatrix *M, const size_t row, const size_t col, const word value) {
-  M->values[ M->rowswap[row] + (col+M->offset)/RADIX ] = value;
-}
-
-/**
- * \brief Read the word  at position M[row,col].
- *
- * \param M Matrix
- * \param row Row index
- * \param col Column index
- *
- * \note Keep in mind that the row, col refer to a row and column (of
- * bits), and you can address the block by any of the RADIX (usually
- * 64) A[i,j] there.
- *
- * \note No bounds checks whatsoever are performed.
- *
- */
-
-static inline word mzd_read_block(const packedmatrix *M, const size_t row, const size_t col ) {
-  return M->values[ M->rowswap[row] + (col+M->offset)/RADIX ];
-}
-
-/**
  * \brief Print a matrix to stdout. 
  *
  * The output will contain colons between every 4-th column.
@@ -329,16 +264,6 @@ void mzd_print_matrix_tight(const packedmatrix *M );
  */
 
 void mzd_row_add_offset(packedmatrix *M,  const size_t destrow, const size_t sourcerow, const size_t coloffset );
-
-/**
- * \brief Clear the given row, but only begins at the column coloffset.
- *
- * \param M Matrix
- * \param row Index of row
- * \param coloffset Column offset
- */
-
-void mzd_row_clear_offset(packedmatrix *M, const size_t row, const size_t coloffset);
 
 /**
  * \brief Add the rows sourcerow and destrow and stores the total in

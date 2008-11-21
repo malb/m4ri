@@ -209,30 +209,6 @@ void mzd_print_matrix_tight( const packedmatrix *M ) {
   }
 }
 
-void mzd_row_clear_offset(packedmatrix *M, size_t row, size_t coloffset) {
-  assert(M->offset == 0);
-
-  size_t startblock= coloffset/RADIX;
-  size_t i;
-  word temp;
-  
-  /* make sure to start clearing at coloffset */
-  if (coloffset%RADIX) {
-    temp=mzd_read_block(M, row, coloffset);
-    temp &= RIGHT_BITMASK(RADIX-coloffset);
-  } else {
-    temp = 0;
-  }
-  mzd_write_block(M, row, coloffset, temp);
-
-  temp=0;
-
-  for ( i=startblock+1; i < (M->width); i++ ) {
-    mzd_write_block(M, row, i*RADIX, temp);
-  }
-}
-
-
 void mzd_row_add_offset( packedmatrix *M, size_t dstrow, size_t srcrow, size_t coloffset) {
   coloffset += M->offset;
   size_t startblock= coloffset/RADIX;
@@ -550,16 +526,13 @@ BIT mzd_equal(const packedmatrix *A, const packedmatrix *B) {
   assert(B->offset == 0);
 
   size_t i, j;
-  word block1, block2;
 
   if (A->nrows != B->nrows) return FALSE;
   if (A->ncols != B->ncols) return FALSE;
 
   for (i=0; i< A->nrows; i++) {
     for (j=0; j< A->width; j++) {
-      block1=mzd_read_block(A, i, j*RADIX);
-      block2=mzd_read_block(B, i, j*RADIX);
-      if (block1 != block2)
+      if (A->values[A->rowswap[i] + j] != B->values[B->rowswap[i] + j])
 	return FALSE;
     }
   }
