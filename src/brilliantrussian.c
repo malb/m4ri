@@ -1301,7 +1301,6 @@ packedmatrix *_mzd_pluq_to_u(packedmatrix *U, packedmatrix *A, size_t r, size_t 
   for(i=0; i<k; i++)
     for(j=0; j<c+i; j++) 
       mzd_write_bit(U, i, j, 0);
-  //mzd_print_matrix(U);
   return U;
 }
 
