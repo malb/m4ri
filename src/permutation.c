@@ -107,22 +107,22 @@ void mzd_col_block_rotate(packedmatrix *M, size_t zs, size_t ze, size_t de, int 
     /* write */
     for(j=0; j<ld_f; j++) {
       mzd_clear_bits(M, i, zs + j*RADIX, RADIX);
-      mzd_write_zeroed_bits(M, i, zs + j*RADIX, RADIX, data[j]);
+      mzd_xor_bits(M, i, zs + j*RADIX, RADIX, data[j]);
     }
     if(ld_r) {
       mzd_clear_bits(M, i, zs + ld_f*RADIX, ld_r);
-      mzd_write_zeroed_bits(M, i, zs + ld_f*RADIX, ld_r, data[ld_f]);
+      mzd_xor_bits(M, i, zs + ld_f*RADIX, ld_r, data[ld_f]);
     }
     
     if (copy) {
       /* zero rest */
       for(j=0; j<lz_f; j++) {
         mzd_clear_bits(M, i, zs + (de - ds) + j*RADIX, RADIX);
-        mzd_write_zeroed_bits(M, i, zs + (de - ds) + j*RADIX, RADIX, begin[j]);
+        mzd_xor_bits(M, i, zs + (de - ds) + j*RADIX, RADIX, begin[j]);
       }
       if(lz_r) {
         mzd_clear_bits(M, i, zs + (de - ds) + lz_f*RADIX, lz_r);
-        mzd_write_zeroed_bits(M, i, zs + (de - ds) + lz_f*RADIX, lz_r, begin[lz_f]);
+        mzd_xor_bits(M, i, zs + (de - ds) + lz_f*RADIX, lz_r, begin[lz_f]);
       }
     }
   }

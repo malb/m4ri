@@ -121,9 +121,7 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
     /* Update Q */
     //printf("n1: %llu, r1: %llu, r2: %llu\n",n1,r1, r2);
     for(i=n1, j=r1; i<n1+r2; i++, j++) {
-      size_t t = Q->values[j];
-      Q->values[j] = Q->values[i];
-      //Q->values[i] = t;
+      Q->values[j]++;
     }
     mzp_free_window(Q2);
     mzp_free_window(Q2b);

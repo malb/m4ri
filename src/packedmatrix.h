@@ -662,8 +662,7 @@ static inline word mzd_read_bits(const packedmatrix *M, const size_t x, const si
 
 
 /**
- * \brief Write n bits from values to M starting a position (x,y). The
- * positions written to are expected to be zero.
+ * \brief XOR n bits from values to M starting a position (x,y).
  *
  * \param M Source matrix.
  * \param x Starting row.
@@ -672,7 +671,7 @@ static inline word mzd_read_bits(const packedmatrix *M, const size_t x, const si
  * \param values Word with values;
  */
 
-static inline void mzd_write_zeroed_bits(const packedmatrix *M, const size_t x, const size_t y, const int n, word values) {
+static inline void mzd_xor_bits(const packedmatrix *M, const size_t x, const size_t y, const int n, word values) {
   size_t truerow = M->rowswap[ x ];
   word *temp;
 
@@ -682,14 +681,45 @@ static inline void mzd_write_zeroed_bits(const packedmatrix *M, const size_t x, 
   if ( ((y+M->offset)%RADIX + n - 1) < RADIX ) {
     /* everything happens in one word here */
     temp =  M->values +  (y+M->offset) / RADIX + truerow;
-    *temp |= values<<(RADIX-((y+M->offset)%RADIX)-n);
+    *temp ^= values<<(RADIX-((y+M->offset)%RADIX)-n);
 
   } else {
     /* two words are affected */
     const size_t block = (y+M->offset) / RADIX + truerow; /* correct block */
     const size_t spot = (y +M->offset+ n ) % RADIX; /* correct offset */
-    M->values[block] |= values >> (spot);
-    M->values[block + 1] |= values<<(RADIX-spot);
+    M->values[block] ^= values >> (spot);
+    M->values[block + 1] ^= values<<(RADIX-spot);
+  }
+}
+
+/**
+ * \brief AND n bits from values to M starting a position (x,y).
+ *
+ * \param M Source matrix.
+ * \param x Starting row.
+ * \param y Starting column.
+ * \param n Number of bits (<= RADIX);
+ * \param values Word with values;
+ */
+
+static inline void mzd_and_bits(const packedmatrix *M, const size_t x, const size_t y, const int n, word values) {
+  size_t truerow = M->rowswap[ x ];
+  word *temp;
+
+  /* there are two possible situations. Either all bits are in one
+   * word or they are spread across two words. */
+
+  if ( ((y+M->offset)%RADIX + n - 1) < RADIX ) {
+    /* everything happens in one word here */
+    temp =  M->values +  (y+M->offset) / RADIX + truerow;
+    *temp &= values<<(RADIX-((y+M->offset)%RADIX)-n);
+
+  } else {
+    /* two words are affected */
+    const size_t block = (y+M->offset) / RADIX + truerow; /* correct block */
+    const size_t spot = (y +M->offset+ n ) % RADIX; /* correct offset */
+    M->values[block] &= values >> (spot);
+    M->values[block + 1] &= values<<(RADIX-spot);
   }
 }
 
