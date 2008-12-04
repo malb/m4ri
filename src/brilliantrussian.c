@@ -1192,7 +1192,7 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
     /* search for some pivot */
     for(j = start_col + curr_pos; j < start_col + k; j++) {
       for(i = start_row + curr_pos; i < A->nrows; i++) {
-        // clear before but preserve transformation matrix
+        /* clear before but preserve transformation matrix */
         for(l = 0; l < curr_pos; l++)
 	  if (mzd_read_bit(A, i, start_col + l)) {
 	    mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
@@ -1238,7 +1238,6 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
   return curr_pos;
 }
 
-// make this more read-able for first version!
 void mzd_make_table_pluq( packedmatrix *M, size_t r, size_t c, int k, packedmatrix *T, size_t *L) {
   const size_t homeblock= c/RADIX;
   size_t i, j, rowneeded, id;
@@ -1296,10 +1295,9 @@ void mzd_make_table_pluq( packedmatrix *M, size_t r, size_t c, int k, packedmatr
   }
 
   
-  //fix table!
+  /* fix table */
   for(i=1; i < twokay; i++) {
     const word correction = (word)codebook[k]->ord[i];
-    //printf("i: %llu id: %llu val: %llu\n",i,correction,mzd_read_bits(T,i,c,k));
     mzd_xor_bits(T, i,c, k, correction);
   }
 }
@@ -1327,9 +1325,10 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
   if(k == 0)
     k = m4ri_opt_k(A->nrows, A->ncols, 0);
 
-  for(size_t i = 0; i<ncols; i++) {
+  for(size_t i = 0; i<ncols; i++)
     Q->values[i] = i;
-  }
+  for(size_t i = 0; i<nrows; i++)
+    P->values[i] = i;
 
   packedmatrix *T = mzd_init(TWOPOW(k), A->ncols);
   packedmatrix *U = mzd_init(k, A->ncols);
@@ -1341,14 +1340,12 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
 
     /* 1. compute PLUQ factorisation for a kxk submatrix */
     kbar = _mzd_pluq_submatrix(A, r, c, k, P, Q);
-    /* printf("k: %d, kbar: %d c: %d\n",k, kbar, (int)c); */
     
     /* 2. extract U */
     _mzd_pluq_to_u(U, A, r, c, kbar);
     if(kbar > 0) {
       /* 2. generate table T */
       mzd_make_table_pluq(U, 0, c, kbar, T, L);
-      //mzd_print_matrix(T);
       /* 3. use that table to process remaining rows below */
       mzd_process_rows(A, r+kbar, A->nrows, c, kbar, T, L);
     }
