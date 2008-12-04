@@ -1185,8 +1185,6 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
   size_t i, j, l, curr_pos;
   int found;
 
-  int *added = m4ri_mm_calloc(sizeof(int),k);
-
   for(curr_pos = 0; curr_pos < k; curr_pos++) {
     found = 0;
     /* search for some pivot */
@@ -1194,12 +1192,8 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
       for(i = start_row + curr_pos; i < A->nrows; i++) {
         /* clear before but preserve transformation matrix */
         for(l = 0; l < curr_pos; l++)
-	  if (mzd_read_bit(A, i, start_col + l)) {
+	  if(mzd_read_bit(A, i, start_col + l))
 	    mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
-            added[l] = 1;
-          } else {
-            added[l] = 0;
-          }
         
 	if(mzd_read_bit(A, i, j))
           found = 1;
@@ -1208,9 +1202,9 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
           /* alternative idea: copy out the stripe and do ordinary
            * Gaussian elimination then use this stripe as a lookup but
            * add stuff to the actual matrix too?*/
-          for(l = 0; l < curr_pos; l++)
-            if(added[l])
-              mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
+          for(l = curr_pos; l != 0; l--)
+            if(mzd_read_bit(A, i, start_col + l - 1))
+              mzd_row_add_offset(A, i, start_row + l - 1, start_col + l);
         } else {
           break;
         }
@@ -1220,7 +1214,6 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
     }
     
     if(!found) {
-      m4ri_mm_free(added);
       return curr_pos;
     }
 
@@ -1228,16 +1221,14 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
     if (i != start_row + curr_pos)
       mzd_row_swap(A, i, start_row + curr_pos);
 
-
     if (j > Q->values[start_col + curr_pos])
       Q->values[start_col + curr_pos] = j;
     if (j != start_col + curr_pos)
       mzd_col_swap(A, j, start_col + curr_pos);
   }
-  m4ri_mm_free(added);
   return curr_pos;
 }
-
+/* like mzd_make_table but adapts table for PLUQ */
 void mzd_make_table_pluq( packedmatrix *M, size_t r, size_t c, int k, packedmatrix *T, size_t *L) {
   const size_t homeblock= c/RADIX;
   size_t i, j, rowneeded, id;
@@ -1302,15 +1293,15 @@ void mzd_make_table_pluq( packedmatrix *M, size_t r, size_t c, int k, packedmatr
   }
 }
 
-// REALLY SLOW! TODO: FIX THIS
 packedmatrix *_mzd_pluq_to_u(packedmatrix *U, packedmatrix *A, size_t r, size_t c, int k) {
+  assert(U->offset == A->offset);
   size_t i, j;
-  mzd_set_ui(U, 0);
-  for(i=0; i<k; i++) {
-    for(j=c+i; j<A->ncols; j++) {
-      mzd_write_bit(U, i, j, mzd_read_bit(A, r+i, j));
-    }
-  }
+  mzd_submatrix(U, A, r, 0, r+k, A->ncols);
+
+  for(i=0; i<k; i++)
+    for(j=0; j<c+i; j++) 
+      mzd_write_bit(U, i, j, 0);
+  //mzd_print_matrix(U);
   return U;
 }
 
@@ -1330,8 +1321,14 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
   for(size_t i = 0; i<nrows; i++)
     P->values[i] = i;
 
-  packedmatrix *T = mzd_init(TWOPOW(k), A->ncols);
-  packedmatrix *U = mzd_init(k, A->ncols);
+  packedmatrix *T = mzd_init(TWOPOW(k), A->ncols + A->offset);
+  T->offset = A->offset;
+  T->ncols = A->ncols;
+
+  packedmatrix *U = mzd_init(k, A->ncols + A->offset);
+  U->offset = A->offset;
+  U->ncols = A->ncols;
+
   size_t *L = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
 
   while(c < ncols && r < A->nrows) {

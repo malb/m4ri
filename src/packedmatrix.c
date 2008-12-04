@@ -749,7 +749,6 @@ packedmatrix *_mzd_add(packedmatrix *C, const packedmatrix *A, const packedmatri
 }
 
 packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *M, const size_t startrow, const size_t startcol, const size_t endrow, const size_t endcol) {
-  assert(M->offset == 0);
   size_t nrows, ncols, i, colword, x, y, block, spot, startword;
   size_t truerow;
   word temp  = 0;
@@ -762,11 +761,12 @@ packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *M, const size_t
   } else if(S->nrows < nrows || S->ncols < ncols) {
     m4ri_die("mzd_submatrix: got S with dimension %d x %d but expected %d x %d\n",S->nrows,S->ncols,nrows,ncols);
   }
+  assert(M->offset == S->offset);
 
-  startword = startcol / RADIX;
+  startword = (M->offset + startcol) / RADIX;
 
   /* we start at the beginning of a word */
-  if (startcol%RADIX == 0) {
+  if ((M->offset + startcol)%RADIX == 0) {
     if(ncols/RADIX) {
       for(x = startrow, i=0; i<nrows; i++, x++) {
         memcpy(S->values + S->rowswap[i], M->values + M->rowswap[x] + startword, 8*(ncols/RADIX));
@@ -781,12 +781,12 @@ packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *M, const size_t
     }
     /* startcol is not the beginning of a word */
   } else { 
-    spot = startcol % RADIX;
+    spot = (M->offset + startcol) % RADIX;
     for(x = startrow, i=0; i<nrows; i++, x+=1) {
       truerow = M->rowswap[x];
 
       /* process full words first */
-      for(y = startcol, colword=0; colword<(int)(ncols/RADIX); colword++, y+=RADIX) {
+      for(colword=0; colword<(int)(ncols/RADIX); colword++) {
 	block = truerow + colword + startword;
 	temp = (M->values[block] << (spot)) | (M->values[block + 1] >> (RADIX-spot) ); 
 	S->values[S->rowswap[i] + colword] = temp;
