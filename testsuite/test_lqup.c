@@ -274,7 +274,7 @@ int main(int argc, char **argv) {
   status += test_lqup_full_rank(256,256);
   status += test_lqup_full_rank(1024,1024);
 
-  status += test_lqup_half_rank(128,128);
+  status += test_lqup_half_rank(129,129);
   status += test_lqup_half_rank(150,150);
   status += test_lqup_half_rank(256,256);
   status += test_lqup_half_rank(1024,1024);
