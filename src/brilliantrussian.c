@@ -1199,6 +1199,7 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
           found = 1;
         
         if(found==0) {
+          /* undo clearing */
           /* alternative idea: copy out the stripe and do ordinary
            * Gaussian elimination then use this stripe as a lookup but
            * add stuff to the actual matrix too?*/
@@ -1228,18 +1229,17 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
   }
   return curr_pos;
 }
-/* like mzd_make_table but adapts table for PLUQ */
+
+/* create a table of all 2^k linear combinations */
 void mzd_make_table_pluq( packedmatrix *M, size_t r, size_t c, int k, packedmatrix *T, size_t *L) {
-  const size_t homeblock= c/RADIX;
-  size_t i, j, rowneeded, id;
+  const size_t blockoffset= c/RADIX;
+  size_t i, rowneeded;
   size_t twokay= TWOPOW(k);
-  size_t wide = T->width - homeblock;
+  size_t wide = T->width - blockoffset;
 
   word *ti, *ti1, *m;
 
-  mzd_set_ui(T, 0);
-
-  ti1 = T->values + homeblock;
+  ti1 = T->values + blockoffset;
   ti = ti1 + T->width;
 #ifdef HAVE_SSE2
   unsigned long incw = 0;
@@ -1250,62 +1250,61 @@ void mzd_make_table_pluq( packedmatrix *M, size_t r, size_t c, int k, packedmatr
   L[0]=0;
   for (i=1; i<twokay; i++) {
     rowneeded = r + codebook[k]->inc[i-1];
-    id = codebook[k]->ord[i];
-    if (rowneeded >= M->nrows) {
-      for (j = 0; j < wide; j++) {
-        *ti++ = *ti1++;
-      }
-#ifdef HAVE_SSE2
-      ti+=incw; ti1+=incw;
-#endif
-    } else {
-      m = M->values + M->rowswap[rowneeded] + homeblock;
+    m = M->values + M->rowswap[rowneeded] + blockoffset;
 
-      /* Duff's device loop unrolling */
-      register int n = (wide + 7) / 8;
-      switch (wide % 8) {
-      case 0: do { *(ti++) = *(m++) ^ *(ti1++);
-      case 7:      *(ti++) = *(m++) ^ *(ti1++);
-      case 6:      *(ti++) = *(m++) ^ *(ti1++);
-      case 5:      *(ti++) = *(m++) ^ *(ti1++);
-      case 4:      *(ti++) = *(m++) ^ *(ti1++);
-      case 3:      *(ti++) = *(m++) ^ *(ti1++);
-      case 2:      *(ti++) = *(m++) ^ *(ti1++);
-      case 1:      *(ti++) = *(m++) ^ *(ti1++);
-        } while (--n > 0);
-      }
-#ifdef HAVE_SSE2
-      ti+=incw; ti1+=incw;
-#endif
-      ti += homeblock;
-      ti1 += homeblock;
+    /* Duff's device loop unrolling */
+    register int n = (wide + 7) / 8;
+    switch (wide % 8) {
+    case 0: do { *(ti++) = *(m++) ^ *(ti1++);
+    case 7:      *(ti++) = *(m++) ^ *(ti1++);
+    case 6:      *(ti++) = *(m++) ^ *(ti1++);
+    case 5:      *(ti++) = *(m++) ^ *(ti1++);
+    case 4:      *(ti++) = *(m++) ^ *(ti1++);
+    case 3:      *(ti++) = *(m++) ^ *(ti1++);
+    case 2:      *(ti++) = *(m++) ^ *(ti1++);
+    case 1:      *(ti++) = *(m++) ^ *(ti1++);
+      } while (--n > 0);
     }
+#ifdef HAVE_SSE2
+    ti+=incw; ti1+=incw;
+#endif
+    ti += blockoffset;
+    ti1 += blockoffset;
 
-    /* fix table lookup */
+    /* U is a basis but not the canonical basis, so we need to read what
+       element we just created from T*/
     L[(int)mzd_read_bits(T,i,c,k)] = i;
+    
+    /* We need fix the table to update the transformation matrix
+       correctly; e.g. if the first row has [1 0 1] and we clear a row
+       below with [1 0 1] we need to encode that this row is cleared by
+       adding the first row only ([1 0 0]).*/
   }
-
-  
-  /* fix table */
   for(i=1; i < twokay; i++) {
     const word correction = (word)codebook[k]->ord[i];
     mzd_xor_bits(T, i,c, k, correction);
   }
 }
 
+/* extract U from A for table creation */
 packedmatrix *_mzd_pluq_to_u(packedmatrix *U, packedmatrix *A, size_t r, size_t c, int k) {
-  assert(U->offset == A->offset);
+  /* this function call is now rather cheap, but it could be avoided
+     completetly if needed */
+  assert(U->offset == 0);
+  assert(A->offset == 0);
   size_t i, j;
+  size_t startcol = (c/RADIX)*RADIX;
   mzd_submatrix(U, A, r, 0, r+k, A->ncols);
 
   for(i=0; i<k; i++)
-    for(j=0; j<c+i; j++) 
-      mzd_write_bit(U, i, j, 0);
+    for(j=startcol; j<c+i; j++) 
+      mzd_write_bit(U, i, j,  0);
   return U;
 }
 
 /* method of many people factorisation */
 size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) {
+  assert(A->offset == 0);
   const size_t nrows = A->nrows; 
   size_t ncols = A->ncols; 
   size_t r = 0;
@@ -1320,13 +1319,8 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
   for(size_t i = 0; i<nrows; i++)
     P->values[i] = i;
 
-  packedmatrix *T = mzd_init(TWOPOW(k), A->ncols + A->offset);
-  T->offset = A->offset;
-  T->ncols = A->ncols;
-
-  packedmatrix *U = mzd_init(k, A->ncols + A->offset);
-  U->offset = A->offset;
-  U->ncols = A->ncols;
+  packedmatrix *T = mzd_init(TWOPOW(k), A->ncols);
+  packedmatrix *U = mzd_init(k, A->ncols);
 
   size_t *L = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
 
