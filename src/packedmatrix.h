@@ -163,6 +163,8 @@ void mzd_free_window(packedmatrix *A);
  */
  
 static inline void mzd_row_swap(packedmatrix *M, const size_t rowa, const size_t rowb) {
+  if(rowa == rowb)
+    return;
   size_t i;
   size_t width = M->width - 1;
   word *a = M->values + M->rowswap[rowa];
