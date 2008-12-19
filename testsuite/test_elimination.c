@@ -25,9 +25,9 @@ int elim_test_equality(int nr, int nc) {
   mzd_reduce_m4ri(D, 0, 4, NULL, NULL);
   mzd_top_reduce_m4ri(D, 4, NULL, NULL);
 
-  mzd_reduce_naiv(E, 1);
+  mzd_reduce_naive(E, 1);
 
-  mzd_reduce_naiv(F, 0);
+  mzd_reduce_naive(F, 0);
   mzd_top_reduce_m4ri(F, 0, NULL, NULL);
   
   if(mzd_equal(A, B) != TRUE) {

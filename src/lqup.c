@@ -111,26 +111,28 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
       P2->values[i] += r1;
     
     /* Permute the Right side of U to the left */
-    permutation * Q2b = mzp_init_window(Q, r1, ncols);
     // TODO : fix A->offset
-    packedmatrix* A01b = mzd_init_window (A, 0, r1, r1, ncols);
-    packedmatrix* A11b = mzd_init_window (A, r1, r1, nrows, ncols);
-    mzd_col_block_rotate (A01b, 0, n1-r1, n1 - r1 + r2, 1);
-    mzd_col_block_rotate (A11b, 0, n1-r1, n1 - r1 + r2, 1);
 
-    /* Update Q */
-    //printf("n1: %llu, r1: %llu, r2: %llu\n",n1,r1, r2);
-     for(i=n1, j=r1; i<n1+r2; i++, j++) {
-      size_t t = Q->values[j];
+    /* // fast, buggy solution
+     * permutation * Q2b = mzp_init_window(Q, r1, ncols);
+     * packedmatrix* A01b = mzd_init_window (A, 0, r1, r1, ncols);
+     * packedmatrix* A11b = mzd_init_window (A, r1, r1, nrows, ncols);
+     * mzd_col_block_rotate (A01b, 0, n1-r1, n1 - r1 + r2, 1);
+     * mzd_col_block_rotate (A11b, 0, n1-r1, n1 - r1 + r2, 1);
+     * // Update Q
+     * mzp_free_window(Q2b);
+     * mzd_free_window(A01b);
+     * mzd_free_window(A11b);
+     */
+
+    for(i=n1, j=r1; i<n1+r2; i++, j++) {
       Q->values[j] = Q->values[i];
-      //Q->values[i] = t;
+      mzd_col_swap(A, i, j);
     }
+
     mzp_free_window(Q2);
-    mzp_free_window(Q2b);
     mzp_free_window(P2);
 
-    mzd_free_window(A01b);
-    mzd_free_window(A11b);
     mzd_free_window(A0);
     mzd_free_window(A1);
     mzd_free_window(A00);
@@ -144,7 +146,7 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
 }
 
 
-size_t _mzd_pluq_naiv(packedmatrix *A, permutation *P, permutation *Q)  {
+size_t _mzd_pluq_naive(packedmatrix *A, permutation *P, permutation *Q)  {
   size_t i, j, l, curr_pos;
   int found;
 

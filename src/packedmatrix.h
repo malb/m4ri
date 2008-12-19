@@ -342,10 +342,10 @@ packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A );
  *
  * \note Normally, if you will multiply several times by b, it is
  * smarter to calculate bT yourself, and keep it, and then use the
- * function called _mzd_mul_naiv
+ * function called _mzd_mul_naive
  *
  */
-packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
+packedmatrix *mzd_mul_naive(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
 
 /**
  * \brief Naive cubic matrix multiplication and addition
@@ -358,10 +358,10 @@ packedmatrix *mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedm
  *
  * \note Normally, if you will multiply several times by b, it is
  * smarter to calculate bT yourself, and keep it, and then use the
- * function called _mzd_mul_naiv
+ * function called _mzd_mul_naive
  */
 
-packedmatrix *mzd_addmul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
+packedmatrix *mzd_addmul_naive(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
 
 /**
  * \brief Naive cubic matrix multiplication with the pre-transposed B.
@@ -374,7 +374,7 @@ packedmatrix *mzd_addmul_naiv(packedmatrix *C, const packedmatrix *A, const pack
  * \param clear Whether to clear C before accumulating AB
  */
 
-packedmatrix *_mzd_mul_naiv(packedmatrix *C, const packedmatrix *A, const packedmatrix *B, const int clear);
+packedmatrix *_mzd_mul_naive(packedmatrix *C, const packedmatrix *A, const packedmatrix *B, const int clear);
 
 /**
  * \brief Matrix multiplication optimized for v*A where v is a vector.
@@ -445,7 +445,7 @@ int mzd_gauss_delayed(packedmatrix *M, const size_t startcol, const int full);
  * \wordoffset
  */
 
-int mzd_reduce_naiv(packedmatrix *M, const int full);
+int mzd_reduce_naive(packedmatrix *M, const int full);
 
 /**
  * \brief Return TRUE if A == B.
@@ -554,7 +554,7 @@ packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *M, const size_t
  * \wordoffset
  */
 
-packedmatrix *mzd_invert_naiv(packedmatrix *INV, packedmatrix *A, const packedmatrix *I);
+packedmatrix *mzd_invert_naive(packedmatrix *INV, packedmatrix *A, const packedmatrix *I);
 
 /**
  * \brief Set C = A+B.

@@ -30,8 +30,8 @@ int mul_test_equality(int m, int l, int n, int k, int cutoff) {
   /* D = A*B via M4RM, temporary buffers are managed internally */
   D = mzd_mul_m4rm(    NULL, A, B, k);
 
-  /* E = A*B via naiv cubic multiplication */
-  E = mzd_mul_naiv(    NULL, A, B);
+  /* E = A*B via naive cubic multiplication */
+  E = mzd_mul_naive(    NULL, A, B);
 
   mzd_free(A);
   mzd_free(B);

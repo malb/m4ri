@@ -991,9 +991,9 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
 
   if (b_nc < RADIX-10) {
     if(clear)
-      return mzd_mul_naiv(C, A, B);
+      return mzd_mul_naive(C, A, B);
     else
-      return mzd_addmul_naiv(C, A, B);
+      return mzd_addmul_naive(C, A, B);
   } else if (a_nr < 16) {
     return _mzd_mul_va(C, A, B, clear);
   }

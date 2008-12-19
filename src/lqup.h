@@ -91,7 +91,7 @@ size_t mzd_pluq(packedmatrix *A, permutation *P, permutation * Q, const int cuto
 size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cutoff);
 
 /**
- * \brief PLUQ matrix decomposition (naiv base case).
+ * \brief PLUQ matrix decomposition (naive base case).
  *
  * Computes the PLUQ matrix decomposition using the naive algorithm.
  *
@@ -108,6 +108,6 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
  * \param Q Output column permutation matrix
  */
 
-size_t _mzd_pluq_naiv(packedmatrix *A, permutation * P, permutation * Q);
+size_t _mzd_pluq_naive(packedmatrix *A, permutation * P, permutation * Q);
 
 #endif
