@@ -40,7 +40,7 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
 
   if (ncols <= PLUQ_CUTOFF){
     /* Base case */
-    return _mzd_pluq_naive(A, P, Q);
+    return _mzd_pluq_mmpf(A, P, Q, 0);
   } else{
     /* Block divide and conquer algorithm */
     

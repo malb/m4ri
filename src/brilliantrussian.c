@@ -1344,18 +1344,27 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
     c += kbar;
 
     if (kbar == 0) {
-      if (c < ncols -1 && r < nrows) {
-        ncols--;
-        if (Q->values[c] < Q->values[ncols]) {
-          Q->values[c] = Q->values[ncols];
-        } else {
-          size_t tmp = Q->values[c];
-          Q->values[c] = Q->values[ncols];
-          Q->values[ncols] = tmp;
-        };
+      size_t t = Q->values[c];
+      if (c < ncols  && r < nrows && t < ncols - 1) {
+        //TODO: have more efficient strategy here
+        //ncols--;
+        //if (Q->values[c] < Q->values[ncols]) {
+        //  Q->values[c] = Q->values[ncols];
+        //} else {
+        //  size_t tmp = Q->values[c];
+        //  Q->values[c] = Q->values[ncols];
+        //  Q->values[ncols] = tmp;
+        //};
 
-        mzd_col_swap(A, c, ncols);
+        /** undo last swap **/
+        if (t > c) {
+          mzd_col_swap(A, c, t);
+        }
+        mzd_col_swap(A, c, t+1);
+        Q->values[c] = t+1;
       } else {
+        Q->values[c] = c;
+        mzd_col_swap(A, c, t);
         break;
       }
     }

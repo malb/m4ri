@@ -191,6 +191,7 @@ int test_lqup_structured(size_t m, size_t n) {
         break;
       }
     }
+
   if (status) {
     printf(" ... FAILED\n");
   }  else

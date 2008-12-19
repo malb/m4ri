@@ -20,8 +20,8 @@ int main(int argc, char **argv) {
   
   wt = walltime(&clockZero);
   t = cpucycles();
-  mzd_reduce_m4ri(A, 1, 0, NULL, NULL);
-  printf("n: %5d, cpu cycles: %llu wall time: %lf\n",n, cpucycles() - t, walltime(&wt));
+  size_t r = mzd_reduce_m4ri(A, 1, 0, NULL, NULL);
+  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %llu wall time: %lf\n",m, n, r, cpucycles() - t, walltime(&wt));
 
   mzd_free(A);
 }
