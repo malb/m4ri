@@ -93,6 +93,8 @@ int test_lqup_half_rank(size_t m, size_t n) {
 
   packedmatrix* Acopy = mzd_copy (NULL,A);
 
+
+
   permutation* P = mzp_init(m);
   permutation* Q = mzp_init(n);
   int r = mzd_pluq(A, P, Q, 0);
@@ -116,12 +118,16 @@ int test_lqup_half_rank(size_t m, size_t n) {
   mzd_addmul(Acopy,L2,U2,0);
 
   int status = 0;
-  for ( i=0; i<m; ++i)
+  for ( i=0; i<m; ++i) {
     for ( j=0; j<n; ++j){
       if (mzd_read_bit(Acopy,i,j)){
 	status = 1;
       }
     }
+    if(status)
+      break;
+  }
+
   if (status)
     printf(" ... FAILED\n");
   else
@@ -146,12 +152,9 @@ int test_lqup_structured(size_t m, size_t n) {
   packedmatrix* L = mzd_init(m, m);
   packedmatrix* U = mzd_init(m, n);
 
-  for(i=0; i<MIN(m,n); i+=2) {
-    mzd_write_bit(A, i, i, 1);
-  }
-  for(i=0; i<m; i++) {
-    mzd_write_bit(A, i, n-1, 1);
-  }
+  for(i=0; i<m; i+=2)
+    for (j=i; j<n; j++)
+      mzd_write_bit(A, i, j, 1);
 
   packedmatrix* Acopy = mzd_copy (NULL,A);
 
@@ -275,7 +278,7 @@ int main(int argc, char **argv) {
   status += test_lqup_full_rank(1024,1024);
 
   status += test_lqup_half_rank(129,129);
-  status += test_lqup_half_rank(150,150);
+  status += test_lqup_half_rank(132,132);
   status += test_lqup_half_rank(256,256);
   status += test_lqup_half_rank(1024,1024);
 

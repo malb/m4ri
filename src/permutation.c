@@ -49,26 +49,34 @@ void mzp_free_window(permutation* condemned){
 
 void mzd_apply_p_left(packedmatrix *A, permutation *P) {
   size_t i;
-  for (i=0; i<P->length; i++)
+  for (i=0; i<P->length; i++) {
+    assert(P->values[i] >= i);
     mzd_row_swap(A, i, P->values[i]);
+  }
 }
 
 void mzd_apply_p_left_trans(packedmatrix *A, permutation *P) {
   long i;
-  for (i=P->length-1; i>=0; i--)
+  for (i=P->length-1; i>=0; i--) {
+    assert(P->values[i] >= i);
     mzd_row_swap(A, i, P->values[i]);
+  }
 }
 
 void mzd_apply_p_right(packedmatrix *A, permutation *P) {
   size_t i;
-  for (i=0; i<P->length; i++)
+  for (i=0; i<P->length; i++) {
+    assert(P->values[i] >= i);
     mzd_col_swap(A, i, P->values[i]);
+  }
 }
 
 void mzd_apply_p_right_trans(packedmatrix *A, permutation *P) {
   long i;
-  for (i=P->length-1;i>=0; i--)
+  for (i=P->length-1;i>=0; i--) {
+    assert(P->values[i] >= i);
     mzd_col_swap(A, i, P->values[i]);
+  }
 }
 
 void mzd_col_block_rotate(packedmatrix *M, size_t zs, size_t ze, size_t de, int copy) {

@@ -40,18 +40,16 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
 
   if (ncols <= PLUQ_CUTOFF){
     /* Base case */
-    return _mzd_pluq_mmpf(A, P, Q, 0);
-    
+    return _mzd_pluq_naive(A, P, Q);
   } else{
     /* Block divide and conquer algorithm */
     
-    /*   
+    /*                     n1
      *   ------------------------------------------
-     *   | A0                                     |
-     *   |                                        |
-     * n1------------------------------------------ 
-     *   | A1                                     |
-     *   |                                        |
+     *   | A0              | A1                   |
+     *   |                 |                      |
+     *   |                 |                      |
+     *   |                 |                      |
      *   ------------------------------------------
      */
 
@@ -63,7 +61,6 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
     size_t r1, r2;
     /* First recursive call */
     r1 = _mzd_pluq (A0, P, Q, cutoff);
-
 
     /*
      *           r1           n1
@@ -93,15 +90,8 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
     /* Second recursive call */
     permutation * P2 = mzp_init_window(P, r1, nrows);
     permutation * Q2 = mzp_init_window(Q, n1, ncols);
+
     r2 = _mzd_pluq(A11, P2, Q2, cutoff);
-
-
-    /* Update A01 */
-    mzd_apply_p_right(A01, Q2);
-
-    /* Update Q */
-    for (i = 0; i < ncols - n1; ++i)
-      Q2->values[i] += n1;
 
     /* Update A10 */
     mzd_apply_p_left(A10, P2);
@@ -109,11 +99,16 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
     /* Update P */
     for (i = 0; i < nrows - r1; ++i)
       P2->values[i] += r1;
+
     
     /* Permute the Right side of U to the left */
-    // TODO : fix A->offset
 
     /* // fast, buggy solution
+     * // Update A01 
+     * mzd_apply_p_right(A01, Q2);
+     * // Update Q
+     * for (i = 0; i < ncols - n1; ++i)
+     *  Q2->values[i] += n1;
      * permutation * Q2b = mzp_init_window(Q, r1, ncols);
      * packedmatrix* A01b = mzd_init_window (A, 0, r1, r1, ncols);
      * packedmatrix* A11b = mzd_init_window (A, r1, r1, nrows, ncols);
@@ -123,11 +118,22 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
      * mzp_free_window(Q2b);
      * mzd_free_window(A01b);
      * mzd_free_window(A11b);
+     * for(i=n1, j=r1; i<n1+r2; i++, j++) {
+     *   Q->values[j] = Q->values[i];
+     *   mzd_col_swap(A, j, i);
+     * }
      */
 
-    for(i=n1, j=r1; i<n1+r2; i++, j++) {
-      Q->values[j] = Q->values[i];
-      mzd_col_swap(A, i, j);
+    // easy working solution
+    /* undo permutation */
+    mzd_apply_p_right_trans(A11, Q2);
+
+    for(i=0, j=n1; j<n1+r2; i++, j++) {
+      mzd_col_swap(A, r1 + i, Q2->values[i] + n1);
+      Q->values[r1+i] = Q2->values[i] + n1;
+    }
+    for(i=r1+r2; i<ncols; i++) {
+      Q->values[i] = i;
     }
 
     mzp_free_window(Q2);
@@ -142,7 +148,6 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
 
     return r1 + r2;
   }
-  
 }
 
 
@@ -184,12 +189,7 @@ size_t _mzd_pluq_naive(packedmatrix *A, permutation *P, permutation *Q)  {
       }
       curr_pos++;
     } else {
-      /* Inefficient: should be removed by changing the specs of permutations */
-      for (i=curr_pos; i<A->nrows; ++i)
-	P->values[i]=i;
-      for (i=curr_pos; i<A->ncols; ++i)
-	Q->values[i]=i;
-      return curr_pos;
+      break;
     }
   }
   for (i=curr_pos; i<A->nrows; ++i)
