@@ -29,11 +29,12 @@
 *
 ********************************************************************/
 
-#include <stdlib.h>
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
+#include <stdlib.h>
+#include <assert.h>
 #include <string.h>
 
 /*
@@ -255,6 +256,14 @@ void m4ri_word_to_str( char *destination, word data, int colon);
  */
 
 BIT m4ri_coin_flip(void);
+
+/**
+ * \brief Return uniformly randomly distributed random word.
+ *
+ * \todo Allow user to provide her own random() function.
+ */
+
+word m4ri_random_word();
 
 /***** Initialization *****/
 
@@ -481,5 +490,6 @@ static inline void m4ri_mmc_cleanup(void) {
     mm[i].size = 0;
   }
 }
+
 
 #endif //MISC_H

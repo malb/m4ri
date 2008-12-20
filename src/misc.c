@@ -118,6 +118,12 @@ void m4ri_mm_free(void *condemned, ...) {
 #endif  
 }
 
+#define RAND_SHORT ((word)(rand()&((1<<16)-1)))
+
+word m4ri_random_word() {
+  return RAND_SHORT ^ RAND_SHORT<<16 ^ RAND_SHORT<<32 ^ RAND_SHORT<<48;
+}
+
 BIT m4ri_coin_flip() {
   if (rand() < RAND_MAX/2) {
     return 0;
@@ -125,6 +131,7 @@ BIT m4ri_coin_flip() {
     return 1;
   }
 }
+
 
 #ifdef __GNUC__
 void __attribute__ ((constructor)) m4ri_init()
