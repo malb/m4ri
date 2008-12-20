@@ -91,7 +91,7 @@ void m4ri_destroy_all_codes() {
   codebook = NULL;
 }
 
-static int log2_floor(int n){
+static inline int log2_floor(int n){
   int i;
   for(i=0;TWOPOW(i)<=n;i++){}
   return i;

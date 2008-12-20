@@ -174,10 +174,8 @@ size_t _mzd_pluq_naive(packedmatrix *A, permutation *P, permutation *Q)  {
     if(found) {
       P->values[curr_pos] = i;
       Q->values[curr_pos] = j;
-      if (i!=curr_pos)
-        mzd_row_swap(A, i, curr_pos);
-      if (j!=curr_pos)
-        mzd_col_swap(A, j, curr_pos);
+      mzd_row_swap(A, i, curr_pos);
+      mzd_col_swap(A, j, curr_pos);
           
       /* clear below but preserve transformation matrix */
       if (curr_pos +1 < A->ncols){

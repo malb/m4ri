@@ -1189,7 +1189,7 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
     found = 0;
     /* search for some pivot */
     for(j = start_col + curr_pos; j < start_col + k; j++) {
-      for(i = start_row + curr_pos; i < A->nrows; i++) {
+      for(i = start_row + curr_pos; i < MIN(A->nrows, start_row + 5*k); i++) {
         /* clear before but preserve transformation matrix */
         for(l = 0; l < curr_pos; l++)
 	  if(mzd_read_bit(A, i, start_col + l))
@@ -1218,14 +1218,13 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
       return curr_pos;
     }
 
-    P->values[start_row + curr_pos] = i;
-    if (i != start_row + curr_pos)
-      mzd_row_swap(A, i, start_row + curr_pos);
+    if (i > P->values[start_row + curr_pos])
+      P->values[start_row + curr_pos] = i;
+    mzd_row_swap(A, i, start_row + curr_pos);
 
     if (j > Q->values[start_col + curr_pos])
       Q->values[start_col + curr_pos] = j;
-    if (j != start_col + curr_pos)
-      mzd_col_swap(A, j, start_col + curr_pos);
+    mzd_col_swap(A, j, start_col + curr_pos);
   }
   return curr_pos;
 }
@@ -1306,65 +1305,59 @@ packedmatrix *_mzd_pluq_to_u(packedmatrix *U, packedmatrix *A, size_t r, size_t 
 size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) {
   assert(A->offset == 0);
   const size_t nrows = A->nrows; 
-  size_t ncols = A->ncols; 
-  size_t r = 0;
-  size_t c = 0;
+  const size_t ncols = A->ncols; 
+  size_t curr_pos = 0;
   int kbar = 0;
 
   if(k == 0)
-    k = m4ri_opt_k(A->nrows, A->ncols, 0);
+    k = m4ri_opt_k(nrows, ncols, 0);
 
   for(size_t i = 0; i<ncols; i++)
     Q->values[i] = i;
   for(size_t i = 0; i<nrows; i++)
     P->values[i] = i;
 
-  packedmatrix *T = mzd_init(TWOPOW(k), A->ncols);
-  packedmatrix *U = mzd_init(k, A->ncols);
+  packedmatrix *T = mzd_init(TWOPOW(k), ncols);
+  packedmatrix *U = mzd_init(k, ncols);
 
   size_t *L = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
 
-  while(c < ncols && r < A->nrows) {
-    if(c+k > A->ncols)
-      k = ncols - c;
+  while(curr_pos < MIN(ncols,nrows)) {
+    if(curr_pos + k > ncols)
+      k = ncols - curr_pos;
 
     /* 1. compute PLUQ factorisation for a kxk submatrix */
-    kbar = _mzd_pluq_submatrix(A, r, c, k, P, Q);
-    
+    kbar = _mzd_pluq_submatrix(A, curr_pos, curr_pos, k, P, Q);
     /* 2. extract U */
-    _mzd_pluq_to_u(U, A, r, c, kbar);
+    _mzd_pluq_to_u(U, A, curr_pos, curr_pos, kbar);
     if(kbar > 0) {
       /* 2. generate table T */
-      mzd_make_table_pluq(U, 0, c, kbar, T, L);
+      mzd_make_table_pluq(U, 0, curr_pos, kbar, T, L);
       /* 3. use that table to process remaining rows below */
-      mzd_process_rows(A, r+kbar, A->nrows, c, kbar, T, L);
+      mzd_process_rows(A, curr_pos + kbar, nrows, curr_pos, kbar, T, L);
     }
     
-    r += kbar;
-    c += kbar;
-
+    curr_pos += kbar;
     if (kbar == 0) {
-      size_t t = Q->values[c];
-      if (c < ncols  && r < nrows && t < ncols - 1) {
-        //TODO: have more efficient strategy here
-        //ncols--;
-        //if (Q->values[c] < Q->values[ncols]) {
-        //  Q->values[c] = Q->values[ncols];
-        //} else {
-        //  size_t tmp = Q->values[c];
-        //  Q->values[c] = Q->values[ncols];
-        //  Q->values[ncols] = tmp;
-        //};
-
-        /** undo last swap **/
-        if (t > c) {
-          mzd_col_swap(A, c, t);
+      size_t i = curr_pos;
+      size_t j = curr_pos;
+      size_t found = 0;
+      for(j = curr_pos ; j < ncols; j++) {
+        for(i = curr_pos ; i< nrows; i++) {
+          if(mzd_read_bit(A, i, j)) {
+            found = 1;
+            break;
+          }
         }
-        mzd_col_swap(A, c, t+1);
-        Q->values[c] = t+1;
+        if (found)
+          break;
+      }
+      if(found) {
+        P->values[curr_pos] = i;
+        Q->values[curr_pos] = j;
+        mzd_row_swap(A, i, curr_pos);
+        mzd_col_swap(A, j, curr_pos);
       } else {
-        Q->values[c] = c;
-        mzd_col_swap(A, c, t);
         break;
       }
     }
@@ -1373,5 +1366,5 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
   mzd_free(U);
   mzd_free(T);
   m4ri_mm_free(L);
-  return r;
+  return curr_pos;
 }
