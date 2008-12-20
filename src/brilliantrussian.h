@@ -260,40 +260,4 @@ packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
 
 #define M4RM_GRAY8
 
-
-/**
- * Perform PLUQ factorization on A.
- *
- * This code is a scratch only, do not call it.
- *
- * \param A Matrix.
- * \param k Size of Gray code tables.
- * \param P Preallocated row permutation.
- * \param Q Preallocated column permutation.
- *
- * \wordoffset
- * \internal
- */
-
-size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k);
-
-/**
- * Perform PLUQ factorization on a submatrix of up to dimension k
- * starting at (r,c).
- *
- * This code is a scratch only, do not call it.
- *
- * \param A Matrix.
- * \param r Row Offset.
- * \param c Column Offset.
- * \param k Size of Gray code tables.
- * \param P Preallocated row permutation.
- * \param Q Preallocated column permutation.
- *
- * \wordoffset
- * \internal
- */
-
-size_t _mzd_pluq_submatrix(packedmatrix *A, size_t r, size_t c, int k, permutation *P, permutation *Q);
-
 #endif //BRILLIANTRUSSIAN_H

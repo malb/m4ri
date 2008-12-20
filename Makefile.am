@@ -4,13 +4,13 @@ AM_CFLAGS=${C99_FLAG} ${SIMD_FLAGS} ${OPENMP_CFLAGS} ${DEBUG_FLAGS}
 
 lib_LTLIBRARIES = libm4ri.la
 
-libm4ri_la_SOURCES = src/brilliantrussian.c src/misc.c src/packedmatrix.c src/grayflex.c src/strassen.c src/permutation.c src/trsm.c src/lqup.c src/solve.c
+libm4ri_la_SOURCES = src/brilliantrussian.c src/misc.c src/packedmatrix.c src/grayflex.c src/strassen.c src/permutation.c src/trsm.c src/lqup.c src/solve.c src/pluq_mmpf.c
 
 pkgincludesubdir = $(includedir)/m4ri
-pkgincludesub_HEADERS = src/m4ri.h src/brilliantrussian.h src/misc.h src/packedmatrix.h src/grayflex.h src/strassen.h src/parity.h src/permutation.h src/config.h src/trsm.h src/lqup.h src/solve.h
+pkgincludesub_HEADERS = src/m4ri.h src/brilliantrussian.h src/misc.h src/packedmatrix.h src/grayflex.h src/strassen.h src/parity.h src/permutation.h src/config.h src/trsm.h src/lqup.h src/solve.h  src/pluq_mmpf.h
 
 #libm4ri_la_LDFLAGS = -version-info 0:0:0
-libm4ri_la_LDFLAGS = -release 0.0.20081130
+libm4ri_la_LDFLAGS = -release 0.0.20081230
 
 check_PROGRAMS=test_multiplication test_elimination test_trsm test_lqup test_solve
 test_multiplication_SOURCES=testsuite/test_multiplication.c

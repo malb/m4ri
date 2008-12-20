@@ -23,6 +23,7 @@
 #include "trsm.h"
 #include "parity.h"
 #include <stdio.h>
+#include "pluq_mmpf.h"
 #include "strassen.h"
 #include "lqup.h"
 
