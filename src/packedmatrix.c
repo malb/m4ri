@@ -22,10 +22,6 @@
 #include "packedmatrix.h"
 #include "parity.h"
 
-#ifdef HAVE_SSE2
-#include <emmintrin.h>
-#endif
-
 #define SAFECHAR (int)(RADIX+RADIX/3)
 
 packedmatrix *mzd_init(size_t r, size_t c) {
@@ -208,27 +204,6 @@ void mzd_print_matrix_tight( const packedmatrix *M ) {
     printf("]\n");
   }
 }
-
-void mzd_row_add_offset( packedmatrix *M, size_t dstrow, size_t srcrow, size_t coloffset) {
-  coloffset += M->offset;
-  size_t startblock= coloffset/RADIX;
-  size_t i;
-  
-  /* make sure to start adding at coloffset */
-  word *src = M->values + M->rowswap[srcrow];
-  word *dst = M->values + M->rowswap[dstrow];
-  word temp = src[startblock];
-
-  if (coloffset%RADIX)
-    temp = RIGHTMOST_BITS(temp, (RADIX-(coloffset%RADIX)-1));
-
-  dst[startblock] ^= temp;
-
-  for ( i=startblock+1; i < M->width; i++ ) {
-    dst[i] ^= src[i];
-  }
-}
-
 
 void mzd_row_add( packedmatrix *m, size_t sourcerow, size_t destrow) {
   mzd_row_add_offset(m, destrow, sourcerow, 0);

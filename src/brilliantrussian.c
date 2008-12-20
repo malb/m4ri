@@ -55,9 +55,10 @@ static inline int _mzd_gauss_submatrix_full(packedmatrix *A, size_t r, size_t c,
     found = 0;
     for (i=start_row; i< end_row; i++) {
       /* first we need to clear the first columns */
-      for (l=0; l<j-c; l++)
-        if (mzd_read_bit(A, i, c+l))
-          mzd_row_add_offset(A, i, r+l, c+l);
+      if(mzd_read_bits(A,i,c,j-c))
+        for (l=0; l<j-c; l++)
+          if (mzd_read_bit(A, i, c+l))
+            mzd_row_add_offset(A, i, r+l, c+l);
       
       /* pivot? */
       if (mzd_read_bit(A, i, j)) {
