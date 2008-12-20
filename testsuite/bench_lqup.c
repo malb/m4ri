@@ -5,6 +5,7 @@
 #include "walltime.h"
 
 int main(int argc, char **argv) {
+  int fullrank = 1;
   int n,m;
   unsigned long long t;
   double wt;
@@ -15,11 +16,14 @@ int main(int argc, char **argv) {
   }
   m = atoi(argv[1]);
   n = atoi(argv[2]);
-/*   packedmatrix *L = mzd_init(m, m); */
-/*   packedmatrix *U = mzd_init(m, n); */
+  packedmatrix *L, *U;
   packedmatrix *A = mzd_init(m, n);
-/*   mzd_randomize(U); */
-/*   mzd_randomize(L); */
+
+  if(fullrank) {
+  L = mzd_init(m, m);
+  U = mzd_init(m, n);
+  mzd_randomize(U);
+  mzd_randomize(L);
 /*   size_t i,j; */
 /*   for (i=0; i<m; ++i){ */
 /*     for (j=i+1; j<m;++j) */
@@ -32,10 +36,25 @@ int main(int argc, char **argv) {
 /*       mzd_write_bit(U,i,j, 0); */
 /*     mzd_write_bit(U,i,i, 1); */
 /*   } */
+  size_t i,j;
+  for (i=0; i<m; ++i){
+    mzd_write_bit(U,i,i, 1);
+    for (j=0; j<i;++j)
+      mzd_write_bit(U,i,j, 0);
+    if (i%2)
+      for (j=i; j<n;++j)
+	mzd_write_bit(U,i,j, 0);
+    for (j=i+1; j<m;++j)
+      mzd_write_bit(L,i,j, 0);
+    mzd_write_bit(L,i,i, 1);
+  }
 
-/*   mzd_mul(A,L,U,0); */
 
-  mzd_randomize(A);
+
+  mzd_mul(A,L,U,0);
+  } else {
+    mzd_randomize(A);
+  }
 
   permutation* P = mzp_init(m);
   permutation* Q = mzp_init(n);
@@ -49,6 +68,8 @@ int main(int argc, char **argv) {
   mzd_free(A);
   mzp_free(P);
   mzp_free(Q);
-/*   mzd_free(U); */
-/*   mzd_free(L); */
+  if(fullrank) {
+    mzd_free(U);
+    mzd_free(L);
+  }
 }

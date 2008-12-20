@@ -3,8 +3,6 @@
  *
  * \brief PLUQ matrix decomposition routines
  *
- * This is scratch, experimental code.
- *
  * \author Clement Pernet <clement.pernet@gmail.com>
  *
  * \internal
@@ -40,7 +38,7 @@
  * Crossover point for PLUQ factorization.
  */
 
-#define PLUQ_CUTOFF 2048
+#define PLUQ_CUTOFF 64
 
 /**
  * \brief PLUQ matrix decomposition.

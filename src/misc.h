@@ -189,7 +189,7 @@ typedef unsigned char BIT;
 #define RIGHTMOST_BITS(w, n) (((w)<<(RADIX-(n)-1))>>(RADIX-(n)-1))
 
 /**
-* \brief creat a bit mask to zero out all but he n%RADIX leftmost
+* \brief creat a bit mask to zero out all but the n%RADIX leftmost
 * bits.
 *
 * \param n Integer
@@ -198,7 +198,7 @@ typedef unsigned char BIT;
 #define LEFT_BITMASK(n) (~((ONE << ((RADIX - (n % RADIX))%RADIX) ) - 1))
 
 /**
-* \brief creat a bit mask to zero out all but he n%RADIX rightmost
+* \brief creat a bit mask to zero out all but the n%RADIX rightmost
 * bits.
 *
 * \param n Integer
@@ -207,6 +207,16 @@ typedef unsigned char BIT;
 */
 
 #define RIGHT_BITMASK(n) (FFFF>>( (RADIX - (n%RADIX))%RADIX ))
+
+/**
+* \brief creat a bit mask to zero out all but the n%RADIX bit.
+*
+* \param n Integer
+*
+*/
+
+#define BITMASK(n) (ONE<<(RADIX-((n)%RADIX)-1))
+
 
 /**
  * \brief Return alignment of addr w.r.t. n. For example the address

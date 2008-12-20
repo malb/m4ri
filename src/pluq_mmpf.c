@@ -38,7 +38,7 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
     found = 0;
     /* search for some pivot */
     for(j = start_col + curr_pos; j < start_col + k; j++) {
-      for(i = start_row + curr_pos; i < MIN(A->nrows, start_row + 5*k); i++) {
+      for(i = start_row + curr_pos; i < MIN(A->nrows, start_row + 3*k); i++) {
         /* clear before but preserve transformation matrix */
         for(l = 0; l < curr_pos; l++)
 	  if(mzd_read_bit(A, i, start_col + l))
@@ -249,27 +249,45 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
       /* 3. use that table to process remaining rows below */
       mzd_process_rows(A, curr_pos + kbar, nrows, curr_pos, kbar, T0, L0);
     } else {
-      size_t i = curr_pos;
-      size_t j = curr_pos;
-      size_t found = 0;
-      for(j = curr_pos ; j < ncols; j++) {
-        for(i = curr_pos ; i< nrows; i++) {
-          if(mzd_read_bit(A, i, j)) {
-            found = 1;
-            break;
+      // falling back to Gaussian elimination
+      for( ; curr_pos < MIN(A->nrows, A->ncols); ) {
+        register size_t i = curr_pos;
+        register size_t j = curr_pos;
+        register size_t found = 0;
+        for(j = curr_pos; j < ncols; j++) {
+          const word bit = BITMASK(A->offset + j);
+          const size_t wrd = (A->offset + j)/RADIX;
+          for(i = curr_pos; i< nrows; i++) {
+            if(A->values[A->rowswap[i] + wrd] & bit) {
+              found = 1;
+              break;
+            }
           }
+          if (found)
+            break;
         }
-        if (found)
+        if(found) {
+          P->values[curr_pos] = i;
+          Q->values[curr_pos] = j;
+          mzd_row_swap(A, i, curr_pos);
+          mzd_col_swap(A, j, curr_pos);
+
+          if (curr_pos +1 < A->ncols) {
+            const word bit = BITMASK(A->offset + curr_pos);
+            const size_t wrd = (A->offset + curr_pos)/RADIX;
+
+            for(size_t l=curr_pos+1; l<A->nrows; l++) {
+              if (A->values[A->rowswap[l] + wrd] & bit) {
+                mzd_row_add_offset(A, l, curr_pos, curr_pos+1);
+              }
+            }
+          }
+          curr_pos++;
+        } else {
           break;
+        }
       }
-      if(found) {
-        P->values[curr_pos] = i;
-        Q->values[curr_pos] = j;
-        mzd_row_swap(A, i, curr_pos);
-        mzd_col_swap(A, j, curr_pos);
-      } else {
-        break;
-      }
+      return curr_pos;
     }
     curr_pos += kbar;
   }

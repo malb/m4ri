@@ -49,6 +49,8 @@ void mzp_free_window(permutation* condemned){
 
 void mzd_apply_p_left(packedmatrix *A, permutation *P) {
   size_t i;
+  if(A->ncols == 0)
+    return;
   for (i=0; i<P->length; i++) {
     assert(P->values[i] >= i);
     mzd_row_swap(A, i, P->values[i]);
@@ -57,6 +59,8 @@ void mzd_apply_p_left(packedmatrix *A, permutation *P) {
 
 void mzd_apply_p_left_trans(packedmatrix *A, permutation *P) {
   long i;
+  if(A->ncols == 0)
+    return;
   for (i=P->length-1; i>=0; i--) {
     assert(P->values[i] >= i);
     mzd_row_swap(A, i, P->values[i]);
@@ -65,6 +69,8 @@ void mzd_apply_p_left_trans(packedmatrix *A, permutation *P) {
 
 void mzd_apply_p_right(packedmatrix *A, permutation *P) {
   size_t i;
+  if(A->nrows == 0)
+    return;
   for (i=0; i<P->length; i++) {
     assert(P->values[i] >= i);
     mzd_col_swap(A, i, P->values[i]);
@@ -73,6 +79,8 @@ void mzd_apply_p_right(packedmatrix *A, permutation *P) {
 
 void mzd_apply_p_right_trans(packedmatrix *A, permutation *P) {
   long i;
+  if(A->nrows == 0)
+    return;
   for (i=P->length-1;i>=0; i--) {
     assert(P->values[i] >= i);
     mzd_col_swap(A, i, P->values[i]);
