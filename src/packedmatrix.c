@@ -491,8 +491,13 @@ packedmatrix *_mzd_mul_va(packedmatrix *C, const packedmatrix *v, const packedma
 
 void mzd_randomize(packedmatrix *A) {
   size_t i, j;
+  assert(A->offset == 0);
+
   for (i=0; i < A->nrows; i++) {
-    for (j=0; j < A->ncols; j++) {
+    for(j=0; j<A->width - 1; j++) {
+      A->values[A->rowswap[i] + j] = m4ri_random_word();
+    }
+    for (j=(A->width-1)*RADIX; j < A->ncols; j++) {
       mzd_write_bit(A, i, j, m4ri_coin_flip() );
     }
   }
