@@ -130,7 +130,7 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
     mzd_apply_p_right_trans(A11, Q2);
 
     for(i=0, j=n1; j<n1+r2; i++, j++) {
-      mzd_col_swap(A, r1 + i, Q2->values[i] + n1);
+      mzd_col_swap(A, r1 + i, n1 + Q2->values[i]);
       Q->values[r1+i] = Q2->values[i] + n1;
     }
     for(i=r1+r2; i<ncols; i++) {
@@ -175,8 +175,8 @@ size_t _mzd_pluq_naive(packedmatrix *A, permutation *P, permutation *Q)  {
     if(found) {
       P->values[curr_pos] = i;
       Q->values[curr_pos] = j;
-      mzd_row_swap(A, i, curr_pos);
-      mzd_col_swap(A, j, curr_pos);
+      mzd_row_swap(A, curr_pos, i);
+      mzd_col_swap(A, curr_pos, j);
           
       /* clear below but preserve transformation matrix */
       if (curr_pos +1 < A->ncols){

@@ -228,6 +228,31 @@ typedef unsigned char BIT;
 
 #define ALIGNMENT(addr, n) (((unsigned long)(addr))%(n))
 
+/**
+ * Return the index of the leftmost bit in a for a nonzero.
+ *
+ * \param a Word
+ */
+
+static inline int leftmost_bit(word a) {
+  size_t r = 0;
+  if(a>>32)
+    r+=32, a>>=32;
+  if(a>>16)
+    r+=16, a>>=16;
+  if(a>>8)
+    r+=8, a>>=8;
+  if(a>>4)
+    r+=4, a>>=4;
+  if(a>>2)
+    r+=2, a>>=2;
+  if(a)
+    r+=1, a>>=1;
+  return r;
+}
+
+
+
 /**** Error Handling *****/
 
 /**

@@ -73,7 +73,7 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
 
     if (j > Q->values[start_col + curr_pos])
       Q->values[start_col + curr_pos] = j;
-    mzd_col_swap(A, j, start_col + curr_pos);
+    mzd_col_swap(A, start_col + curr_pos, j);
   }
   return curr_pos;
 }
@@ -249,45 +249,43 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
       /* 3. use that table to process remaining rows below */
       mzd_process_rows(A, curr_pos + kbar, nrows, curr_pos, kbar, T0, L0);
     } else {
-      // falling back to Gaussian elimination
-      for( ; curr_pos < MIN(A->nrows, A->ncols); ) {
-        register size_t i = curr_pos;
-        register size_t j = curr_pos;
-        register size_t found = 0;
-        for(j = curr_pos; j < ncols; j++) {
-          const word bit = BITMASK(A->offset + j);
-          const size_t wrd = (A->offset + j)/RADIX;
-          for(i = curr_pos; i< nrows; i++) {
-            if(A->values[A->rowswap[i] + wrd] & bit) {
-              found = 1;
+      register size_t i = curr_pos;
+      register size_t j = curr_pos;
+      register size_t found = 0;
+      for(j=curr_pos; j<ncols; j+=RADIX) {
+        const size_t length = MIN(RADIX,ncols-j);
+        word data = 0;
+        size_t ii = 0;
+        for(i=curr_pos; i<nrows; i++) {
+          const word curr_data = (word)mzd_read_bits(A, i, j, length);
+          if (curr_data > data && leftmost_bit(curr_data) > leftmost_bit(data)) {
+            ii = i;
+            data = curr_data;
+            if(GET_BIT(data,RADIX-length-1))
+              break;
+          }
+        }
+        if(data) {
+          i = ii;
+          data <<=(RADIX-length);
+          for(size_t l=0; l<length; l++) {
+            if(GET_BIT(data, l)) {
+              j+=l;
               break;
             }
           }
-          if (found)
-            break;
-        }
-        if(found) {
-          P->values[curr_pos] = i;
-          Q->values[curr_pos] = j;
-          mzd_row_swap(A, i, curr_pos);
-          mzd_col_swap(A, j, curr_pos);
-
-          if (curr_pos +1 < A->ncols) {
-            const word bit = BITMASK(A->offset + curr_pos);
-            const size_t wrd = (A->offset + curr_pos)/RADIX;
-
-            for(size_t l=curr_pos+1; l<A->nrows; l++) {
-              if (A->values[A->rowswap[l] + wrd] & bit) {
-                mzd_row_add_offset(A, l, curr_pos, curr_pos+1);
-              }
-            }
-          }
-          curr_pos++;
-        } else {
+          found = 1;
           break;
         }
       }
-      return curr_pos;
+      if(found) {
+        P->values[curr_pos] = i;
+        Q->values[curr_pos] = j;
+        mzd_row_swap(A, curr_pos, i);
+        mzd_col_swap(A, curr_pos, j);
+      } else {
+        break;
+      }
     }
     curr_pos += kbar;
   }
