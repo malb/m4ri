@@ -125,7 +125,7 @@ typedef unsigned long long word;
 typedef unsigned char BIT;
 
 /**
- * \brief Clear the bit spot in the word w
+ * \brief Clear the bit spot (counting from the left) in the word w
  * 
  * \param w Word
  * \param spot Integer with 0 <= spot < RADIX
@@ -134,7 +134,7 @@ typedef unsigned char BIT;
 #define CLR_BIT(w, spot) ((w) &= ~(ONE<<(RADIX - (spot) - 1)))
 
 /**
- * \brief Set the bit spot in the word w
+ * \brief Set the bit spot (counting from the left) in the word w
  * 
  * \param w Word
  * \param spot Integer with 0 <= spot < RADIX
@@ -143,7 +143,7 @@ typedef unsigned char BIT;
 #define SET_BIT(w, spot) ((w) |= (ONE<<(RADIX - (spot) - 1)))
 
 /**
- * \brief Get the bit spot in the word w
+ * \brief Get the bit spot (counting from the left) in the word w
  * 
  * \param w Word
  * \param spot Integer with 0 <= spot < RADIX
