@@ -235,7 +235,7 @@ typedef unsigned char BIT;
  */
 
 static inline int leftmost_bit(word a) {
-  size_t r = 0;
+  int r = 0;
   if(a>>32)
     r+=32, a>>=32;
   if(a>>16)
@@ -246,6 +246,8 @@ static inline int leftmost_bit(word a) {
     r+=4, a>>=4;
   if(a>>2)
     r+=2, a>>=2;
+  if(a>>1)
+    r+=1, a>>=1;
   if(a)
     r+=1, a>>=1;
   return r;

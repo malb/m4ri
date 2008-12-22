@@ -249,35 +249,9 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
       /* 3. use that table to process remaining rows below */
       mzd_process_rows(A, curr_pos + kbar, nrows, curr_pos, kbar, T0, L0);
     } else {
-      register size_t i = curr_pos;
-      register size_t j = curr_pos;
-      register size_t found = 0;
-      for(j=curr_pos; j<ncols; j+=RADIX) {
-        const size_t length = MIN(RADIX,ncols-j);
-        word data = 0;
-        size_t ii = 0;
-        for(i=curr_pos; i<nrows; i++) {
-          const word curr_data = (word)mzd_read_bits(A, i, j, length);
-          if (curr_data > data && leftmost_bit(curr_data) > leftmost_bit(data)) {
-            ii = i;
-            data = curr_data;
-            if(GET_BIT(data,RADIX-length-1))
-              break;
-          }
-        }
-        if(data) {
-          i = ii;
-          data <<=(RADIX-length);
-          for(size_t l=0; l<length; l++) {
-            if(GET_BIT(data, l)) {
-              j+=l;
-              break;
-            }
-          }
-          found = 1;
-          break;
-        }
-      }
+      size_t i = curr_pos;
+      size_t j  = curr_pos;
+      int found = mzd_find_pivot(A, curr_pos, curr_pos, &i, &j);
       if(found) {
         P->values[curr_pos] = i;
         Q->values[curr_pos] = j;

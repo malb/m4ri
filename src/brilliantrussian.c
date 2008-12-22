@@ -225,6 +225,77 @@ void mzd_process_rows(packedmatrix *M, size_t startrow, size_t stoprow, size_t s
   const size_t blocknum=startcol/RADIX;
   size_t wide = M->width - blocknum;
 
+  if(k==1) {
+    word bm = ONE << ((RADIX - startcol - 1) % RADIX);
+
+    for (r=startrow; r+2<=stoprow; r+=2) {
+      word *t = T->values + T->rowswap[1] + blocknum;
+      word *m0 = M->values + M->rowswap[r+0] + blocknum;
+      word *m1 = M->values + M->rowswap[r+1] + blocknum;
+      register int n = (wide + 7) / 8;
+
+      if(*m0 & bm) {
+        if(*m1 & bm) {
+          switch (wide % 8) {
+          case 0: do { *m0++ ^= *t; *m1++ ^= *t++;
+          case 7:    *m0++ ^= *t; *m1++ ^= *t++;
+          case 6:    *m0++ ^= *t; *m1++ ^= *t++;
+          case 5:    *m0++ ^= *t; *m1++ ^= *t++;
+          case 4:    *m0++ ^= *t; *m1++ ^= *t++;
+          case 3:    *m0++ ^= *t; *m1++ ^= *t++;
+          case 2:    *m0++ ^= *t; *m1++ ^= *t++;
+          case 1:    *m0++ ^= *t; *m1++ ^= *t++;
+            } while (--n > 0);
+          }
+        } else {
+          switch (wide % 8) {
+          case 0: do { *m0++ ^= *t++;
+          case 7:    *m0++ ^= *t++;
+          case 6:    *m0++ ^= *t++;
+          case 5:    *m0++ ^= *t++;
+          case 4:    *m0++ ^= *t++;
+          case 3:    *m0++ ^= *t++;
+          case 2:    *m0++ ^= *t++;
+          case 1:    *m0++ ^= *t++;
+            } while (--n > 0);
+          }
+        }
+      } else if(*m1 & bm) {
+          switch (wide % 8) {
+          case 0: do { *m1++ ^= *t++;
+          case 7:    *m1++ ^= *t++;
+          case 6:    *m1++ ^= *t++;
+          case 5:    *m1++ ^= *t++;
+          case 4:    *m1++ ^= *t++;
+          case 3:    *m1++ ^= *t++;
+          case 2:    *m1++ ^= *t++;
+          case 1:    *m1++ ^= *t++;
+            } while (--n > 0);
+          }
+      }
+    }
+
+    for( ; r<stoprow; r++) {
+      const int x0 = L[ (int)mzd_read_bits(M, r, startcol, k) ];
+      word *m0 = M->values + M->rowswap[r] + blocknum;
+      word *t0 = T->values + T->rowswap[x0] + blocknum;
+      
+      register int n = (wide + 7) / 8;
+      switch (wide % 8) {
+      case 0: do { *m0++ ^= *t0++;
+        case 7:    *m0++ ^= *t0++;
+        case 6:    *m0++ ^= *t0++;
+        case 5:    *m0++ ^= *t0++;
+        case 4:    *m0++ ^= *t0++;
+        case 3:    *m0++ ^= *t0++;
+        case 2:    *m0++ ^= *t0++;
+        case 1:    *m0++ ^= *t0++;
+        } while (--n > 0);
+      }
+    }
+    return;
+  }
+
   for (r=startrow; r+2<=stoprow; r+=2) {
     const int x0 = L[ (int)mzd_read_bits(M, r+0, startcol, k) ];
     const int x1 = L[ (int)mzd_read_bits(M, r+1, startcol, k) ];
@@ -653,7 +724,15 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L
     r += kbar;
     c += kbar;
     if(kk!=kbar) {
-      c++;
+      size_t cbar;
+      size_t rbar;
+      if (mzd_find_pivot(A, r, c, &rbar, &cbar)) {
+        c = cbar;
+        mzd_row_swap(A, r, rbar);
+      } else {
+        break;
+      }
+      //c++;
     }
   }
 

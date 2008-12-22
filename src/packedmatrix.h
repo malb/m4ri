@@ -817,4 +817,23 @@ int mzd_is_zero(packedmatrix *A);
 
 void mzd_row_clear_offset(packedmatrix *M, const size_t row, const size_t coloffset);
 
+/**
+ * \brief Find the next nonzero entry in M starting at start_row and start_col. 
+ *
+ * This function walks down rows in the inner loop and columns in the
+ * outer loop. If a nonzero entry is found this function returns 1 and
+ * zero otherwise.
+ *
+ * If and only if a nonzero entry is found r and c are updated.
+ *
+ * \param M Matrix
+ * \param start_row Index of row where to start search
+ * \param start_col Index of column where to start search
+ * \param r Row index updated if pivot is found
+ * \param c Column index updated if pivot is found
+ */
+
+int mzd_find_pivot(packedmatrix *M, size_t start_row, size_t start_col, size_t *r, size_t *c);
+
+
 #endif //PACKEDMATRIX_H

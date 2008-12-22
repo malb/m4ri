@@ -881,21 +881,31 @@ void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb) {
   const size_t a_bit = _cola%RADIX;
   const size_t b_bit = _colb%RADIX;
   
-  //register word tmp;
   word *ptr_a, *ptr_b, *base;
 
   size_t i;
   
-/*   for (i=0; i<M->nrows; i++) { */
-/*     base = M->values + M->rowswap[i]; */
-/*     ptr_a = base + a_word; */
-/*     ptr_b = base + b_word; */
-
-/*     tmp = GET_BIT(*ptr_b, b_bit); */
-/*     WRITE_BIT(*ptr_b, b_bit, GET_BIT(*ptr_a, a_bit)); */
-/*     WRITE_BIT(*ptr_a, a_bit, tmp); */
+/* #ifdef HAVE_SSE2 */
+/*   const size_t __a_word = _cola/128; */
+/*   const size_t __b_word = _colb/128; */
+/*   const size_t __a_bit = _cola%128; */
+/*   const size_t __b_bit = _colb%128; */
+  
+/*   __m128i *__base; */
+  
+/*   if(__a_word == __b_word) { */
+/*     const int ai = 128 - __a_bit - 1; */
+/*     const int bi = 128 - __b_bit - 1; */
+/*     const __m128i one = _mm_cvtsi32_si128(1); */
+/*     for (i=0; i<M->nrows; i++) { */
+/*       __base = (__m128i*)(M->values + M->rowswap[i] + a_word); */
+/*       __m128i b = *__base; */
+/*       __m128i x = _mm_and_si128(_mm_xor_si128(_mm_srli_si128(b, ai), _mm_srli_si128(b, bi)), one); // XOR temporary */
+/*       *__base = _mm_xor_si128(b, _mm_or_si128(_mm_slli_si128(x, ai), _mm_slli_si128(x, bi))); */
+/*     } */
+/*     return; */
 /*   } */
-
+/* #else */
   if(a_word == b_word) {
     const word ai = RADIX - a_bit - 1;
     const word bi = RADIX - b_bit - 1;
@@ -907,6 +917,7 @@ void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb) {
     }
     return;
   }
+/* #endif */
 
   const word a_bm = (ONE<<(RADIX - (a_bit) - 1));
   const word b_bm = (ONE<<(RADIX - (b_bit) - 1));
@@ -1015,3 +1026,118 @@ void mzd_row_clear_offset(packedmatrix *M, size_t row, size_t coloffset) {
     M->values[M->rowswap[row] + i] = temp;
   }
 }
+
+
+int mzd_find_pivot(packedmatrix *A, size_t start_row, size_t start_col, size_t *r, size_t *c) { 
+  assert(A->offset == 0);
+  register size_t i = start_row;
+  register size_t j = start_col;
+  const size_t nrows = A->nrows;
+  const size_t ncols = A->ncols;
+  size_t row_candidate = 0;
+  word data = 0;
+  if(A->ncols - start_col < RADIX) {
+    for(j=start_col; j<A->ncols; j+=RADIX) {
+      const size_t length = MIN(RADIX, ncols-j);
+      for(i=start_row; i<nrows; i++) {
+        const word curr_data = (word)mzd_read_bits(A, i, j, length);
+        if (curr_data > data && leftmost_bit(curr_data) > leftmost_bit(data)) {
+          row_candidate = i;
+          data = curr_data;
+          if(GET_BIT(data,RADIX-length-1))
+            break;
+        }
+      }
+      if(data) {
+        i = row_candidate;
+        data <<=(RADIX-length);
+        for(size_t l=0; l<length; l++) {
+          if(GET_BIT(data, l)) {
+            j+=l;
+            break;
+          }
+        }
+        *r = i, *c = j;
+        return 1;
+      }
+    }
+  } else {
+    /* we definitely have more than one word */
+    /* handle first word */
+    const size_t bit_offset = (start_col % RADIX);
+    const size_t word_offset = start_col / RADIX;
+    const word mask_begin = RIGHT_BITMASK(RADIX-bit_offset);
+    for(i=start_row; i<nrows; i++) {
+      const word curr_data = A->values[A->rowswap[i] + word_offset] & mask_begin;
+      if (curr_data > data && leftmost_bit(curr_data) > leftmost_bit(data)) {
+        row_candidate = i;
+        data = curr_data;
+        if(GET_BIT(data,bit_offset)) {
+          break;
+        }
+      }
+    }
+    if(data) {
+      i = row_candidate;
+      data <<=bit_offset;
+      for(size_t l=0; l<(RADIX-bit_offset); l++) {
+        if(GET_BIT(data, l)) {
+          j+=l;
+          break;
+        }
+      }
+      *r = i, *c = j;
+      return 1;
+    }
+    /* handle complete words */
+    for(j=word_offset + 1; j<A->width - 1; j++) {
+      for(i=start_row; i<nrows; i++) {
+        const word curr_data = A->values[A->rowswap[i] + j];
+        if (curr_data > data && leftmost_bit(curr_data) > leftmost_bit(data)) {
+          row_candidate = i;
+          data = curr_data;
+          if(GET_BIT(data, 0))
+            break;
+        }
+      }
+      if(data) {
+        i = row_candidate;
+        for(size_t l=0; l<RADIX; l++) {
+          if(GET_BIT(data, l)) {
+            j=j*RADIX + l;
+            break;
+          }
+        }
+        *r = i, *c = j;
+        return 1;
+      }
+    }
+    /* handle last word */
+    const size_t end_offset = A->ncols % RADIX ? (A->ncols%RADIX) : RADIX;
+    const word mask_end = LEFT_BITMASK(end_offset);
+    j = A->width-1;
+    for(i=start_row; i<nrows; i++) {
+      const word curr_data = A->values[A->rowswap[i] + j] & mask_end;
+      if (curr_data > data && leftmost_bit(curr_data) > leftmost_bit(data)) {
+        row_candidate = i;
+        data = curr_data;
+        if(GET_BIT(data,0))
+          break;
+      }
+    }
+    if(data) {
+      i = row_candidate;
+      for(size_t l=0; l<end_offset; l++) {
+        if(GET_BIT(data, l)) {
+          j=j*RADIX+l;
+          break;
+        }
+      }
+      *r = i, *c = j;
+      return 1;
+    }
+  }
+  return 0;
+}
+
+
