@@ -885,27 +885,6 @@ void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb) {
 
   size_t i;
   
-/* #ifdef HAVE_SSE2 */
-/*   const size_t __a_word = _cola/128; */
-/*   const size_t __b_word = _colb/128; */
-/*   const size_t __a_bit = _cola%128; */
-/*   const size_t __b_bit = _colb%128; */
-  
-/*   __m128i *__base; */
-  
-/*   if(__a_word == __b_word) { */
-/*     const int ai = 128 - __a_bit - 1; */
-/*     const int bi = 128 - __b_bit - 1; */
-/*     const __m128i one = _mm_cvtsi32_si128(1); */
-/*     for (i=0; i<M->nrows; i++) { */
-/*       __base = (__m128i*)(M->values + M->rowswap[i] + a_word); */
-/*       __m128i b = *__base; */
-/*       __m128i x = _mm_and_si128(_mm_xor_si128(_mm_srli_si128(b, ai), _mm_srli_si128(b, bi)), one); // XOR temporary */
-/*       *__base = _mm_xor_si128(b, _mm_or_si128(_mm_slli_si128(x, ai), _mm_slli_si128(x, bi))); */
-/*     } */
-/*     return; */
-/*   } */
-/* #else */
   if(a_word == b_word) {
     const word ai = RADIX - a_bit - 1;
     const word bi = RADIX - b_bit - 1;
@@ -917,7 +896,6 @@ void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb) {
     }
     return;
   }
-/* #endif */
 
   const word a_bm = (ONE<<(RADIX - (a_bit) - 1));
   const word b_bm = (ONE<<(RADIX - (b_bit) - 1));
