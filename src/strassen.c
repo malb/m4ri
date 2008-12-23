@@ -42,6 +42,9 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   b = A->ncols;
   c = B->ncols;
 
+  if(C->nrows == 0 || C->ncols == 0)
+    return C;
+
   /* handle case first, where the input matrices are too small already */
   if (CLOSER(A->nrows, A->nrows/2, cutoff) || CLOSER(A->ncols, A->ncols/2, cutoff) || CLOSER(B->ncols, B->ncols/2, cutoff)) {
     /* we copy the matrix first since it is only constant memory
@@ -340,6 +343,9 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   size_t a,b,c;
   size_t anr, anc, bnr, bnc;
   
+  if(C->nrows == 0 || C->ncols == 0)
+    return C;
+
   a = A->nrows;
   b = A->ncols;
   c = B->ncols;

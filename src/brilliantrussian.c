@@ -919,6 +919,9 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
   size_t a = A->nrows;
   size_t c = B->ncols;
 
+  if(C->ncols == 0 || C->nrows == 0)
+    return C;
+
   if(A->ncols != B->nrows) 
     m4ri_die("mzd_mul_m4rm A ncols (%d) need to match B nrows (%d) .\n", A->ncols, B->nrows);
   if (C == NULL) {

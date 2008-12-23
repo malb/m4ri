@@ -108,4 +108,16 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
 
 size_t _mzd_pluq_naive(packedmatrix *A, permutation * P, permutation * Q);
 
+/**
+ * \brief Compute the (reduced) row echelon form.
+ *
+ * \param A Matrix.
+ * \param full Return the reduced row echelon form, not only upper triangular form.
+ *
+ * \wordoffset
+ */
+
+
+size_t mzd_echelonize_pluq(packedmatrix *A, int full);
+
 #endif

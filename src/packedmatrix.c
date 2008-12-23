@@ -482,12 +482,19 @@ void mzd_set_ui( packedmatrix *A, unsigned int value) {
   word mask_begin = RIGHT_BITMASK(RADIX - A->offset);
   word mask_end = LEFT_BITMASK((A->offset + A->ncols)%RADIX);
   
-  for (i=0; i<A->nrows; i++) {
-    size_t truerow = A->rowswap[i];
-    A->values[truerow] = ~mask_begin;
-    for(j=1 ; j<A->width-1; j++)
-      A->values[truerow + j] = 0;
-    A->values[truerow + A->width - 1] &= ~mask_end;
+  if(A->width==1) {
+    for (i=0; i<A->nrows; i++) {
+      for(j=0 ; j<A->ncols; j++)
+        mzd_write_bit(A,i,j, 0);
+    }
+  } else {
+    for (i=0; i<A->nrows; i++) {
+      size_t truerow = A->rowswap[i];
+      A->values[truerow] &= ~mask_begin;
+      for(j=1 ; j<A->width-1; j++)
+        A->values[truerow + j] = 0;
+      A->values[truerow + A->width - 1] &= ~mask_end;
+    }
   }
 
   if(value%2 == 0)

@@ -198,3 +198,44 @@ size_t _mzd_pluq_naive(packedmatrix *A, permutation *P, permutation *Q)  {
   return curr_pos;
 }
  
+size_t mzd_echelonize_pluq(packedmatrix *A, int full) {
+  permutation *P = mzp_init(A->nrows);
+  permutation *Q = mzp_init(A->ncols);
+
+  size_t r = mzd_pluq(A, P, Q, 0);
+
+
+  if(full) {
+    packedmatrix *U = mzd_init_window(A, 0, 0, r, r);
+    packedmatrix *B = mzd_init_window(A, 0, r, r, A->ncols);
+    if(r!=A->ncols) 
+      mzd_trsm_upper_left(U, B, 0);
+    if(r!=0) 
+      mzd_set_ui(U, 0);
+    size_t i;
+    for(i=0; i<r; i++) {
+      mzd_write_bit(A, i, i, 1);
+    }
+    mzd_free_window(U);
+    mzd_free_window(B);
+  } else {
+    size_t i, j;
+    for(i=0; i<r; i++) {
+      for(j=0; j<i; i+=RADIX) {
+        const size_t length = MIN(RADIX, i-j);
+        mzd_clear_bits(A, i, j, length);
+      }
+    }
+  }
+  
+  if(r!=A->nrows) {
+    packedmatrix *R = mzd_init_window(A, r, 0, A->nrows, A->ncols);
+    mzd_set_ui(R, 0);
+    mzd_free_window(R);
+  }
+
+  mzd_apply_p_right_trans(A, Q);
+  mzp_free(P);
+  mzp_free(Q);
+  return r;
+}
