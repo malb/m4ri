@@ -224,6 +224,18 @@ void mzd_copy_row(packedmatrix* B, size_t i, packedmatrix* A, size_t j);
 void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb);
 
 /**
+ * \brief Swap the two columns cola and colb but only between start_row and stop_row.
+ * 
+ * \param M Matrix.
+ * \param cola Column index.
+ * \param colb Column index.
+ * \param start_row Row index.
+ * \param stop_row Row index (exclusive).
+ */
+ 
+void mzd_col_swap_in_rows(packedmatrix *M, const size_t cola, const size_t colb, const size_t start_row, const size_t stop_row);
+
+/**
  * \brief Read the bit at position M[row,col].
  *
  * \param M Matrix
