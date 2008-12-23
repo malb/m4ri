@@ -636,6 +636,7 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L
       kbar = _mzd_gauss_submatrix_full(A, r, c, A->nrows, kk);
     } else {
       kbar = _mzd_gauss_submatrix(A, r, c, A->nrows, kk);
+      /* this isn't necessary, adapt make_table */
       U = mzd_submatrix(U, A, r, 0, r+kbar, A->ncols);
       _mzd_gauss_submatrix_top(A, r, c, kbar);
     }
@@ -742,15 +743,15 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L
     r += kbar;
     c += kbar;
     if(kk!=kbar) {
-/*       size_t cbar; */
-/*       size_t rbar; */
-/*       if (mzd_find_pivot(A, r, c, &rbar, &cbar)) { */
-/*         c = cbar; */
-/*         mzd_row_swap(A, r, rbar); */
-/*       } else { */
-/*         break; */
-/*       } */
-      c++;
+      size_t cbar;
+      size_t rbar;
+      if (mzd_find_pivot(A, r, c, &rbar, &cbar)) {
+        c = cbar;
+        mzd_row_swap(A, r, rbar);
+      } else {
+        break;
+      }
+      //c++;
     }
   }
 
