@@ -649,29 +649,35 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L
       const int ke = kbar/6 + ((rem>=1) ? 1 : 0);;
       const int kf = kbar/6;
 
-      mzd_make_table(A, r, c, ka, T0, L0);
-      mzd_make_table(A, r+ka, c, kb, T1, L1);
-      mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
-      mzd_make_table(A, r+ka+kb+kc, c, kd, T3, L3);
-      mzd_make_table(A, r+ka+kb+kc+kd, c, ke, T4, L4);
-      mzd_make_table(A, r+ka+kb+kc+kd+ke, c, kf, T5, L5);
-      mzd_process_rows6(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4, T5, L5);
+      if(full || kbar==kk) {
+        mzd_make_table(A, r, c, ka, T0, L0);
+        mzd_make_table(A, r+ka, c, kb, T1, L1);
+        mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
+        mzd_make_table(A, r+ka+kb+kc, c, kd, T3, L3);
+        mzd_make_table(A, r+ka+kb+kc+kd, c, ke, T4, L4);
+        mzd_make_table(A, r+ka+kb+kc+kd+ke, c, kf, T5, L5);
+      }
+      if(kbar==kk)
+        mzd_process_rows6(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4, T5, L5);
       if(full)
         mzd_process_rows6(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4, T5, L5);
 
-  } else if (kbar>4*k) {
+  } else if (kbar>4*k) { 
       const int rem = kbar%5;
       const int ka = kbar/5 + ((rem>=4) ? 1 : 0);
       const int kb = kbar/5 + ((rem>=3) ? 1 : 0);
       const int kc = kbar/5 + ((rem>=2) ? 1 : 0);
       const int kd = kbar/5 + ((rem>=1) ? 1 : 0);
       const int ke = kbar/5;
-      mzd_make_table(A, r, c, ka, T0, L0);
-      mzd_make_table(A, r+ka, c, kb, T1, L1);
-      mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
-      mzd_make_table(A, r+ka+kb+kc, c, kd, T3, L3);
-      mzd_make_table(A, r+ka+kb+kc+kd, c, ke, T4, L4);
-      mzd_process_rows5(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4);
+      if(full || kbar==kk) {
+        mzd_make_table(A, r, c, ka, T0, L0);
+        mzd_make_table(A, r+ka, c, kb, T1, L1);
+        mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
+        mzd_make_table(A, r+ka+kb+kc, c, kd, T3, L3);
+        mzd_make_table(A, r+ka+kb+kc+kd, c, ke, T4, L4);
+      }
+      if(kbar==kk)
+        mzd_process_rows5(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4);
       if(full)
         mzd_process_rows5(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4);
       
@@ -681,11 +687,14 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L
       const int kb = kbar/4 + ((rem>=2) ? 1 : 0);
       const int kc = kbar/4 + ((rem>=1) ? 1 : 0);
       const int kd = kbar/4;
-      mzd_make_table(A, r, c, ka, T0, L0);
-      mzd_make_table(A, r+ka, c, kb, T1, L1);
-      mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
-      mzd_make_table(A, r+ka+kb+kc, c, kd, T3, L3);
-      mzd_process_rows4(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
+      if(full || kbar==kk) {
+        mzd_make_table(A, r, c, ka, T0, L0);
+        mzd_make_table(A, r+ka, c, kb, T1, L1);
+        mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
+        mzd_make_table(A, r+ka+kb+kc, c, kd, T3, L3);
+      }
+      if(kbar==kk)
+        mzd_process_rows4(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
       if(full)
         mzd_process_rows4(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
       
@@ -694,25 +703,34 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L
       int ka = kbar/3 + ((rem>=2) ? 1 : 0);
       int kb = kbar/3 + ((rem>=1) ? 1 : 0);
       int kc = kbar/3;
-      mzd_make_table(A, r, c, ka, T0, L0);
-      mzd_make_table(A, r+ka, c, kb, T1, L1);
-      mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
-      mzd_process_rows3(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1, T2, L2);
+      if(full || kbar==kk) {
+        mzd_make_table(A, r, c, ka, T0, L0);
+        mzd_make_table(A, r+ka, c, kb, T1, L1);
+        mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
+      }
+      if(kbar==kk)
+        mzd_process_rows3(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1, T2, L2);
       if(full)
         mzd_process_rows3(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2);
       
     } else if (kbar>k) {
       const int ka = kbar/2;
       const int kb = kbar - ka;
-      mzd_make_table(A, r, c, ka, T0, L0);
-      mzd_make_table(A, r+ka, c, kb, T1, L1);
-      mzd_process_rows2(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1);
+      if(full || kbar==kk) {
+        mzd_make_table(A, r, c, ka, T0, L0);
+        mzd_make_table(A, r+ka, c, kb, T1, L1);
+      }
+      if(kbar==kk)
+        mzd_process_rows2(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1);
       if(full)
         mzd_process_rows2(A, 0, r, c, kbar, T0, L0, T1, L1);
       
     } else if(kbar > 0) {
-      mzd_make_table(A, r, c, kbar, T0, L0);
-      mzd_process_rows(A, r+kbar, A->nrows, c, kbar, T0, L0);
+      if(full || kbar==kk) {
+        mzd_make_table(A, r, c, kbar, T0, L0);
+      }
+      if(kbar==kk)
+        mzd_process_rows(A, r+kbar, A->nrows, c, kbar, T0, L0);
       if(full)
         mzd_process_rows(A, 0, r, c, kbar, T0, L0);
     }
@@ -724,15 +742,15 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L
     r += kbar;
     c += kbar;
     if(kk!=kbar) {
-      size_t cbar;
-      size_t rbar;
-      if (mzd_find_pivot(A, r, c, &rbar, &cbar)) {
-        c = cbar;
-        mzd_row_swap(A, r, rbar);
-      } else {
-        break;
-      }
-      //c++;
+/*       size_t cbar; */
+/*       size_t rbar; */
+/*       if (mzd_find_pivot(A, r, c, &rbar, &cbar)) { */
+/*         c = cbar; */
+/*         mzd_row_swap(A, r, rbar); */
+/*       } else { */
+/*         break; */
+/*       } */
+      c++;
     }
   }
 
