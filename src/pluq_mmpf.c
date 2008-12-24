@@ -38,7 +38,7 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
     found = 0;
     /* search for some pivot */
     for(j = start_col + curr_pos; j < start_col + k; j++) {
-      for(i = start_row + curr_pos; i < MIN(A->nrows, start_row + 3*k); i++) {
+      for(i = start_row + curr_pos; i < A->nrows; i++) {
         /* clear before but preserve transformation matrix */
         for(l = 0; l < curr_pos; l++)
 	  if(mzd_read_bit(A, i, start_col + l))

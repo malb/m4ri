@@ -204,7 +204,6 @@ size_t mzd_echelonize_pluq(packedmatrix *A, int full) {
 
   size_t r = mzd_pluq(A, P, Q, 0);
 
-
   if(full) {
     packedmatrix *U = mzd_init_window(A, 0, 0, r, r);
     packedmatrix *B = mzd_init_window(A, 0, r, r, A->ncols);
