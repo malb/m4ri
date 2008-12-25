@@ -83,7 +83,7 @@ void _mzd_pluq_solve_left (packedmatrix *A, size_t rank,
 /*     if( !mzd_is_zero(Y2) ) { */
 /*       printf("inconsistent system of size %llu x %llu\n", Y2->nrows, Y2->ncols); */
 /*       printf("Y2="); */
-/*       mzd_print_matrix(Y2); */
+/*       mzd_print(Y2); */
 /*     } */
     mzd_free_window(H);
     mzd_free_window(Y2);

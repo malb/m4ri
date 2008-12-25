@@ -243,21 +243,6 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
 packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear);
 
 /**
- * \brief Matrix multiplication using Konrod's method but transpose
- * all matrices first, i.e. compute C = AB = (B^T A^T)^T.
- *
- * \param C Preallocated product matrix, may be NULL for automatic creation.
- * \param A Input matrix A
- * \param B Input matrix B
- * \param k M4RI parameter, may be 0 for auto-choose.
- *
- * \wordoffset
- */
-
-packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k);
-
-
-/**
  * \brief If defined 8 Gray code tables are used in parallel.
  */
 

@@ -881,26 +881,6 @@ packedmatrix *mzd_invert_m4ri(packedmatrix *m, packedmatrix *I, int k) {
   return answer;
 }
 
-packedmatrix *mzd_mul_m4rm_t(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k) {
-  packedmatrix *AT, *BT, *CT;
-  
-  if(A->ncols != B->nrows) 
-    m4ri_die("mzd_mul_m4rm_t: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
-  
-  AT = mzd_transpose(NULL, A);
-  BT = mzd_transpose(NULL, B);
-  
-  CT = mzd_init(B->ncols, A->nrows);
-  CT = _mzd_mul_m4rm(CT, BT, AT, k, 0);
-  
-  mzd_free(AT);
-  mzd_free(BT);
-
-  C = mzd_transpose(C, CT);
-  mzd_free(CT);
-  return C;
-}
-
 packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k) {
   size_t a = A->nrows;
   size_t c = B->ncols;

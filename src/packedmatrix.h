@@ -269,28 +269,6 @@ static inline void mzd_write_bit(packedmatrix *M, const size_t row, const size_t
     CLR_BIT(M->values[ M->rowswap[row] + (col+M->offset)/RADIX ], (col+M->offset) % RADIX);
 }
 
-
-/**
- * \brief Swap the two rows rowa and rowb starting at the offset.
- * 
- * \param M Matrix
- * \param rowa Row index.
- * \param rowb Row index.
- * \param offset column offset.
- */
- 
-static inline void mzd_row_swap_offset(packedmatrix *M, const size_t rowa, const size_t rowb, const size_t offset) {
-  size_t i;
-  /**
-   * \todo this is pathetic/test code 
-   **/
-  for(i=offset; i<M->ncols; i++) {
-    const BIT temp = mzd_read_bit(M, rowa, i);
-    mzd_write_bit(M, rowa, i, mzd_read_bit(M, rowb, i));
-    mzd_write_bit(M, rowb, i, temp);
-  }
-}
-
 /**
  * \brief Print a matrix to stdout. 
  *
@@ -299,7 +277,7 @@ static inline void mzd_row_swap_offset(packedmatrix *M, const size_t rowa, const
  * \param M Matrix
  */
 
-void mzd_print_matrix(const packedmatrix *M );
+void mzd_print(const packedmatrix *M );
 
 /**
  * \brief Print the matrix to stdout.
@@ -307,7 +285,7 @@ void mzd_print_matrix(const packedmatrix *M );
  * \param M Matrix
  */
 
-void mzd_print_matrix_tight(const packedmatrix *M );
+void mzd_print_tight(const packedmatrix *M );
 
 /**
  * \brief Add the rows sourcerow and destrow and stores the total in the row

@@ -154,7 +154,7 @@ void mzd_free_window( packedmatrix *condemned) {
 #endif
 }
 
-void mzd_print_matrix( const packedmatrix *M ) {
+void mzd_print( const packedmatrix *M ) {
   size_t i, j;
   char temp[SAFECHAR];
   word *row;
@@ -183,7 +183,7 @@ void mzd_print_matrix( const packedmatrix *M ) {
   }
 }
 
-void mzd_print_matrix_tight( const packedmatrix *M ) {
+void mzd_print_tight( const packedmatrix *M ) {
   assert(M->offset == 0);
 
   size_t i, j;
