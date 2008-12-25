@@ -245,7 +245,7 @@ int mzd_gauss_delayed(packedmatrix *M, size_t startcol, int full) {
   return pivots;
 }
 
-int mzd_reduce_naive(packedmatrix *m, int full) { 
+int mzd_echelonize_naive(packedmatrix *m, int full) { 
   return mzd_gauss_delayed(m, 0, full); 
 }
 
@@ -685,7 +685,7 @@ packedmatrix *mzd_invert_naive(packedmatrix *INV, packedmatrix *A, const packedm
 
   H = mzd_concat(NULL, A, I);
 
-  x = mzd_reduce_naive(H, TRUE);
+  x = mzd_echelonize_naive(H, TRUE);
 
   if (x == FALSE) { 
     mzd_free(H); 

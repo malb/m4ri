@@ -281,7 +281,9 @@ static inline void mzd_write_bit(packedmatrix *M, const size_t row, const size_t
  
 static inline void mzd_row_swap_offset(packedmatrix *M, const size_t rowa, const size_t rowb, const size_t offset) {
   size_t i;
-  /** \todo: this is pathetic/test code **/
+  /**
+   * \todo this is pathetic/test code 
+   **/
   for(i=offset; i<M->ncols; i++) {
     const BIT temp = mzd_read_bit(M, rowa, i);
     mzd_write_bit(M, rowa, i, mzd_read_bit(M, rowb, i));
@@ -312,8 +314,8 @@ void mzd_print_matrix_tight(const packedmatrix *M );
  * destrow, but only begins at the column coloffset.
  *
  * \param M Matrix
- * \param sourcerow Index of source row
- * \param destrow Index of target row
+ * \param dstrow Index of target row
+ * \param srcrow Index of source row
  * \param coloffset Column offset
  */
 
@@ -489,17 +491,19 @@ int mzd_gauss_delayed(packedmatrix *M, const size_t startcol, const int full);
 /**
  * \brief Gaussian elimination.
  * 
- * This will do Gaussian elimination on the matrix m.  If  full =
- *  FALSE, then it will do triangular style elimination, and if 
- *  full = TRUE, it will do Gauss-Jordan style, or full elimination.
+ * This will do Gaussian elimination on the matrix m.  If full=FALSE,
+ *  then it will do triangular style elimination, and if full=TRUE,
+ *  it will do Gauss-Jordan style, or full elimination.
  *
  * \param M Matrix
  * \param full Gauss-Jordan style or upper triangular form only.
  *
  * \wordoffset
+ * 
+ * \sa mzd_echelonize_m4ri(), mzd_echelonize_pluq()
  */
 
-int mzd_reduce_naive(packedmatrix *M, const int full);
+int mzd_echelonize_naive(packedmatrix *M, const int full);
 
 /**
  * \brief Return TRUE if A == B.

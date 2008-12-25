@@ -32,14 +32,16 @@
 #include "packedmatrix.h"
 
 /**
- * \brief TRiangular System solving with Matrix.
+ * \brief Solves X U = B with X and B matrices and U upper triangular.
  *
- * Solves X U = B where X and B are matrices, and U is upper
- * triangular.  X is stored inplace on B.
+ * X is stored inplace on B.
  * 
- * This is the wrapper function including bounds checks. See
- * _mzd_trsm_upper_right for implementation details.
+ * \attention Note, that the 'right' variants of TRSM are slower than
+ * the 'left' variants.
  *
+ * This is the wrapper function including bounds checks. See
+ * _mzd_trsm_upper_right() for implementation details.
+ * 
  * \param U Input upper triangular matrix.
  * \param B Input matrix, being overwritten by the solution matrix X
  * \param cutoff Minimal dimension for Strassen recursion.
@@ -48,26 +50,29 @@
 void mzd_trsm_upper_right(packedmatrix *U, packedmatrix *B, const int cutoff);
 
 /**
- * \brief TRiangular System solving with Matrix.
+ * \brief Solves X U = B with X and B matrices and U upper triangular.
  *
- * Solves X U = B where X and B are matrices, and U is upper triangular.
+ * X is stored inplace on B.
+ * 
+ * \attention Note, that the 'right' variants of TRSM are slower than
+ * the 'left' variants.
  *
  * \param U Input upper triangular matrix.
  * \param B Input matrix, being overwritten by the solution matrix X
  * \param cutoff Minimal dimension for Strassen recursion.
- *
- * \internal
  */
 void _mzd_trsm_upper_right(packedmatrix *U, packedmatrix *B, const int cutoff);
 
 /**
- * \brief TRiangular System solving with Matrix.
+ * \brief Solves X L = B with X and B matrices and L lower triangular.
  *
- * Solves X L = B where X and B are matrices, and L is lower triangular.
- * X is stored inplace on B
- * * 
+ * X is stored inplace on B.
+ * 
  * This is the wrapper function including bounds checks. See
- * _mzd_trsm_upper_right for implementation details.
+ * _mzd_trsm_upper_right() for implementation details.
+ *
+ * \attention Note, that the 'right' variants of TRSM are slower than the 'left'
+ * variants.
  *
  * \param L Input upper triangular matrix.
  * \param B Input matrix, being overwritten by the solution matrix X
@@ -77,12 +82,15 @@ void _mzd_trsm_upper_right(packedmatrix *U, packedmatrix *B, const int cutoff);
 void mzd_trsm_lower_right(packedmatrix *L, packedmatrix *B, const int cutoff);
 
 /**
- * \brief TRiangular System solving with matrix.
- *
- * Solves X L = B where X and B are matrices, and L is lower triangular.
+ * \brief Solves X L = B with X and B with matrices and L lower
+ * triangular.
+ * 
  * This version assumes that the matrices are at an even position on
- * the RADIX grid and that their dimension is a multiple of RADIX.
- * X is stored inplace on B
+ * the RADIX grid and that their dimension is a multiple of RADIX.  X
+ * is stored inplace on B.
+ *
+ * \attention Note, that the 'right' variants of TRSM are slower than
+ * the 'left' variants.
  *
  * \param L Input lower triangular matrix.
  * \param B Input matrix, being overwritten by the solution matrix X
@@ -92,13 +100,12 @@ void mzd_trsm_lower_right(packedmatrix *L, packedmatrix *B, const int cutoff);
 void _mzd_trsm_lower_right(packedmatrix *L, packedmatrix *B, const int cutoff);
 
 /**
- * \brief TRiangular System solving with matrix.
- *
- * Solves L X = B where X and B are matrices, and L is lower triangular.
+ * \brief Solves L X = B with X and B matrices and L lower triangular.
+ * 
  * X is stored inplace on B.
  *  
  * This is the wrapper function including bounds checks. See
- * _mzd_trsm_lower_left for implementation details.
+ * _mzd_trsm_lower_left() for implementation details.
  *
  * \param L Input lower triangular matrix.
  * \param B Input matrix, being overwritten by the solution matrix X
@@ -108,10 +115,9 @@ void _mzd_trsm_lower_right(packedmatrix *L, packedmatrix *B, const int cutoff);
 void mzd_trsm_lower_left(packedmatrix *L, packedmatrix *B, const int cutoff);
 
 /**
- * \brief TRiangular System solving with Matrix.
- *
- * Solves L X = B where X and B are matrices, and L is lower
- * triangular.  X is stored inplace on B.
+ * \brief Solves L X = B with X and B matrices and L lower triangular.
+ * 
+ * X is stored inplace on B.
  *
  * \param L Input lower triangular matrix.
  * \param B Input matrix, being overwritten by the solution matrix X
@@ -121,13 +127,12 @@ void mzd_trsm_lower_left(packedmatrix *L, packedmatrix *B, const int cutoff);
 void _mzd_trsm_lower_left(packedmatrix *L, packedmatrix *B, const int cutoff);
 
 /**
- * \brief TRiangular System solving with matrix.
+ * \brief Solves U X = B with X and B matrices and U upper triangular.
  *
- * Solves U X = B where X and B are matrices, and U is upper triangular.
- *  X is stored inplace on B
+ * X is stored inplace on B.
  *  
  * This is the wrapper function including bounds checks. See
- * _mzd_trsm_upper_left for implementation details.
+ * _mzd_trsm_upper_left() for implementation details.
  *
  * \param U Input upper triangular matrix.
  * \param B Input matrix, being overwritten by the solution matrix X
@@ -137,10 +142,9 @@ void _mzd_trsm_lower_left(packedmatrix *L, packedmatrix *B, const int cutoff);
 void mzd_trsm_upper_left(packedmatrix *U, packedmatrix *B, const int cutoff);
 
 /**
- * \brief TRiangular System solving with matrix.
+ * \brief Solves U X = B with X and B matrices and U upper triangular.
  *
- * Solves U X = B where X and B are matrices, and U is upper triangular.
- * X is stored inplace on B
+ * X is stored inplace on B.
  *
  * \param U Input upper triangular matrix.
  * \param B Input matrix, being overwritten by the solution matrix X

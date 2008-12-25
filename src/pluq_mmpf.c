@@ -49,9 +49,8 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
         
         if(found==0) {
           /* undo clearing */
-          /* alternative idea: copy out the stripe and do ordinary
-           * Gaussian elimination then use this stripe as a lookup but
-           * add stuff to the actual matrix too?*/
+          /* this is brain dead! */
+          /* don't undo it, P encodes length already applied anyway */
           for(l = curr_pos; l != 0; l--)
             if(mzd_read_bit(A, i, start_col + l - 1))
               mzd_row_add_offset(A, i, start_row + l - 1, start_col + l);

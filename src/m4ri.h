@@ -36,7 +36,6 @@
  * http://m4ri.sagemath.org for details.
  *
  * \example testsuite/test_multiplication.c
- * \example testsuite/test_elimination.c
  */
 
 #include <stdio.h>

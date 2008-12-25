@@ -185,7 +185,7 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
 #ifdef HAVE_OPENMP
 packedmatrix *_mzd_mul_mp_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   /**
-   * \todo: make sure not to overwrite crap after ncols and before width*RADIX
+   * \todo make sure not to overwrite crap after ncols and before width*RADIX
    */
   size_t a,b,c;
   size_t anr, anc, bnr, bnc;
@@ -337,7 +337,7 @@ packedmatrix *mzd_mul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cut
 
 packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   /**
-   * \todo: make sure not to overwrite crap after ncols and before width*RADIX
+   * \todo make sure not to overwrite crap after ncols and before width*RADIX
    */
 
   size_t a,b,c;

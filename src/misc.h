@@ -203,7 +203,7 @@ typedef unsigned char BIT;
 *
 * \param n Integer
 *
-* \warn Does not handle multiples of RADIX correctly
+* \warning Does not handle multiples of RADIX correctly
 */
 
 #define RIGHT_BITMASK(n) (FFFF>>( (RADIX - (n%RADIX))%RADIX ))
@@ -430,8 +430,8 @@ extern mm_block m4ri_mmc_cache[M4RI_MMC_NBLOCKS];
 
 /**
  * \brief Return handle for locale memory management cache.
- * 
- * \todo Make thread safe.
+ *
+ * \attention Not thread safe.
  */
 
 static inline mm_block *m4ri_mmc_handle(void) {

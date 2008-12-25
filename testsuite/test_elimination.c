@@ -15,20 +15,20 @@ int elim_test_equality(int nr, int nc) {
   E = mzd_copy(NULL, A);
   F = mzd_copy(NULL, A);
 
-  mzd_reduce_m4ri(A, 1, 0, NULL, NULL);
+  mzd_echelonize_m4ri(A, 1, 0, NULL, NULL);
 
-  mzd_reduce_m4ri(B, 1, 8, NULL, NULL);
+  mzd_echelonize_m4ri(B, 1, 8, NULL, NULL);
 
-  mzd_reduce_m4ri(C, 0, 0, NULL, NULL);
-  mzd_top_reduce_m4ri(C, 0, NULL, NULL);
+  mzd_echelonize_m4ri(C, 0, 0, NULL, NULL);
+  mzd_top_echelonize_m4ri(C, 0, NULL, NULL);
 
-  mzd_reduce_m4ri(D, 0, 4, NULL, NULL);
-  mzd_top_reduce_m4ri(D, 4, NULL, NULL);
+  mzd_echelonize_m4ri(D, 0, 4, NULL, NULL);
+  mzd_top_echelonize_m4ri(D, 4, NULL, NULL);
 
-  mzd_reduce_naive(E, 1);
+  mzd_echelonize_naive(E, 1);
 
-  mzd_reduce_naive(F, 0);
-  mzd_top_reduce_m4ri(F, 0, NULL, NULL);
+  mzd_echelonize_naive(F, 0);
+  mzd_top_echelonize_m4ri(F, 0, NULL, NULL);
   
   if(mzd_equal(A, B) != TRUE) {
     printf("A != B ");

@@ -1,11 +1,9 @@
 /**
  * \file lqup.h
  *
- * \brief PLUQ matrix decomposition routines
+ * \brief PLUQ matrix decomposition routines.
  *
  * \author Clement Pernet <clement.pernet@gmail.com>
- *
- * \internal
  */
 
 
@@ -46,13 +44,13 @@
  * Computes the transposed PLUQ matrix decomposition using a block
  * recursive algorithm.
  *
- * If (P,L,U,Q) satisfy P^T LU Q^T = A, it returns (P, L, U, Q).
+ * If (P,L,U,Q) satisfy PLUQ = A, it returns (P, L, U, Q).
  *
- * The Row echelon form (not reduced) can be read from the upper
- * triangular matrix U.
+ * The row echelon form (not reduced) can be read from the upper
+ * triangular matrix U. See mzd_echelonize_pluq() for details.
  * 
- * This is the wrapper function including bounds checks. See _mzd_pluq
- * for implementation details.
+ * This is the wrapper function including bounds checks. See
+ * _mzd_pluq() for implementation details.
  *
  * The matrix L and U are stored in place over A.  U is represented
  * by the matrix Q U Q^T
@@ -69,16 +67,16 @@ size_t mzd_pluq(packedmatrix *A, permutation *P, permutation * Q, const int cuto
 /**
  * \brief PLUQ matrix decomposition.
  *
- * Computes the transposed PLUQ matrix decomposition using a block
- * recursive algorithm.
+ * Computes the PLUQ matrix decomposition using a block recursive
+ * algorithm.
  *
- * If (L,Q,U,P) satisfy PLUQ = A^T, it returns (L^T, Q^T, U^T, P^T).
+ * If (P,L,U,Q) satisfy PLUQ = A, this routine returns (P,L,U,Q).
  *
- * The Row echelon form (not reduced) can be read from the upper
- * triangular matrix L^T.
+ * The row echelon form (not reduced) can be read from the upper
+ * triangular matrix U*Q. See mzd_echelonize_pluq() for (reduced) row
+ * echelon forms using PLUQ factorisation.
  * 
- * The matrix L and U are stored in place over A.  L^T is represented
- * by the matrix Q^T L^T Q
+ * The matrix L and U are stored in place over A.
  * 
  * \param A Input matrix
  * \param P Output row permutation matrix
@@ -93,28 +91,27 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
  *
  * Computes the PLUQ matrix decomposition using the naive algorithm.
  *
- * If (L,Q,U,P) satisfy PLUQ = A, it returns (L, Q, U, P). 
+ * If (P,L,U,Q) satisfy PLUQ = A, it returns (P, L, U, Q). 
  * 
- * The Row echelon form (not reduced) can be read from the upper
- * triangular matrix L.
- * 
- * The matrix L and U are stored in place over A.  L is represented by
- * the matrix Q L Q.
+ * The matrix L and U are stored in place over A.
  * 
  * \param A Input matrix
  * \param P Output row permutation matrix
  * \param Q Output column permutation matrix
+ *
+ * \sa mzd_pluq()
  */
 
 size_t _mzd_pluq_naive(packedmatrix *A, permutation * P, permutation * Q);
 
 /**
- * \brief Compute the (reduced) row echelon form.
+ * \brief (Reduced) row echelon form using PLUQ factorisation.
  *
  * \param A Matrix.
  * \param full Return the reduced row echelon form, not only upper triangular form.
  *
  * \wordoffset
+ * \sa mzd_pluq()
  */
 
 

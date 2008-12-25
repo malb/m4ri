@@ -1,7 +1,7 @@
 /**
  * \file permutation.h
  *
- * \brief Permutation matrices for the M4RI library.
+ * \brief Permutation matrices.
  * 
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
  *

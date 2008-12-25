@@ -79,10 +79,9 @@ void _mzd_trsm_upper_right(packedmatrix *U, packedmatrix *B, const int cutoff) {
      |B0 |B1 |
      |___|___|
    \endverbatim
-  
-   * U00 and B0 are possibly located at uneven locations.
-   * Their column dimension is lower than 64
-   * The first column of U01, U11, B1 are aligned to words.
+     * \li U00 and B0 are possibly located at uneven locations.
+   * \li Their column dimension is lower than 64.
+   * \li The first column of U01, U11, B1 are aligned at words.
    */
   packedmatrix *B0  = mzd_init_window (B,  0,  0, mb, n1);
   packedmatrix *B1  = mzd_init_window (B,  0, n1, mb, nb);
@@ -251,7 +250,6 @@ void _mzd_trsm_lower_right(packedmatrix *L, packedmatrix *B, const int cutoff) {
   else{
   /**
    \verbatim  
-     
      |\
      | \  
      |  \
@@ -266,10 +264,9 @@ void _mzd_trsm_lower_right(packedmatrix *L, packedmatrix *B, const int cutoff) {
      |B0  |B1  |
      |____|____|
    \endverbatim
- 
-   * L00 and B0 are possibly located at uneven locations.
-   * Their column dimension is lower than 64
-   * The first column of L10, L11, B1 are aligned to words.
+   * \li L00 and B0 are possibly located at uneven locations.
+   * \li Their column dimension is lower than 64.
+   * \li The first column of L10, L11, B1 are aligned to words.
    */
     packedmatrix *B0  = mzd_init_window (B,  0,  0, mb, n1);
     packedmatrix *B1  = mzd_init_window (B,  0, n1, mb, nb);
@@ -454,9 +451,9 @@ void _mzd_trsm_lower_left(packedmatrix *L, packedmatrix *B, const int cutoff) {
     |L10 |L11\  |      |
     |____|____\ |______|
     \endverbatim 
-    * L00 L10 B0 and B1 are possibly located at uneven locations.
-    * Their column dimension is lower than 64
-    * The first column of L01, L11, B1 are aligned to words.
+    * \li L00 L10 B0 and B1 are possibly located at uneven locations.
+    * \li Their column dimension is lower than 64.
+    * \li The first column of L01, L11, B1 are aligned to words.
     */
       
     packedmatrix *B0  = mzd_init_window (B,  0,  0, m1, nb);
@@ -647,9 +644,9 @@ void _mzd_trsm_upper_left(packedmatrix *U, packedmatrix *B, const int cutoff) {
              \ | |      |
               \| |______|
      \endverbatim 
-     * U00, B0 and B1 are possibly located at uneven locations.
-     * Their column dimension is greater than 64
-     * The first column of U01, U11, B0 and B1 are aligned to words.
+     * \li U00, B0 and B1 are possibly located at uneven locations.
+     * \li Their column dimension is greater than 64
+     * \li The first column of U01, U11, B0 and B1 are aligned to words.
      */
     
     packedmatrix *B0  = mzd_init_window (B,  0,  0, m1, nb);

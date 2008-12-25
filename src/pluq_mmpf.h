@@ -1,8 +1,11 @@
 /**
  * \file pluq_mmpf.h
- * \brief PLUQ factorisation using Gray codes
+ * \brief PLUQ factorization using Gray codes.
+ *
  *
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
+ * 
+ * \example testsuite/test_lqup.c
  */
 
 
@@ -32,12 +35,12 @@
 #include "permutation.h"
 
 /**
- * Perform PLUQ factorization on A using Gray codes.
+ * \brief PLUQ matrix decomposition of A using Gray codes.
  *
  * \param A Matrix.
- * \param k Size of Gray code tables.
  * \param P Preallocated row permutation.
  * \param Q Preallocated column permutation.
+ * \param k Size of Gray code tables.
  *
  * \wordoffset
  */
@@ -45,8 +48,8 @@
 size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k);
 
 /**
- * Perform PLUQ factorization on a submatrix of up to dimension k
- * starting at (r,c).
+ * \brief PLUQ matrix decomposition of a submatrix of up to dimension
+ * k starting at (r,c).
  *
  * \param A Matrix.
  * \param r Row Offset.

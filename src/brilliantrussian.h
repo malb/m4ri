@@ -1,6 +1,6 @@
 /**
  * \file brilliantrussian.h
- * \brief Matrix operations using Gray codes.
+ * \brief M4RI and M4RM.
  *
  * \author Gregory Bard <bard@fordham.edu>
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
@@ -146,8 +146,8 @@ void mzd_process_rows4(packedmatrix *M, size_t startrow, size_t endrow, size_t s
                        packedmatrix *T2, size_t *L2, packedmatrix *T3, size_t *L3);
 
 /**
- * \brief Perform matrix reduction using the 'Method of the Four
- * Russians' (M4RI) or Kronrod-Method.
+ * \brief Matrix elimination using the 'Method of the Four Russians'
+ * (M4RI).
  * 
  * \param M Matrix to be reduced.
  * \param full Return the reduced row echelon form, not only upper triangular form.
@@ -155,10 +155,13 @@ void mzd_process_rows4(packedmatrix *M, size_t startrow, size_t endrow, size_t s
  * \param T Preallocated table, may be NULL for automatic creation.
  * \param L Preallocated lookup table, may be NULL for automatic creation.
  *
+ * \example testsuite/test_elimination.c
+ * \example testsuite/bench_elimination.c
+ * 
  * \wordoffset
  */
 
-int mzd_reduce_m4ri(packedmatrix *M, int full, int k, packedmatrix *T, size_t *L);
+int mzd_echelonize_m4ri(packedmatrix *M, int full, int k, packedmatrix *T, size_t *L);
 
 /**
  * \brief Given a matrix in upper triangular form compute the reduced row
@@ -172,7 +175,7 @@ int mzd_reduce_m4ri(packedmatrix *M, int full, int k, packedmatrix *T, size_t *L
  * \wordoffset
  */
 
-void mzd_top_reduce_m4ri(packedmatrix *M, int k, packedmatrix *T, size_t *L);
+void mzd_top_echelonize_m4ri(packedmatrix *M, int k, packedmatrix *T, size_t *L);
 
 /**
  * \brief Invert the matrix M using Konrod's method. To avoid

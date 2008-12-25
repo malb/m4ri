@@ -564,23 +564,21 @@ void mzd_process_rows6(packedmatrix *M, size_t startrow, size_t stoprow, size_t 
   }
 }
 
-int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L) {
+int mzd_echelonize_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L) {
   /**
-   * The algorithm works as follows:
-   *
-   * Step 1.Denote the first column to be processed in a given
+   * \par General algorithm
+   * \li Step 1.Denote the first column to be processed in a given
    * iteration as \f$a_i\f$. Then, perform Gaussian elimination on the
    * first \f$3k\f$ rows after and including the \f$i\f$-th row to
    * produce an identity matrix in \f$a_{i,i} ... a_{i+k-1,i+k-1},\f$
    * and zeroes in \f$a_{i+k,i} ... a_{i+3k-1,i+k-1}\f$.
    *
-   * Step 2. Construct a table consisting of the \f$2^k\f$ binary strings of
+   * \li Step 2. Construct a table consisting of the \f$2^k\f$ binary strings of
    * length k in a Gray code.  Thus with only \f$2^k\f$ vector
    * additions, all possible linear combinations of these k rows
    * have been precomputed.
    *
-   *
-   * Step 3. One can rapidly process the remaining rows from \f$i +
+   * \li Step 3. One can rapidly process the remaining rows from \f$i +
    * 3k\f$ until row \f$m\f$ (the last row) by using the table. For
    * example, suppose the \f$j\f$-th row has entries \f$a_{j,i}
    * ... a_{j,i+k-1}\f$ in the columns being processed. Selecting the
@@ -589,14 +587,17 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L
    * remaining columns from \f$ i + k\f$ to n in the appropriate way,
    * as if Gaussian elimination had been performed.
    *
-   * Step 4. While the above form of the algorithm will reduce a
+   * \li Step 4. While the above form of the algorithm will reduce a
    * system of boolean linear equations to unit upper triangular form,
    * and thus permit a system to be solved with back substitution, the
    * M4RI algorithm can also be used to invert a matrix, or put the
    * system into reduced row echelon form (RREF). Simply run Step 3
    * on rows \f$0 ... i-1\f$ as well as on rows \f$i + 3k
    * ... m\f$. This only affects the complexity slightly, changing the
-   * 2.5 coeffcient to 3
+   * 2.5 coeffcient to 3.
+   *
+   * \attention This function implements a variant of the algorithm
+   * described above.
    */
 
   const size_t ncols = A->ncols; 
@@ -771,7 +772,7 @@ int mzd_reduce_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L
   return r;
 }
 
-void mzd_top_reduce_m4ri(packedmatrix *A, int k, packedmatrix *T, size_t *L) {
+void mzd_top_echelonize_m4ri(packedmatrix *A, int k, packedmatrix *T, size_t *L) {
   const size_t ncols = A->ncols; 
   size_t r = 0;
   size_t c = 0;
@@ -862,7 +863,7 @@ packedmatrix *mzd_invert_m4ri(packedmatrix *m, packedmatrix *I, int k) {
   size_t *L=(size_t *)m4ri_mm_malloc(twokay * sizeof(size_t));
   packedmatrix *answer;
   
-  mzd_reduce_m4ri(big, TRUE, k, T, L);
+  mzd_echelonize_m4ri(big, TRUE, k, T, L);
   
   for(i=0; i < size; i++) {
     if (!mzd_read_bit(big, i,i )) {
