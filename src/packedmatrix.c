@@ -162,24 +162,31 @@ void mzd_print( const packedmatrix *M ) {
   for (i=0; i< M->nrows; i++ ) {
     printf("[");
     row = M->values + M->rowswap[i];
-    /* TODO: This is not correct */
-    for (j=0; j< (M->ncols+M->offset)/RADIX; j++) {
-      m4ri_word_to_str(temp, row[j], 1);
-      printf("%s ", temp);
+    if(M->offset == 0) {
+      for (j=0; j< M->width-1; j++) {
+        m4ri_word_to_str(temp, row[j], 1);
+        printf("%s ", temp);
+      }
+      row = row + M->width - 1;
+      for (j=0; j< (size_t)(M->ncols%RADIX); j++) {
+        if (GET_BIT(*row, j)) 
+          printf("1");
+        else
+          printf(" ");
+        if (((j % 4)==3) && (j!=RADIX-1))
+          printf(":");
+      }
+    } else {
+      for (j=0; j< M->ncols; j++) {
+        if(mzd_read_bit(M, i, j))
+          printf("1");
+        else
+          printf(" ");
+        if (((j % 4)==3) && (j!=RADIX-1))
+          printf(":");
+      }
     }
-    row = row + M->width - 1;
-    for (j=0; j< (size_t)((M->ncols+M->offset)%RADIX); j++) {
-      if (GET_BIT(*row, j)) 
-        printf("1");
-      else
-        printf(" ");
-      if (((j % 4)==3) && (j!=RADIX-1))
-        printf(":");
-    }
-    if (M->ncols%RADIX)
-      printf("]\n");
-    else
-      printf("]\n");
+    printf("]\n");
   }
 }
 
@@ -617,7 +624,9 @@ packedmatrix *mzd_copy(packedmatrix *n, const packedmatrix *p) {
       }
     }
     size_t i, j, p_truerow, n_truerow;
-    /* TODO: This is wrong */
+    /**
+     * \todo This is wrong 
+     */
     int trailingdim =  RADIX - p->ncols - p->offset;
 
     if (trailingdim >= 0) {

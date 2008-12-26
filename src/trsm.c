@@ -490,7 +490,9 @@ void _mzd_trsm_lower_left_weird(packedmatrix *L, packedmatrix *B, const int cuto
     for (size_t i=1; i < mb; ++i) {
       
       /* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
-      /** TODO: Need to be optimized !!! **/ 
+      /**
+       * \todo needs to be optimized!
+       **/ 
       size_t Lidx = L->rowswap[i];
       size_t Bidx = B->rowswap[i];
 
@@ -510,7 +512,9 @@ void _mzd_trsm_lower_left_weird(packedmatrix *L, packedmatrix *B, const int cuto
 
     for (size_t i=1; i < mb; ++i) {
       /* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
-      /** TODO: Need to be optimized !!! **/
+      /**
+       * \todo needs to be optimized!
+       **/ 
       size_t Lidx = L->rowswap[i];
       size_t Bidx = B->rowswap[i];
 
@@ -539,7 +543,9 @@ void _mzd_trsm_lower_left_even(packedmatrix *L, packedmatrix *B, const int cutof
 
       for (size_t i=1; i < mb; ++i) {
 	/* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
-	/** TODO: Need to be optimized !!! **/
+        /**
+         * \todo needs to be optimized!
+         **/ 
 	size_t Lidx = L->rowswap[i];
 	size_t Bidx = B->rowswap[i];
 
