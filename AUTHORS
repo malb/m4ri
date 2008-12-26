@@ -1,19 +1,22 @@
  * Tim Abbott: Debian-isation & advice on correct libtool versioning,
 
  * Martin Albrecht <M.R.Albrecht@rhul.ac.uk>: release manager,
-   peformance tuning (M4RM, M4RI, Strassen), initial M4RM
-   implementation, Strassen-Winograd implementation, parallelisation,
-   LQUP factorisation.
+   peformance tuning (M4RM, M4RI, MMPF, PLUQ, Strassen), MMPF
+   algorithm and implementation, initial M4RM implementation,
+   Strassen-Winograd implementation, parallelisation, PLUQ
+   factorisation
 
  * Gregory Bard <bard@fordham.edu>: initial author, M4RI algorithm and
    initial implementation.
 
  * Michael Brickenstein: PolyBoRi author, standard conformity
    contributions for ANSIC, test data, discussion/suggestion of
-   performance improvements.
+   performance improvements, fast vector-matrix products.
 
  * Alexander Dreyer: PolyBoRi author, standard conformity
    contributions for ANSIC.
+
+ * Jean-Guillaume Dumas: linear system resolution.
 
  * William Hart: many performance improvements for matrix
    multiplication and in general.
@@ -21,6 +24,6 @@
  * David Harvey: parallel parity function used in classical
    multiplication.
 
- * Clément Pernet: LQUP factorisation, triangular system solving.
+ * Clément Pernet: PLUQ factorisation, triangular system solving (TRSM).
 
  
