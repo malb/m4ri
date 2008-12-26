@@ -68,7 +68,7 @@ void mzp_free(permutation *P);
 /**
  * \brief Create a window/view into the permutation matrix P.
  *
- * Use mzp_free_permutation_window to free the window.
+ * Use mzp_free_permutation_window() to free the window.
  *
  * \param P Permutaiton matrix
  * \param begin Starting index (inclusive)
@@ -80,7 +80,7 @@ permutation *mzp_init_window(permutation* P, size_t begin, size_t end);
 
 /**
  * \brief Free a permutation matrix window created with
- * mzp_init_permutation_window.
+ * mzp_init_permutation_window().
  * 
  * \param condemned Permutation Matrix
  */

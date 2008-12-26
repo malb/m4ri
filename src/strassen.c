@@ -322,6 +322,13 @@ packedmatrix *mzd_mul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cut
     m4ri_die("mzd_mul: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
 	     C->nrows, C->ncols, A->nrows, B->ncols);
   }
+
+  if(A->offset || B->offset || C->offset) {
+    mzd_set_ui(C, 0);
+    mzd_addmul(C, A, B, cutoff);
+    return C;
+  }
+
 #ifdef HAVE_OPENMP
   /* this one isn't optimal */
   if (omp_get_max_threads() > 1) {

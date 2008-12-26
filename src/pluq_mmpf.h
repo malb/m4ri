@@ -37,6 +37,9 @@
 /**
  * \brief PLUQ matrix decomposition of A using Gray codes.
  *
+ * If (P,L,U,Q) satisfy PLUQ = A, this function returns
+ * (P^T,L,U,Q^T). The matrix L and U are stored in place over A.
+ *
  * \param A Matrix.
  * \param P Preallocated row permutation.
  * \param Q Preallocated column permutation.

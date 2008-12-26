@@ -38,7 +38,7 @@
  *
  * The solution X is stored inplace on B.
  *
- * \param A Input matrix.
+ * \param A Input matrix (overwritten).
  * \param B Input matrix, being overwritten by the solution matrix X
  * \param cutoff Minimal dimension for Strassen recursion.
  * \param inconsistency_check decide wether or not to check for

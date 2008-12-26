@@ -1055,6 +1055,8 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
    * Step 3. for \f$h = 1,2, ... , c\f$ do
    *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
    */
+  assert(A->offset==0);
+  assert(B->offset==0);
   assert(C->offset==0);
   size_t i,j;
   size_t ii;

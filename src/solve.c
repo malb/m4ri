@@ -57,16 +57,16 @@ void _mzd_pluq_solve_left (packedmatrix *A, size_t rank,
    *  3) U B4 = B3
    *  4) Q B5 = B4
    */
-  
+
   /* P B2 = B1 or B2 = P^T B1*/
-  mzd_apply_p_left_trans(B, P);
+  mzd_apply_p_left(B, P);
   
   /* L B3 = B2 */
   
   /* view on the upper part of L */
   packedmatrix *LU = mzd_init_window(A,0,0,rank,rank);
   packedmatrix *Y1 = mzd_init_window(B,0,0,rank,B->ncols);
-  _mzd_trsm_lower_left(LU, Y1, cutoff);
+  mzd_trsm_lower_left(LU, Y1, cutoff);
   
   if (inconsistency_check) {
     /* Check for inconsistency */
@@ -74,36 +74,40 @@ void _mzd_pluq_solve_left (packedmatrix *A, size_t rank,
      * 
      * update with the lower part of L 
      */
-    packedmatrix *H = mzd_init_window(A,rank,0,A->nrows,rank);
+    packedmatrix *H = mzd_init_window(A, rank, 0, A->nrows, rank);
     packedmatrix *Y2 = mzd_init_window(B,rank,0,B->nrows,B->ncols);
     mzd_addmul(Y2, H, Y1, cutoff);
     /*
      * test whether Y2 is the zero matrix
      */
-/*     if( !mzd_is_zero(Y2) ) { */
-/*       printf("inconsistent system of size %llu x %llu\n", Y2->nrows, Y2->ncols); */
-/*       printf("Y2="); */
-/*       mzd_print(Y2); */
-/*     } */
+    if( !mzd_is_zero(Y2) ) {
+      //printf("inconsistent system of size %llu x %llu\n", Y2->nrows, Y2->ncols);
+      //printf("Y2=");
+      //mzd_print(Y2);
+    }
     mzd_free_window(H);
     mzd_free_window(Y2);
   }
   /* U B4 = B3 */
-  _mzd_trsm_upper_left(LU, Y1, cutoff);
+  mzd_trsm_upper_left(LU, Y1, cutoff);
   mzd_free_window(LU);
   mzd_free_window(Y1);
   
-  if (! inconsistency_check) {
+  if (!inconsistency_check) {
     /** Default is to set the indefined bits to zero 
      * if inconsistency has been checked then 
      *    Y2 bits are already all zeroes
      * thus this clearing is not needed
      */
-    if (rank < B->nrows) mzd_clear_bits(B,rank,0, (B->nrows-rank)*B->ncols);
+    for(size_t i = rank; i<B->nrows; i++) {
+      for(size_t j=0; j<B->ncols; j+=RADIX) {
+        mzd_clear_bits(B, i, j, MIN(RADIX,B->ncols - j));
+      }
+    }
   }
-  
   /* Q B5 = B4 or B5 = Q^T B4*/
-  mzd_apply_p_left_trans(B, Q);
+  mzd_apply_p_right(B, Q);
+
   /* P L U Q B5 = B1 */
 }
 

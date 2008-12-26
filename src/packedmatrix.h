@@ -211,7 +211,7 @@ static inline void mzd_row_swap(packedmatrix *M, const size_t rowa, const size_t
  * \param j Source row index.
  */
 
-void mzd_copy_row(packedmatrix* B, size_t i, packedmatrix* A, size_t j);
+void mzd_copy_row(packedmatrix* B, size_t i, const packedmatrix* A, size_t j);
 
 /**
  * \brief Swap the two columns cola and colb.
