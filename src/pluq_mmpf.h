@@ -51,8 +51,11 @@
 size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k);
 
 /**
- * \brief PLUQ matrix decomposition of a submatrix of up to dimension
- * k starting at (r,c).
+ * \brief PLUQ matrix decomposition of a submatrix for up to k columns
+ * starting at (r,c).
+ *
+ * Updates P and Q and modifies A in place. The buffer done afterwards holds how
+ * far a particular row was already added.
  *
  * \param A Matrix.
  * \param r Row Offset.
@@ -60,10 +63,9 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k);
  * \param k Size of Gray code tables.
  * \param P Preallocated row permutation.
  * \param Q Preallocated column permutation.
- *
- * \wordoffset
+ * \param done Preallocated temporary buffer.
  */
 
-size_t _mzd_pluq_submatrix(packedmatrix *A, size_t r, size_t c, int k, permutation *P, permutation *Q);
+size_t _mzd_pluq_submatrix(packedmatrix *A, size_t r, size_t c, int k, permutation *P, permutation *Q, size_t *todo);
 
 #endif //PLUQ_MMPF_H

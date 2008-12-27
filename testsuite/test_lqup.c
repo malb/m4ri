@@ -42,7 +42,6 @@ int test_lqup_full_rank (size_t m, size_t n){
     mzd_write_bit(U2,i,i, 1);
   }
   mzd_addmul(Acopy,L2,U2,0);
-
   int status = 0;
   for ( i=0; i<m; ++i)
     for ( j=0; j<n; ++j){
@@ -270,6 +269,7 @@ int main(int argc, char **argv) {
   status += test_lqup_structured(65, 65);
   status += test_lqup_structured(128, 128);
 
+  status += test_lqup_full_rank(13,13);
   status += test_lqup_full_rank(37,37);
   status += test_lqup_full_rank(64,64);
   status += test_lqup_full_rank(97,97);

@@ -30,38 +30,31 @@
 #include "brilliantrussian.h"
 #include "grayflex.h"
 
-size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, int k, permutation *P, permutation *Q)  {
+size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, int k, permutation *P, permutation *Q, size_t *done)  {
   size_t i, j, l, curr_pos;
   int found;
 
-  for(curr_pos = 0; curr_pos < k; curr_pos++) {
+  for(curr_pos=0; curr_pos < k; curr_pos++) {
     found = 0;
     /* search for some pivot */
     for(j = start_col + curr_pos; j < start_col + k; j++) {
       for(i = start_row + curr_pos; i < A->nrows; i++) {
         /* clear before but preserve transformation matrix */
         for(l = 0; l < curr_pos; l++)
-	  if(mzd_read_bit(A, i, start_col + l))
-	    mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
+	  if(done[l] < i) {
+            if(mzd_read_bit(A, i, start_col + l))
+              mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
+            done[l] = i; /* encode up to which row we added for l already */
+          }
         
-	if(mzd_read_bit(A, i, j))
+	if(mzd_read_bit(A, i, j)) {
           found = 1;
-        
-        if(found==0) {
-          /* undo clearing */
-          /* this is brain dead! */
-          /* don't undo it, P encodes length already applied anyway */
-          for(l = curr_pos; l != 0; l--)
-            if(mzd_read_bit(A, i, start_col + l - 1))
-              mzd_row_add_offset(A, i, start_row + l - 1, start_col + l);
-        } else {
           break;
         }
       }
       if(found)
         break;
     }
-    
     if(!found) {
       return curr_pos;
     }
@@ -73,6 +66,8 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
     if (j > Q->values[start_col + curr_pos])
       Q->values[start_col + curr_pos] = j;
     mzd_col_swap(A, start_col + curr_pos, j);
+
+    done[curr_pos] = i;
   }
   return curr_pos;
 }
@@ -198,13 +193,22 @@ packedmatrix *_mzd_pluq_to_u(packedmatrix *U, packedmatrix *A, size_t r, size_t 
   return U;
 }
 
+static inline size_t _max_value(size_t *data, size_t length) {
+  size_t max = 0;
+  for(size_t i=0; i<length; i++) {
+    max = MAX(max, data[i]);
+  }
+  return max;
+}
+
 /* method of many people factorisation */
 size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) {
   assert(A->offset == 0);
   const size_t nrows = A->nrows; 
   const size_t ncols = A->ncols; 
   size_t curr_pos = 0;
-  int kbar = 0;
+  size_t kbar = 0;
+  size_t done_row = 0;
 
   if(k == 0) {
     k = m4ri_opt_k(nrows, ncols, 0);
@@ -224,13 +228,21 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
 
   size_t *L0 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
   size_t *L1 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+  size_t *done = (size_t *)m4ri_mm_malloc(kk * sizeof(size_t));
 
   while(curr_pos < MIN(ncols,nrows)) {
     if(curr_pos + kk > ncols)
       kk = ncols - curr_pos;
 
     /* 1. compute PLUQ factorisation for a kxk submatrix */
-    kbar = _mzd_pluq_submatrix(A, curr_pos, curr_pos, kk, P, Q);
+    kbar = _mzd_pluq_submatrix(A, curr_pos, curr_pos, kk, P, Q, done);
+    /* 1.5. finish submatrix*/
+    done_row = _max_value(done, kbar);
+    for(size_t c2=0; c2<kbar; c2++)
+      for(size_t r2=done[c2]+1; r2<=done_row; r2++)
+        if(mzd_read_bit(A, r2, curr_pos + c2))
+          mzd_row_add_offset(A, r2, curr_pos+c2, curr_pos+c2+1);
+
     /* 2. extract U */
     _mzd_pluq_to_u(U, A, curr_pos, curr_pos, kbar);
     
@@ -241,12 +253,12 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
       mzd_make_table_pluq(U, 0, curr_pos, ka, T0, L0);
       mzd_make_table_pluq(U, 0+ka, curr_pos + ka, kb, T1, L1);
       /* 3. use that table to process remaining rows below */
-      mzd_process_rows2_pluq(A, curr_pos + ka + kb, nrows, curr_pos, kbar, T0, L0, T1, L1);
+      mzd_process_rows2_pluq(A, done_row + 1, nrows, curr_pos, kbar, T0, L0, T1, L1);
     } else if(kbar > 0) {
       /* 2. generate table T */
       mzd_make_table_pluq(U, 0, curr_pos, kbar, T0, L0);
       /* 3. use that table to process remaining rows below */
-      mzd_process_rows(A, curr_pos + kbar, nrows, curr_pos, kbar, T0, L0);
+      mzd_process_rows(A, done_row + 1, nrows, curr_pos, kbar, T0, L0);
     } else {
       size_t i = curr_pos;
       size_t j  = curr_pos;
@@ -268,5 +280,6 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
   mzd_free(T1);
   m4ri_mm_free(L0);
   m4ri_mm_free(L1);
+  m4ri_mm_free(done);
   return curr_pos;
 }
