@@ -2,33 +2,42 @@
 #include "m4ri/m4ri.h"
 
 int elim_test_equality(int nr, int nc) {
-  packedmatrix *A, *B, *C, *D, *E, *F;
   int ret = 0; 
 
   printf("elim: m: %4d, n: %4d ",nr,nc);
 
-  A = mzd_init(nr, nc);
+  packedmatrix *A = mzd_init(nr, nc);
   mzd_randomize(A);
-  B = mzd_copy(NULL, A);
-  C = mzd_copy(NULL, A);
-  D = mzd_copy(NULL, A);
-  E = mzd_copy(NULL, A);
-  F = mzd_copy(NULL, A);
+  packedmatrix *B = mzd_copy(NULL, A);
+  packedmatrix *C = mzd_copy(NULL, A);
+  packedmatrix *D = mzd_copy(NULL, A);
+  packedmatrix *E = mzd_copy(NULL, A);
+  packedmatrix *F = mzd_copy(NULL, A);
+  packedmatrix *G = mzd_copy(NULL, A);
 
+  /* M4RI k=auto */
   mzd_echelonize_m4ri(A, 1, 0, NULL, NULL);
 
+  /* M4RI k=8 */
   mzd_echelonize_m4ri(B, 1, 8, NULL, NULL);
 
+  /* M4RI Upper Triangular k=auto*/
   mzd_echelonize_m4ri(C, 0, 0, NULL, NULL);
   mzd_top_echelonize_m4ri(C, 0, NULL, NULL);
 
+  /* M4RI Upper Triangular k=4*/
   mzd_echelonize_m4ri(D, 0, 4, NULL, NULL);
   mzd_top_echelonize_m4ri(D, 4, NULL, NULL);
 
+  /* Gauss */
   mzd_echelonize_naive(E, 1);
 
+  /* Gauss Upper Triangular */
   mzd_echelonize_naive(F, 0);
   mzd_top_echelonize_m4ri(F, 0, NULL, NULL);
+
+  /* PLUQ */
+  mzd_echelonize_pluq(G, 1);
   
   if(mzd_equal(A, B) != TRUE) {
     printf("A != B ");
@@ -50,16 +59,23 @@ int elim_test_equality(int nr, int nc) {
     ret -= 1;
   }
 
-  if(mzd_equal(F, A) != TRUE) {
-    printf("F != A");
+  if(mzd_equal(F, G) != TRUE) {
+    printf("F != G ");
     ret -= 1;
   }
+  if(mzd_equal(G, A) != TRUE) {
+    printf("G != A ");
+    ret -= 1;
+  }
+
 
   mzd_free(A);
   mzd_free(B);
   mzd_free(C);
   mzd_free(D);
   mzd_free(E);
+  mzd_free(F);
+  mzd_free(G);
 
   if(ret == 0) {
     printf(" ... passed\n");

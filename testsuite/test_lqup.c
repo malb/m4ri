@@ -14,11 +14,12 @@ int test_lqup_full_rank (size_t m, size_t n){
 
   size_t i,j;
   for (i=0; i<m; ++i){
-    for (j=0; j<i;++j)
+    for (j=0; j<i && j<n;++j)
       mzd_write_bit(U,i,j, 0);
     for (j=i+1; j<m;++j)
       mzd_write_bit(L,i,j, 0);
-    mzd_write_bit(U,i,i, 1);
+    if(i<n)
+      mzd_write_bit(U,i,i, 1);
     mzd_write_bit(L,i,i, 1);
   }
   
@@ -31,13 +32,13 @@ int test_lqup_full_rank (size_t m, size_t n){
   mzd_pluq(A, P, Q, 2048);
 
   for (i=0; i<m; ++i){
-    for (j=0; j<i;++j)
+    for (j=0; j<i && j <n;++j)
       mzd_write_bit (L2, i, j, mzd_read_bit(A,i,j));
     for (j=i+1; j<n;++j)
       mzd_write_bit (U2, i, j, mzd_read_bit(A,i,j));
   }
   
-  for (i=0; i<n; ++i){
+  for (i=0; i<n && i<m; ++i){
     mzd_write_bit(L2,i,i, 1);
     mzd_write_bit(U2,i,i, 1);
   }
@@ -265,22 +266,51 @@ int main(int argc, char **argv) {
   int status = 0;
 
   status += test_lqup_structured(37, 37);
+  status += test_lqup_structured(63, 63);
+  status += test_lqup_structured(64, 64);
   status += test_lqup_structured(65, 65);
   status += test_lqup_structured(128, 128);
 
+  status += test_lqup_structured(37, 137);
+  status += test_lqup_structured(65, 5);
+  status += test_lqup_structured(128, 18);
+
   status += test_lqup_full_rank(13,13);
   status += test_lqup_full_rank(37,37);
+  status += test_lqup_full_rank(63,63);
   status += test_lqup_full_rank(64,64);
+  status += test_lqup_full_rank(65,65);
   status += test_lqup_full_rank(97,97);
   status += test_lqup_full_rank(128,128);
   status += test_lqup_full_rank(150,150);
   status += test_lqup_full_rank(256,256);
   status += test_lqup_full_rank(1024,1024);
 
+  status += test_lqup_full_rank(13,11);
+  status += test_lqup_full_rank(37,39);
+  status += test_lqup_full_rank(64,164);
+  status += test_lqup_full_rank(97,92);
+  status += test_lqup_full_rank(128,121);
+  status += test_lqup_full_rank(150,153);
+  status += test_lqup_full_rank(256,258);
+  status += test_lqup_full_rank(1024,1023);
+
+  status += test_lqup_half_rank(64,64);
+  status += test_lqup_half_rank(65,65);
+  status += test_lqup_half_rank(66,66);
   status += test_lqup_half_rank(129,129);
   status += test_lqup_half_rank(132,132);
   status += test_lqup_half_rank(256,256);
   status += test_lqup_half_rank(1024,1024);
+
+  status += test_lqup_half_rank(129,127);
+  status += test_lqup_half_rank(132,136);
+  status += test_lqup_half_rank(256,251);
+  status += test_lqup_half_rank(1024,2100);
+
+  status += test_lqup_random(63,63);
+  status += test_lqup_random(64,64);
+  status += test_lqup_random(65,65);
 
   status += test_lqup_random(128,128);
   status += test_lqup_random(128, 131);
@@ -291,6 +321,14 @@ int main(int argc, char **argv) {
   status += test_lqup_random(1024,1022);
   status += test_lqup_random(1024,1024);
 
+  status += test_lqup_random(128,1280);
+  status += test_lqup_random(128, 130);
+  status += test_lqup_random(132, 132);
+  status += test_lqup_random(150,151);
+  status += test_lqup_random(252, 2);
+  status += test_lqup_random(256,251);
+  status += test_lqup_random(1024,1025);
+  status += test_lqup_random(1024,1021);
 
   if (!status) {
     printf("All tests passed.\n");
