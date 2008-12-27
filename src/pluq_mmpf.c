@@ -41,7 +41,7 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
       for(i = start_row + curr_pos; i < A->nrows; i++) {
         /* clear before but preserve transformation matrix */
         for(l = 0; l < curr_pos; l++)
-	  if(done[l] < i) {
+          if(done[l] < i) {
             if(mzd_read_bit(A, i, start_col + l))
               mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
             done[l] = i; /* encode up to which row we added for l already */

@@ -5,7 +5,7 @@
 #include "walltime.h"
 
 int main(int argc, char **argv) {
-  int fullrank = 1;
+  int halfrank = 1;
   int n,m;
   unsigned long long t;
   double wt;
@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
   packedmatrix *L, *U;
   packedmatrix *A = mzd_init(m, n);
 
-  if(fullrank) {
+  if(halfrank) {
   L = mzd_init(m, m);
   U = mzd_init(m, n);
   mzd_randomize(U);
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
   mzd_free(A);
   mzp_free(P);
   mzp_free(Q);
-  if(fullrank) {
+  if(halfrank) {
     mzd_free(U);
     mzd_free(L);
   }
