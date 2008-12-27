@@ -181,7 +181,6 @@ int test_lqup_structured(size_t m, size_t n) {
   mzd_apply_p_right(Acopy, Q);
 
   mzd_addmul(Acopy, L, U, 0);
-
   int status = 0;
   for ( i=0; i<m; ++i)
     for ( j=0; j<n; ++j){

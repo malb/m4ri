@@ -241,7 +241,7 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
     for(size_t c2=0; c2<kbar; c2++)
       for(size_t r2=done[c2]+1; r2<=done_row; r2++)
         if(mzd_read_bit(A, r2, curr_pos + c2))
-          mzd_row_add_offset(A, r2, curr_pos+c2, curr_pos+c2+1);
+          mzd_row_add_offset(A, r2, curr_pos + c2, curr_pos + c2 + 1);
 
     /* 2. extract U */
     _mzd_pluq_to_u(U, A, curr_pos, curr_pos, kbar);
@@ -254,25 +254,38 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
       mzd_make_table_pluq(U, 0+ka, curr_pos + ka, kb, T1, L1);
       /* 3. use that table to process remaining rows below */
       mzd_process_rows2_pluq(A, done_row + 1, nrows, curr_pos, kbar, T0, L0, T1, L1);
+      curr_pos += kbar;
     } else if(kbar > 0) {
       /* 2. generate table T */
       mzd_make_table_pluq(U, 0, curr_pos, kbar, T0, L0);
       /* 3. use that table to process remaining rows below */
       mzd_process_rows(A, done_row + 1, nrows, curr_pos, kbar, T0, L0);
+      curr_pos += kbar;
     } else {
-      size_t i = curr_pos;
-      size_t j  = curr_pos;
-      int found = mzd_find_pivot(A, curr_pos, curr_pos, &i, &j);
-      if(found) {
-        P->values[curr_pos] = i;
-        Q->values[curr_pos] = j;
-        mzd_row_swap(A, curr_pos, i);
-        mzd_col_swap(A, curr_pos, j);
-      } else {
-        break;
+      /* we have at least kk columns which are all zero! */
+      int found = 0;
+      size_t stop_col = curr_pos + kk;
+      while(curr_pos < stop_col) {
+        size_t i = curr_pos;
+        size_t j = curr_pos;
+        found = mzd_find_pivot(A, curr_pos, curr_pos, &i, &j);
+        if(found) {
+          P->values[curr_pos] = i;
+          Q->values[curr_pos] = j;
+          mzd_row_swap(A, curr_pos, i);
+          mzd_col_swap(A, curr_pos, j);
+          for(size_t l = i+1; l<A->nrows; l++) {
+            if(mzd_read_bit(A, l, curr_pos))
+              mzd_row_add_offset(A, l, curr_pos, curr_pos + 1);
+          }
+          curr_pos++;
+        } else {
+          break;
+        }
       }
+      if(curr_pos != stop_col)
+        break;
     }
-    curr_pos += kbar;
   }
 
   mzd_free(U);
