@@ -56,15 +56,14 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
 
     size_t i, j;
     size_t n1 = (((ncols - 1) / RADIX + 1) >> 1) * RADIX;
-    packedmatrix *A0  = mzd_init_window (A,  0,  0, nrows,    n1);
-    packedmatrix *A1  = mzd_init_window (A,  0, n1, nrows, ncols);
+    packedmatrix *A0  = mzd_init_window(A,  0,  0, nrows,    n1);
+    packedmatrix *A1  = mzd_init_window(A,  0, n1, nrows, ncols);
 
     size_t r1, r2;
     /* First recursive call */
-    r1 = _mzd_pluq (A0, P, Q, cutoff);
-
-    /*
-     *           r1           n1
+    r1 = _mzd_pluq(A0, P, Q, cutoff);
+    
+    /*           r1           n1
      *   ------------------------------------------
      *   | A00    |           | A01               |
      *   |        |           |                   |
@@ -73,13 +72,12 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
      *   | A01    |           | A11               |
      *   |        |           |                   |
      *   ------------------------------------------
-     *
      */
 
-    packedmatrix *A00  = mzd_init_window (A,   0, 0, r1, r1);
-    packedmatrix *A10  = mzd_init_window (A,  r1, 0, nrows, r1);
-    packedmatrix *A01  = mzd_init_window (A,  0, n1, r1, ncols);
-    packedmatrix *A11  = mzd_init_window (A,  r1, n1, nrows, ncols);
+    packedmatrix *A00 = mzd_init_window(A,  0,  0, r1, r1);
+    packedmatrix *A10 = mzd_init_window(A, r1,  0, nrows, r1);
+    packedmatrix *A01 = mzd_init_window(A,  0, n1, r1, ncols);
+    packedmatrix *A11 = mzd_init_window(A, r1, n1, nrows, ncols);
 
     if (r1) {
       /* Computation of the Schur complement */
@@ -89,8 +87,8 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
     }
 
     /* Second recursive call */
-    permutation * P2 = mzp_init_window(P, r1, nrows);
-    permutation * Q2 = mzp_init_window(Q, n1, ncols);
+    permutation *P2 = mzp_init_window(P, r1, nrows);
+    permutation *Q2 = mzp_init_window(Q, n1, ncols);
 
     r2 = _mzd_pluq(A11, P2, Q2, cutoff);
 

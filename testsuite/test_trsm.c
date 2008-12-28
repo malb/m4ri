@@ -2,7 +2,9 @@
 #include "m4ri/m4ri.h"
 
 
-int test_trsm_upper_right (int m, int n, int offset){
+int test_trsm_upper_right (int m, int n, int offset, const char* description){
+  printf("upper_right: %s  m: %4d n: %4d offset: %4d ... ",description, m, n, offset);
+
   packedmatrix* Ubase = mzd_init (2048,2048);
   packedmatrix* Bbase = mzd_init (2048,2048);
   mzd_randomize (Ubase);
@@ -55,7 +57,8 @@ int test_trsm_upper_right (int m, int n, int offset){
   return status;
 }
 
-int test_trsm_lower_right (int m, int n, int offset){
+int test_trsm_lower_right (int m, int n, int offset, const char *description){
+  printf("lower_right: %s  m: %4d n: %4d offset: %4d ... ",description, m, n, offset);
   packedmatrix* Lbase = mzd_init (2048,2048);
   packedmatrix* Bbase = mzd_init (2048,2048);
   mzd_randomize (Lbase);
@@ -165,7 +168,8 @@ int test_trsm_lower_left (int m, int n, int offsetL, int offsetB){
 
 
 
-int test_trsm_upper_left (int m, int n, int offsetU, int offsetB){
+int test_trsm_upper_left (int m, int n, int offsetU, int offsetB, const char *description) {
+  printf("upper_left: %s  m: %4d n: %4d offset: %4d ... ",description, m, n, offsetU);
   packedmatrix* Ubase = mzd_init (2048,2048);
   packedmatrix* Bbase = mzd_init (2048,2048);
   mzd_randomize (Ubase);
@@ -222,33 +226,21 @@ int test_trsm_upper_left (int m, int n, int offsetU, int offsetB){
 int main(int argc, char **argv) {
   int status = 0;
 
-  printf("UpperRight: small, even placed ... ");
-  status += test_trsm_upper_right(57, 10, 0);
-  printf("UpperRight: large, even placed ... ");
-  status += test_trsm_upper_right(57, 150, 0);
-  printf("UpperRight: small, odd placed  ... ");
-  status += test_trsm_upper_right(57, 3, 4);
-  printf("UpperRight: medium, odd placed ... ");
-  status += test_trsm_upper_right(57, 4, 62);
-  printf("UpperRight: large, odd placed  ... ");
-  status += test_trsm_upper_right(57, 80, 60);
-  printf("UpperRight: larger, odd placed ... ");
-  status += test_trsm_upper_right(1577, 1802, 189);
+  status += test_trsm_upper_right(  57,   10,   0, "small, even placed");
+  status += test_trsm_upper_right(  57,  150,   0, "large, even placed");
+  status += test_trsm_upper_right(  57,    3,   4, " small, odd placed");
+  status += test_trsm_upper_right(  57,    4,  62, "medium, odd placed");
+  status += test_trsm_upper_right(  57,   80,  60, " large, odd placed");
+  status += test_trsm_upper_right(1577, 1802, 189, "larger, odd placed");
 
   printf("\n");
 
-  printf("LowerRight: small, even placed ... ");
-  status += test_trsm_lower_right(57, 10, 0);
-  printf("LowerRight: large, even placed ... ");
-  status += test_trsm_lower_right(57, 150, 0);
-  printf("LowerRight: small, odd placed  ... ");
-  status += test_trsm_lower_right(57, 3, 4);
-  printf("LowerRight: medium, odd placed ... ");
-  status += test_trsm_lower_right(57, 4, 62);
-  printf("LowerRight: large, odd placed  ... ");
-  status += test_trsm_lower_right(57, 80, 60);
-  printf("LowerRight: larger, odd placed ... ");
-  status += test_trsm_lower_right(1577, 1802, 189);
+  status += test_trsm_lower_right(  57,   10,  0,"small, even placed");
+  status += test_trsm_lower_right(  57,  150,  0,"large, even placed");
+  status += test_trsm_lower_right(  57,    3,  4," small, odd placed");
+  status += test_trsm_lower_right(  57,    4, 62,"medium, odd placed");
+  status += test_trsm_lower_right(  57,   80, 60," large, odd placed");
+  status += test_trsm_lower_right(1577, 1802,189,"larger, odd placed");
 
   printf("\n");
 
@@ -291,42 +283,25 @@ int main(int argc, char **argv) {
 
   printf("\n");
 
-  printf("UpperLeft: small U even, small B even ... ");
-  status += test_trsm_upper_left (10, 20, 0, 0);
-  printf("UpperLeft: small U even, large B even ... ");
-  status += test_trsm_upper_left (10, 80, 0, 0);
-  printf("UpperLeft: small U even, small B odd  ... ");
-  status += test_trsm_upper_left (10, 20, 0, 15);
-  printf("UpperLeft: small U even, large B odd  ... ");
-  status += test_trsm_upper_left (10, 80, 0, 15);
-  printf("UpperLeft: small U odd, small B even  ... ");
-  status += test_trsm_upper_left (10, 20, 15, 0);
-  printf("UpperLeft: small U odd, large B even  ... ");
-  status += test_trsm_upper_left (10, 80, 15, 0);
-  printf("UpperLeft: small U odd, small B odd   ... ");
-  status += test_trsm_upper_left (10, 20, 15, 20);
-  printf("UpperLeft: small U odd, large B odd   ... ");
-  status += test_trsm_upper_left (10, 80, 15, 20);
-  printf("UpperLeft: large U even, small B even ... ");
-  status += test_trsm_upper_left (70, 20, 0, 0);
-  printf("UpperLeft: large U even, large B even ... ");
-  status += test_trsm_upper_left (70, 80, 0, 0);
-  printf("UpperLeft: large U even, small B odd  ... ");
-  status += test_trsm_upper_left (70, 10, 0, 15);
-  printf("UpperLeft: large U even, large B odd  ... ");
-  status += test_trsm_upper_left (70, 80, 0, 15);
-  printf("UpperLeft: large U odd, small B even  ... ");
-  status += test_trsm_upper_left (70, 20, 15, 0);
-  printf("UpperLeft: large U odd, large B even  ... ");
-  status += test_trsm_upper_left (70, 80, 15, 0);
-  printf("UpperLeft: large U odd, small B odd   ... ");
-  status += test_trsm_upper_left (70, 20, 15, 20);
-  printf("UpperLeft: large U odd, large B odd   ... ");
-  status += test_trsm_upper_left (70, 80, 15, 20);
-  printf("UpperLeft: larger U odd, larger B odd ... ");
-  status += test_trsm_upper_left (770, 1600, 75, 89);
-  printf("UpperLeft: larger U odd, larger B odd ... ");
-  status += test_trsm_upper_left (1764, 1345, 198, 123);
+  status += test_trsm_upper_left(  10,  20,  0,  0,"small U even, small B even");
+  status += test_trsm_upper_left(  10,  80,  0,  0,"small U even, large B even");
+  status += test_trsm_upper_left(  10,  20,  0, 15," small U even, small B odd");
+  status += test_trsm_upper_left(  10,  80,  0, 15," small U even, large B odd");
+  status += test_trsm_upper_left(  10,  20, 15,  0," small U odd, small B even");
+  status += test_trsm_upper_left(  10,  80, 15,  0," small U odd, large B even");
+  status += test_trsm_upper_left(  10,  20, 15, 20,"  small U odd, small B odd");
+  status += test_trsm_upper_left(  10,  80, 15, 20,"  small U odd, large B odd");
+  status += test_trsm_upper_left(  70,  20,  0,  0,"large U even, small B even");
+  status += test_trsm_upper_left(  63,   1,  0,  0,"                          ");
+  status += test_trsm_upper_left(  70,  80,  0,  0,"large U even, large B even");
+  status += test_trsm_upper_left(  70,  10,  0, 15," large U even, small B odd");
+  status += test_trsm_upper_left(  70,  80,  0, 15," large U even, large B odd");
+  status += test_trsm_upper_left(  70,  20, 15,  0," large U odd, small B even");
+  status += test_trsm_upper_left(  70,  80, 15,  0," large U odd, large B even");
+  status += test_trsm_upper_left(  70,  20, 15, 20,"  large U odd, small B odd");
+  status += test_trsm_upper_left(  70,  80, 15, 20,"  large U odd, large B odd");
+  status += test_trsm_upper_left( 770,1600, 75, 89,"larger U odd, larger B odd");
+  status += test_trsm_upper_left(1764,1345,198,123,"larger U odd, larger B odd");
 
   if (!status) {
     printf("All tests passed.\n");

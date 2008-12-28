@@ -274,10 +274,10 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
           Q->values[curr_pos] = j;
           mzd_row_swap(A, curr_pos, i);
           mzd_col_swap(A, curr_pos, j);
-          for(size_t l = i+1; l<A->nrows; l++) {
+          for(size_t l = i+1; l<A->nrows; l++)
             if(mzd_read_bit(A, l, curr_pos))
               mzd_row_add_offset(A, l, curr_pos, curr_pos + 1);
-          }
+          
           curr_pos++;
         } else {
           break;

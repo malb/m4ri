@@ -610,10 +610,6 @@ void _mzd_trsm_lower_left_even(packedmatrix *L, packedmatrix *B, const int cutof
  */
 void _mzd_trsm_upper_left_weird (packedmatrix *U, packedmatrix *B, const int cutoff);
 
-/*
- * Variant where U and B start at an odd bit position
- * Assumes that U->ncols < 64
- */
 void _mzd_trsm_upper_left_even(packedmatrix *U, packedmatrix *B, const int cutoff);
 
 void mzd_trsm_upper_left(packedmatrix *U, packedmatrix *B, const int cutoff) {
@@ -679,7 +675,7 @@ void _mzd_trsm_upper_left_weird (packedmatrix *U, packedmatrix *B, const int cut
   size_t nb = B->ncols;
   size_t Boffset = B->offset;
   size_t nbrest = (nb + Boffset) % RADIX;
-  if (nb + Boffset >= RADIX) {
+  if (nb + Boffset > RADIX) {
 
     // Large B
     word mask_begin = RIGHT_BITMASK(RADIX-B->offset);
@@ -730,7 +726,7 @@ void _mzd_trsm_upper_left_even(packedmatrix *U, packedmatrix *B, const int cutof
   if (mb <= RADIX){
     /* base case */
 
-    if (nb + B->offset >= RADIX) {
+    if (nb + B->offset > RADIX) {
       // B is large
       word mask_begin = RIGHT_BITMASK(RADIX-B->offset);
       word mask_end = LEFT_BITMASK(nbrest);

@@ -77,7 +77,7 @@ int test_lqup_half_rank(size_t m, size_t n) {
   mzd_randomize (L);
 
   size_t i,j;
-  for (i=0; i<m; ++i){
+  for (i=0; i<m && i<n; ++i){
     mzd_write_bit(U,i,i, 1);
     for (j=0; j<i;++j)
       mzd_write_bit(U,i,j, 0);
