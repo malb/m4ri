@@ -238,7 +238,7 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
     kbar = _mzd_pluq_submatrix(A, curr_pos, curr_pos, kk, P, Q, done);
     /* 1.5. finish submatrix*/
     done_row = _max_value(done, kbar);
-    for(size_t c2=0; c2<kbar; c2++)
+    for(size_t c2=0; c2<kbar && curr_pos + c2 < A->ncols -1; c2++)
       for(size_t r2=done[c2]+1; r2<=done_row; r2++)
         if(mzd_read_bit(A, r2, curr_pos + c2))
           mzd_row_add_offset(A, r2, curr_pos + c2, curr_pos + c2 + 1);

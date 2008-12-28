@@ -155,9 +155,10 @@ void mzd_free_window( packedmatrix *condemned) {
 }
 
 void mzd_print( const packedmatrix *M ) {
-  size_t i, j;
+  size_t i, j, wide;
   char temp[SAFECHAR];
   word *row;
+
 
   for (i=0; i< M->nrows; i++ ) {
     printf("[");
@@ -168,7 +169,11 @@ void mzd_print( const packedmatrix *M ) {
         printf("%s ", temp);
       }
       row = row + M->width - 1;
-      for (j=0; j< (size_t)(M->ncols%RADIX); j++) {
+      if(M->ncols%RADIX)
+        wide = (size_t)M->ncols%RADIX;
+      else
+        wide = RADIX;
+      for (j=0; j< wide; j++) {
         if (GET_BIT(*row, j)) 
           printf("1");
         else

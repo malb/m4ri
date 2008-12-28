@@ -62,7 +62,7 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
     size_t r1, r2;
     /* First recursive call */
     r1 = _mzd_pluq(A0, P, Q, cutoff);
-    
+
     /*           r1           n1
      *   ------------------------------------------
      *   | A00    |           | A01               |

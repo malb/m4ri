@@ -36,7 +36,7 @@
  * Crossover point for PLUQ factorization.
  */
 
-#define PLUQ_CUTOFF 64
+#define PLUQ_CUTOFF 512
 
 /**
  * \brief PLUQ matrix decomposition.
