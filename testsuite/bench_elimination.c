@@ -5,15 +5,20 @@
 #include "walltime.h"
 
 int main(int argc, char **argv) {
-  int halfrank = 1;
-  size_t m, n;
+  int halfrank = 0;
+  size_t m, n, r;
+  const char *algorithm;
   unsigned long long t;
   double wt;
   double clockZero = 0.0;
 
-  if (argc != 3) {
+  if (argc < 3) {
     m4ri_die("Parameters m,n expected.\n");
   }
+  if (argc == 4)
+    algorithm = argv[3];
+  else
+    algorithm = "m4ri";
   m = atoi(argv[1]);
   n = atoi(argv[2]);
   packedmatrix *A = mzd_init(m, n);
@@ -43,7 +48,12 @@ int main(int argc, char **argv) {
   }
   wt = walltime(&clockZero);
   t = cpucycles();
-  size_t r = mzd_echelonize_m4ri(A, 1, 0, NULL, NULL);
+  if(strcmp(algorithm,"m4ri")==0)
+    r = mzd_echelonize_m4ri(A, 1, 0, NULL, NULL);
+  else if(strcmp(algorithm,"pluq")==0)
+    r = mzd_echelonize_pluq(A, 1);
+  else if(strcmp(algorithm,"naive")==0)
+    r = mzd_echelonize_naive(A, 1);
   printf("m: %5d, n: %5d, r: %5d, cpu cycles: %llu wall time: %lf\n",m, n, r, cpucycles() - t, walltime(&wt));
 
   mzd_free(A);
