@@ -137,30 +137,30 @@ void mzd_process_rows2_pluq(packedmatrix *M, size_t startrow, size_t stoprow, si
   const size_t blockoffset = blocknumb - blocknuma;
   size_t wide = M->width - blocknuma;
 
-  if(wide < 6) {
+  if(wide < 4) {
     mzd_process_rows(M, startrow, stoprow, startcol, ka, T0, L0);
     mzd_process_rows(M, startrow, stoprow, startcol + ka, kb, T1, L1);
     return;
   }
 
-  wide -= 4;
+  wide -= 2;
   for(r=startrow; r<stoprow; r++) {
     const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka) ];
     word *t0 = T0->values + T0->rowswap[x0] + blocknuma;
     word *m0 = M->values + M->rowswap[r+0] + blocknuma;
     m0[0] ^= t0[0];
     m0[1] ^= t0[1];
-    m0[2] ^= t0[2];
-    m0[3] ^= t0[3];
+/*     m0[2] ^= t0[2]; */
+/*     m0[3] ^= t0[3]; */
     const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb) ];
     word *t1 = T1->values + T1->rowswap[x1] + blocknumb;
-    for(size_t i=blockoffset; i<4; i++) {
+    for(size_t i=blockoffset; i<2; i++) {
       m0[i] ^= t1[i-blockoffset];
     }
 
-    t0+=4;
-    t1+=4-blockoffset;
-    m0+=4;
+    t0+=2;
+    t1+=2-blockoffset;
+    m0+=2;
 
     register int n = (wide + 7) / 8;
     switch (wide % 8) {
