@@ -127,13 +127,18 @@ size_t _mzd_pluq(packedmatrix *A, permutation * P, permutation * Q, const int cu
     /* undo permutation */
     mzd_apply_p_right_trans(A11, Q2);
 
+
+    permutation *tmp = mzp_init(A->ncols);
     for(i=0, j=n1; j<n1+r2; i++, j++) {
-      mzd_col_swap(A, r1 + i, n1 + Q2->values[i]);
+      //mzd_col_swap(A, r1 + i, n1 + Q2->values[i]);
+      tmp->values[r1+i] = Q2->values[i] + n1;
       Q->values[r1+i] = Q2->values[i] + n1;
     }
     for(i=r1+r2; i<ncols; i++) {
       Q->values[i] = i;
     }
+    mzd_apply_p_right(A, tmp);
+    mzp_free(tmp);
 
     mzp_free_window(Q2);
     mzp_free_window(P2);
