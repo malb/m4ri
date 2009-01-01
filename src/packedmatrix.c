@@ -974,6 +974,7 @@ void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb) {
 
   if(a_bit > b_bit) {
     const size_t offset = a_bit - b_bit;
+
     for (i=0; i<M->nrows; i++) {
       base = M->values + M->rowswap[i];
       a = *(base + a_word);
@@ -1004,67 +1005,6 @@ void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb) {
 
 }
 
-void mzd_col_swap_in_rows(packedmatrix *M, const size_t cola, const size_t colb, const size_t start_row, const size_t stop_row) {
-  if (cola == colb)
-    return;
-
-  const size_t _cola = cola + M->offset;
-  const size_t _colb = colb + M->offset;
-
-  const size_t a_word = _cola/RADIX;
-  const size_t b_word = _colb/RADIX;
-  const size_t a_bit = _cola%RADIX;
-  const size_t b_bit = _colb%RADIX;
-  
-  word a, b, *base;
-
-  size_t i;
-  
-  if(a_word == b_word) {
-    const word ai = RADIX - a_bit - 1;
-    const word bi = RADIX - b_bit - 1;
-    for (i=start_row; i<stop_row; i++) {
-      base = (M->values + M->rowswap[i] + a_word);
-      register word b = *base;
-      register word x = ((b >> ai) ^ (b >> bi)) & 1; // XOR temporary
-      *base = b ^ ((x << ai) | (x << bi));
-    }
-    return;
-  }
-
-  const word a_bm = (ONE<<(RADIX - (a_bit) - 1));
-  const word b_bm = (ONE<<(RADIX - (b_bit) - 1));
-
-  if(a_bit > b_bit) {
-    const size_t offset = a_bit - b_bit;
-    for (i=start_row; i<stop_row; i++) {
-      base = M->values + M->rowswap[i];
-      a = *(base + a_word);
-      b = *(base + b_word);
-
-      a ^= (b & b_bm) >> offset;
-      b ^= (a & a_bm) << offset;
-      a ^= (b & b_bm) >> offset;
-
-      *(base + a_word) = a;
-      *(base + b_word) = b;
-    }
-  } else {
-    const size_t offset = b_bit - a_bit;
-    for (i=start_row; i<stop_row; i++) {
-      base = M->values + M->rowswap[i];
-      a = *(base + a_word);
-      b = *(base + b_word);
-
-      a ^= (b & b_bm) << offset;
-      b ^= (a & a_bm) >> offset;
-      a ^= (b & b_bm) << offset;
-      *(base + a_word) = a;
-      *(base + b_word) = b;
-    }
-  }
-
-}
 
 int mzd_is_zero(packedmatrix *A) {
   /* Could be improved: stopping as the first non zero value is found (status!=0)*/

@@ -78,22 +78,22 @@ void mzd_apply_p_right(packedmatrix *A, permutation *P) {
 }
 
 void mzd_apply_p_right_trans(packedmatrix *A, permutation *P) {
-/*   int i; */
-/*   const size_t step_size = MAX((CPU_L1_CACHE>>3)/A->width,1); */
-/*   for(size_t j=0; j<A->nrows; j+=step_size) { */
-/*     size_t stop_row = MIN(j+step_size, A->nrows); */
-/*     for (i=P->length-1; i>=0; i--) { */
-/*       assert(P->values[i] >= i); */
-/*       mzd_col_swap_in_rows(A, i, P->values[i], j, stop_row); */
-/*     } */
-/*   } */
-  long i;
-  if(A->nrows == 0)
-    return;
-  for (i=P->length-1; i>=0; i--) {
-    assert(P->values[i] >= i);
-    mzd_col_swap(A, i, P->values[i]);
+  int i;
+  const size_t step_size = MAX((CPU_L1_CACHE>>3)/A->width,1);
+  for(size_t j=0; j<A->nrows; j+=step_size) {
+    size_t stop_row = MIN(j+step_size, A->nrows);
+    for (i=P->length-1; i>=0; i--) {
+      assert(P->values[i] >= i);
+      mzd_col_swap_in_rows(A, i, P->values[i], j, stop_row);
+    }
   }
+/*   long i; */
+/*   if(A->nrows == 0) */
+/*     return; */
+/*   for (i=P->length-1; i>=0; i--) { */
+/*     assert(P->values[i] >= i); */
+/*     mzd_col_swap(A, i, P->values[i]); */
+/*   } */
 }
 
 void mzd_col_block_rotate(packedmatrix *M, size_t zs, size_t ze, size_t de, int copy) {
