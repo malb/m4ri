@@ -116,7 +116,7 @@ typedef unsigned long long word;
  * \param i Integer.
  */ 
 
-#define TWOPOW(i) (1<<(i))
+#define TWOPOW(i) (ONE<<(i))
 
 /**
  * \brief Pretty for unsigned char.

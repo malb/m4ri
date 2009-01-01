@@ -793,4 +793,18 @@ void mzd_row_clear_offset(packedmatrix *M, const size_t row, const size_t coloff
 int mzd_find_pivot(packedmatrix *M, size_t start_row, size_t start_col, size_t *r, size_t *c);
 
 
+/**
+ * \brief Return the number of nonzero entries divided by nrows *
+ * nclos
+ *
+ * If res = 0 then 100 samples per row are made, if res > 0 the
+ * function takes res sized steps within each row (res = 1 uses every
+ * word).
+ *
+ * \param A Matrix
+ * \param res Resolution of sampling
+ */
+
+double mzd_density(packedmatrix *A, int res);
+
 #endif //PACKEDMATRIX_H

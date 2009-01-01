@@ -1259,3 +1259,50 @@ int mzd_find_pivot(packedmatrix *A, size_t start_row, size_t start_col, size_t *
 }
 
 
+#define MASK(c)    (((word)(-1)) / (TWOPOW(TWOPOW(c)) + ONE))
+#define COUNT(x,c) ((x) & MASK(c)) + (((x) >> (TWOPOW(c))) & MASK(c))
+
+static inline int m4ri_bitcount(word n)  {
+   n = COUNT(n, 0);
+   n = COUNT(n, 1);
+   n = COUNT(n, 2);
+   n = COUNT(n, 3);
+   n = COUNT(n, 4);
+   n = COUNT(n, 5);
+   return n ;
+}
+
+double mzd_density(packedmatrix *A, int res) {
+  long count = 0;
+  long total = 0;
+  
+  if(res == 0)
+    res = (A->width/100.0);
+  if (res < 1)
+    res = 1;
+
+  if(A->width == 1) {
+    for(size_t i=0; i<A->nrows; i++)
+      for(size_t j=0; j<A->ncols; j++)
+        if(mzd_read_bit(A, i, j))
+          count++;
+    return ((double)count)/(A->ncols * A->nrows);
+  } else {
+    for(size_t i=0; i<A->nrows; i++) {
+      size_t truerow = A->rowswap[i];
+      for(size_t j = A->offset; j<RADIX; j++)
+        if(mzd_read_bit(A, i, j))
+          count++;
+      total += (long)RADIX - A->offset;
+      for(size_t j=1; j<A->width-1; j+=res) {
+        count += m4ri_bitcount(A->values[truerow + j]);
+        total += RADIX;
+      }
+      for(size_t j = 0; j < (A->offset + A->ncols)%RADIX; j++)
+        if(mzd_read_bit(A, i, j))
+          count++;
+      total += (A->offset + A->ncols)%RADIX;
+    }
+  }
+  return ((double)count)/(total);
+}
