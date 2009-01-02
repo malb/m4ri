@@ -48,6 +48,7 @@
  */
 
 static inline int _mzd_gauss_submatrix_full(packedmatrix *A, size_t r, size_t c, size_t end_row, int k) {
+  assert(k<=RADIX);
   size_t i,j,l;
   size_t start_row = r;
   int found;
@@ -55,23 +56,26 @@ static inline int _mzd_gauss_submatrix_full(packedmatrix *A, size_t r, size_t c,
     found = 0;
     for (i=start_row; i< end_row; i++) {
       /* first we need to clear the first columns */
-      if(mzd_read_bits(A,i,c,j-c))
+      const word tmp = mzd_read_bits(A,i,c,j-c+1);
+      const size_t offset = RADIX-(j-c+1);
+      if(tmp) {
         for (l=0; l<j-c; l++)
-          if (mzd_read_bit(A, i, c+l))
+          if (GET_BIT(tmp, offset+l))
             mzd_row_add_offset(A, i, r+l, c+l);
       
-      /* pivot? */
-      if (mzd_read_bit(A, i, j)) {
-        mzd_row_swap(A, i, start_row);
-        /* clear above */
-        for (l=r; l<start_row; l++) {
-          if (mzd_read_bit(A, l, j)) {
-            mzd_row_add_offset(A, l, start_row, j);
+        /* pivot? */
+        if (mzd_read_bit(A, i, j)) {
+          mzd_row_swap(A, i, start_row);
+          /* clear above */
+          for (l=r; l<start_row; l++) {
+            if (mzd_read_bit(A, l, j)) {
+              mzd_row_add_offset(A, l, start_row, j);
+            }
           }
+          start_row++;
+          found = 1;
+          break;
         }
-        start_row++;
-        found = 1;
-        break;
       }
     }
     if (found==0) {
