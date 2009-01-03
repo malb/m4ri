@@ -65,6 +65,64 @@ int mul_test_equality(int m, int l, int n, int k, int cutoff) {
 
 }
 
+/**
+ * Check that the results of all implemented squaring algorithms match
+ * up. 
+ *
+ * \param m Number of rows and columns of A
+ * \param k Parameter k of M4RM algorithm, may be 0 for automatic choice.
+ * \param cutoff Cut off parameter at which dimension to switch from
+ * Strassen to M4RM
+ */
+int sqr_test_equality(int m, int k, int cutoff) {
+  int ret  = 0;
+  packedmatrix *A, *C, *D, *E;
+  
+  printf("   mul: m: %4d, k: %2d, cutoff: %4d",m,k,cutoff);
+
+  /* we create one random matrix */
+  A = mzd_init(m, m);
+  mzd_randomize(A);
+
+  /* C = A*A via Strassen */
+  C = mzd_mul(NULL, A, A, cutoff);
+
+  /* D = A*A via M4RM, temporary buffers are managed internally */
+  D = mzd_mul_m4rm(    NULL, A, A, k);
+
+  /* E = A*A via naive cubic multiplication */
+  E = mzd_mul_naive(    NULL, A, A);
+
+  mzd_free(A);
+
+  if (mzd_equal(C, D) != TRUE) {
+    printf(" Strassen != M4RM");
+    ret -=1;
+  }
+
+  if (mzd_equal(D, E) != TRUE) {
+    printf(" M4RM != Naiv");
+    ret -= 1;
+  }
+
+  if (mzd_equal(C, E) != TRUE) {
+    printf(" Strassen != Naiv");
+    ret -= 1;
+  }
+
+  mzd_free(C);
+  mzd_free(D);
+  mzd_free(E);
+
+  if(ret==0) {
+    printf(" ... passed\n");
+  } else {
+    printf(" ... FAILED\n");
+  }
+
+  return ret;
+}
+
 int addmul_test_equality(int m, int l, int n, int k, int cutoff) {
   int ret  = 0;
   packedmatrix *A, *B, *C, *D, *E, *F;
@@ -159,6 +217,25 @@ int main(int argc, char **argv) {
   status += addmul_test_equality(1290, 1710, 2000, 0, 256);
   status += addmul_test_equality(1290, 1290, 2000, 0, 64);
   status += addmul_test_equality(1000, 210, 200, 0, 64);
+
+  status += sqr_test_equality(1, 0, 1024);
+  status += sqr_test_equality(128, 0, 0);
+  status += sqr_test_equality(131, 0, 0);
+  status += sqr_test_equality(64,  0, 64);
+  status += sqr_test_equality(128, 0, 64);
+  status += sqr_test_equality(171, 0, 63); 
+  status += sqr_test_equality(171, 0, 131); 
+  status += sqr_test_equality(193, 10, 64);
+  status += sqr_test_equality(1025, 3, 256);
+  status += sqr_test_equality(2048, 0, 1024);
+  status += sqr_test_equality(3528, 0, 1024);
+  status += sqr_test_equality(1000, 0, 256);
+  status += sqr_test_equality(1000, 0, 64);
+  status += sqr_test_equality(1710, 0, 256);
+  status += sqr_test_equality(1290, 0, 64);
+  status += sqr_test_equality(2000, 0, 256);
+  status += sqr_test_equality(2000, 0, 64);
+  status += sqr_test_equality(210, 0, 64);
 
   if (status == 0) {
     printf("All tests passed.\n");
