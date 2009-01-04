@@ -65,7 +65,7 @@ int test_pluq_solve_left(size_t m, size_t n, size_t offsetA, size_t offsetB){
   mzd_free(Acopy);
   mzd_free(Abase);
   mzd_free(Bbase);
-
+  mzd_free(X);
   return status;
 }
 
