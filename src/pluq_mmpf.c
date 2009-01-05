@@ -34,7 +34,7 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
   size_t i, j, l, curr_pos;
   int found;
 
-  for(curr_pos=0; curr_pos < k; curr_pos++) {
+  for(curr_pos=0; curr_pos < (size_t)k; curr_pos++) {
     found = 0;
     /* search for some pivot */
     for(j = start_col + curr_pos; j < start_col + k; j++) {
@@ -187,7 +187,7 @@ packedmatrix *_mzd_pluq_to_u(packedmatrix *U, packedmatrix *A, size_t r, size_t 
   size_t startcol = (c/RADIX)*RADIX;
   mzd_submatrix(U, A, r, 0, r+k, A->ncols);
 
-  for(i=0; i<k; i++)
+  for(i=0; i<(size_t)k; i++)
     for(j=startcol; j<c+i; j++) 
       mzd_write_bit(U, i, j,  0);
   return U;
@@ -246,7 +246,7 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
     /* 2. extract U */
     _mzd_pluq_to_u(U, A, curr_pos, curr_pos, kbar);
     
-    if(kbar > k) {
+    if(kbar > (size_t)k) {
       const int ka = kbar/2;
       const int kb = kbar - ka;
       /* 2. generate table T */

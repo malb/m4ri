@@ -1209,7 +1209,7 @@ static inline int m4ri_bitcount(word n)  {
    n = COUNT(n, 3);
    n = COUNT(n, 4);
    n = COUNT(n, 5);
-   return n ;
+   return (int)n;
 }
 
 double mzd_density(packedmatrix *A, int res) {
@@ -1217,7 +1217,7 @@ double mzd_density(packedmatrix *A, int res) {
   long total = 0;
   
   if(res == 0)
-    res = (A->width/100.0);
+    res = (int)(A->width/100.0);
   if (res < 1)
     res = 1;
 

@@ -62,7 +62,7 @@ void mzd_apply_p_left_trans(packedmatrix *A, permutation *P) {
   if(A->ncols == 0)
     return;
   for (i=P->length-1; i>=0; i--) {
-    assert(P->values[i] >= i);
+    assert(P->values[i] >= (size_t)i);
     mzd_row_swap(A, i, P->values[i]);
   }
 }
@@ -93,7 +93,7 @@ void mzd_apply_p_right_trans(packedmatrix *A, permutation *P) {
   for(size_t j=0; j<A->nrows; j+=step_size) {
     size_t stop_row = MIN(j+step_size, A->nrows);
     for (i=P->length-1; i>=0; --i) {
-      assert(P->values[i] >= i);
+      assert(P->values[i] >= (size_t)i);
       mzd_col_swap_in_rows(A, i, P->values[i], j, stop_row);
     }
   }
