@@ -14,18 +14,20 @@ FEATURES
 ========
 
  * basic arithmetic with dense matrices over F2 (addition, equality
-   testing, stacking, augmenting, sub-matrices, randomisation),
+   testing, stacking, augmenting, sub-matrices, randomisation);
 
  * asymptotically fast O(n^log_2(7)) matrix multiplication via the "Method
-   of the Four Russians" (M4RM) & Strassen-Winograd algorithm,
+   of the Four Russians" (M4RM) & Strassen-Winograd algorithm;
 
  * fast row echelon form computation and matrix inversion via the "Method
-   of the Four Russians" (M4RI, O(n^3/log(n))), 
+   of the Four Russians" (M4RI, O(n^3/log(n)));
 
- * support for the x86/x86_64 SSE2 instruction set where available,
+ * asymptotically fast PLUQ factorisation; 
+
+ * support for the x86/x86_64 SSE2 instruction set where available;
 
  * preliminary support for parallisation on shared memory systems via
-   OpenMP 
+   OpenMP;
 
  * and support for Linux and OS X (GCC), support for Solaris (Sun
    Studio Express) and support for Windows (Visual Studio 2008 Express).
