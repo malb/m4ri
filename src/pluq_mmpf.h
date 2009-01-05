@@ -63,7 +63,7 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k);
  * \param k Size of Gray code tables.
  * \param P Preallocated row permutation.
  * \param Q Preallocated column permutation.
- * \param done Preallocated temporary buffer.
+ * \param todo Preallocated temporary buffer.
  */
 
 size_t _mzd_pluq_submatrix(packedmatrix *A, size_t r, size_t c, int k, permutation *P, permutation *Q, size_t *todo);
