@@ -200,6 +200,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\pluq_mmpf.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\solve.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\strassen.h"
 				>
 			</File>
@@ -241,6 +249,14 @@
 			</File>
 			<File
 				RelativePath=".\src\permutation.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\pluq_mmpf.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\solve.c"
 				>
 			</File>
 			<File
