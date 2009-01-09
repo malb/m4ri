@@ -612,15 +612,15 @@ packedmatrix *mzd_copy(packedmatrix *N, const packedmatrix *P) {
 	m4ri_die("mzd_copy: Target matrix is too small.");
     }
     size_t i, j, p_truerow, n_truerow;
-
+    const size_t wide = P->width-1; 
     word mask = LEFT_BITMASK(P->ncols);
     for (i=0; i<P->nrows; i++) {
       p_truerow = P->rowswap[i];
       n_truerow = N->rowswap[i];
-      for (j=0; j<P->width-1; j++) {
+      for (j=0; j<wide; j++) {
         N->values[n_truerow + j] = P->values[p_truerow + j];
       }
-      N->values[n_truerow + j] = (N->values[n_truerow + j] & ~mask) | (P->values[p_truerow + j] & mask);
+      N->values[n_truerow + wide] = (N->values[n_truerow + wide] & ~mask) | (P->values[p_truerow +  wide] & mask);
     }
   } else { // P->offset > 0
     if (N == NULL) {
