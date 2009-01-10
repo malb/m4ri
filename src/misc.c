@@ -29,9 +29,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include "misc.h"
-#ifdef HAVE_MM_MALLOC
-#include <mm_malloc.h>
-#endif
 
 #include "grayflex.h"
 
@@ -80,7 +77,6 @@ void m4ri_word_to_str( char *destination, word data, int colon) {
   }
 }
 
-
 void *m4ri_mm_calloc( int count, int size ) {
 #ifdef HAVE_MM_MALLOC
   void *newthing = _mm_malloc(count*size, 16);
@@ -123,14 +119,6 @@ void m4ri_mm_free(void *condemned, ...) {
 
 word m4ri_random_word() {
   return RAND_SHORT ^ RAND_SHORT<<16 ^ RAND_SHORT<<32 ^ RAND_SHORT<<48;
-}
-
-BIT m4ri_coin_flip() {
-  if (rand() < RAND_MAX/2) {
-    return 0;
-  }  else {
-    return 1;
-  }
 }
 
 

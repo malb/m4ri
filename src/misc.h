@@ -33,6 +33,10 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_MM_MALLOC
+#include <mm_malloc.h>
+#endif
+
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -292,7 +296,14 @@ void m4ri_word_to_str( char *destination, word data, int colon);
  * \todo Allow user to provide her own random() function.
  */
 
-BIT m4ri_coin_flip(void);
+//BIT m4ri_coin_flip(void);
+static inline BIT m4ri_coin_flip() {
+  if (rand() < RAND_MAX/2) {
+    return 0;
+  }  else {
+    return 1;
+  }
+}
 
 /**
  * \brief Return uniformly randomly distributed random word.
