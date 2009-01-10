@@ -18,27 +18,26 @@ all: $(TEST_PRGS) $(BENCH_PRGS)
 .c:	
 	$(CC) $(DEBUG) $(CFLAGS) $@.c $(LDFLAGS) -o $@
 
-bench_elimination: cpucycles.o bench_elimination.c
+bench_elimination: cpucycles.o bench_elimination.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) bench_elimination.c cpucycles.o $(LDFLAGS) -o $@
 
-bench_multiplication: cpucycles.o bench_multiplication.c
+bench_multiplication: cpucycles.o bench_multiplication.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) bench_multiplication.c cpucycles.o $(LDFLAGS) -o $@
 
-bench_lqup: cpucycles.o bench_lqup.c
+bench_lqup: cpucycles.o bench_lqup.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) bench_lqup.c cpucycles.o $(LDFLAGS) -o $@
 
-bench_trsm_lowerleft: cpucycles.o bench_trsm_lowerleft.c
+bench_trsm_lowerleft: cpucycles.o bench_trsm_lowerleft.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o $(LDFLAGS) -o $@
 
-bench_trsm_lowerright: cpucycles.o bench_trsm_lowerright.c
+bench_trsm_lowerright: cpucycles.o bench_trsm_lowerright.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o $(LDFLAGS) -o $@
 
-bench_trsm_upperleft: cpucycles.o bench_trsm_upperleft.c
+bench_trsm_upperleft: cpucycles.o bench_trsm_upperleft.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o $(LDFLAGS) -o $@
 
-bench_trsm_upperright: cpucycles.o bench_trsm_upperright.c
+bench_trsm_upperright: cpucycles.o bench_trsm_upperright.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o $(LDFLAGS) -o $@
-
 
 clean:
 	rm -f $(TEST_PRGS)
