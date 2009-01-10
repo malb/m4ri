@@ -217,43 +217,6 @@ void mzd_print_tight( const packedmatrix *M ) {
   }
 }
 
-void mzd_row_add_offset(packedmatrix *M, size_t dstrow, size_t srcrow, size_t coloffset) {
-  coloffset += M->offset;
-  const size_t startblock= coloffset/RADIX;
-  size_t wide = M->width - startblock;
-  word *src = M->values + M->rowswap[srcrow] + startblock;
-  word *dst = M->values + M->rowswap[dstrow] + startblock;
-
-  word temp = *src++;
-  if (coloffset%RADIX)
-    temp = RIGHTMOST_BITS(temp, (RADIX-(coloffset%RADIX)-1));
-  *dst++ ^= temp;
-  wide--;
-
-#ifdef HAVE_SSE2 
-  if (ALIGNMENT(src,16)==8 && wide) {
-    *dst++ ^= *src++;
-    wide--;
-  }
-  __m128i *__src = (__m128i*)src;
-  __m128i *__dst = (__m128i*)dst;
-  const __m128i *eof = (__m128i*)((unsigned long)(src + wide) & ~0xF);
-  __m128i xmm1;
-  
-  while(__src < eof) {
-    xmm1 = _mm_xor_si128(*__dst, *__src++);
-    *__dst++ = xmm1;
-  }
-  src  = (word*)__src;
-  dst = (word*)__dst;
-  wide = ((sizeof(word)*wide)%16)/sizeof(word);
-#endif
-  size_t i;
-  for(i=0; i<wide; i++) {
-    dst[i] ^= src[i];
-  }
-}
-
 void mzd_row_add( packedmatrix *m, size_t sourcerow, size_t destrow) {
   mzd_row_add_offset(m, destrow, sourcerow, 0);
 }

@@ -376,7 +376,23 @@ void m4ri_fini(void);
  * \todo Allow user to register calloc function.
  */
 
-void *m4ri_mm_calloc( int count, int size );
+/* void *m4ri_mm_calloc( int count, int size ); */
+static inline void *m4ri_mm_calloc( int count, int size ) {
+#ifdef HAVE_MM_MALLOC
+  void *newthing = _mm_malloc(count*size, 16);
+#else
+  void *newthing = calloc(count, size);
+#endif
+  if (newthing==NULL) {
+    m4ri_die("m4ri_mm_calloc: calloc returned NULL\n");
+    return NULL; /* unreachable. */
+  }
+#ifdef HAVE_MM_MALLOC
+  char *b = (char*)newthing;
+  memset(b, 0, count*size);
+#endif
+  return newthing;
+}
 
 /**
  * \brief Malloc wrapper.
@@ -386,7 +402,20 @@ void *m4ri_mm_calloc( int count, int size );
  * \todo Allow user to register malloc function.
  */
 
-void *m4ri_mm_malloc( int size );
+/* void *m4ri_mm_malloc( int size ); */
+static inline void *m4ri_mm_malloc( int size ) {
+#ifdef HAVE_MM_MALLOC
+  void *newthing = _mm_malloc(size, 16);
+#else
+  void *newthing=malloc( size );
+#endif  
+  if (newthing==NULL && (size>0)) {
+    m4ri_die("m4ri_mm_malloc: malloc returned NULL\n");
+    return NULL; /* unreachable */
+  }
+  else return newthing;
+}
+
 
 /**
  * \brief Free wrapper.
@@ -396,7 +425,14 @@ void *m4ri_mm_malloc( int size );
  * \todo Allow user to register free function.
  */
 
-void m4ri_mm_free(void *condemned, ...);
+/* void m4ri_mm_free(void *condemned, ...); */
+static inline void m4ri_mm_free(void *condemned, ...) { 
+#ifdef HAVE_MM_MALLOC
+  _mm_free(condemned); 
+#else
+  free(condemned);
+#endif  
+}
 
 /**
  * \brief Enable memory block cache (default: disabled)

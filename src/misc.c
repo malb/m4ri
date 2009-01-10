@@ -77,44 +77,6 @@ void m4ri_word_to_str( char *destination, word data, int colon) {
   }
 }
 
-void *m4ri_mm_calloc( int count, int size ) {
-#ifdef HAVE_MM_MALLOC
-  void *newthing = _mm_malloc(count*size, 16);
-#else
-  void *newthing = calloc(count, size);
-#endif
-  if (newthing==NULL) {
-    m4ri_die("m4ri_mm_calloc: calloc returned NULL\n");
-    return NULL; /* unreachable. */
-  }
-#ifdef HAVE_MM_MALLOC
-  char *b = (char*)newthing;
-  memset(b, 0, count*size);
-#endif
-  return newthing;
-}
-
-void *m4ri_mm_malloc( int size ) {
-#ifdef HAVE_MM_MALLOC
-  void *newthing = _mm_malloc(size, 16);
-#else
-  void *newthing=malloc( size );
-#endif  
-  if (newthing==NULL && (size>0)) {
-    m4ri_die("m4ri_mm_malloc: malloc returned NULL\n");
-    return NULL; /* unreachable */
-  }
-  else return newthing;
-}
-
-void m4ri_mm_free(void *condemned, ...) { 
-#ifdef HAVE_MM_MALLOC
-  _mm_free(condemned); 
-#else
-  free(condemned);
-#endif  
-}
-
 #define RAND_SHORT ((word)(rand()&((1<<16)-1)))
 
 word m4ri_random_word() {
