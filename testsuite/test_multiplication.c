@@ -78,7 +78,7 @@ int sqr_test_equality(int m, int k, int cutoff) {
   int ret  = 0;
   packedmatrix *A, *C, *D, *E;
   
-  printf("   mul: m: %4d, k: %2d, cutoff: %4d",m,k,cutoff);
+  printf("   sqr: m: %4d, k: %2d, cutoff: %4d",m,k,cutoff);
 
   /* we create one random matrix */
   A = mzd_init(m, m);
@@ -178,6 +178,58 @@ int addmul_test_equality(int m, int l, int n, int k, int cutoff) {
   return ret;
 }
 
+int addsqr_test_equality(int m, int k, int cutoff) {
+  int ret  = 0;
+  packedmatrix *A, *C, *D, *E, *F;
+  
+  printf("addsqr: m: %4d, k: %2d, cutoff: %4d",m,k,cutoff);
+
+  /* we create two random matrices */
+  A = mzd_init(m, m);
+  C = mzd_init(m, m);
+  mzd_randomize(A);
+  mzd_randomize(C);
+
+  /* D = C + A*B via M4RM, temporary buffers are managed internally */
+  D = mzd_copy(NULL, C);
+  D = mzd_addmul_m4rm(D, A, A, k);
+
+  /* E = C + A*B via naive cubic multiplication */
+  E = mzd_mul_m4rm(NULL, A, A, k);
+  mzd_add(E, E, C);
+
+  /* F = C + A*B via naive cubic multiplication */
+  F = mzd_copy(NULL, C);
+  F = mzd_addmul(F, A, A, cutoff);
+
+  mzd_free(A);
+  mzd_free(C);
+
+  if (mzd_equal(D, E) != TRUE) {
+    printf(" M4RM != add,mul");
+    ret -=1;
+  }
+  if (mzd_equal(E, F) != TRUE) {
+    printf(" add,mul = addmul");
+    ret -=1;
+  }
+  if (mzd_equal(F, D) != TRUE) {
+    printf(" M4RM != addmul");
+    ret -=1;
+  }
+
+  if (ret==0)
+    printf(" ... passed\n");
+  else
+    printf(" ... FAILED\n");
+
+
+  mzd_free(D);
+  mzd_free(E);
+  mzd_free(F);
+  return ret;
+}
+
 int main(int argc, char **argv) {
   int status = 0;
   
@@ -236,6 +288,23 @@ int main(int argc, char **argv) {
   status += sqr_test_equality(2000, 0, 256);
   status += sqr_test_equality(2000, 0, 64);
   status += sqr_test_equality(210, 0, 64);
+
+  status += addsqr_test_equality(1, 0, 0);
+  status += addsqr_test_equality(131, 0, 0);
+  status += addsqr_test_equality(64,  0, 64);
+  status += addsqr_test_equality(128, 0, 64);
+  status += addsqr_test_equality(171, 0, 63);
+  status += addsqr_test_equality(171, 0, 131);
+  status += addsqr_test_equality(193, 10, 64);
+  status += addsqr_test_equality(1025, 3, 256);
+  status += addsqr_test_equality(4096, 0, 2048);
+  status += addsqr_test_equality(1000, 0, 256);
+  status += addsqr_test_equality(1000, 0, 64);
+  status += addsqr_test_equality(1710, 0, 256);
+  status += addsqr_test_equality(1290, 0, 64);
+  status += addsqr_test_equality(2000, 0, 256);
+  status += addsqr_test_equality(2000, 0, 64);
+  status += addsqr_test_equality(210, 0, 64);
 
   if (status == 0) {
     printf("All tests passed.\n");
