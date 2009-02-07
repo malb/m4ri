@@ -34,8 +34,7 @@
 #endif
 
 
-
-packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+packedmatrix *_mzd_mul_even_orig(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   size_t a,b,c;
   size_t anr, anc, bnr, bnc;
   
@@ -104,18 +103,18 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   
   _mzd_add(X0, A00, A10);              /*1    X0 = A00 + A10 */
   _mzd_add(X1, B11, B01);              /*2    X1 = B11 + B01 */
-  _mzd_mul_even(C10, X0, X1, cutoff);  /*3   C10 = X0*X1 */
+  _mzd_mul_even_orig(C10, X0, X1, cutoff);  /*3   C10 = X0*X1 */
 
   _mzd_add(X0, A10, A11);              /*4    X0 = A10 + A11 */
   _mzd_add(X1, B01, B00);              /*5    X1 = B01 + B00*/
-  _mzd_mul_even(C11, X0, X1, cutoff);  /*6   C11 = X0*X1 */
+  _mzd_mul_even_orig(C11, X0, X1, cutoff);  /*6   C11 = X0*X1 */
 
   _mzd_add(X0, X0, A00);               /*7    X0 = X0 + A00 */
   _mzd_add(X1, X1, B11);               /*8    X1 = B11 + X1 */
-  _mzd_mul_even(C01, X0, X1, cutoff);  /*9   C01 = X0*X1 */
+  _mzd_mul_even_orig(C01, X0, X1, cutoff);  /*9   C01 = X0*X1 */
 
   _mzd_add(X0, X0, A01);               /*10   X0 = A01 + X0 */
-  _mzd_mul_even(C00, X0, B11, cutoff); /*11  C00 = X0*B11 */
+  _mzd_mul_even_orig(C00, X0, B11, cutoff); /*11  C00 = X0*B11 */
 
   /**
    * \todo ideally we would use the same X0 throughout the function
@@ -135,10 +134,10 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   _mzd_add(C11, C10, C11);             /*16  C11 = C10 + C11 */
   _mzd_add(C01, C01, C00);             /*17  C01 = C01 + C00 */
   _mzd_add(X1, X1, B10);               /*18   X1 = X1 + B10 */
-  _mzd_mul_even(C00, A11, X1, cutoff); /*19  C00 = A11*X1 */
+  _mzd_mul_even_orig(C00, A11, X1, cutoff); /*19  C00 = A11*X1 */
 
   _mzd_add(C10, C10, C00);             /*20  C10 = C10 + C00 */
-  _mzd_mul_even(C00, A01, B10, cutoff);/*21  C00 = A01*B10 */
+  _mzd_mul_even_orig(C00, A01, B10, cutoff);/*21  C00 = A01*B10 */
 
   _mzd_add(C00, C00, X0);              /*22  C00 = X0 + C00 */
 
@@ -184,7 +183,7 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
 }
 
 
-packedmatrix *_mzd_mul_evenb(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   size_t m,k,n;
   size_t mmm, kkk, nnn;
   
@@ -252,18 +251,18 @@ packedmatrix *_mzd_mul_evenb(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
 
     _mzd_add(Wkn, B22, B12);		 /* Wkn = B22 + B12 */
     _mzd_add(Wmk, A22, A12);		 /* Wmk = A22 + A12 */
-    _mzd_mul_evenb(C21, Wmk, Wkn, cutoff);/* C21 = Wmk * Wkn */
+    _mzd_mul_even(C21, Wmk, Wkn, cutoff);/* C21 = Wmk * Wkn */
 
     _mzd_add(Wmk, A22, A21);		 /* Wmk = A22 - A21 */
     _mzd_add(Wkn, B22, B21);		 /* Wkn = B22 - B21 */
-    _mzd_mul_evenb(C22, Wmk, Wkn, cutoff);/* C22 = Wmk * Wkn */
+    _mzd_mul_even(C22, Wmk, Wkn, cutoff);/* C22 = Wmk * Wkn */
 
     _mzd_add(Wkn, Wkn, B12);		 /* Wkn = Wkn + B12 */
     _mzd_add(Wmk, Wmk, A12);		 /* Wmk = Wmk + A12 */
-    _mzd_mul_evenb(C11, Wmk, Wkn, cutoff);/* C11 = Wmk * Wkn */
+    _mzd_mul_even(C11, Wmk, Wkn, cutoff);/* C11 = Wmk * Wkn */
 
     _mzd_add(Wmk, Wmk, A11);		 /* Wmk = Wmk - A11 */
-    _mzd_mul_evenb(C12, Wmk, B12, cutoff);/* C12 = Wmk * B12 */
+    _mzd_mul_even(C12, Wmk, B12, cutoff);/* C12 = Wmk * B12 */
     _mzd_add(C12, C12, C22);		 /* C12 = C12 + C22 */
 
     /**
@@ -282,12 +281,12 @@ packedmatrix *_mzd_mul_evenb(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
     _mzd_add(C12, C11, C12);		  /* C12 = C11 - C12 */
     _mzd_add(C11, C21, C11);		  /* C11 = C21 - C11 */
     _mzd_add(Wkn, Wkn, B11);		  /* Wkn = Wkn - B11 */
-    _mzd_mul_evenb(C21, A21, Wkn, cutoff);/* C21 = A21 * Wkn */
+    _mzd_mul_even(C21, A21, Wkn, cutoff);/* C21 = A21 * Wkn */
     mzd_free(Wkn);
 
     _mzd_add(C21, C11, C21);		  /* C21 = C11 - C21 */
     _mzd_add(C22, C22, C11);		  /* C22 = C22 + C11 */
-    _mzd_mul_evenb(C11, A11, B11, cutoff);/* C11 = A11 * B11 */
+    _mzd_mul_even(C11, A11, B11, cutoff);/* C11 = A11 * B11 */
 
     _mzd_add(C11, C11, Wmk);		  /* C11 = C11 + Wmk */
 
@@ -342,7 +341,7 @@ packedmatrix *_mzd_mul_evenb(packedmatrix *C, packedmatrix *A, packedmatrix *B, 
   return C;
 }
 
-packedmatrix *_mzd_sqr_evenb(packedmatrix *C, packedmatrix *A, int cutoff) {
+packedmatrix *_mzd_sqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
   size_t m;
   size_t mmm;
   
@@ -395,16 +394,16 @@ packedmatrix *_mzd_sqr_evenb(packedmatrix *C, packedmatrix *A, int cutoff) {
     packedmatrix *Wkn = mzd_init(mmm, mmm);
 
     _mzd_add(Wkn, A22, A12);                 /* Wkn = A22 + A12 */
-    _mzd_sqr_evenb(C21, Wkn, cutoff);     /* C21 = Wkn^2 */
+    _mzd_sqr_even(C21, Wkn, cutoff);     /* C21 = Wkn^2 */
 
     _mzd_add(Wkn, A22, A21);                 /* Wkn = A22 - A21 */
-    _mzd_sqr_evenb(C22, Wkn, cutoff);     /* C22 = Wkn^2 */
+    _mzd_sqr_even(C22, Wkn, cutoff);     /* C22 = Wkn^2 */
 
     _mzd_add(Wkn, Wkn, A12);                 /* Wkn = Wkn + A12 */
-    _mzd_sqr_evenb(C11, Wkn, cutoff);     /* C11 = Wkn^2 */
+    _mzd_sqr_even(C11, Wkn, cutoff);     /* C11 = Wkn^2 */
 
     _mzd_add(Wkn, Wkn, A11);                 /* Wkn = Wkn - A11 */
-    _mzd_mul_evenb(C12, Wkn, A12, cutoff);/* C12 = Wkn * A12 */
+    _mzd_mul_even(C12, Wkn, A12, cutoff);/* C12 = Wkn * A12 */
     _mzd_add(C12, C12, C22);		  /* C12 = C12 + C22 */
 
     Wmk = mzd_mul(NULL, A12, A21, cutoff);/*Wmk = A12 * A21 */
@@ -412,12 +411,12 @@ packedmatrix *_mzd_sqr_evenb(packedmatrix *C, packedmatrix *A, int cutoff) {
     _mzd_add(C11, C11, Wmk);		  /* C11 = C11 + Wmk */
     _mzd_add(C12, C11, C12);		  /* C12 = C11 - C12 */
     _mzd_add(C11, C21, C11);		  /* C11 = C21 - C11 */
-    _mzd_mul_evenb(C21, A21, Wkn, cutoff);/* C21 = A21 * Wkn */
+    _mzd_mul_even(C21, A21, Wkn, cutoff);/* C21 = A21 * Wkn */
     mzd_free(Wkn);
 
     _mzd_add(C21, C11, C21);		  /* C21 = C11 - C21 */
     _mzd_add(C22, C22, C11);		  /* C22 = C22 + C11 */
-    _mzd_sqr_evenb(C11, A11, cutoff);     /* C11 = A11^2 */
+    _mzd_sqr_even(C11, A11, cutoff);     /* C11 = A11^2 */
 
     _mzd_add(C11, C11, Wmk);		  /* C11 = C11 + Wmk */
 
@@ -625,12 +624,12 @@ packedmatrix *mzd_mul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cut
     C = _mzd_mul_even(C, A, B, cutoff);
   }
 #else
-  C = (A==B)?_mzd_sqr_evenb(C, A, cutoff):_mzd_mul_evenb(C, A, B, cutoff);
+  C = (A==B)?_mzd_sqr_even(C, A, cutoff):_mzd_mul_even(C, A, B, cutoff);
 #endif  
   return C;
 }
 
-packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+packedmatrix *_mzd_addmul_even_orig(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   /**
    * \todo make sure not to overwrite crap after ncols and before width*RADIX
    */
@@ -700,29 +699,29 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   
   _mzd_add(X0, A10, A11);                  /* 1  S1 = A21 + A22        X1 */
   _mzd_add(X1, B01, B00);                  /* 2  T1 = B12 - B11        X2 */
-  _mzd_mul_even(X2, X0, X1, cutoff);       /* 3  P5 = S1 T1            X3 */
+  _mzd_mul_even_orig(X2, X0, X1, cutoff);       /* 3  P5 = S1 T1            X3 */
   
   _mzd_add(C11, X2, C11);                  /* 4  C22 = P5 + C22       C22 */
   _mzd_add(C01, X2, C01);                  /* 5  C12 = P5 + C12       C12 */
   _mzd_add(X0, X0, A00);                   /* 6  S2 = S1 - A11         X1 */
   _mzd_add(X1, B11, X1);                   /* 7  T2 = B22 - T1         X2 */
-  _mzd_mul_even(X2, A00, B00, cutoff);     /* 8  P1 = A11 B11          X3 */
+  _mzd_mul_even_orig(X2, A00, B00, cutoff);     /* 8  P1 = A11 B11          X3 */
   
   _mzd_add(C00, X2, C00);                  /* 9  C11 = P1 + C11       C11 */
-  _mzd_addmul_even(X2, X0, X1, cutoff);    /* 10 U2 = S2 T2 + P1       X3 */
+  _mzd_addmul_even_orig(X2, X0, X1, cutoff);    /* 10 U2 = S2 T2 + P1       X3 */
 
-  _mzd_addmul_even(C00, A01, B10, cutoff); /* 11 U1 = A12 B21 + C11   C11 */
+  _mzd_addmul_even_orig(C00, A01, B10, cutoff); /* 11 U1 = A12 B21 + C11   C11 */
   
   _mzd_add(X0, A01, X0);                   /* 12 S4 = A12 - S2         X1 */
   _mzd_add(X1, X1, B10);                   /* 13 T4 = T2 - B21         X2 */
-  _mzd_addmul_even(C01, X0, B11, cutoff);  /* 14 C12 = S4 B22 + C12   C12 */
+  _mzd_addmul_even_orig(C01, X0, B11, cutoff);  /* 14 C12 = S4 B22 + C12   C12 */
   
   _mzd_add(C01, X2, C01);                  /* 15 U5 = U2 + C12        C12 */
-  _mzd_addmul_even(C10, A11, X1, cutoff);  /* 16 P4 = A22 T4 - C21    C21 */
+  _mzd_addmul_even_orig(C10, A11, X1, cutoff);  /* 16 P4 = A22 T4 - C21    C21 */
   
   _mzd_add(X0, A00, A10);                  /* 17 S3 = A11 - A21        X1 */
   _mzd_add(X1, B11, B01);                  /* 18 T3 = B22 - B12        X2 */
-  _mzd_addmul_even(X2, X0, X1, cutoff);    /* 19 U3 = S3 T3 + U2       X3 */
+  _mzd_addmul_even_orig(X2, X0, X1, cutoff);    /* 19 U3 = S3 T3 + U2       X3 */
   
   _mzd_add(C11, X2, C11);                  /* 20 U7 = U3 + C22        C22 */
   _mzd_add(C10, X2, C10);                  /* 21 U6 = U3 - C21        C21 */
@@ -771,7 +770,7 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   return C;
 }
 
-packedmatrix *_mzd_addmul_evenb(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
   /**
    * \todo make sure not to overwrite crap after ncols and before width*RADIX
    */
@@ -843,29 +842,29 @@ packedmatrix *_mzd_addmul_evenb(packedmatrix *C, packedmatrix *A, packedmatrix *
 
     _mzd_add(S, A22, A21);                   /* 1  S = A22 - A21       */
     _mzd_add(T, B22, B21);                   /* 2  T = B22 - B21       */
-    _mzd_mul_evenb(U, S, T, cutoff);         /* 3  U = S*T             */
+    _mzd_mul_even(U, S, T, cutoff);         /* 3  U = S*T             */
     _mzd_add(C22, U, C22);                   /* 4  C22 = U + C22       */
     _mzd_add(C12, U, C12);                   /* 5  C12 = U + C12       */
 
-    _mzd_mul_evenb(U, A12, B21, cutoff);     /* 8  U = A12*B21         */
+    _mzd_mul_even(U, A12, B21, cutoff);     /* 8  U = A12*B21         */
     _mzd_add(C11, U, C11);                   /* 9  C11 = U + C11       */
 
-    _mzd_addmul_evenb(C11, A11, B11, cutoff);/* 11 C11 = A11*B11 + C11 */
+    _mzd_addmul_even(C11, A11, B11, cutoff);/* 11 C11 = A11*B11 + C11 */
 
     _mzd_add(S, S, A12);                     /* 6  S = S - A12         */
     _mzd_add(T, T, B12);                     /* 7  T = T - B12         */
-    _mzd_addmul_evenb(U, S, T, cutoff);      /* 10 U = S*T + U         */
+    _mzd_addmul_even(U, S, T, cutoff);      /* 10 U = S*T + U         */
     _mzd_add(C12, C12, U);                   /* 15 C12 = U + C12       */
 
     _mzd_add(S, A11, S);                     /* 12 S = A11 - S         */
-    _mzd_addmul_evenb(C12, S, B12, cutoff);  /* 14 C12 = S*B12 + C12   */
+    _mzd_addmul_even(C12, S, B12, cutoff);  /* 14 C12 = S*B12 + C12   */
 
     _mzd_add(T, B11, T);                     /* 13 T = B11 - T         */
-    _mzd_addmul_evenb(C21, A21, T, cutoff);  /* 16 C21 = A21*T + C21   */
+    _mzd_addmul_even(C21, A21, T, cutoff);  /* 16 C21 = A21*T + C21   */
 
     _mzd_add(S, A22, A12);                   /* 17 S = A22 + A21       */
     _mzd_add(T, B22, B12);                   /* 18 T = B22 + B21       */
-    _mzd_addmul_evenb(U, S, T, cutoff);      /* 19 U = U - S*T         */
+    _mzd_addmul_even(U, S, T, cutoff);      /* 19 U = U - S*T         */
     _mzd_add(C21, C21, U);                   /* 20 C21 = C21 - U3      */
     _mzd_add(C22, C22, U);                   /* 21 C22 = C22 - U3      */
 
@@ -922,7 +921,7 @@ packedmatrix *_mzd_addmul_evenb(packedmatrix *C, packedmatrix *A, packedmatrix *
   return C;
 }
 
-packedmatrix *_mzd_addsqr_evenb(packedmatrix *C, packedmatrix *A, int cutoff) {
+packedmatrix *_mzd_addsqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
   /**
    * \todo make sure not to overwrite crap after ncols and before width*RADIX
    */
@@ -983,26 +982,26 @@ packedmatrix *_mzd_addsqr_evenb(packedmatrix *C, packedmatrix *A, int cutoff) {
     packedmatrix *U = mzd_init(mmm, mmm);
 
     _mzd_add(S, A22, A21);                   /* 1  S = A22 - A21       */
-    _mzd_sqr_evenb(U, S, cutoff);            /* 3  U = S^2             */
+    _mzd_sqr_even(U, S, cutoff);            /* 3  U = S^2             */
     _mzd_add(C22, U, C22);                   /* 4  C22 = U + C22       */
     _mzd_add(C12, U, C12);                   /* 5  C12 = U + C12       */
 
-    _mzd_mul_evenb(U, A12, A21, cutoff);     /* 8  U = A12*A21         */
+    _mzd_mul_even(U, A12, A21, cutoff);     /* 8  U = A12*A21         */
     _mzd_add(C11, U, C11);                   /* 9  C11 = U + C11       */
 
-    _mzd_addsqr_evenb(C11, A11, cutoff);     /* 11 C11 = A11^2 + C11   */
+    _mzd_addsqr_even(C11, A11, cutoff);     /* 11 C11 = A11^2 + C11   */
 
     _mzd_add(S, S, A12);                     /* 6  S = S + A12         */
-    _mzd_addsqr_evenb(U, S, cutoff);         /* 10 U = S^2 + U         */
+    _mzd_addsqr_even(U, S, cutoff);         /* 10 U = S^2 + U         */
     _mzd_add(C12, C12, U);                   /* 15 C12 = U + C12       */
 
     _mzd_add(S, A11, S);                     /* 12 S = A11 - S         */
-    _mzd_addmul_evenb(C12, S, A12, cutoff);  /* 14 C12 = S*B12 + C12   */
+    _mzd_addmul_even(C12, S, A12, cutoff);  /* 14 C12 = S*B12 + C12   */
 
-    _mzd_addmul_evenb(C21, A21, S, cutoff);  /* 16 C21 = A21*T + C21   */
+    _mzd_addmul_even(C21, A21, S, cutoff);  /* 16 C21 = A21*T + C21   */
 
     _mzd_add(S, A22, A12);                   /* 17 S = A22 + A21       */
-    _mzd_addsqr_evenb(U, S, cutoff);         /* 19 U = U - S^2         */
+    _mzd_addsqr_even(U, S, cutoff);         /* 19 U = U - S^2         */
     _mzd_add(C21, C21, U);                   /* 20 C21 = C21 - U3      */
     _mzd_add(C22, C22, U);                   /* 21 C22 = C22 - U3      */
 
@@ -1062,7 +1061,7 @@ packedmatrix *_mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int
   
   if (!A->offset){
     if (!B->offset) /* A even, B even */
-      return (A==B)?_mzd_addsqr_evenb(C, A, cutoff):_mzd_addmul_evenb (C, A, B, cutoff);
+      return (A==B) ? _mzd_addsqr_even(C, A, cutoff) : _mzd_addmul_even(C, A, B, cutoff);
     else {  /* A even, B weird */
       size_t bnc = RADIX - B->offset;
       if (B->ncols <= bnc){
@@ -1073,7 +1072,7 @@ packedmatrix *_mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int
 	packedmatrix * B1 = mzd_init_window (B, 0, bnc, B->nrows, B->ncols);
 	packedmatrix * C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
 	_mzd_addmul_even_weird  (C0,  A, B0, cutoff);
-	_mzd_addmul_evenb (C1, A, B1, cutoff);
+	_mzd_addmul_even(C1, A, B1, cutoff);
 	mzd_free_window (B0); mzd_free_window (B1);
 	mzd_free_window (C0); mzd_free_window (C1);
       }
@@ -1116,7 +1115,7 @@ packedmatrix *_mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int
       _mzd_addmul_weird_weird (C0, A0, B00, cutoff);
       _mzd_addmul_even_weird  (C0,  A1, B10, cutoff);
       _mzd_addmul_weird_even  (C1,  A0, B01, cutoff);
-      _mzd_addmul_evenb  (C1,  A1, B11, cutoff);
+      _mzd_addmul_even  (C1,  A1, B11, cutoff);
 
       mzd_free_window (A0);  mzd_free_window (A1);
       mzd_free_window (C0);  mzd_free_window (C1);
@@ -1133,7 +1132,7 @@ packedmatrix *_mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int
       packedmatrix * B0  = mzd_init_window (B, 0, 0, anc, B->ncols);
       packedmatrix * B1  = mzd_init_window (B, anc, 0, B->nrows, B->ncols);
       _mzd_addmul_weird_even (C, A0, B0, cutoff);
-      _mzd_addmul_evenb  (C, A1, B1, cutoff);
+      _mzd_addmul_even  (C, A1, B1, cutoff);
       mzd_free_window (A0); mzd_free_window (A1);
       mzd_free_window (B0); mzd_free_window (B1);
     }
@@ -1146,7 +1145,7 @@ packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedma
   for (size_t i=0; i < A->nrows; ++i){
     tmp->values [tmp->rowswap[i]] = (A->values [A->rowswap [i]] << A->offset);
   }
-  _mzd_addmul_evenb (C, tmp, B, cutoff);
+  _mzd_addmul_even (C, tmp, B, cutoff);
   mzd_free(tmp);
   return C;
 }
@@ -1160,7 +1159,7 @@ packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedma
    word mask = ((ONE << B->ncols) - 1) << (RADIX-B->offset - B->ncols);
    for (size_t i=0; i < B->nrows; ++i)
      tmp->values [tmp->rowswap[i]] = B->values [B->rowswap [i]] & mask;
-   _mzd_addmul_evenb (C, A, tmp, cutoff);
+   _mzd_addmul_even (C, A, tmp, cutoff);
    C->offset=offset;
    C->ncols = cncols;
    mzd_free (tmp);
