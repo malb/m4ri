@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
   wt = walltime(&clockZero);
   t = cpucycles();
   if(strcmp(algorithm,"m4ri")==0)
-    r = mzd_echelonize_m4ri(A, 1, 0, NULL, NULL);
+    r = mzd_echelonize_m4ri(A, 1, 0);
   else if(strcmp(algorithm,"pluq")==0)
     r = mzd_echelonize_pluq(A, 1);
   else if(strcmp(algorithm,"naive")==0)
