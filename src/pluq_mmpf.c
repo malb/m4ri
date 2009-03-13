@@ -59,12 +59,12 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
       return curr_pos;
     }
 
-    if (i > P->values[start_row + curr_pos])
-      P->values[start_row + curr_pos] = i;
+    //if (i > P->values[start_row + curr_pos])
+    P->values[start_row + curr_pos] = i;
     mzd_row_swap(A, i, start_row + curr_pos);
 
-    if (j > Q->values[start_col + curr_pos])
-      Q->values[start_col + curr_pos] = j;
+    //if (j > Q->values[start_col + curr_pos])
+    Q->values[start_col + curr_pos] = j;
     mzd_col_swap(A, start_col + curr_pos, j);
 
     done[curr_pos] = i;
