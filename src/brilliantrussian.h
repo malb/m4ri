@@ -59,8 +59,8 @@
 void mzd_make_table( packedmatrix *M, size_t r, size_t c, int k, packedmatrix *T, size_t *L);
 
 /**
- * \brief The function looks up k bits from position i,startcol in each row
- * and adds the appropriate row from T to the row i. 
+ * \brief The function looks up k bits from position i,startcol in
+ * each row and adds the appropriate row from T to the row i.
  *
  * This process is iterated for i from startrow to stoprow
  * (exclusive).
@@ -148,20 +148,20 @@ void mzd_process_rows4(packedmatrix *M, size_t startrow, size_t endrow, size_t s
 /**
  * \brief Matrix elimination using the 'Method of the Four Russians'
  * (M4RI).
- * 
+ *
  * \param M Matrix to be reduced.
  * \param full Return the reduced row echelon form, not only upper triangular form.
  * \param k M4RI parameter, may be 0 for auto-choose.
- * \param T Preallocated table, may be NULL for automatic creation.
- * \param L Preallocated lookup table, may be NULL for automatic creation.
  *
  * \example testsuite/test_elimination.c
  * \example testsuite/bench_elimination.c
  * 
  * \wordoffset
+ *
+ * \return Rank of A.
  */
 
-int mzd_echelonize_m4ri(packedmatrix *M, int full, int k, packedmatrix *T, size_t *L);
+size_t mzd_echelonize_m4ri(packedmatrix *M, int full, int k);
 
 /**
  * \brief Given a matrix in upper triangular form compute the reduced row
@@ -173,20 +173,28 @@ int mzd_echelonize_m4ri(packedmatrix *M, int full, int k, packedmatrix *T, size_
  * \param L Preallocated lookup table, may be NULL for automatic creation.
  *
  * \wordoffset
+ *
+ * \note This function isn't as optimized as it should be.
  */
 
-void mzd_top_echelonize_m4ri(packedmatrix *M, int k, packedmatrix *T, size_t *L);
+void mzd_top_echelonize_m4ri(packedmatrix *M, int k);
 
 /**
- * \brief Invert the matrix M using Konrod's method. To avoid
- * recomputing the identity matrix over and over again, I may be
- * passed in as identity parameter.
+ * \brief Invert the matrix M using Konrod's method. 
+ * 
+ * To avoid recomputing the identity matrix over and over again, I may
+ * be passed in as identity parameter.
  *
  * \param M Matrix to be reduced.
  * \param I Identity matrix.
  * \param k M4RI parameter, may be 0 for auto-choose.
  *
  * \wordoffset
+ *
+ * \return Inverse of M
+ *
+ * \note This function allocates a new matrix for the inverse which
+ * must be free'd using mzd_free() once not needed anymore.
  */
 
 packedmatrix *mzd_invert_m4ri(packedmatrix *M, packedmatrix *I, int k);
@@ -204,6 +212,8 @@ packedmatrix *mzd_invert_m4ri(packedmatrix *M, packedmatrix *I, int k);
  * \param k M4RI parameter, may be 0 for auto-choose.
  *
  * \wordoffset
+ *
+ * \return Pointer to C.
  */
 
 packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k);
@@ -218,6 +228,8 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
  * \param k M4RI parameter, may be 0 for auto-choose.
  *
  * \wordoffset
+ *
+ * \return Pointer to C.
  */
 
 packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k);
@@ -238,6 +250,8 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
  * \author William Hart -- block matrix implementation, use of several Gray code tables, general speed-ups
  *
  * \wordoffset
+ *
+ * \return Pointer to C.
  */
 
 packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear);

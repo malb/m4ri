@@ -16,25 +16,25 @@ int elim_test_equality(int nr, int nc) {
   packedmatrix *G = mzd_copy(NULL, A);
 
   /* M4RI k=auto */
-  mzd_echelonize_m4ri(A, 1, 0, NULL, NULL);
+  mzd_echelonize_m4ri(A, 1, 0);
 
   /* M4RI k=8 */
-  mzd_echelonize_m4ri(B, 1, 8, NULL, NULL);
+  mzd_echelonize_m4ri(B, 1, 8);
 
   /* M4RI Upper Triangular k=auto*/
-  mzd_echelonize_m4ri(C, 0, 0, NULL, NULL);
-  mzd_top_echelonize_m4ri(C, 0, NULL, NULL);
+  mzd_echelonize_m4ri(C, 0, 0);
+  mzd_top_echelonize_m4ri(C, 0);
 
   /* M4RI Upper Triangular k=4*/
-  mzd_echelonize_m4ri(D, 0, 4, NULL, NULL);
-  mzd_top_echelonize_m4ri(D, 4, NULL, NULL);
+  mzd_echelonize_m4ri(D, 0, 4);
+  mzd_top_echelonize_m4ri(D, 4);
 
   /* Gauss */
   mzd_echelonize_naive(E, 1);
 
   /* Gauss Upper Triangular */
   mzd_echelonize_naive(F, 0);
-  mzd_top_echelonize_m4ri(F, 0, NULL, NULL);
+  mzd_top_echelonize_m4ri(F, 0);
 
   /* PLUQ */
   mzd_echelonize_pluq(G, 1);

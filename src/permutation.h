@@ -88,6 +88,20 @@ permutation *mzp_init_window(permutation* P, size_t begin, size_t end);
 void mzp_free_window(permutation* condemned);
 
 /**
+ * \brief Set the permutation P to the identity permutation. The only
+ * allowed value is 1.
+ *
+ *
+ * \param P Permutation
+ * \param value 1
+ *
+ * \note This interface was chosen to be similar to mzd_set_ui().
+ */
+
+void mzp_set_ui(permutation *P, unsigned int value);
+
+
+/**
  * Apply the permutation P to A from the left.
  *
  * This is equivalent to row swaps walking from length-1 to 0.

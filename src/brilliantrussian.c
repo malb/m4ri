@@ -568,7 +568,7 @@ void mzd_process_rows6(packedmatrix *M, size_t startrow, size_t stoprow, size_t 
   }
 }
 
-int mzd_echelonize_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_t *L) {
+size_t mzd_echelonize_m4ri(packedmatrix *A, int full, int k) {
   /**
    * \par General algorithm
    * \li Step 1.Denote the first column to be processed in a given
@@ -776,7 +776,7 @@ int mzd_echelonize_m4ri(packedmatrix *A, int full, int k, packedmatrix *T, size_
   return r;
 }
 
-void mzd_top_echelonize_m4ri(packedmatrix *A, int k, packedmatrix *T, size_t *L) {
+void mzd_top_echelonize_m4ri(packedmatrix *A, int k) {
   const size_t ncols = A->ncols; 
   size_t r = 0;
   size_t c = 0;
@@ -867,7 +867,7 @@ packedmatrix *mzd_invert_m4ri(packedmatrix *m, packedmatrix *I, int k) {
   size_t *L=(size_t *)m4ri_mm_malloc(twokay * sizeof(size_t));
   packedmatrix *answer;
   
-  mzd_echelonize_m4ri(big, TRUE, k, T, L);
+  mzd_echelonize_m4ri(big, TRUE, k);
   
   for(i=0; i < size; i++) {
     if (!mzd_read_bit(big, i,i )) {

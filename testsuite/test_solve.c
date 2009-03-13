@@ -23,7 +23,7 @@ int test_pluq_solve_left(size_t m, size_t n, size_t offsetA, size_t offsetB){
   }
 
   packedmatrix *Acopy = mzd_copy(NULL, A);
-  size_t r = mzd_echelonize_m4ri(Acopy,0,0,NULL,NULL);
+  size_t r = mzd_echelonize_m4ri(Acopy,0,0);
   printf("solve_left m: %4zu, n: %4zu, r: %4zu da: %2zu db: %2zu ",m, n, r, offsetA, offsetB);
   mzd_free(Acopy);
   Acopy = mzd_copy(NULL, A);

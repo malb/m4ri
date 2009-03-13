@@ -47,6 +47,13 @@ void mzp_free_window(permutation* condemned){
   m4ri_mm_free(condemned);
 }
 
+void mzp_set_ui(permutation *P, unsigned int value) {
+  size_t i;
+  for (i=0; i<P->length; i++) {
+    P->values[i] = i;
+  }
+}
+
 void mzd_apply_p_left(packedmatrix *A, permutation *P) {
   size_t i;
   if(A->ncols == 0)
