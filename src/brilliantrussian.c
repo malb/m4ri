@@ -1078,13 +1078,11 @@ packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   size_t a_nc = A->ncols;
   size_t b_nc = B->ncols;
 
-  if (b_nc < RADIX-10) {
+  if (b_nc < RADIX-10 || a_nr < 16) {
     if(clear)
       return mzd_mul_naive(C, A, B);
     else
       return mzd_addmul_naive(C, A, B);
-  } else if (a_nr < 16) {
-    return _mzd_mul_va(C, A, B, clear);
   }
 
   size_t wide = C->width;

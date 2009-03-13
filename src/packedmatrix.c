@@ -352,30 +352,35 @@ packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A) {
 }
 
 packedmatrix *mzd_mul_naive(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
-  packedmatrix *BT = mzd_transpose(NULL, B);
-
   if (C==NULL) {
     C=mzd_init(A->nrows, B->ncols);
   } else {
     if (C->nrows != A->nrows || C->ncols != B->ncols) {
-      mzd_free (BT);
       m4ri_die("mzd_mul_naive: Provided return matrix has wrong dimensions.\n");
     }
   }
-  _mzd_mul_naive(C, A, BT, 1);
-  mzd_free (BT);
+  if(B->ncols < RADIX-10) { /* this cutoff is rather arbitrary */
+    packedmatrix *BT = mzd_transpose(NULL, B);
+    _mzd_mul_naive(C, A, BT, 1);
+    mzd_free (BT);
+  } else {
+    _mzd_mul_va(C, A, B, 1);
+  }
   return C;
 }
 
 packedmatrix *mzd_addmul_naive(packedmatrix *C, const packedmatrix *A, const packedmatrix *B) {
-  packedmatrix *BT = mzd_transpose(NULL, B);
-
   if (C->nrows != A->nrows || C->ncols != B->ncols) {
-    mzd_free (BT);
     m4ri_die("mzd_mul_naive: Provided return matrix has wrong dimensions.\n");
   }
-  _mzd_mul_naive(C, A, BT, 0);
-  mzd_free (BT);
+
+  if(B->ncols < RADIX-10) { /* this cutoff is rather arbitrary */
+    packedmatrix *BT = mzd_transpose(NULL, B);
+    _mzd_mul_naive(C, A, BT, 0);
+    mzd_free (BT);
+  } else {
+    _mzd_mul_va(C, A, B, 0);
+  }
   return C;
 }
 
@@ -475,7 +480,6 @@ packedmatrix *_mzd_mul_va(packedmatrix *C, const packedmatrix *v, const packedma
   const size_t n=v->ncols;
   
   for(i=0; i<m; i++)
-    
     for(j=0;j<n;j++)
       if (mzd_read_bit(v,i,j))
         mzd_combine(C,i,0,C,i,0,A,j,0);
