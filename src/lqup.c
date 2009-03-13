@@ -223,7 +223,7 @@ size_t mzd_echelonize_pluq(packedmatrix *A, int full) {
   } else {
     size_t i, j;
     for(i=0; i<r; i++) {
-      for(j=0; j<i; i+=RADIX) {
+      for(j=0; j<i; j+=RADIX) {
         const size_t length = MIN(RADIX, i-j);
         mzd_clear_bits(A, i, j, length);
       }
