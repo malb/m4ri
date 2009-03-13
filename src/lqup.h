@@ -67,9 +67,8 @@
  *
  * \sa _mzd_pluq() _mzd_pluq_mmpf() mzd_echelonize_pluq()
  *
- * \example testsuite/test_lqup.c
- *
  * \wordoffset
+ *
  * \return Rank of A.
  */
 

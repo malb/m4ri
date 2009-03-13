@@ -169,8 +169,6 @@ size_t mzd_echelonize_m4ri(packedmatrix *M, int full, int k);
  * 
  * \param M Matrix to be reduced.
  * \param k M4RI parameter, may be 0 for auto-choose.
- * \param T Preallocated table, may be NULL for automatic creation.
- * \param L Preallocated lookup table, may be NULL for automatic creation.
  *
  * \wordoffset
  *
