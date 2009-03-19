@@ -28,14 +28,7 @@ mzd_t *mzd_init(size_t r, size_t c) {
   mzd_t *A;
   size_t i,j;
 
-#ifdef HAVE_OPENMP
-#pragma omp critical
-{
-#endif
   A=(mzd_t *)m4ri_mmc_malloc(sizeof(mzd_t));
-#ifdef HAVE_OPENMP
- }
-#endif
 
   A->width=DIV_CEIL(c,RADIX);
 
@@ -52,22 +45,9 @@ mzd_t *mzd_init(size_t r, size_t c) {
   A->nrows=r;
   A->offset = 0;
 
-#ifdef HAVE_OPENMP
-#pragma omp critical
-{
-#endif
-  A->rows=(word **)m4ri_mmc_malloc( r * sizeof(word*) );
-#ifdef HAVE_OPENMP
- }
-#endif
+  A->rows=(word **)m4ri_mmc_calloc( sizeof(word*), r+1); //we're overcomitting here
 
-
-#ifdef HAVE_OPENMP
-#pragma omp critical
-{
-#endif
-
-  if(A->width) {
+  if(r && c) {
     /* we allow more than one malloc call so he have to be a bit clever
        here */
     
@@ -92,11 +72,9 @@ mzd_t *mzd_init(size_t r, size_t c) {
     for(j=0; j<rest; j++) {
       A->rows[max_rows_per_block*(nblocks-1) + j] = (word*)(A->blocks[nblocks-1].data) + j*A->width;
     }
+  } else {
+    A->blocks = NULL;
   }
-#ifdef HAVE_OPENMP
- }
-#endif
-
 
 #ifdef HAVE_SSE2
   if (incw) {
@@ -110,14 +88,8 @@ mzd_t *mzd_init(size_t r, size_t c) {
 mzd_t *mzd_init_window (const mzd_t *m, size_t lowr, size_t lowc, size_t highr, size_t highc) {
   size_t nrows, ncols, i, offset; 
   mzd_t *window;
-#ifdef HAVE_OPENMP
-#pragma omp critical
-{
-#endif
   window = (mzd_t *)m4ri_mmc_malloc(sizeof(mzd_t));
-#ifdef HAVE_OPENMP
-}
-#endif
+
   nrows = MIN(highr - lowr, m->nrows - lowr);
   ncols = highc - lowc;
   
@@ -131,16 +103,12 @@ mzd_t *mzd_init_window (const mzd_t *m, size_t lowr, size_t lowc, size_t highr, 
   if ((window->offset + ncols) % RADIX)
     window->width++;
   window->blocks = NULL;
-  window->blocksizes = NULL;
 
-#ifdef HAVE_OPENMP
-#pragma omp critical
-{
-#endif
-  window->rows = (word **)m4ri_mmc_malloc( nrows * sizeof(word*));
-#ifdef HAVE_OPENMP
-}
-#endif
+  if(nrows)
+    window->rows = (word **)m4ri_mmc_malloc( nrows * sizeof(word*));
+  else
+    window->rows = NULL;
+
   for(i=0; i<nrows; i++) {
     window->rows[i] = m->rows[lowr + i] + offset;
   }
@@ -150,12 +118,9 @@ mzd_t *mzd_init_window (const mzd_t *m, size_t lowr, size_t lowc, size_t highr, 
 
 
 void mzd_free( mzd_t *A) {
-#ifdef HAVE_OPENMP
-#pragma omp critical
-{
-#endif
-  m4ri_mmc_free(A->rows, A->nrows * sizeof(word*));
-  if(A->width && A->blocks) {
+  if(A->rows)
+    m4ri_mmc_free(A->rows, (A->nrows+1) * sizeof(word*));
+  if(A->blocks) {
     size_t i;
     for(i=0; A->blocks[i].size; i++) {
       m4ri_mmc_free(A->blocks[i].data, A->blocks[i].size);
@@ -163,21 +128,6 @@ void mzd_free( mzd_t *A) {
     m4ri_mmc_free(A->blocks, (i+1) * sizeof(mmb_t));
   }
   m4ri_mmc_free(A, sizeof(mzd_t));
-#ifdef HAVE_OPENMP
-}
-#endif
-}
-
-void mzd_free_window( mzd_t *A) {
-#ifdef HAVE_OPENMP
-#pragma omp critical
-{
-#endif
-  m4ri_mmc_free(A->rows, A->nrows * sizeof(word*));
-  m4ri_mmc_free(A, sizeof(mzd_t));
-#ifdef HAVE_OPENMP
-}
-#endif
 }
 
 void mzd_print( const mzd_t *M ) {

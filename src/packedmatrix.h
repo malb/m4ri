@@ -77,12 +77,6 @@ typedef struct {
   mmb_t *blocks;
 
   /**
-   * Size of each block in bytes.
-   */
-
-  size_t *blocksizes;
-
-  /**
    * Number of rows.
    */
 
@@ -164,7 +158,7 @@ mzd_t *mzd_init_window(const mzd_t *M, const size_t lowr, const size_t lowc, con
  * \param A Matrix
  */
 
-void mzd_free_window(mzd_t *A);
+#define mzd_free_window mzd_free
 
 /**
  * \brief Swap the two rows rowa and rowb.

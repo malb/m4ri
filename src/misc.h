@@ -378,11 +378,21 @@ void m4ri_fini(void);
 
 /* void *m4ri_mm_calloc( int count, int size ); */
 static inline void *m4ri_mm_calloc( int count, int size ) {
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
+
 #ifdef HAVE_MM_MALLOC
   void *newthing = _mm_malloc(count*size, 16);
 #else
   void *newthing = calloc(count, size);
 #endif
+
+#ifdef HAVE_OPENMP
+ }
+#endif
+
   if (newthing==NULL) {
     m4ri_die("m4ri_mm_calloc: calloc returned NULL\n");
     return NULL; /* unreachable. */
@@ -404,11 +414,19 @@ static inline void *m4ri_mm_calloc( int count, int size ) {
 
 /* void *m4ri_mm_malloc( int size ); */
 static inline void *m4ri_mm_malloc( int size ) {
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
+
 #ifdef HAVE_MM_MALLOC
   void *newthing = _mm_malloc(size, 16);
 #else
   void *newthing=malloc( size );
 #endif  
+#ifdef HAVE_OPENMP
+ }
+#endif
   if (newthing==NULL && (size>0)) {
     m4ri_die("m4ri_mm_malloc: malloc returned NULL\n");
     return NULL; /* unreachable */
@@ -427,11 +445,18 @@ static inline void *m4ri_mm_malloc( int size ) {
 
 /* void m4ri_mm_free(void *condemned, ...); */
 static inline void m4ri_mm_free(void *condemned, ...) { 
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
 #ifdef HAVE_MM_MALLOC
   _mm_free(condemned); 
 #else
   free(condemned);
 #endif  
+#ifdef HAVE_OPENMP
+ }
+#endif
 }
 
 /**
@@ -499,6 +524,10 @@ static inline mmb_t *m4ri_mmc_handle(void) {
  */
 
 static inline void *m4ri_mmc_malloc(size_t size) {
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
 #ifdef ENABLE_MMC
   mmb_t *mm = m4ri_mmc_handle();
   if (size <= M4RI_MMC_THRESHOLD) {
@@ -513,6 +542,9 @@ static inline void *m4ri_mmc_malloc(size_t size) {
     }
   }
 #endif //ENABLE_MMC
+#ifdef HAVE_OPENMP
+ }
+#endif
   return m4ri_mm_malloc(size);
 }
 
@@ -541,6 +573,10 @@ static inline void *m4ri_mmc_calloc(size_t size, size_t count) {
  */
 
 static inline void m4ri_mmc_free(void *condemned, size_t size) {
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
 #ifdef ENABLE_MMC
   static size_t j = 0;
   mmb_t *mm = m4ri_mmc_handle();
@@ -560,6 +596,9 @@ static inline void m4ri_mmc_free(void *condemned, size_t size) {
     return;
   }
 #endif //ENABLE_MMC
+#ifdef HAVE_OPENMP
+ }
+#endif
   m4ri_mm_free(condemned);
 }
 
@@ -573,6 +612,10 @@ static inline void m4ri_mmc_free(void *condemned, size_t size) {
  */
 
 static inline void m4ri_mmc_cleanup(void) {
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
   mmb_t *mm = m4ri_mmc_handle();
   size_t i;
   for(i=0; i < M4RI_MMC_NBLOCKS; i++) {
@@ -580,6 +623,9 @@ static inline void m4ri_mmc_cleanup(void) {
       m4ri_mm_free(mm[i].data);
     mm[i].size = 0;
   }
+#ifdef HAVE_OPENMP
+ }
+#endif
 }
 
 #endif //MISC_H
