@@ -2,18 +2,18 @@
 #include "m4ri/m4ri.h"
 
 int test_pluq_solve_left(size_t m, size_t n, size_t offsetA, size_t offsetB){
-  packedmatrix* Abase = mzd_init(2048, 2048);
-  packedmatrix* Bbase = mzd_init(2048, 2048);
+  mzd_t* Abase = mzd_init(2048, 2048);
+  mzd_t* Bbase = mzd_init(2048, 2048);
   mzd_randomize(Abase);
   mzd_randomize(Bbase);
 
-  packedmatrix* A = mzd_init_window(Abase, 0, offsetA, m, offsetA + m);
-  packedmatrix* B = mzd_init_window(Bbase, 0, offsetB, m, offsetB + n);
+  mzd_t* A = mzd_init_window(Abase, 0, offsetA, m, offsetA + m);
+  mzd_t* B = mzd_init_window(Bbase, 0, offsetB, m, offsetB + n);
   
   size_t i,j;
 
   // copy B
-  packedmatrix* Bcopy = mzd_init(B->nrows, B->ncols);
+  mzd_t* Bcopy = mzd_init(B->nrows, B->ncols);
   for ( i=0; i<B->nrows; ++i)
       for ( j=0; j<B->ncols; ++j)
           mzd_write_bit(Bcopy,i,j, mzd_read_bit (B,i,j));
@@ -22,7 +22,7 @@ int test_pluq_solve_left(size_t m, size_t n, size_t offsetA, size_t offsetB){
     mzd_write_bit(A,i,i, 1);
   }
 
-  packedmatrix *Acopy = mzd_copy(NULL, A);
+  mzd_t *Acopy = mzd_copy(NULL, A);
   size_t r = mzd_echelonize_m4ri(Acopy,0,0);
   printf("solve_left m: %4zu, n: %4zu, r: %4zu da: %2zu db: %2zu ",m, n, r, offsetA, offsetB);
   mzd_free(Acopy);
@@ -31,13 +31,13 @@ int test_pluq_solve_left(size_t m, size_t n, size_t offsetA, size_t offsetB){
   mzd_solve_left(A, B, 0, 1);
 
   //copy B
-  packedmatrix *X = mzd_init(B->nrows,B->ncols);
+  mzd_t *X = mzd_init(B->nrows,B->ncols);
   for ( i=0; i<B->nrows; ++i)
       for ( j=0; j<B->ncols; ++j)
           mzd_write_bit(X,i,j, mzd_read_bit (B,i,j));
 
-  packedmatrix *B1 = mzd_mul(NULL, Acopy, X, 0);
-  packedmatrix *Z = mzd_add(NULL, Bcopy, B1);
+  mzd_t *B1 = mzd_mul(NULL, Acopy, X, 0);
+  mzd_t *Z = mzd_add(NULL, Bcopy, B1);
   
   int status = 0;
   

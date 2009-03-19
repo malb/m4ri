@@ -50,7 +50,7 @@
  * \param cutoff Minimal dimension for Strassen recursion.
  */
 
-packedmatrix *mzd_mul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+mzd_t *mzd_mul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
 
 /**
  * \brief Matrix multiplication and in-place addition via the
@@ -66,7 +66,7 @@ packedmatrix *mzd_mul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cut
  * \param cutoff Minimal dimension for Strassen recursion.
  */
 
-packedmatrix *mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+mzd_t *mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
 
 /**
  * \brief Matrix multiplication via the Strassen-Winograd matrix
@@ -86,7 +86,7 @@ packedmatrix *mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int 
  * http://www.sagemath.org
  */
 
-packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+mzd_t *_mzd_mul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
 
 /**
  * \brief Matrix multiplication and in-place addition via the
@@ -107,7 +107,7 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
  * http://www.sagemath.org
  */
 
-packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
 
 /**
  * \brief Matrix multiplication and in-place addition via the
@@ -124,7 +124,7 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
  *
  */
 
-packedmatrix *_mzd_addmul (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+mzd_t *_mzd_addmul (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
 
 /**
  * C = A*B + C for matrices with offsets != 0
@@ -134,7 +134,7 @@ packedmatrix *_mzd_addmul (packedmatrix *C, packedmatrix *A, packedmatrix *B, in
  * \internal
  */
 
-packedmatrix *_mzd_addmul_weird_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+mzd_t *_mzd_addmul_weird_weird (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
 
 /**
  * C = A*B + C for A with offset == 0 and B with offset != 0.
@@ -144,7 +144,7 @@ packedmatrix *_mzd_addmul_weird_weird (packedmatrix *C, packedmatrix *A, packedm
  * \internal
  */
 
-packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
 
 /**
  * C = A*B + C for A with offset != 0 and B with offset == 0.
@@ -154,7 +154,7 @@ packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedma
  * \internal
  */
 
-packedmatrix *_mzd_addmul_even_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff);
+mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
 
 /**
  * The default cutoff for Strassen-Winograd multiplication. It should

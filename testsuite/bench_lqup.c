@@ -16,8 +16,8 @@ int main(int argc, char **argv) {
   }
   m = atoi(argv[1]);
   n = atoi(argv[2]);
-  packedmatrix *L, *U;
-  packedmatrix *A = mzd_init(m, n);
+  mzd_t *L, *U;
+  mzd_t *A = mzd_init(m, n);
 
   if(halfrank) {
   L = mzd_init(m, m);
@@ -56,8 +56,8 @@ int main(int argc, char **argv) {
     mzd_randomize(A);
   }
 
-  permutation* P = mzp_init(m);
-  permutation* Q = mzp_init(n);
+  mzp_t* P = mzp_init(m);
+  mzp_t* Q = mzp_init(n);
 
   
   wt = walltime(&clockZero);

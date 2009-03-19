@@ -47,7 +47,7 @@
  * \param cutoff Minimal dimension for Strassen recursion.
  */
 
-void mzd_trsm_upper_right(packedmatrix *U, packedmatrix *B, const int cutoff);
+void mzd_trsm_upper_right(mzd_t *U, mzd_t *B, const int cutoff);
 
 /**
  * \brief Solves X U = B with X and B matrices and U upper triangular.
@@ -61,7 +61,7 @@ void mzd_trsm_upper_right(packedmatrix *U, packedmatrix *B, const int cutoff);
  * \param B Input matrix, being overwritten by the solution matrix X
  * \param cutoff Minimal dimension for Strassen recursion.
  */
-void _mzd_trsm_upper_right(packedmatrix *U, packedmatrix *B, const int cutoff);
+void _mzd_trsm_upper_right(mzd_t *U, mzd_t *B, const int cutoff);
 
 /**
  * \brief Solves X L = B with X and B matrices and L lower triangular.
@@ -79,7 +79,7 @@ void _mzd_trsm_upper_right(packedmatrix *U, packedmatrix *B, const int cutoff);
  * \param cutoff Minimal dimension for Strassen recursion.
  */
 
-void mzd_trsm_lower_right(packedmatrix *L, packedmatrix *B, const int cutoff);
+void mzd_trsm_lower_right(mzd_t *L, mzd_t *B, const int cutoff);
 
 /**
  * \brief Solves X L = B with X and B with matrices and L lower
@@ -97,7 +97,7 @@ void mzd_trsm_lower_right(packedmatrix *L, packedmatrix *B, const int cutoff);
  * \param cutoff Minimal dimension for Strassen recursion.
  *
  */
-void _mzd_trsm_lower_right(packedmatrix *L, packedmatrix *B, const int cutoff);
+void _mzd_trsm_lower_right(mzd_t *L, mzd_t *B, const int cutoff);
 
 /**
  * \brief Solves L X = B with X and B matrices and L lower triangular.
@@ -112,7 +112,7 @@ void _mzd_trsm_lower_right(packedmatrix *L, packedmatrix *B, const int cutoff);
  * \param cutoff Minimal dimension for Strassen recursion.
  */
 
-void mzd_trsm_lower_left(packedmatrix *L, packedmatrix *B, const int cutoff);
+void mzd_trsm_lower_left(mzd_t *L, mzd_t *B, const int cutoff);
 
 /**
  * \brief Solves L X = B with X and B matrices and L lower triangular.
@@ -124,7 +124,7 @@ void mzd_trsm_lower_left(packedmatrix *L, packedmatrix *B, const int cutoff);
  * \param cutoff Minimal dimension for Strassen recursion.
  */
 
-void _mzd_trsm_lower_left(packedmatrix *L, packedmatrix *B, const int cutoff);
+void _mzd_trsm_lower_left(mzd_t *L, mzd_t *B, const int cutoff);
 
 /**
  * \brief Solves U X = B with X and B matrices and U upper triangular.
@@ -139,7 +139,7 @@ void _mzd_trsm_lower_left(packedmatrix *L, packedmatrix *B, const int cutoff);
  * \param cutoff Minimal dimension for Strassen recursion.
  */
 
-void mzd_trsm_upper_left(packedmatrix *U, packedmatrix *B, const int cutoff);
+void mzd_trsm_upper_left(mzd_t *U, mzd_t *B, const int cutoff);
 
 /**
  * \brief Solves U X = B with X and B matrices and U upper triangular.
@@ -150,6 +150,6 @@ void mzd_trsm_upper_left(packedmatrix *U, packedmatrix *B, const int cutoff);
  * \param B Input matrix, being overwritten by the solution matrix X
  * \param cutoff Minimal dimension for Strassen recursion.
  */
-void _mzd_trsm_upper_left (packedmatrix *U, packedmatrix *B, const int cutoff);
+void _mzd_trsm_upper_left (mzd_t *U, mzd_t *B, const int cutoff);
 
 #endif

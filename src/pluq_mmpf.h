@@ -50,7 +50,7 @@
  * \return Rank of A.
  */
 
-size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k);
+size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
 
 /**
  * \brief PLUQ matrix decomposition of a submatrix for up to k columns
@@ -70,6 +70,6 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k);
  * \retval kbar Maximum k for which a pivot could be found.
  */
 
-size_t _mzd_pluq_submatrix(packedmatrix *A, size_t r, size_t c, int k, permutation *P, permutation *Q, size_t *todo);
+size_t _mzd_pluq_submatrix(mzd_t *A, size_t r, size_t c, int k, mzp_t *P, mzp_t *Q, size_t *todo);
 
 #endif //PLUQ_MMPF_H

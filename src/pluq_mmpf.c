@@ -30,7 +30,7 @@
 #include "brilliantrussian.h"
 #include "grayflex.h"
 
-size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, int k, permutation *P, permutation *Q, size_t *done)  {
+size_t _mzd_pluq_submatrix(mzd_t *A, size_t start_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done)  {
   size_t i, j, l, curr_pos;
   int found;
 
@@ -73,7 +73,8 @@ size_t _mzd_pluq_submatrix(packedmatrix *A, size_t start_row, size_t start_col, 
 }
 
 /* create a table of all 2^k linear combinations */
-void mzd_make_table_pluq( packedmatrix *M, size_t r, size_t c, int k, packedmatrix *T, size_t *L) {
+void mzd_make_table_pluq( mzd_t *M, size_t r, size_t c, int k, mzd_t *T, size_t *L) {
+  assert(T->blocks[1].size == 0);
   const size_t blockoffset= c/RADIX;
   size_t i, rowneeded;
   size_t twokay= TWOPOW(k);
@@ -81,7 +82,7 @@ void mzd_make_table_pluq( packedmatrix *M, size_t r, size_t c, int k, packedmatr
 
   word *ti, *ti1, *m;
 
-  ti1 = T->values + blockoffset;
+  ti1 = T->rows[0] + blockoffset;
   ti = ti1 + T->width;
 #ifdef HAVE_SSE2
   unsigned long incw = 0;
@@ -92,7 +93,7 @@ void mzd_make_table_pluq( packedmatrix *M, size_t r, size_t c, int k, packedmatr
   L[0]=0;
   for (i=1; i<twokay; i++) {
     rowneeded = r + codebook[k]->inc[i-1];
-    m = M->values + M->rowswap[rowneeded] + blockoffset;
+    m = M->rows[rowneeded] + blockoffset;
 
     /* Duff's device loop unrolling */
     register int n = (wide + 7) / 8;
@@ -128,7 +129,7 @@ void mzd_make_table_pluq( packedmatrix *M, size_t r, size_t c, int k, packedmatr
   }
 }
 
-void mzd_process_rows2_pluq(packedmatrix *M, size_t startrow, size_t stoprow, size_t startcol, int k, packedmatrix *T0, size_t *L0, packedmatrix *T1, size_t *L1) {
+void mzd_process_rows2_pluq(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol, int k, mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1) {
   size_t r;
   const int ka = k/2;
   const int kb = k-k/2;
@@ -146,14 +147,14 @@ void mzd_process_rows2_pluq(packedmatrix *M, size_t startrow, size_t stoprow, si
   wide -= 2;
   for(r=startrow; r<stoprow; r++) {
     const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka) ];
-    word *t0 = T0->values + T0->rowswap[x0] + blocknuma;
-    word *m0 = M->values + M->rowswap[r+0] + blocknuma;
+    word *t0 = T0->rows[x0] + blocknuma;
+    word *m0 = M->rows[r+0] + blocknuma;
     m0[0] ^= t0[0];
     m0[1] ^= t0[1];
 /*     m0[2] ^= t0[2]; */
 /*     m0[3] ^= t0[3]; */
     const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb) ];
-    word *t1 = T1->values + T1->rowswap[x1] + blocknumb;
+    word *t1 = T1->rows[x1] + blocknumb;
     for(size_t i=blockoffset; i<2; i++) {
       m0[i] ^= t1[i-blockoffset];
     }
@@ -178,7 +179,7 @@ void mzd_process_rows2_pluq(packedmatrix *M, size_t startrow, size_t stoprow, si
 }
 
 /* extract U from A for table creation */
-packedmatrix *_mzd_pluq_to_u(packedmatrix *U, packedmatrix *A, size_t r, size_t c, int k) {
+mzd_t *_mzd_pluq_to_u(mzd_t *U, mzd_t *A, size_t r, size_t c, int k) {
   /* this function call is now rather cheap, but it could be avoided
      completetly if needed */
   assert(U->offset == 0);
@@ -202,7 +203,7 @@ static inline size_t _max_value(size_t *data, size_t length) {
 }
 
 /* method of many people factorisation */
-size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) {
+size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
   assert(A->offset == 0);
   const size_t nrows = A->nrows; 
   const size_t ncols = A->ncols; 
@@ -222,9 +223,9 @@ size_t _mzd_pluq_mmpf(packedmatrix *A, permutation * P, permutation * Q, int k) 
   for(size_t i = 0; i<nrows; i++)
     P->values[i] = i;
 
-  packedmatrix *T0 = mzd_init(TWOPOW(k), ncols);
-  packedmatrix *T1 = mzd_init(TWOPOW(k), ncols);
-  packedmatrix *U = mzd_init(kk, ncols);
+  mzd_t *T0 = mzd_init(TWOPOW(k), ncols);
+  mzd_t *T1 = mzd_init(TWOPOW(k), ncols);
+  mzd_t *U = mzd_init(kk, ncols);
 
   size_t *L0 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
   size_t *L1 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));

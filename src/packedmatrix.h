@@ -70,10 +70,17 @@
 
 typedef struct {
   /**
-   * Contains the actual values packed into words of size RADIX.
+   * Contains pointers to the actual blocks of memory containing the
+   * values packed into words of size RADIX.
    */
 
-  word *values;
+  mmb_t *blocks;
+
+  /**
+   * Size of each block in bytes.
+   */
+
+  size_t *blocksizes;
 
   /**
    * Number of rows.
@@ -99,13 +106,13 @@ typedef struct {
   size_t offset;
   
   /**
-   * Offsets to each row, so e.g. the first word of the i-th row
-   * is m->values[m->rowswap[i]]
+   * Address of first word in each row, so the first word of row i is
+   * is m->rows[i]
    */
 
-  size_t *rowswap;
+  word **rows;
 
-} packedmatrix;
+} mzd_t;
 
 /**
  * \brief Create a new matrix of dimension r x c.
@@ -117,7 +124,7 @@ typedef struct {
  *
  */
 
-packedmatrix *mzd_init(const size_t r, const size_t c);
+mzd_t *mzd_init(const size_t r, const size_t c);
 
 /**
  * \brief Free a matrix created with mzd_init.
@@ -125,7 +132,7 @@ packedmatrix *mzd_init(const size_t r, const size_t c);
  * \param A Matrix
  */
 
-void mzd_free(packedmatrix *A);
+void mzd_free(mzd_t *A);
 
 
 /**
@@ -149,7 +156,7 @@ void mzd_free(packedmatrix *A);
  *
  */
 
-packedmatrix *mzd_init_window(const packedmatrix *M, const size_t lowr, const size_t lowc, const size_t highr, const size_t highc);
+mzd_t *mzd_init_window(const mzd_t *M, const size_t lowr, const size_t lowc, const size_t highr, const size_t highc);
 
 /**
  * \brief Free a matrix window created with mzd_init_window.
@@ -157,7 +164,7 @@ packedmatrix *mzd_init_window(const packedmatrix *M, const size_t lowr, const si
  * \param A Matrix
  */
 
-void mzd_free_window(packedmatrix *A);
+void mzd_free_window(mzd_t *A);
 
 /**
  * \brief Swap the two rows rowa and rowb.
@@ -167,13 +174,13 @@ void mzd_free_window(packedmatrix *A);
  * \param rowb Row index.
  */
  
-static inline void mzd_row_swap(packedmatrix *M, const size_t rowa, const size_t rowb) {
+static inline void mzd_row_swap(mzd_t *M, const size_t rowa, const size_t rowb) {
   if(rowa == rowb)
     return;
   size_t i;
   size_t width = M->width - 1;
-  word *a = M->values + M->rowswap[rowa];
-  word *b = M->values + M->rowswap[rowb];
+  word *a = M->rows[rowa];
+  word *b = M->rows[rowb];
   word tmp; 
   word mask_begin = RIGHT_BITMASK(RADIX - M->offset);
   word mask_end = LEFT_BITMASK( (M->offset + M->ncols)%RADIX );
@@ -211,7 +218,7 @@ static inline void mzd_row_swap(packedmatrix *M, const size_t rowa, const size_t
  * \param j Source row index.
  */
 
-void mzd_copy_row(packedmatrix* B, size_t i, const packedmatrix* A, size_t j);
+void mzd_copy_row(mzd_t* B, size_t i, const mzd_t* A, size_t j);
 
 /**
  * \brief Swap the two columns cola and colb.
@@ -221,7 +228,7 @@ void mzd_copy_row(packedmatrix* B, size_t i, const packedmatrix* A, size_t j);
  * \param colb Column index.
  */
  
-void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb);
+void mzd_col_swap(mzd_t *M, const size_t cola, const size_t colb);
 
 /**
  * \brief Swap the two columns cola and colb but only between start_row and stop_row.
@@ -233,7 +240,7 @@ void mzd_col_swap(packedmatrix *M, const size_t cola, const size_t colb);
  * \param stop_row Row index (exclusive).
  */
  
-static inline void mzd_col_swap_in_rows(packedmatrix *M, const size_t cola, const size_t colb, const size_t start_row, const size_t stop_row) {
+static inline void mzd_col_swap_in_rows(mzd_t *M, const size_t cola, const size_t colb, const size_t start_row, const size_t stop_row) {
   if (cola == colb)
     return;
 
@@ -253,7 +260,7 @@ static inline void mzd_col_swap_in_rows(packedmatrix *M, const size_t cola, cons
     const word ai = RADIX - a_bit - 1;
     const word bi = RADIX - b_bit - 1;
     for (i=start_row; i<stop_row; i++) {
-      base = (M->values + M->rowswap[i] + a_word);
+      base = (M->rows[i] + a_word);
       register word b = *base;
       register word x = ((b >> ai) ^ (b >> bi)) & 1; // XOR temporary
       *base = b ^ ((x << ai) | (x << bi));
@@ -267,7 +274,7 @@ static inline void mzd_col_swap_in_rows(packedmatrix *M, const size_t cola, cons
   if(a_bit > b_bit) {
     const size_t offset = a_bit - b_bit;
     for (i=start_row; i<stop_row; i++) {
-      base = M->values + M->rowswap[i];
+      base = M->rows[i];
       a = *(base + a_word);
       b = *(base + b_word);
 
@@ -281,7 +288,7 @@ static inline void mzd_col_swap_in_rows(packedmatrix *M, const size_t cola, cons
   } else {
     const size_t offset = b_bit - a_bit;
     for (i=start_row; i<stop_row; i++) {
-      base = M->values + M->rowswap[i];
+      base = M->rows[i];
       a = *(base + a_word);
       b = *(base + b_word);
 
@@ -306,8 +313,8 @@ static inline void mzd_col_swap_in_rows(packedmatrix *M, const size_t cola, cons
  *
  */
 
-static inline BIT mzd_read_bit(const packedmatrix *M, const size_t row, const size_t col ) {
-  return GET_BIT(M->values[ M->rowswap[row] + (col+M->offset)/RADIX ], (col+M->offset) % RADIX);
+static inline BIT mzd_read_bit(const mzd_t *M, const size_t row, const size_t col ) {
+  return GET_BIT(M->rows[row][(col+M->offset)/RADIX], (col+M->offset) % RADIX);
 }
 
 /**
@@ -322,11 +329,11 @@ static inline BIT mzd_read_bit(const packedmatrix *M, const size_t row, const si
  *
  */
 
-static inline void mzd_write_bit(packedmatrix *M, const size_t row, const size_t col, const BIT value) {
+static inline void mzd_write_bit(mzd_t *M, const size_t row, const size_t col, const BIT value) {
   if (value==1)
-    SET_BIT(M->values[ M->rowswap[row] + (col+M->offset)/RADIX ], (col+M->offset) % RADIX);
+    SET_BIT(M->rows[row][(col+M->offset)/RADIX], (col+M->offset) % RADIX);
   else
-    CLR_BIT(M->values[ M->rowswap[row] + (col+M->offset)/RADIX ], (col+M->offset) % RADIX);
+    CLR_BIT(M->rows[row][(col+M->offset)/RADIX], (col+M->offset) % RADIX);
 }
 
 /**
@@ -337,7 +344,7 @@ static inline void mzd_write_bit(packedmatrix *M, const size_t row, const size_t
  * \param M Matrix
  */
 
-void mzd_print(const packedmatrix *M );
+void mzd_print(const mzd_t *M);
 
 /**
  * \brief Print the matrix to stdout.
@@ -345,7 +352,7 @@ void mzd_print(const packedmatrix *M );
  * \param M Matrix
  */
 
-void mzd_print_tight(const packedmatrix *M );
+void mzd_print_tight(const mzd_t *M);
 
 /**
  * \brief Add the rows sourcerow and destrow and stores the total in the row
@@ -357,13 +364,13 @@ void mzd_print_tight(const packedmatrix *M );
  * \param coloffset Column offset
  */
 
-/*void mzd_row_add_offset(packedmatrix *M, size_t dstrow, size_t srcrow, size_t coloffset); */
-static inline void mzd_row_add_offset(packedmatrix *M, size_t dstrow, size_t srcrow, size_t coloffset) {
+/*void mzd_row_add_offset(mzd_t *M, size_t dstrow, size_t srcrow, size_t coloffset); */
+static inline void mzd_row_add_offset(mzd_t *M, size_t dstrow, size_t srcrow, size_t coloffset) {
   coloffset += M->offset;
   const size_t startblock= coloffset/RADIX;
   size_t wide = M->width - startblock;
-  word *src = M->values + M->rowswap[srcrow] + startblock;
-  word *dst = M->values + M->rowswap[dstrow] + startblock;
+  word *src = M->rows[srcrow] + startblock;
+  word *dst = M->rows[dstrow] + startblock;
 
   word temp = *src++;
   if (coloffset%RADIX)
@@ -406,7 +413,7 @@ static inline void mzd_row_add_offset(packedmatrix *M, size_t dstrow, size_t src
  * \note this can be done much faster with mzd_combine.
  */
 
-void mzd_row_add(packedmatrix *M, const size_t sourcerow, const size_t destrow);
+void mzd_row_add(mzd_t *M, const size_t sourcerow, const size_t destrow);
 
 /**
  * \brief Transpose a matrix.
@@ -422,7 +429,7 @@ void mzd_row_add(packedmatrix *M, const size_t sourcerow, const size_t destrow);
  * \param A Matrix
  */
 
-packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A );
+mzd_t *mzd_transpose(mzd_t *DST, const mzd_t *A );
 
 /**
  * \brief Naive cubic matrix multiplication.
@@ -438,7 +445,7 @@ packedmatrix *mzd_transpose(packedmatrix *DST, const packedmatrix *A );
  * function called _mzd_mul_naive
  *
  */
-packedmatrix *mzd_mul_naive(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
+mzd_t *mzd_mul_naive(mzd_t *C, const mzd_t *A, const mzd_t *B);
 
 /**
  * \brief Naive cubic matrix multiplication and addition
@@ -454,7 +461,7 @@ packedmatrix *mzd_mul_naive(packedmatrix *C, const packedmatrix *A, const packed
  * function called _mzd_mul_naive
  */
 
-packedmatrix *mzd_addmul_naive(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
+mzd_t *mzd_addmul_naive(mzd_t *C, const mzd_t *A, const mzd_t *B);
 
 /**
  * \brief Naive cubic matrix multiplication with the pre-transposed B.
@@ -467,7 +474,7 @@ packedmatrix *mzd_addmul_naive(packedmatrix *C, const packedmatrix *A, const pac
  * \param clear Whether to clear C before accumulating AB
  */
 
-packedmatrix *_mzd_mul_naive(packedmatrix *C, const packedmatrix *A, const packedmatrix *B, const int clear);
+mzd_t *_mzd_mul_naive(mzd_t *C, const mzd_t *A, const mzd_t *B, const int clear);
 
 /**
  * \brief Matrix multiplication optimized for v*A where v is a vector.
@@ -478,7 +485,7 @@ packedmatrix *_mzd_mul_naive(packedmatrix *C, const packedmatrix *A, const packe
  * \param clear If set clear C first, otherwise add result to C.
  *
  */
-packedmatrix *_mzd_mul_va(packedmatrix *C, const packedmatrix *v, const packedmatrix *A, const int clear);
+mzd_t *_mzd_mul_va(mzd_t *C, const mzd_t *v, const mzd_t *A, const int clear);
 
 /**
  * \brief Fill matrix M with uniformly distributed bits.
@@ -490,7 +497,7 @@ packedmatrix *_mzd_mul_va(packedmatrix *C, const packedmatrix *v, const packedma
  * \wordoffset
  */
 
-void mzd_randomize(packedmatrix *M);
+void mzd_randomize(mzd_t *M);
 
 /**
  * \brief Set the matrix M to the value equivalent to the integer
@@ -506,7 +513,7 @@ void mzd_randomize(packedmatrix *M);
  * \param value Either 0 or 1
  */
 
-void mzd_set_ui(packedmatrix *M, const unsigned value);
+void mzd_set_ui(mzd_t *M, const unsigned value);
 
 /**
  * \brief Gaussian elimination.
@@ -523,7 +530,7 @@ void mzd_set_ui(packedmatrix *M, const unsigned value);
  * \wordoffset
  */
 
-int mzd_gauss_delayed(packedmatrix *M, const size_t startcol, const int full);
+int mzd_gauss_delayed(mzd_t *M, const size_t startcol, const int full);
 
 /**
  * \brief Gaussian elimination.
@@ -540,7 +547,7 @@ int mzd_gauss_delayed(packedmatrix *M, const size_t startcol, const int full);
  * \sa mzd_echelonize_m4ri(), mzd_echelonize_pluq()
  */
 
-int mzd_echelonize_naive(packedmatrix *M, const int full);
+int mzd_echelonize_naive(mzd_t *M, const int full);
 
 /**
  * \brief Return TRUE if A == B.
@@ -551,7 +558,7 @@ int mzd_echelonize_naive(packedmatrix *M, const int full);
  * \wordoffset
  */
 
-BIT mzd_equal(const packedmatrix *A, const packedmatrix *B );
+BIT mzd_equal(const mzd_t *A, const mzd_t *B );
 
 /**
  * \brief Return -1,0,1 if if A < B, A == B or A > B respectively.
@@ -566,7 +573,7 @@ BIT mzd_equal(const packedmatrix *A, const packedmatrix *B );
  * \wordoffset
  */
 
-int mzd_cmp(const packedmatrix *A, const packedmatrix *B);
+int mzd_cmp(const mzd_t *A, const mzd_t *B);
 
 /**
  * \brief Copy matrix  A to DST.
@@ -577,16 +584,16 @@ int mzd_cmp(const packedmatrix *A, const packedmatrix *B);
  * \wordoffset
  */
 
-packedmatrix *mzd_copy(packedmatrix *DST, const packedmatrix *A);
+mzd_t *mzd_copy(mzd_t *DST, const mzd_t *A);
 
 /**
  * \brief Concatenate B to A and write the result to C.
  * 
  * That is,
  *
-\verbatim
-[ A ], [ B ] -> [ A  B ] = C
-\endverbatim
+ \verbatim
+ [ A ], [ B ] -> [ A  B ] = C
+ \endverbatim
  *
  * The inputs are not modified but a new matrix is created.
  *
@@ -599,17 +606,17 @@ packedmatrix *mzd_copy(packedmatrix *DST, const packedmatrix *A);
  * \wordoffset
  */
 
-packedmatrix *mzd_concat(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
+mzd_t *mzd_concat(mzd_t *C, const mzd_t *A, const mzd_t *B);
 
 /**
  * \brief Stack A on top of B and write the result to C.
  *
  * That is, 
  *
-\verbatim
-[ A ], [ B ] -> [ A ] = C
-                [ B ]
-\endverbatim
+ \verbatim
+ [ A ], [ B ] -> [ A ] = C
+                 [ B ]
+ \endverbatim
  *
  * The inputs are not modified but a new matrix is created.
  *
@@ -620,7 +627,7 @@ packedmatrix *mzd_concat(packedmatrix *C, const packedmatrix *A, const packedmat
  * \wordoffset
  */
 
-packedmatrix *mzd_stack(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
+mzd_t *mzd_stack(mzd_t *C, const mzd_t *A, const mzd_t *B);
 
 /**
  * \brief Copy a submatrix.
@@ -634,7 +641,7 @@ packedmatrix *mzd_stack(packedmatrix *C, const packedmatrix *A, const packedmatr
  * \param highr stop row (this row is \em not included)
  * \param highc stop column (this column is \em not included)
  */
-packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *M, const size_t lowr, const size_t lowc, const size_t highr, const size_t highc);
+mzd_t *mzd_submatrix(mzd_t *S, const mzd_t *M, const size_t lowr, const size_t lowc, const size_t highr, const size_t highc);
 
 /**
  * \brief Invert the matrix target using Gaussian elimination. 
@@ -649,7 +656,7 @@ packedmatrix *mzd_submatrix(packedmatrix *S, const packedmatrix *M, const size_t
  * \wordoffset
  */
 
-packedmatrix *mzd_invert_naive(packedmatrix *INV, packedmatrix *A, const packedmatrix *I);
+mzd_t *mzd_invert_naive(mzd_t *INV, mzd_t *A, const mzd_t *I);
 
 /**
  * \brief Set C = A+B.
@@ -662,7 +669,7 @@ packedmatrix *mzd_invert_naive(packedmatrix *INV, packedmatrix *A, const packedm
  * \param B Matrix
  */
 
-packedmatrix *mzd_add(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
+mzd_t *mzd_add(mzd_t *C, const mzd_t *A, const mzd_t *B);
 
 /**
  * \brief Same as mzd_add but without any checks on the input.
@@ -674,7 +681,7 @@ packedmatrix *mzd_add(packedmatrix *C, const packedmatrix *A, const packedmatrix
  * \wordoffset
  */
 
-packedmatrix *_mzd_add(packedmatrix *C, const packedmatrix *A, const packedmatrix *B);
+mzd_t *_mzd_add(mzd_t *C, const mzd_t *A, const mzd_t *B);
 
 /**
  * \brief Same as mzd_add.
@@ -720,9 +727,9 @@ packedmatrix *_mzd_add(packedmatrix *C, const packedmatrix *A, const packedmatri
  * \wordoffset
  */
 
-void mzd_combine(packedmatrix * DST, const size_t row3, const size_t startblock3,
-		 const packedmatrix * SC1, const size_t row1, const size_t startblock1, 
-		 const packedmatrix * SC2, const size_t row2, const size_t startblock2);
+void mzd_combine(mzd_t * DST, const size_t row3, const size_t startblock3,
+		 const mzd_t * SC1, const size_t row1, const size_t startblock1, 
+		 const mzd_t * SC2, const size_t row2, const size_t startblock2);
 
 /**
  * Get n bits starting a position (x,y) from the matrix M.
@@ -733,8 +740,7 @@ void mzd_combine(packedmatrix * DST, const size_t row3, const size_t startblock3
  * \param n Number of bits (<= RADIX);
  */ 
 
-static inline word mzd_read_bits(const packedmatrix *M, const size_t x, const size_t y, const int n) {
-  size_t truerow = M->rowswap[ x ];
+static inline word mzd_read_bits(const mzd_t *M, const size_t x, const size_t y, const int n) {
   word temp;
 
   /* there are two possible situations. Either all bits are in one
@@ -742,17 +748,17 @@ static inline word mzd_read_bits(const packedmatrix *M, const size_t x, const si
 
   if ( ((y+M->offset)%RADIX + n - 1) < RADIX ) {
     /* everything happens in one word here */
-    temp =  M->values[ (y+M->offset) / RADIX + truerow ]; /* get the value */
+    temp =  M->rows[x][(y+M->offset) / RADIX]; /* get the value */
     temp <<= (y+M->offset)%RADIX; /* clear upper bits */
     temp >>= RADIX - n; /* clear lower bits and move to correct position.*/
     return temp;
 
   } else {
     /* two words are affected */
-    const size_t block = (y+M->offset) / RADIX + truerow; /* correct block */
-    const size_t spot = (y + +M->offset+n ) % RADIX; /* correct offset */
+    const size_t block = (y+M->offset) / RADIX; /* correct block */
+    const size_t spot  = (y+M->offset+n) % RADIX; /* correct offset */
     /* make room by shifting spot times to the right, and add stuff from the second word */
-    temp = (M->values[block] << spot) | ( M->values[block + 1] >> (RADIX - spot) ); 
+    temp = (M->rows[x][block] << spot) | ( M->rows[x][block + 1] >> (RADIX - spot) ); 
     return (temp << (RADIX-n)) >> (RADIX-n); /* clear upper bits and return */
    }
 }
@@ -768,8 +774,7 @@ static inline word mzd_read_bits(const packedmatrix *M, const size_t x, const si
  * \param values Word with values;
  */
 
-static inline void mzd_xor_bits(const packedmatrix *M, const size_t x, const size_t y, const int n, word values) {
-  size_t truerow = M->rowswap[ x ];
+static inline void mzd_xor_bits(const mzd_t *M, const size_t x, const size_t y, const int n, word values) {
   word *temp;
 
   /* there are two possible situations. Either all bits are in one
@@ -777,15 +782,15 @@ static inline void mzd_xor_bits(const packedmatrix *M, const size_t x, const siz
 
   if ( ((y+M->offset)%RADIX + n - 1) < RADIX ) {
     /* everything happens in one word here */
-    temp =  M->values +  (y+M->offset) / RADIX + truerow;
+    temp =  M->rows[x] + (y+M->offset) / RADIX;
     *temp ^= values<<(RADIX-((y+M->offset)%RADIX)-n);
 
   } else {
     /* two words are affected */
-    const size_t block = (y+M->offset) / RADIX + truerow; /* correct block */
-    const size_t spot = (y +M->offset+ n ) % RADIX; /* correct offset */
-    M->values[block] ^= values >> (spot);
-    M->values[block + 1] ^= values<<(RADIX-spot);
+    const size_t block = (y+M->offset) / RADIX; /* correct block */
+    const size_t spot  = (y+M->offset+n) % RADIX; /* correct offset */
+    M->rows[x][block] ^= values >> (spot);
+    M->rows[x][block + 1] ^= values<<(RADIX-spot);
   }
 }
 
@@ -799,8 +804,7 @@ static inline void mzd_xor_bits(const packedmatrix *M, const size_t x, const siz
  * \param values Word with values;
  */
 
-static inline void mzd_and_bits(const packedmatrix *M, const size_t x, const size_t y, const int n, word values) {
-  size_t truerow = M->rowswap[ x ];
+static inline void mzd_and_bits(const mzd_t *M, const size_t x, const size_t y, const int n, word values) {
   word *temp;
 
   /* there are two possible situations. Either all bits are in one
@@ -808,15 +812,15 @@ static inline void mzd_and_bits(const packedmatrix *M, const size_t x, const siz
 
   if ( ((y+M->offset)%RADIX + n - 1) < RADIX ) {
     /* everything happens in one word here */
-    temp =  M->values +  (y+M->offset) / RADIX + truerow;
+    temp =  M->rows[x] + (y+M->offset) / RADIX;
     *temp &= values<<(RADIX-((y+M->offset)%RADIX)-n);
 
   } else {
     /* two words are affected */
-    const size_t block = (y+M->offset) / RADIX + truerow; /* correct block */
-    const size_t spot = (y +M->offset+ n ) % RADIX; /* correct offset */
-    M->values[block] &= values >> (spot);
-    M->values[block + 1] &= values<<(RADIX-spot);
+    const size_t block = (y+M->offset) / RADIX; /* correct block */
+    const size_t spot  = (y+M->offset+n) % RADIX; /* correct offset */
+    M->rows[x][block] &= values >> (spot);
+    M->rows[x][block + 1] &= values<<(RADIX-spot);
   }
 }
 
@@ -829,8 +833,7 @@ static inline void mzd_and_bits(const packedmatrix *M, const size_t x, const siz
  * \param n Number of bits (<= RADIX);
  */
 
-static inline void mzd_clear_bits(const packedmatrix *M, const size_t x, const size_t y, const int n) {
-  size_t truerow = M->rowswap[ x ];
+static inline void mzd_clear_bits(const mzd_t *M, const size_t x, const size_t y, const int n) {
   word temp;
 
   /* there are two possible situations. Either all bits are in one
@@ -838,17 +841,17 @@ static inline void mzd_clear_bits(const packedmatrix *M, const size_t x, const s
 
   if ( ((y+M->offset)%RADIX + n - 1) < RADIX ) {
     /* everything happens in one word here */
-    temp =  M->values[ (y+M->offset) / RADIX + truerow ];
+    temp =  M->rows[x][(y+M->offset) / RADIX];
     temp <<= (y+M->offset)%RADIX; /* clear upper bits */
     temp >>= RADIX-n; /* clear lower bits and move to correct position.*/
     temp <<= RADIX-n - (y+M->offset)%RADIX;
-    M->values[ (y+M->offset) / RADIX + truerow ] ^= temp;
+    M->rows[x][(y+M->offset) / RADIX] ^= temp;
   } else {
     /* two words are affected */
-    const size_t block = (y+M->offset) / RADIX + truerow; /* correct block */
-    const size_t spot = (y+M->offset + n ) % RADIX; /* correct offset */
-    M->values[block] ^= M->values[block] & ((ONE<<(n-spot))-1);
-    M->values[block+1] ^= (M->values[block+1]>>(RADIX-spot))<<(RADIX-spot);
+    const size_t block = (y+M->offset) / RADIX; /* correct block */
+    const size_t spot  = (y+M->offset+n) % RADIX; /* correct offset */
+    M->rows[x][block]   ^=  M->rows[x][block] & ((ONE<<(n-spot))-1);
+    M->rows[x][block+1] ^= (M->rows[x][block+1]>>(RADIX-spot))<<(RADIX-spot);
   }
 }
 
@@ -858,7 +861,7 @@ static inline void mzd_clear_bits(const packedmatrix *M, const size_t x, const s
  * \param A Input matrix.
  *
  */
-int mzd_is_zero(packedmatrix *A);
+int mzd_is_zero(mzd_t *A);
 
 /**
  * \brief Clear the given row, but only begins at the column coloffset.
@@ -868,7 +871,7 @@ int mzd_is_zero(packedmatrix *A);
  * \param coloffset Column offset
  */
 
-void mzd_row_clear_offset(packedmatrix *M, const size_t row, const size_t coloffset);
+void mzd_row_clear_offset(mzd_t *M, const size_t row, const size_t coloffset);
 
 /**
  * \brief Find the next nonzero entry in M starting at start_row and start_col. 
@@ -886,7 +889,7 @@ void mzd_row_clear_offset(packedmatrix *M, const size_t row, const size_t coloff
  * \param c Column index updated if pivot is found
  */
 
-int mzd_find_pivot(packedmatrix *M, size_t start_row, size_t start_col, size_t *r, size_t *c);
+int mzd_find_pivot(mzd_t *M, size_t start_row, size_t start_col, size_t *r, size_t *c);
 
 
 /**
@@ -901,6 +904,6 @@ int mzd_find_pivot(packedmatrix *M, size_t start_row, size_t start_col, size_t *
  * \param res Resolution of sampling
  */
 
-double mzd_density(packedmatrix *A, int res);
+double mzd_density(mzd_t *A, int res);
 
 #endif //PACKEDMATRIX_H

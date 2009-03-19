@@ -21,11 +21,11 @@ int main(int argc, char **argv) {
     algorithm = "m4ri";
   m = atoi(argv[1]);
   n = atoi(argv[2]);
-  packedmatrix *A = mzd_init(m, n);
+  mzd_t *A = mzd_init(m, n);
   if (!halfrank) {
     mzd_randomize(A);
   } else {
-    packedmatrix *L, *U;
+    mzd_t *L, *U;
     L = mzd_init(m, m);
     U = mzd_init(m, n);
     mzd_randomize(U);

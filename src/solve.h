@@ -46,7 +46,7 @@
  *        system is not consistent).
  *
  */
-void mzd_solve_left(packedmatrix *A, packedmatrix *B, const int cutoff, 
+void mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, 
                     const int inconsistency_check);
 
 /**
@@ -71,9 +71,9 @@ void mzd_solve_left(packedmatrix *A, packedmatrix *B, const int cutoff,
  *        incosistency (faster without but output not defined if
  *        system is not consistent).
  */
-void mzd_pluq_solve_left (packedmatrix *A, size_t rank, 
-                          permutation *P, permutation *Q, 
-                          packedmatrix *B, const int cutoff, const int inconsistency_check);
+void mzd_pluq_solve_left (mzd_t *A, size_t rank, 
+                          mzp_t *P, mzp_t *Q, 
+                          mzd_t *B, const int cutoff, const int inconsistency_check);
 
 /**
  * \brief  Solves (P L U Q) X = B
@@ -98,9 +98,9 @@ void mzd_pluq_solve_left (packedmatrix *A, size_t rank,
  *        system is not consistent).
  *
  */
-void _mzd_pluq_solve_left(packedmatrix *A, size_t rank, 
-                          permutation *P, permutation *Q, 
-                          packedmatrix *B, const int cutoff, const int inconsistency_check);
+void _mzd_pluq_solve_left(mzd_t *A, size_t rank, 
+                          mzp_t *P, mzp_t *Q, 
+                          mzd_t *B, const int cutoff, const int inconsistency_check);
 
 /**
  * \brief Solves A X = B with A and B matrices.
@@ -117,6 +117,6 @@ void _mzd_pluq_solve_left(packedmatrix *A, size_t rank,
  *        incosistency (faster without but output not defined if
  *        system is not consistent).
  */
-void _mzd_solve_left(packedmatrix *A, packedmatrix *B, const int cutoff, const int inconsistency_check);
+void _mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency_check);
 
 #endif // SOLVE_H

@@ -14,7 +14,7 @@
  */
 int mul_test_equality(int m, int l, int n, int k, int cutoff) {
   int ret  = 0;
-  packedmatrix *A, *B, *C, *D, *E;
+  mzd_t *A, *B, *C, *D, *E;
   
   printf("   mul: m: %4d, l: %4d, n: %4d, k: %2d, cutoff: %4d",m,l,n,k,cutoff);
 
@@ -76,7 +76,7 @@ int mul_test_equality(int m, int l, int n, int k, int cutoff) {
  */
 int sqr_test_equality(int m, int k, int cutoff) {
   int ret  = 0;
-  packedmatrix *A, *C, *D, *E;
+  mzd_t *A, *C, *D, *E;
   
   printf("   sqr: m: %4d, k: %2d, cutoff: %4d",m,k,cutoff);
 
@@ -125,7 +125,7 @@ int sqr_test_equality(int m, int k, int cutoff) {
 
 int addmul_test_equality(int m, int l, int n, int k, int cutoff) {
   int ret  = 0;
-  packedmatrix *A, *B, *C, *D, *E, *F;
+  mzd_t *A, *B, *C, *D, *E, *F;
   
   printf("addmul: m: %4d, l: %4d, n: %4d, k: %2d, cutoff: %4d",m,l,n,k,cutoff);
 
@@ -180,7 +180,7 @@ int addmul_test_equality(int m, int l, int n, int k, int cutoff) {
 
 int addsqr_test_equality(int m, int k, int cutoff) {
   int ret  = 0;
-  packedmatrix *A, *C, *D, *E, *F;
+  mzd_t *A, *C, *D, *E, *F;
   
   printf("addsqr: m: %4d, k: %2d, cutoff: %4d",m,k,cutoff);
 

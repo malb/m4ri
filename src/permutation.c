@@ -20,9 +20,9 @@
 #include "permutation.h"
 #include "packedmatrix.h"
 
-permutation *mzp_init(size_t length) {
+mzp_t *mzp_init(size_t length) {
   size_t i;
-  permutation *P = (permutation*)m4ri_mm_malloc(sizeof(permutation));
+  mzp_t *P = (mzp_t*)m4ri_mm_malloc(sizeof(mzp_t));
   P->values = (size_t*)m4ri_mm_malloc(sizeof(size_t)*length);
   P->length = length;
   for (i=0; i<length; i++) {
@@ -31,30 +31,30 @@ permutation *mzp_init(size_t length) {
   return P;
 }
 
-void mzp_free(permutation *P) {
+void mzp_free(mzp_t *P) {
   m4ri_mm_free(P->values);
   m4ri_mm_free(P);
 }
 
-permutation *mzp_init_window(permutation* P, size_t begin, size_t end){
-  permutation *window = (permutation *)m4ri_mm_malloc(sizeof(permutation));
+mzp_t *mzp_init_window(mzp_t* P, size_t begin, size_t end){
+  mzp_t *window = (mzp_t *)m4ri_mm_malloc(sizeof(mzp_t));
   window->values = P->values + begin;
   window->length = end-begin;
   return window;
 }
 
-void mzp_free_window(permutation* condemned){
+void mzp_free_window(mzp_t* condemned){
   m4ri_mm_free(condemned);
 }
 
-void mzp_set_ui(permutation *P, unsigned int value) {
+void mzp_set_ui(mzp_t *P, unsigned int value) {
   size_t i;
   for (i=0; i<P->length; i++) {
     P->values[i] = i;
   }
 }
 
-void mzd_apply_p_left(packedmatrix *A, permutation *P) {
+void mzd_apply_p_left(mzd_t *A, mzp_t *P) {
   size_t i;
   if(A->ncols == 0)
     return;
@@ -64,7 +64,7 @@ void mzd_apply_p_left(packedmatrix *A, permutation *P) {
   }
 }
 
-void mzd_apply_p_left_trans(packedmatrix *A, permutation *P) {
+void mzd_apply_p_left_trans(mzd_t *A, mzp_t *P) {
   long i;
   if(A->ncols == 0)
     return;
@@ -74,7 +74,7 @@ void mzd_apply_p_left_trans(packedmatrix *A, permutation *P) {
   }
 }
 
-void mzd_apply_p_right(packedmatrix *A, permutation *P) {
+void mzd_apply_p_right(mzd_t *A, mzp_t *P) {
   size_t i;
   if(A->nrows == 0)
     return;
@@ -92,7 +92,7 @@ void mzd_apply_p_right(packedmatrix *A, permutation *P) {
 /*   } */
 }
 
-void mzd_apply_p_right_trans(packedmatrix *A, permutation *P) {
+void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P) {
   int i;
   if(A->nrows == 0)
     return;
@@ -111,7 +111,7 @@ void mzd_apply_p_right_trans(packedmatrix *A, permutation *P) {
 /*   } */
 }
 
-void mzd_col_block_rotate(packedmatrix *M, size_t zs, size_t ze, size_t de, int copy) {
+void mzd_col_block_rotate(mzd_t *M, size_t zs, size_t ze, size_t de, int copy) {
   size_t i,j;
 
   const size_t ds = ze;
@@ -163,7 +163,7 @@ void mzd_col_block_rotate(packedmatrix *M, size_t zs, size_t ze, size_t de, int 
   m4ri_mm_free(begin);
 }
 
-void mzp_print(permutation *P) {
+void mzp_print(mzp_t *P) {
   printf("[ ");
   for(size_t i=0; i<P->length; i++) {
     printf("%zu ",P->values[i]);

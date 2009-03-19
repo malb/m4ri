@@ -24,16 +24,16 @@
 #include "trsm.h"
 #include "permutation.h"
 
-void mzd_solve_left(packedmatrix *A, packedmatrix *B, const int cutoff, const int inconsistency_check) {    
+void mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency_check) {    
   if(A->ncols > B->nrows)
     m4ri_die("mzd_solve_left: A ncols (%d) need to be lower than B nrows (%d).\n", A->ncols, B->nrows);
 
   _mzd_solve_left (A, B, cutoff, inconsistency_check);
 }
  
-void mzd_pluq_solve_left (packedmatrix *A, size_t rank, 
-                          permutation *P, permutation *Q, 
-                          packedmatrix *B, const int cutoff, const int inconsistency_check) 
+void mzd_pluq_solve_left (mzd_t *A, size_t rank, 
+                          mzp_t *P, mzp_t *Q, 
+                          mzd_t *B, const int cutoff, const int inconsistency_check) 
 {
   if(A->ncols > B->nrows)
     m4ri_die("mzd_pluq_solve_left: A ncols (%d) need to be lower than B nrows (%d).\n", A->ncols, B->nrows);
@@ -45,9 +45,9 @@ void mzd_pluq_solve_left (packedmatrix *A, size_t rank,
   _mzd_pluq_solve_left (A, rank, P, Q, B, cutoff, inconsistency_check);
 }
 
-void _mzd_pluq_solve_left (packedmatrix *A, size_t rank, 
-                           permutation *P, permutation *Q, 
-                           packedmatrix *B, const int cutoff, const int inconsistency_check) {
+void _mzd_pluq_solve_left (mzd_t *A, size_t rank, 
+                           mzp_t *P, mzp_t *Q, 
+                           mzd_t *B, const int cutoff, const int inconsistency_check) {
   /** A is supposed to store L lower triangular and U upper triangular
    *  B is modified in place 
    *  (Bi's in the comments are just modified versions of B)
@@ -64,8 +64,8 @@ void _mzd_pluq_solve_left (packedmatrix *A, size_t rank,
   /* L B3 = B2 */
   
   /* view on the upper part of L */
-  packedmatrix *LU = mzd_init_window(A,0,0,rank,rank);
-  packedmatrix *Y1 = mzd_init_window(B,0,0,rank,B->ncols);
+  mzd_t *LU = mzd_init_window(A,0,0,rank,rank);
+  mzd_t *Y1 = mzd_init_window(B,0,0,rank,B->ncols);
   mzd_trsm_lower_left(LU, Y1, cutoff);
   
   if (inconsistency_check) {
@@ -74,8 +74,8 @@ void _mzd_pluq_solve_left (packedmatrix *A, size_t rank,
      * 
      * update with the lower part of L 
      */
-    packedmatrix *H = mzd_init_window(A, rank, 0, A->nrows, rank);
-    packedmatrix *Y2 = mzd_init_window(B,rank,0,B->nrows,B->ncols);
+    mzd_t *H = mzd_init_window(A, rank, 0, A->nrows, rank);
+    mzd_t *Y2 = mzd_init_window(B,rank,0,B->nrows,B->ncols);
     mzd_addmul(Y2, H, Y1, cutoff);
     /*
      * test whether Y2 is the zero matrix
@@ -112,7 +112,7 @@ void _mzd_pluq_solve_left (packedmatrix *A, size_t rank,
 }
 
 
-void _mzd_solve_left (packedmatrix *A, packedmatrix *B, const int cutoff, const int inconsistency_check) {
+void _mzd_solve_left (mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency_check) {
   /**
    *  B is modified in place 
    *  (Bi's in the comments are just modified versions of B)
@@ -122,8 +122,8 @@ void _mzd_solve_left (packedmatrix *A, packedmatrix *B, const int cutoff, const 
    *  4) U B4 = B3
    *  5) Q B5 = B4
    */
-  permutation * P = mzp_init(A->nrows);
-  permutation * Q = mzp_init(A->ncols);
+  mzp_t * P = mzp_init(A->nrows);
+  mzp_t * Q = mzp_init(A->ncols);
   
   /* PLUQ = A */
   size_t rank = _mzd_pluq(A, P, Q, cutoff);  

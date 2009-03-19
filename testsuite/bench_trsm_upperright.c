@@ -15,8 +15,8 @@ int main(int argc, char **argv) {
   }
   m = atoi(argv[1]);
   n = atoi(argv[2]);
-  packedmatrix *B = mzd_init(m, n);
-  packedmatrix *U = mzd_init(n, n);
+  mzd_t *B = mzd_init(m, n);
+  mzd_t *U = mzd_init(n, n);
   mzd_randomize(B);
   mzd_randomize(U);
   size_t i,j;

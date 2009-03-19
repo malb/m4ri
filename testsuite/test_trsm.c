@@ -5,15 +5,15 @@
 int test_trsm_upper_right (int m, int n, int offset, const char* description){
   printf("upper_right: %s  m: %4d n: %4d offset: %4d ... ",description, m, n, offset);
 
-  packedmatrix* Ubase = mzd_init (2048,2048);
-  packedmatrix* Bbase = mzd_init (2048,2048);
+  mzd_t* Ubase = mzd_init (2048,2048);
+  mzd_t* Bbase = mzd_init (2048,2048);
   mzd_randomize (Ubase);
   mzd_randomize (Bbase);
-  packedmatrix* Bbasecopy = mzd_copy (NULL, Bbase);
+  mzd_t* Bbasecopy = mzd_copy (NULL, Bbase);
 
-  packedmatrix* U = mzd_init_window (Ubase, 0, offset, n, offset + n);
-  packedmatrix* B = mzd_init_window (Bbase, 0, offset, m, offset + n);
-  packedmatrix* W = mzd_copy (NULL, B);
+  mzd_t* U = mzd_init_window (Ubase, 0, offset, n, offset + n);
+  mzd_t* B = mzd_init_window (Bbase, 0, offset, m, offset + n);
+  mzd_t* W = mzd_copy (NULL, B);
 
   size_t i,j;
   for (i=0; i<n; ++i){
@@ -39,7 +39,7 @@ int test_trsm_upper_right (int m, int n, int offset, const char* description){
 
   for ( i=0; i<2048; ++i)
     for ( j=0; j<2048/RADIX; ++j){
-      if (Bbase->values [Bbase->rowswap[i] + j] != Bbasecopy->values [Bbasecopy->rowswap[i] + j]){
+      if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
 	status = 1;
       }
     }
@@ -59,15 +59,15 @@ int test_trsm_upper_right (int m, int n, int offset, const char* description){
 
 int test_trsm_lower_right (int m, int n, int offset, const char *description){
   printf("lower_right: %s  m: %4d n: %4d offset: %4d ... ",description, m, n, offset);
-  packedmatrix* Lbase = mzd_init (2048,2048);
-  packedmatrix* Bbase = mzd_init (2048,2048);
+  mzd_t* Lbase = mzd_init (2048,2048);
+  mzd_t* Bbase = mzd_init (2048,2048);
   mzd_randomize (Lbase);
   mzd_randomize (Bbase);
-  packedmatrix* Bbasecopy = mzd_copy (NULL, Bbase);
+  mzd_t* Bbasecopy = mzd_copy (NULL, Bbase);
 
-  packedmatrix* L = mzd_init_window (Lbase, 0, offset, n, offset + n);
-  packedmatrix* B = mzd_init_window (Bbase, 0, offset, m, offset + n);
-  packedmatrix* W = mzd_copy (NULL, B);
+  mzd_t* L = mzd_init_window (Lbase, 0, offset, n, offset + n);
+  mzd_t* B = mzd_init_window (Bbase, 0, offset, m, offset + n);
+  mzd_t* W = mzd_copy (NULL, B);
 
   size_t i,j;
   for (i=0; i<n; ++i){
@@ -93,7 +93,7 @@ int test_trsm_lower_right (int m, int n, int offset, const char *description){
 
   for ( i=0; i<2048; ++i)
     for ( j=0; j<2048/RADIX; ++j){
-      if (Bbase->values [Bbase->rowswap[i] + j] != Bbasecopy->values [Bbasecopy->rowswap[i] + j]){
+      if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
 	status = 1;
       }
     }
@@ -113,15 +113,15 @@ int test_trsm_lower_right (int m, int n, int offset, const char *description){
 
 
 int test_trsm_lower_left (int m, int n, int offsetL, int offsetB){
-  packedmatrix* Lbase = mzd_init (2048,2048);
-  packedmatrix* Bbase = mzd_init (2048,2048);
+  mzd_t* Lbase = mzd_init (2048,2048);
+  mzd_t* Bbase = mzd_init (2048,2048);
   mzd_randomize (Lbase);
   mzd_randomize (Bbase);
-  packedmatrix* Bbasecopy = mzd_copy (NULL, Bbase);
+  mzd_t* Bbasecopy = mzd_copy (NULL, Bbase);
 
-  packedmatrix* L = mzd_init_window (Lbase, 0, offsetL, m, offsetL + m);
-  packedmatrix* B = mzd_init_window (Bbase, 0, offsetB, m, offsetB + n);
-  packedmatrix* W = mzd_copy (NULL, B);
+  mzd_t* L = mzd_init_window (Lbase, 0, offsetL, m, offsetL + m);
+  mzd_t* B = mzd_init_window (Bbase, 0, offsetB, m, offsetB + n);
+  mzd_t* W = mzd_copy (NULL, B);
 
   size_t i,j;
   for (i=0; i<m; ++i){
@@ -148,7 +148,7 @@ int test_trsm_lower_left (int m, int n, int offsetL, int offsetB){
 
   for ( i=0; i<2048; ++i)
     for ( j=0; j<2048/RADIX; ++j){
-      if (Bbase->values [Bbase->rowswap[i] + j] != Bbasecopy->values [Bbasecopy->rowswap[i] + j]){
+      if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
 	status = 1;
       }
     }
@@ -170,15 +170,15 @@ int test_trsm_lower_left (int m, int n, int offsetL, int offsetB){
 
 int test_trsm_upper_left (int m, int n, int offsetU, int offsetB, const char *description) {
   printf("upper_left: %s  m: %4d n: %4d offset: %4d ... ",description, m, n, offsetU);
-  packedmatrix* Ubase = mzd_init (2048,2048);
-  packedmatrix* Bbase = mzd_init (2048,2048);
+  mzd_t* Ubase = mzd_init (2048,2048);
+  mzd_t* Bbase = mzd_init (2048,2048);
   mzd_randomize (Ubase);
   mzd_randomize (Bbase);
-  packedmatrix* Bbasecopy = mzd_copy (NULL, Bbase);
+  mzd_t* Bbasecopy = mzd_copy (NULL, Bbase);
 
-  packedmatrix* U = mzd_init_window (Ubase, 0, offsetU, m, offsetU + m);
-  packedmatrix* B = mzd_init_window (Bbase, 0, offsetB, m, offsetB + n);
-  packedmatrix* W = mzd_copy (NULL, B);
+  mzd_t* U = mzd_init_window (Ubase, 0, offsetU, m, offsetU + m);
+  mzd_t* B = mzd_init_window (Bbase, 0, offsetB, m, offsetB + n);
+  mzd_t* W = mzd_copy (NULL, B);
 
   size_t i,j;
   for (i=0; i<m; ++i){
@@ -205,7 +205,7 @@ int test_trsm_upper_left (int m, int n, int offsetU, int offsetB, const char *de
 
   for ( i=0; i<2048; ++i)
     for ( j=0; j<2048/RADIX; ++j){
-      if (Bbase->values [Bbase->rowswap[i] + j] != Bbasecopy->values [Bbasecopy->rowswap[i] + j]){
+      if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
 	status = 1;
       }
     }

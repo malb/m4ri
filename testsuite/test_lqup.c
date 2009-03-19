@@ -4,11 +4,11 @@
 int test_lqup_full_rank (size_t m, size_t n){
   printf("pluq: testing full rank m: %5zu, n: %5zu",m,n);
 
-  packedmatrix* U = mzd_init (m,n);
-  packedmatrix* L = mzd_init (m,m);
-  packedmatrix* U2 = mzd_init (m,n);
-  packedmatrix* L2 = mzd_init (m,m);
-  packedmatrix* A = mzd_init (m,n);
+  mzd_t* U = mzd_init (m,n);
+  mzd_t* L = mzd_init (m,m);
+  mzd_t* U2 = mzd_init (m,n);
+  mzd_t* L2 = mzd_init (m,m);
+  mzd_t* A = mzd_init (m,n);
   mzd_randomize (U);
   mzd_randomize (L);
 
@@ -25,10 +25,10 @@ int test_lqup_full_rank (size_t m, size_t n){
   
   mzd_mul(A, L, U, 2048);
 
-  packedmatrix* Acopy = mzd_copy (NULL,A);
+  mzd_t* Acopy = mzd_copy (NULL,A);
 
-  permutation* P = mzp_init(m);
-  permutation* Q = mzp_init(n);
+  mzp_t* P = mzp_init(m);
+  mzp_t* Q = mzp_init(n);
   mzd_pluq(A, P, Q, 2048);
 
   for (i=0; i<m; ++i){
@@ -68,11 +68,11 @@ int test_lqup_full_rank (size_t m, size_t n){
 int test_lqup_half_rank(size_t m, size_t n) {
   printf("pluq: testing half rank m: %5zd, n: %5zd",m,n);
 
-  packedmatrix* U = mzd_init(m, n);
-  packedmatrix* L = mzd_init(m, m);
-  packedmatrix* U2 = mzd_init(m, n);
-  packedmatrix* L2 = mzd_init(m, m);
-  packedmatrix* A = mzd_init(m, n);
+  mzd_t* U = mzd_init(m, n);
+  mzd_t* L = mzd_init(m, m);
+  mzd_t* U2 = mzd_init(m, n);
+  mzd_t* L2 = mzd_init(m, m);
+  mzd_t* A = mzd_init(m, n);
   mzd_randomize (U);
   mzd_randomize (L);
 
@@ -91,12 +91,12 @@ int test_lqup_half_rank(size_t m, size_t n) {
   
   mzd_mul(A, L, U, 0);
 
-  packedmatrix* Acopy = mzd_copy (NULL,A);
+  mzd_t* Acopy = mzd_copy (NULL,A);
 
 
 
-  permutation* P = mzp_init(m);
-  permutation* Q = mzp_init(n);
+  mzp_t* P = mzp_init(m);
+  mzp_t* Q = mzp_init(n);
   int r = mzd_pluq(A, P, Q, 0);
 
   for (i=0; i<r; ++i){
@@ -148,18 +148,18 @@ int test_lqup_structured(size_t m, size_t n) {
   printf("pluq: testing structured m: %5zd, n: %5zd", m, n);
 
   size_t i,j;
-  packedmatrix* A = mzd_init(m, n);
-  packedmatrix* L = mzd_init(m, m);
-  packedmatrix* U = mzd_init(m, n);
+  mzd_t* A = mzd_init(m, n);
+  mzd_t* L = mzd_init(m, m);
+  mzd_t* U = mzd_init(m, n);
 
   for(i=0; i<m; i+=2)
     for (j=i; j<n; j++)
       mzd_write_bit(A, i, j, 1);
 
-  packedmatrix* Acopy = mzd_copy (NULL,A);
+  mzd_t* Acopy = mzd_copy (NULL,A);
 
-  permutation* P = mzp_init(m);
-  permutation* Q = mzp_init(n);
+  mzp_t* P = mzp_init(m);
+  mzp_t* Q = mzp_init(n);
   int r;
   r=mzd_pluq(A, P, Q, 0);
   printf(", rank: %5d ",r);
@@ -208,15 +208,15 @@ int test_lqup_random(size_t m, size_t n) {
   printf("pluq: testing random m: %5zd, n: %5zd",m,n);
 
   size_t i,j;
-  packedmatrix* U = mzd_init(m, n);
-  packedmatrix* L = mzd_init(m, m);
-  packedmatrix* A = mzd_init(m, n);
+  mzd_t* U = mzd_init(m, n);
+  mzd_t* L = mzd_init(m, m);
+  mzd_t* A = mzd_init(m, n);
   mzd_randomize(A);
 
-  packedmatrix* Acopy = mzd_copy (NULL,A);
+  mzd_t* Acopy = mzd_copy (NULL,A);
 
-  permutation* P = mzp_init(m);
-  permutation* Q = mzp_init(n);
+  mzp_t* P = mzp_init(m);
+  mzp_t* Q = mzp_init(n);
   int r;
   r=mzd_pluq(A, P, Q, 0);
   printf(", rank: %5d ",r);

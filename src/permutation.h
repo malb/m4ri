@@ -46,7 +46,7 @@ typedef struct {
 
   size_t length;
 
-} permutation;
+} mzp_t; // note that this is NOT mpz_t
 
 /**
  * Construct an identity permutation.
@@ -54,21 +54,21 @@ typedef struct {
  * \param length Length of the permutation.
  */
 
-permutation *mzp_init(size_t length);
+mzp_t *mzp_init(size_t length);
 
 /**
- * Free a permutation.
+ * Free a mzp_t.
  * 
- * \param P Permutation to free.
+ * \param P Mzp_T to free.
  */
 
-void mzp_free(permutation *P);
+void mzp_free(mzp_t *P);
 
 
 /**
- * \brief Create a window/view into the permutation matrix P.
+ * \brief Create a window/view into the mzp_t matrix P.
  *
- * Use mzp_free_permutation_window() to free the window.
+ * Use mzp_free_mzp_t_window() to free the window.
  *
  * \param P Permutaiton matrix
  * \param begin Starting index (inclusive)
@@ -76,74 +76,74 @@ void mzp_free(permutation *P);
  *
  */
 
-permutation *mzp_init_window(permutation* P, size_t begin, size_t end);
+mzp_t *mzp_init_window(mzp_t* P, size_t begin, size_t end);
 
 /**
- * \brief Free a permutation matrix window created with
- * mzp_init_permutation_window().
+ * \brief Free a mzp_t matrix window created with
+ * mzp_init_mzp_t_window().
  * 
- * \param condemned Permutation Matrix
+ * \param condemned Mzp_T Matrix
  */
 
-void mzp_free_window(permutation* condemned);
+void mzp_free_window(mzp_t* condemned);
 
 /**
- * \brief Set the permutation P to the identity permutation. The only
+ * \brief Set the mzp_t P to the identity mzp_t. The only
  * allowed value is 1.
  *
  *
- * \param P Permutation
+ * \param P Mzp_T
  * \param value 1
  *
  * \note This interface was chosen to be similar to mzd_set_ui().
  */
 
-void mzp_set_ui(permutation *P, unsigned int value);
+void mzp_set_ui(mzp_t *P, unsigned int value);
 
 
 /**
- * Apply the permutation P to A from the left.
+ * Apply the mzp_t P to A from the left.
  *
  * This is equivalent to row swaps walking from length-1 to 0.
  *
  * \param A Matrix.
- * \param P Permutation.
+ * \param P Mzp_T.
  */
 
-void mzd_apply_p_left(packedmatrix *A, permutation *P);
+void mzd_apply_p_left(mzd_t *A, mzp_t *P);
 
 /**
- * Apply the permutation P to A from the left but transpose P before.
+ * Apply the mzp_t P to A from the left but transpose P before.
  *
  * This is equivalent to row swaps walking from 0 to length-1.
  *
  * \param A Matrix.
- * \param P Permutation.
+ * \param P Mzp_T.
  */
 
-void mzd_apply_p_left_trans(packedmatrix *A, permutation *P);
+void mzd_apply_p_left_trans(mzd_t *A, mzp_t *P);
 
 /**
- * Apply the permutation P to A from the right.
+ * Apply the mzp_t P to A from the right.
  *
  * This is equivalent to column swaps walking from length-1 to 0.
  *
  * \param A Matrix.
- * \param P Permutation.
+ * \param P Mzp_T.
  */
 
-void mzd_apply_p_right(packedmatrix *A, permutation *P);
+void mzd_apply_p_right(mzd_t *A, mzp_t *P);
 
 /**
- * Apply the permutation P to A from the right but transpose P before.
+ * Apply the mzp_t P to A from the right but transpose P before.
  *
  * This is equivalent to column swaps walking from 0 to length-1.
  *
  * \param A Matrix.
- * \param P Permutation.
+ * \param P Mzp_T.
  */
 
-void mzd_apply_p_right_trans(packedmatrix *A, permutation *P);
+void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
 
 /**
  * Rotate zero columns to the end.
@@ -161,14 +161,14 @@ void mzd_apply_p_right_trans(packedmatrix *A, permutation *P);
  *
  */
 
-void mzd_col_block_rotate(packedmatrix *M, size_t zs, size_t ze, size_t de, int zero_out);
+void mzd_col_block_rotate(mzd_t *M, size_t zs, size_t ze, size_t de, int zero_out);
 
 /**
- * Print the permutation P
+ * Print the mzp_t P
  *
- * \param P Permutation.
+ * \param P Mzp_T.
  */
 
-void mzp_print(permutation *P);
+void mzp_print(mzp_t *P);
 
 #endif //PERMUTATION_H

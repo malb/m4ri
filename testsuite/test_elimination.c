@@ -6,14 +6,14 @@ int elim_test_equality(int nr, int nc) {
 
   printf("elim: m: %4d, n: %4d ",nr,nc);
 
-  packedmatrix *A = mzd_init(nr, nc);
+  mzd_t *A = mzd_init(nr, nc);
   mzd_randomize(A);
-  packedmatrix *B = mzd_copy(NULL, A);
-  packedmatrix *C = mzd_copy(NULL, A);
-  packedmatrix *D = mzd_copy(NULL, A);
-  packedmatrix *E = mzd_copy(NULL, A);
-  packedmatrix *F = mzd_copy(NULL, A);
-  packedmatrix *G = mzd_copy(NULL, A);
+  mzd_t *B = mzd_copy(NULL, A);
+  mzd_t *C = mzd_copy(NULL, A);
+  mzd_t *D = mzd_copy(NULL, A);
+  mzd_t *E = mzd_copy(NULL, A);
+  mzd_t *F = mzd_copy(NULL, A);
+  mzd_t *G = mzd_copy(NULL, A);
 
   /* M4RI k=auto */
   mzd_echelonize_m4ri(A, 1, 0);

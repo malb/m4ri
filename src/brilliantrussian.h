@@ -56,7 +56,7 @@
  * \wordoffset
  */
 
-void mzd_make_table( packedmatrix *M, size_t r, size_t c, int k, packedmatrix *T, size_t *L);
+void mzd_make_table( mzd_t *M, size_t r, size_t c, int k, mzd_t *T, size_t *L);
 
 /**
  * \brief The function looks up k bits from position i,startcol in
@@ -76,7 +76,7 @@ void mzd_make_table( packedmatrix *M, size_t r, size_t c, int k, packedmatrix *T
  * \wordoffset
  */
 
-void mzd_process_rows(packedmatrix *M, size_t startrow, size_t endrow, size_t startcol, int k, packedmatrix *T, size_t *L);
+void mzd_process_rows(mzd_t *M, size_t startrow, size_t endrow, size_t startcol, int k, mzd_t *T, size_t *L);
 
 /**
  * \brief Same as mzd_process_rows but works with two Gray code tables
@@ -95,7 +95,7 @@ void mzd_process_rows(packedmatrix *M, size_t startrow, size_t endrow, size_t st
  * \wordoffset
  */
 
-void mzd_process_rows2(packedmatrix *M, size_t startrow, size_t endrow, size_t startcol, int k, packedmatrix *T0, size_t *L0, packedmatrix *T1, size_t *L1);
+void mzd_process_rows2(mzd_t *M, size_t startrow, size_t endrow, size_t startcol, int k, mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1);
 
 /**
  * \brief Same as mzd_process_rows but works with three Gray code tables
@@ -116,9 +116,9 @@ void mzd_process_rows2(packedmatrix *M, size_t startrow, size_t endrow, size_t s
  * \wordoffset
  */
 
-void mzd_process_rows3(packedmatrix *M, size_t startrow, size_t endrow, size_t startcol, int k, 
-                       packedmatrix *T0, size_t *L0, packedmatrix *T1, size_t *L1,
-                       packedmatrix *T2, size_t *L2);
+void mzd_process_rows3(mzd_t *M, size_t startrow, size_t endrow, size_t startcol, int k, 
+                       mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1,
+                       mzd_t *T2, size_t *L2);
 
 /**
  * \brief Same as mzd_process_rows but works with four Gray code tables
@@ -141,9 +141,9 @@ void mzd_process_rows3(packedmatrix *M, size_t startrow, size_t endrow, size_t s
  * \wordoffset
  */
 
-void mzd_process_rows4(packedmatrix *M, size_t startrow, size_t endrow, size_t startcol, int k,
-                       packedmatrix *T0, size_t *L0, packedmatrix *T1, size_t *L1,
-                       packedmatrix *T2, size_t *L2, packedmatrix *T3, size_t *L3);
+void mzd_process_rows4(mzd_t *M, size_t startrow, size_t endrow, size_t startcol, int k,
+                       mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1,
+                       mzd_t *T2, size_t *L2, mzd_t *T3, size_t *L3);
 
 /**
  * \brief Matrix elimination using the 'Method of the Four Russians'
@@ -161,7 +161,7 @@ void mzd_process_rows4(packedmatrix *M, size_t startrow, size_t endrow, size_t s
  * \return Rank of A.
  */
 
-size_t mzd_echelonize_m4ri(packedmatrix *M, int full, int k);
+size_t mzd_echelonize_m4ri(mzd_t *M, int full, int k);
 
 /**
  * \brief Given a matrix in upper triangular form compute the reduced row
@@ -175,7 +175,7 @@ size_t mzd_echelonize_m4ri(packedmatrix *M, int full, int k);
  * \note This function isn't as optimized as it should be.
  */
 
-void mzd_top_echelonize_m4ri(packedmatrix *M, int k);
+void mzd_top_echelonize_m4ri(mzd_t *M, int k);
 
 /**
  * \brief Invert the matrix M using Konrod's method. 
@@ -195,7 +195,7 @@ void mzd_top_echelonize_m4ri(packedmatrix *M, int k);
  * must be free'd using mzd_free() once not needed anymore.
  */
 
-packedmatrix *mzd_invert_m4ri(packedmatrix *M, packedmatrix *I, int k);
+mzd_t *mzd_invert_m4ri(mzd_t *M, mzd_t *I, int k);
 
 /**
  * \brief Matrix multiplication using Konrod's method, i.e. compute C
@@ -214,7 +214,7 @@ packedmatrix *mzd_invert_m4ri(packedmatrix *M, packedmatrix *I, int k);
  * \return Pointer to C.
  */
 
-packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k);
+mzd_t *mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k);
 
 
 /**
@@ -230,7 +230,7 @@ packedmatrix *mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, in
  * \return Pointer to C.
  */
 
-packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k);
+mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k);
 
 /**
  * \brief Matrix multiplication using Konrod's method, i.e. compute C such
@@ -252,7 +252,7 @@ packedmatrix *mzd_addmul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B,
  * \return Pointer to C.
  */
 
-packedmatrix *_mzd_mul_m4rm(packedmatrix *C, packedmatrix *A, packedmatrix *B, int k, int clear);
+mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear);
 
 /**
  * \brief If defined 8 Gray code tables are used in parallel.

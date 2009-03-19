@@ -24,14 +24,14 @@ int main(int argc, char **argv) {
     m4ri_die("Parameter cutoff must be > 0\n");
   }
 
-  packedmatrix *A = mzd_init(n, n);
-  packedmatrix *B = mzd_init(n, n);
+  mzd_t *A = mzd_init(n, n);
+  mzd_t *B = mzd_init(n, n);
   mzd_randomize(A);
   mzd_randomize(B);
 
   wt = walltime(&clockZero);
   t = cpucycles();
-  packedmatrix *C = mzd_mul(NULL, A, B, cutoff);
+  mzd_t *C = mzd_mul(NULL, A, B, cutoff);
   printf("n: %5d, cutoff: %5d, cpu cycles: %llu wall time: %lf\n",n, cutoff, cpucycles() - t, walltime(&wt));
 
   mzd_free(A);

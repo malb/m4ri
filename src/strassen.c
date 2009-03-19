@@ -34,7 +34,7 @@
 #endif
 
 
-packedmatrix *_mzd_mul_even_orig(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+mzd_t *_mzd_mul_even_orig(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   size_t a,b,c;
   size_t anr, anc, bnr, bnc;
   
@@ -52,7 +52,7 @@ packedmatrix *_mzd_mul_even_orig(packedmatrix *C, packedmatrix *A, packedmatrix 
        there are no speed regressions */
     /* C = _mzd_mul_m4rm(C, A, B, 0, TRUE); */
     /* return C; */
-    packedmatrix *Cbar = mzd_init(C->nrows, C->ncols);
+    mzd_t *Cbar = mzd_init(C->nrows, C->ncols);
     Cbar = _mzd_mul_m4rm(Cbar, A, B, 0, FALSE);
     mzd_copy(C, Cbar);
     mzd_free(Cbar);
@@ -75,20 +75,20 @@ packedmatrix *_mzd_mul_even_orig(packedmatrix *C, packedmatrix *A, packedmatrix 
   bnr = anc;
   bnc = ((c/RADIX) >> 1) * RADIX;
 
-  packedmatrix *A00 = mzd_init_window(A,   0,   0,   anr,   anc);
-  packedmatrix *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc);
-  packedmatrix *A10 = mzd_init_window(A, anr,   0, 2*anr,   anc);
-  packedmatrix *A11 = mzd_init_window(A, anr, anc, 2*anr, 2*anc);
+  mzd_t *A00 = mzd_init_window(A,   0,   0,   anr,   anc);
+  mzd_t *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc);
+  mzd_t *A10 = mzd_init_window(A, anr,   0, 2*anr,   anc);
+  mzd_t *A11 = mzd_init_window(A, anr, anc, 2*anr, 2*anc);
 
-  packedmatrix *B00 = mzd_init_window(B,   0,   0,   bnr,   bnc);
-  packedmatrix *B01 = mzd_init_window(B,   0, bnc,   bnr, 2*bnc);
-  packedmatrix *B10 = mzd_init_window(B, bnr,   0, 2*bnr,   bnc);
-  packedmatrix *B11 = mzd_init_window(B, bnr, bnc, 2*bnr, 2*bnc);
+  mzd_t *B00 = mzd_init_window(B,   0,   0,   bnr,   bnc);
+  mzd_t *B01 = mzd_init_window(B,   0, bnc,   bnr, 2*bnc);
+  mzd_t *B10 = mzd_init_window(B, bnr,   0, 2*bnr,   bnc);
+  mzd_t *B11 = mzd_init_window(B, bnr, bnc, 2*bnr, 2*bnc);
 
-  packedmatrix *C00 = mzd_init_window(C,   0,   0,   anr,   bnc);
-  packedmatrix *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc);
-  packedmatrix *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
-  packedmatrix *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
+  mzd_t *C00 = mzd_init_window(C,   0,   0,   anr,   bnc);
+  mzd_t *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc);
+  mzd_t *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
+  mzd_t *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
   
   /**
    * \note See Jean-Guillaume Dumas, Clement Pernet, Wei Zhou; "Memory
@@ -98,8 +98,8 @@ packedmatrix *_mzd_mul_even_orig(packedmatrix *C, packedmatrix *A, packedmatrix 
    */
 
   /* change this to mzd_init(anr, MAX(bnc,anc)) to fix the todo below */
-  packedmatrix *X0 = mzd_init(anr, anc);
-  packedmatrix *X1 = mzd_init(bnr, bnc);
+  mzd_t *X0 = mzd_init(anr, anc);
+  mzd_t *X1 = mzd_init(bnr, bnc);
   
   _mzd_add(X0, A00, A10);              /*1    X0 = A00 + A10 */
   _mzd_add(X1, B11, B01);              /*2    X1 = B11 + B01 */
@@ -143,23 +143,23 @@ packedmatrix *_mzd_mul_even_orig(packedmatrix *C, packedmatrix *A, packedmatrix 
 
   /* deal with rest */
   if (B->ncols > (int)(2*bnc)) {
-    packedmatrix *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
-    packedmatrix *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
+    mzd_t *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
+    mzd_t *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
     _mzd_mul_m4rm(C_last_col, A, B_last_col, 0, TRUE);
     mzd_free_window(B_last_col);
     mzd_free_window(C_last_col);
   }
   if (A->nrows > (int)(2*anr)) {
-    packedmatrix *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
-    packedmatrix *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, C->ncols);
+    mzd_t *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
+    mzd_t *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, C->ncols);
     _mzd_mul_m4rm(C_last_row, A_last_row, B, 0, TRUE);
     mzd_free_window(A_last_row);
     mzd_free_window(C_last_row);
   }
   if (A->ncols > (int)(2*anc)) {
-    packedmatrix *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
-    packedmatrix *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
-    packedmatrix *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2);
+    mzd_t *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
+    mzd_t *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
+    mzd_t *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2);
     mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0);
     mzd_free_window(A_last_col);
     mzd_free_window(B_last_row);
@@ -183,7 +183,7 @@ packedmatrix *_mzd_mul_even_orig(packedmatrix *C, packedmatrix *A, packedmatrix 
 }
 
 
-packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+mzd_t *_mzd_mul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   size_t m,k,n;
   size_t mmm, kkk, nnn;
   
@@ -200,7 +200,7 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
        overhead and improves data locality, if you remove it make sure
        there are no speed regressions */
     /* C = _mzd_mul_m4rm(C, A, B, 0, TRUE); */
-    packedmatrix *Cbar = mzd_init(m, n);
+    mzd_t *Cbar = mzd_init(m, n);
     _mzd_mul_m4rm(Cbar, A, B, 0, FALSE);
     mzd_copy(C, Cbar);
     mzd_free(Cbar);
@@ -223,20 +223,20 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   /*         |A |   |B |   |C |
    * Compute |  | x |  | = |  | */
   {
-    packedmatrix *A11 = mzd_init_window(A,   0,   0,   mmm,   kkk);
-    packedmatrix *A12 = mzd_init_window(A,   0, kkk,   mmm, 2*kkk);
-    packedmatrix *A21 = mzd_init_window(A, mmm,   0, 2*mmm,   kkk);
-    packedmatrix *A22 = mzd_init_window(A, mmm, kkk, 2*mmm, 2*kkk);
+    mzd_t *A11 = mzd_init_window(A,   0,   0,   mmm,   kkk);
+    mzd_t *A12 = mzd_init_window(A,   0, kkk,   mmm, 2*kkk);
+    mzd_t *A21 = mzd_init_window(A, mmm,   0, 2*mmm,   kkk);
+    mzd_t *A22 = mzd_init_window(A, mmm, kkk, 2*mmm, 2*kkk);
 
-    packedmatrix *B11 = mzd_init_window(B,   0,   0,   kkk,   nnn);
-    packedmatrix *B12 = mzd_init_window(B,   0, nnn,   kkk, 2*nnn);
-    packedmatrix *B21 = mzd_init_window(B, kkk,   0, 2*kkk,   nnn);
-    packedmatrix *B22 = mzd_init_window(B, kkk, nnn, 2*kkk, 2*nnn);
+    mzd_t *B11 = mzd_init_window(B,   0,   0,   kkk,   nnn);
+    mzd_t *B12 = mzd_init_window(B,   0, nnn,   kkk, 2*nnn);
+    mzd_t *B21 = mzd_init_window(B, kkk,   0, 2*kkk,   nnn);
+    mzd_t *B22 = mzd_init_window(B, kkk, nnn, 2*kkk, 2*nnn);
 
-    packedmatrix *C11 = mzd_init_window(C,   0,   0,   mmm,   nnn);
-    packedmatrix *C12 = mzd_init_window(C,   0, nnn,   mmm, 2*nnn);
-    packedmatrix *C21 = mzd_init_window(C, mmm,   0, 2*mmm,   nnn);
-    packedmatrix *C22 = mzd_init_window(C, mmm, nnn, 2*mmm, 2*nnn);
+    mzd_t *C11 = mzd_init_window(C,   0,   0,   mmm,   nnn);
+    mzd_t *C12 = mzd_init_window(C,   0, nnn,   mmm, 2*nnn);
+    mzd_t *C21 = mzd_init_window(C, mmm,   0, 2*mmm,   nnn);
+    mzd_t *C22 = mzd_init_window(C, mmm, nnn, 2*mmm, 2*nnn);
   
     /**
      * \note See Marco Bodrato; "A Strassen-like Matrix Multiplication
@@ -246,8 +246,8 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
      */
 
     /* change this to mzd_init(mmm, MAX(nnn,kkk)) to fix the todo below */
-    packedmatrix *Wmk = mzd_init(mmm, kkk);
-    packedmatrix *Wkn = mzd_init(kkk, nnn);
+    mzd_t *Wmk = mzd_init(mmm, kkk);
+    mzd_t *Wkn = mzd_init(kkk, nnn);
 
     _mzd_add(Wkn, B22, B12);		 /* Wkn = B22 + B12 */
     _mzd_add(Wmk, A22, A12);		 /* Wmk = A22 + A12 */
@@ -307,8 +307,8 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   if (n > nnn) {
     /*         |AA|   | B|   | C|
      * Compute |AA| x | B| = | C| */
-    packedmatrix *B_last_col = mzd_init_window(B, 0, nnn, k, n); 
-    packedmatrix *C_last_col = mzd_init_window(C, 0, nnn, m, n);
+    mzd_t *B_last_col = mzd_init_window(B, 0, nnn, k, n); 
+    mzd_t *C_last_col = mzd_init_window(C, 0, nnn, m, n);
     _mzd_mul_m4rm(C_last_col, A, B_last_col, 0, TRUE);
     mzd_free_window(B_last_col);
     mzd_free_window(C_last_col);
@@ -317,9 +317,9 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   if (m > mmm) {
     /*         |  |   |B |   |  |
      * Compute |AA| x |B | = |C | */
-    packedmatrix *A_last_row = mzd_init_window(A, mmm, 0, m, k);
-    packedmatrix *B_first_col= mzd_init_window(B,   0, 0, k, nnn);
-    packedmatrix *C_last_row = mzd_init_window(C, mmm, 0, m, nnn);
+    mzd_t *A_last_row = mzd_init_window(A, mmm, 0, m, k);
+    mzd_t *B_first_col= mzd_init_window(B,   0, 0, k, nnn);
+    mzd_t *C_last_row = mzd_init_window(C, mmm, 0, m, nnn);
     _mzd_mul_m4rm(C_last_row, A_last_row, B_first_col, 0, TRUE);
     mzd_free_window(A_last_row);
     mzd_free_window(B_first_col);
@@ -329,9 +329,9 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   if (k > kkk) {
     /* Add to  |  |   | B|   |C |
      * result  |A | x |  | = |  | */
-    packedmatrix *A_last_col = mzd_init_window(A,   0, kkk, mmm, k);
-    packedmatrix *B_last_row = mzd_init_window(B, kkk,   0,   k, nnn);
-    packedmatrix *C_bulk = mzd_init_window(C, 0, 0, mmm, nnn);
+    mzd_t *A_last_col = mzd_init_window(A,   0, kkk, mmm, k);
+    mzd_t *B_last_row = mzd_init_window(B, kkk,   0,   k, nnn);
+    mzd_t *C_bulk = mzd_init_window(C, 0, 0, mmm, nnn);
     mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0);
     mzd_free_window(A_last_col);
     mzd_free_window(B_last_row);
@@ -341,7 +341,7 @@ packedmatrix *_mzd_mul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, i
   return C;
 }
 
-packedmatrix *_mzd_sqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
+mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t *A, int cutoff) {
   size_t m;
   size_t mmm;
   
@@ -352,7 +352,7 @@ packedmatrix *_mzd_sqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
        overhead and improves data locality, if you remove it make sure
        there are no speed regressions */
     /* C = _mzd_mul_m4rm(C, A, B, 0, TRUE); */
-    packedmatrix *Cbar = mzd_init(m, m);
+    mzd_t *Cbar = mzd_init(m, m);
     _mzd_mul_m4rm(Cbar, A, A, 0, FALSE);
     mzd_copy(C, Cbar);
     mzd_free(Cbar);
@@ -373,15 +373,15 @@ packedmatrix *_mzd_sqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
   /*         |A |   |A |   |C |
    * Compute |  | x |  | = |  | */
   {
-    packedmatrix *A11 = mzd_init_window(A,   0,   0,   mmm,   mmm);
-    packedmatrix *A12 = mzd_init_window(A,   0, mmm,   mmm, 2*mmm);
-    packedmatrix *A21 = mzd_init_window(A, mmm,   0, 2*mmm,   mmm);
-    packedmatrix *A22 = mzd_init_window(A, mmm, mmm, 2*mmm, 2*mmm);
+    mzd_t *A11 = mzd_init_window(A,   0,   0,   mmm,   mmm);
+    mzd_t *A12 = mzd_init_window(A,   0, mmm,   mmm, 2*mmm);
+    mzd_t *A21 = mzd_init_window(A, mmm,   0, 2*mmm,   mmm);
+    mzd_t *A22 = mzd_init_window(A, mmm, mmm, 2*mmm, 2*mmm);
 
-    packedmatrix *C11 = mzd_init_window(C,   0,   0,   mmm,   mmm);
-    packedmatrix *C12 = mzd_init_window(C,   0, mmm,   mmm, 2*mmm);
-    packedmatrix *C21 = mzd_init_window(C, mmm,   0, 2*mmm,   mmm);
-    packedmatrix *C22 = mzd_init_window(C, mmm, mmm, 2*mmm, 2*mmm);
+    mzd_t *C11 = mzd_init_window(C,   0,   0,   mmm,   mmm);
+    mzd_t *C12 = mzd_init_window(C,   0, mmm,   mmm, 2*mmm);
+    mzd_t *C21 = mzd_init_window(C, mmm,   0, 2*mmm,   mmm);
+    mzd_t *C22 = mzd_init_window(C, mmm, mmm, 2*mmm, 2*mmm);
   
     /**
      * \note See Marco Bodrato; "A Strassen-like Matrix Multiplication
@@ -390,8 +390,8 @@ packedmatrix *_mzd_sqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
      * sequence of operations.
      */
 
-    packedmatrix *Wmk;
-    packedmatrix *Wkn = mzd_init(mmm, mmm);
+    mzd_t *Wmk;
+    mzd_t *Wkn = mzd_init(mmm, mmm);
 
     _mzd_add(Wkn, A22, A12);                 /* Wkn = A22 + A12 */
     _mzd_sqr_even(C21, Wkn, cutoff);     /* C21 = Wkn^2 */
@@ -435,8 +435,8 @@ packedmatrix *_mzd_sqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
     /*         |AA|   | A|   | C|
      * Compute |AA| x | A| = | C| */
     {
-      packedmatrix *A_last_col = mzd_init_window(A, 0, mmm, m, m);
-      packedmatrix *C_last_col = mzd_init_window(C, 0, mmm, m, m);
+      mzd_t *A_last_col = mzd_init_window(A, 0, mmm, m, m);
+      mzd_t *C_last_col = mzd_init_window(C, 0, mmm, m, m);
       _mzd_mul_m4rm(C_last_col, A, A_last_col, 0, TRUE);
       mzd_free_window(A_last_col);
       mzd_free_window(C_last_col);
@@ -444,9 +444,9 @@ packedmatrix *_mzd_sqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
     /*         |  |   |A |   |  |
      * Compute |AA| x |A | = |C | */
     {
-      packedmatrix *A_last_row = mzd_init_window(A, mmm, 0, m, m);
-      packedmatrix *A_first_col= mzd_init_window(A,   0, 0, m, mmm);
-      packedmatrix *C_last_row = mzd_init_window(C, mmm, 0, m, mmm);
+      mzd_t *A_last_row = mzd_init_window(A, mmm, 0, m, m);
+      mzd_t *A_first_col= mzd_init_window(A,   0, 0, m, mmm);
+      mzd_t *C_last_row = mzd_init_window(C, mmm, 0, m, mmm);
       _mzd_mul_m4rm(C_last_row, A_last_row, A_first_col, 0, TRUE);
       mzd_free_window(A_last_row);
       mzd_free_window(A_first_col);
@@ -455,9 +455,9 @@ packedmatrix *_mzd_sqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
     /* Add to  |  |   | A|   |C |
      * result  |A | x |  | = |  | */
     {
-      packedmatrix *A_last_col = mzd_init_window(A,   0, mmm, mmm, m);
-      packedmatrix *A_last_row = mzd_init_window(A, mmm,   0,   m, mmm);
-      packedmatrix *C_bulk = mzd_init_window(C, 0, 0, mmm, mmm);
+      mzd_t *A_last_col = mzd_init_window(A,   0, mmm, mmm, m);
+      mzd_t *A_last_row = mzd_init_window(A, mmm,   0,   m, mmm);
+      mzd_t *C_bulk = mzd_init_window(C, 0, 0, mmm, mmm);
       mzd_addmul_m4rm(C_bulk, A_last_col, A_last_row, 0);
       mzd_free_window(A_last_col);
       mzd_free_window(A_last_row);
@@ -470,7 +470,7 @@ packedmatrix *_mzd_sqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
 
 
 #ifdef HAVE_OPENMP
-packedmatrix *_mzd_mul_mp_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+mzd_t *_mzd_mul_mp_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   /**
    * \todo make sure not to overwrite crap after ncols and before width*RADIX
    */
@@ -486,7 +486,7 @@ packedmatrix *_mzd_mul_mp_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
        overhead and improves data locality, if you remove it make sure
        there are no speed regressions */
     /* C = _mzd_mul_m4rm(C, A, B, 0, TRUE); */
-    packedmatrix *Cbar = mzd_init(C->nrows, C->ncols);
+    mzd_t *Cbar = mzd_init(C->nrows, C->ncols);
     Cbar = _mzd_mul_m4rm(Cbar, A, B, 0, FALSE);
     mzd_copy(C, Cbar);
     mzd_free(Cbar);
@@ -509,20 +509,20 @@ packedmatrix *_mzd_mul_mp_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   bnr = anc;
   bnc = ((c/RADIX) >> 1) * RADIX;
 
-  packedmatrix *A00 = mzd_init_window(A,   0,   0,   anr,   anc);
-  packedmatrix *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc);
-  packedmatrix *A10 = mzd_init_window(A, anr,   0, 2*anr,   anc);
-  packedmatrix *A11 = mzd_init_window(A, anr, anc, 2*anr, 2*anc);
+  mzd_t *A00 = mzd_init_window(A,   0,   0,   anr,   anc);
+  mzd_t *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc);
+  mzd_t *A10 = mzd_init_window(A, anr,   0, 2*anr,   anc);
+  mzd_t *A11 = mzd_init_window(A, anr, anc, 2*anr, 2*anc);
 
-  packedmatrix *B00 = mzd_init_window(B,   0,   0,   bnr,   bnc);
-  packedmatrix *B01 = mzd_init_window(B,   0, bnc,   bnr, 2*bnc);
-  packedmatrix *B10 = mzd_init_window(B, bnr,   0, 2*bnr,   bnc);
-  packedmatrix *B11 = mzd_init_window(B, bnr, bnc, 2*bnr, 2*bnc);
+  mzd_t *B00 = mzd_init_window(B,   0,   0,   bnr,   bnc);
+  mzd_t *B01 = mzd_init_window(B,   0, bnc,   bnr, 2*bnc);
+  mzd_t *B10 = mzd_init_window(B, bnr,   0, 2*bnr,   bnc);
+  mzd_t *B11 = mzd_init_window(B, bnr, bnc, 2*bnr, 2*bnc);
 
-  packedmatrix *C00 = mzd_init_window(C,   0,   0,   anr,   bnc);
-  packedmatrix *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc);
-  packedmatrix *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
-  packedmatrix *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
+  mzd_t *C00 = mzd_init_window(C,   0,   0,   anr,   bnc);
+  mzd_t *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc);
+  mzd_t *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
+  mzd_t *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
   
 #pragma omp parallel sections
   {
@@ -550,23 +550,23 @@ packedmatrix *_mzd_mul_mp_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
 
   /* deal with rest */
   if (B->ncols > (int)(2*bnc)) {
-    packedmatrix *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
-    packedmatrix *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
+    mzd_t *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
+    mzd_t *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
     _mzd_mul_m4rm(C_last_col, A, B_last_col, 0, TRUE);
     mzd_free_window(B_last_col);
     mzd_free_window(C_last_col);
   }
   if (A->nrows > (int)(2*anr)) {
-    packedmatrix *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
-    packedmatrix *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, C->ncols);
+    mzd_t *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
+    mzd_t *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, C->ncols);
     _mzd_mul_m4rm(C_last_row, A_last_row, B, 0, TRUE);
     mzd_free_window(A_last_row);
     mzd_free_window(C_last_row);
   }
   if (A->ncols > (int)(2*anc)) {
-    packedmatrix *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
-    packedmatrix *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
-    packedmatrix *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2);
+    mzd_t *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
+    mzd_t *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
+    mzd_t *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2);
     mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0);
     mzd_free_window(A_last_col);
     mzd_free_window(B_last_row);
@@ -587,7 +587,7 @@ packedmatrix *_mzd_mul_mp_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
 }
 #endif
 
-packedmatrix *mzd_mul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+mzd_t *mzd_mul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   if(A->ncols != B->nrows)
     m4ri_die("mzd_mul: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
   
@@ -629,7 +629,7 @@ packedmatrix *mzd_mul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cut
   return C;
 }
 
-packedmatrix *_mzd_addmul_even_orig(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+mzd_t *_mzd_addmul_even_orig(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   /**
    * \todo make sure not to overwrite crap after ncols and before width*RADIX
    */
@@ -648,7 +648,7 @@ packedmatrix *_mzd_addmul_even_orig(packedmatrix *C, packedmatrix *A, packedmatr
     /* we copy the matrix first since it is only constant memory
        overhead and improves data locality, if you remove it make sure
        there are no speed regressions */
-    packedmatrix *Cbar = mzd_copy(NULL, C);
+    mzd_t *Cbar = mzd_copy(NULL, C);
     mzd_addmul_m4rm(Cbar, A, B, 0);
     mzd_copy(C, Cbar);
     mzd_free(Cbar);
@@ -671,20 +671,20 @@ packedmatrix *_mzd_addmul_even_orig(packedmatrix *C, packedmatrix *A, packedmatr
   bnr = anc;
   bnc = ((c/RADIX) >> 1) * RADIX;
 
-  packedmatrix *A00 = mzd_init_window(A,   0,   0,   anr,   anc);
-  packedmatrix *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc);
-  packedmatrix *A10 = mzd_init_window(A, anr,   0, 2*anr,   anc);
-  packedmatrix *A11 = mzd_init_window(A, anr, anc, 2*anr, 2*anc);
+  mzd_t *A00 = mzd_init_window(A,   0,   0,   anr,   anc);
+  mzd_t *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc);
+  mzd_t *A10 = mzd_init_window(A, anr,   0, 2*anr,   anc);
+  mzd_t *A11 = mzd_init_window(A, anr, anc, 2*anr, 2*anc);
 
-  packedmatrix *B00 = mzd_init_window(B,   0,   0,   bnr,   bnc);
-  packedmatrix *B01 = mzd_init_window(B,   0, bnc,   bnr, 2*bnc);
-  packedmatrix *B10 = mzd_init_window(B, bnr,   0, 2*bnr,   bnc);
-  packedmatrix *B11 = mzd_init_window(B, bnr, bnc, 2*bnr, 2*bnc);
+  mzd_t *B00 = mzd_init_window(B,   0,   0,   bnr,   bnc);
+  mzd_t *B01 = mzd_init_window(B,   0, bnc,   bnr, 2*bnc);
+  mzd_t *B10 = mzd_init_window(B, bnr,   0, 2*bnr,   bnc);
+  mzd_t *B11 = mzd_init_window(B, bnr, bnc, 2*bnr, 2*bnc);
 
-  packedmatrix *C00 = mzd_init_window(C,   0,   0,   anr,   bnc);
-  packedmatrix *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc);
-  packedmatrix *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
-  packedmatrix *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
+  mzd_t *C00 = mzd_init_window(C,   0,   0,   anr,   bnc);
+  mzd_t *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc);
+  mzd_t *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
+  mzd_t *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
 
   /**
    * \note See Jean-Guillaume Dumas, Clement Pernet, Wei Zhou; "Memory
@@ -693,9 +693,9 @@ packedmatrix *_mzd_addmul_even_orig(packedmatrix *C, packedmatrix *A, packedmatr
    * used operation scheduling.
    */
 
-  packedmatrix *X0 = mzd_init(anr, anc);
-  packedmatrix *X1 = mzd_init(bnr, bnc);
-  packedmatrix *X2 = mzd_init(anr, bnc);
+  mzd_t *X0 = mzd_init(anr, anc);
+  mzd_t *X1 = mzd_init(bnr, bnc);
+  mzd_t *X2 = mzd_init(anr, bnc);
   
   _mzd_add(X0, A10, A11);                  /* 1  S1 = A21 + A22        X1 */
   _mzd_add(X1, B01, B00);                  /* 2  T1 = B12 - B11        X2 */
@@ -728,25 +728,25 @@ packedmatrix *_mzd_addmul_even_orig(packedmatrix *C, packedmatrix *A, packedmatr
 
   /* deal with rest */
   if (B->ncols > 2*bnc) {
-    packedmatrix *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
-    packedmatrix *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
+    mzd_t *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
+    mzd_t *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
     mzd_addmul_m4rm(C_last_col, A, B_last_col, 0);
     mzd_free_window(B_last_col);
     mzd_free_window(C_last_col);
   }
   if (A->nrows > 2*anr) {
-    packedmatrix *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
-    packedmatrix *B_bulk = mzd_init_window(B, 0, 0, B->nrows, 2*bnc);
-    packedmatrix *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, 2*bnc);
+    mzd_t *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
+    mzd_t *B_bulk = mzd_init_window(B, 0, 0, B->nrows, 2*bnc);
+    mzd_t *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, 2*bnc);
     mzd_addmul_m4rm(C_last_row, A_last_row, B_bulk, 0);
     mzd_free_window(A_last_row);
     mzd_free_window(B_bulk);
     mzd_free_window(C_last_row);
   }
   if (A->ncols > 2*anc) {
-    packedmatrix *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
-    packedmatrix *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
-    packedmatrix *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2);
+    mzd_t *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
+    mzd_t *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
+    mzd_t *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2);
     mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0);
     mzd_free_window(A_last_col);
     mzd_free_window(B_last_row);
@@ -770,7 +770,7 @@ packedmatrix *_mzd_addmul_even_orig(packedmatrix *C, packedmatrix *A, packedmatr
   return C;
 }
 
-packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   /**
    * \todo make sure not to overwrite crap after ncols and before width*RADIX
    */
@@ -790,7 +790,7 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
     /* we copy the matrix first since it is only constant memory
        overhead and improves data locality, if you remove it make sure
        there are no speed regressions */
-    packedmatrix *Cbar = mzd_copy(NULL, C);
+    mzd_t *Cbar = mzd_copy(NULL, C);
     mzd_addmul_m4rm(Cbar, A, B, 0);
     mzd_copy(C, Cbar);
     mzd_free(Cbar);
@@ -814,20 +814,20 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   /*         |C |    |A |   |B | 
    * Compute |  | += |  | x |  |  */
   {
-    packedmatrix *A11 = mzd_init_window(A,   0,   0,   mmm,   kkk);
-    packedmatrix *A12 = mzd_init_window(A,   0, kkk,   mmm, 2*kkk);
-    packedmatrix *A21 = mzd_init_window(A, mmm,   0, 2*mmm,   kkk);
-    packedmatrix *A22 = mzd_init_window(A, mmm, kkk, 2*mmm, 2*kkk);
+    mzd_t *A11 = mzd_init_window(A,   0,   0,   mmm,   kkk);
+    mzd_t *A12 = mzd_init_window(A,   0, kkk,   mmm, 2*kkk);
+    mzd_t *A21 = mzd_init_window(A, mmm,   0, 2*mmm,   kkk);
+    mzd_t *A22 = mzd_init_window(A, mmm, kkk, 2*mmm, 2*kkk);
 
-    packedmatrix *B11 = mzd_init_window(B,   0,   0,   kkk,   nnn);
-    packedmatrix *B12 = mzd_init_window(B,   0, nnn,   kkk, 2*nnn);
-    packedmatrix *B21 = mzd_init_window(B, kkk,   0, 2*kkk,   nnn);
-    packedmatrix *B22 = mzd_init_window(B, kkk, nnn, 2*kkk, 2*nnn);
+    mzd_t *B11 = mzd_init_window(B,   0,   0,   kkk,   nnn);
+    mzd_t *B12 = mzd_init_window(B,   0, nnn,   kkk, 2*nnn);
+    mzd_t *B21 = mzd_init_window(B, kkk,   0, 2*kkk,   nnn);
+    mzd_t *B22 = mzd_init_window(B, kkk, nnn, 2*kkk, 2*nnn);
 
-    packedmatrix *C11 = mzd_init_window(C,   0,   0,   mmm,   nnn);
-    packedmatrix *C12 = mzd_init_window(C,   0, nnn,   mmm, 2*nnn);
-    packedmatrix *C21 = mzd_init_window(C, mmm,   0, 2*mmm,   nnn);
-    packedmatrix *C22 = mzd_init_window(C, mmm, nnn, 2*mmm, 2*nnn);
+    mzd_t *C11 = mzd_init_window(C,   0,   0,   mmm,   nnn);
+    mzd_t *C12 = mzd_init_window(C,   0, nnn,   mmm, 2*nnn);
+    mzd_t *C21 = mzd_init_window(C, mmm,   0, 2*mmm,   nnn);
+    mzd_t *C22 = mzd_init_window(C, mmm, nnn, 2*mmm, 2*nnn);
   
     /**
      * \note See Marco Bodrato; "A Strassen-like Matrix Multiplication
@@ -836,9 +836,9 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
      * sequence of operations.
      */
 
-    packedmatrix *S = mzd_init(mmm, kkk);
-    packedmatrix *T = mzd_init(kkk, nnn);
-    packedmatrix *U = mzd_init(mmm, nnn);
+    mzd_t *S = mzd_init(mmm, kkk);
+    mzd_t *T = mzd_init(kkk, nnn);
+    mzd_t *U = mzd_init(mmm, nnn);
 
     _mzd_add(S, A22, A21);                   /* 1  S = A22 - A21       */
     _mzd_add(T, B22, B21);                   /* 2  T = B22 - B21       */
@@ -887,8 +887,8 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   if (n > nnn) {
     /*         | C|    |AA|   | B|
      * Compute | C| += |AA| x | B| */
-    packedmatrix *B_last_col = mzd_init_window(B, 0, nnn, k, n); 
-    packedmatrix *C_last_col = mzd_init_window(C, 0, nnn, m, n);
+    mzd_t *B_last_col = mzd_init_window(B, 0, nnn, k, n); 
+    mzd_t *C_last_col = mzd_init_window(C, 0, nnn, m, n);
     mzd_addmul_m4rm(C_last_col, A, B_last_col, 0);
     mzd_free_window(B_last_col);
     mzd_free_window(C_last_col);
@@ -897,9 +897,9 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   if (m > mmm) {
     /*         |  |    |  |   |B |
      * Compute |C | += |AA| x |B | */
-    packedmatrix *A_last_row = mzd_init_window(A, mmm, 0, m, k);
-    packedmatrix *B_first_col= mzd_init_window(B,   0, 0, k, nnn);
-    packedmatrix *C_last_row = mzd_init_window(C, mmm, 0, m, nnn);
+    mzd_t *A_last_row = mzd_init_window(A, mmm, 0, m, k);
+    mzd_t *B_first_col= mzd_init_window(B,   0, 0, k, nnn);
+    mzd_t *C_last_row = mzd_init_window(C, mmm, 0, m, nnn);
     mzd_addmul_m4rm(C_last_row, A_last_row, B_first_col, 0);
     mzd_free_window(A_last_row);
     mzd_free_window(B_first_col);
@@ -909,9 +909,9 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   if (k > kkk) {
     /* Add to  |  |   | B|   |C |
      * result  |A | x |  | = |  | */
-    packedmatrix *A_last_col = mzd_init_window(A,   0, kkk, mmm, k);
-    packedmatrix *B_last_row = mzd_init_window(B, kkk,   0,   k, nnn);
-    packedmatrix *C_bulk = mzd_init_window(C, 0, 0, mmm, nnn);
+    mzd_t *A_last_col = mzd_init_window(A,   0, kkk, mmm, k);
+    mzd_t *B_last_row = mzd_init_window(B, kkk,   0,   k, nnn);
+    mzd_t *C_bulk = mzd_init_window(C, 0, 0, mmm, nnn);
     mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0);
     mzd_free_window(A_last_col);
     mzd_free_window(B_last_row);
@@ -921,7 +921,7 @@ packedmatrix *_mzd_addmul_even(packedmatrix *C, packedmatrix *A, packedmatrix *B
   return C;
 }
 
-packedmatrix *_mzd_addsqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
+mzd_t *_mzd_addsqr_even(mzd_t *C, mzd_t *A, int cutoff) {
   /**
    * \todo make sure not to overwrite crap after ncols and before width*RADIX
    */
@@ -939,7 +939,7 @@ packedmatrix *_mzd_addsqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
     /* we copy the matrix first since it is only constant memory
        overhead and improves data locality, if you remove it make sure
        there are no speed regressions */
-    packedmatrix *Cbar = mzd_copy(NULL, C);
+    mzd_t *Cbar = mzd_copy(NULL, C);
     mzd_addmul_m4rm(Cbar, A, A, 0);
     mzd_copy(C, Cbar);
     mzd_free(Cbar);
@@ -961,15 +961,15 @@ packedmatrix *_mzd_addsqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
   /*         |C |    |A |   |B | 
    * Compute |  | += |  | x |  |  */
   {
-    packedmatrix *A11 = mzd_init_window(A,   0,   0,   mmm,   mmm);
-    packedmatrix *A12 = mzd_init_window(A,   0, mmm,   mmm, 2*mmm);
-    packedmatrix *A21 = mzd_init_window(A, mmm,   0, 2*mmm,   mmm);
-    packedmatrix *A22 = mzd_init_window(A, mmm, mmm, 2*mmm, 2*mmm);
+    mzd_t *A11 = mzd_init_window(A,   0,   0,   mmm,   mmm);
+    mzd_t *A12 = mzd_init_window(A,   0, mmm,   mmm, 2*mmm);
+    mzd_t *A21 = mzd_init_window(A, mmm,   0, 2*mmm,   mmm);
+    mzd_t *A22 = mzd_init_window(A, mmm, mmm, 2*mmm, 2*mmm);
 
-    packedmatrix *C11 = mzd_init_window(C,   0,   0,   mmm,   mmm);
-    packedmatrix *C12 = mzd_init_window(C,   0, mmm,   mmm, 2*mmm);
-    packedmatrix *C21 = mzd_init_window(C, mmm,   0, 2*mmm,   mmm);
-    packedmatrix *C22 = mzd_init_window(C, mmm, mmm, 2*mmm, 2*mmm);
+    mzd_t *C11 = mzd_init_window(C,   0,   0,   mmm,   mmm);
+    mzd_t *C12 = mzd_init_window(C,   0, mmm,   mmm, 2*mmm);
+    mzd_t *C21 = mzd_init_window(C, mmm,   0, 2*mmm,   mmm);
+    mzd_t *C22 = mzd_init_window(C, mmm, mmm, 2*mmm, 2*mmm);
   
     /**
      * \note See Marco Bodrato; "A Strassen-like Matrix Multiplication
@@ -978,8 +978,8 @@ packedmatrix *_mzd_addsqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
      * sequence of operations.
      */
 
-    packedmatrix *S = mzd_init(mmm, mmm);
-    packedmatrix *U = mzd_init(mmm, mmm);
+    mzd_t *S = mzd_init(mmm, mmm);
+    mzd_t *U = mzd_init(mmm, mmm);
 
     _mzd_add(S, A22, A21);                   /* 1  S = A22 - A21       */
     _mzd_sqr_even(U, S, cutoff);            /* 3  U = S^2             */
@@ -1021,8 +1021,8 @@ packedmatrix *_mzd_addsqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
     /*         | C|    |AA|   | B|
      * Compute | C| += |AA| x | B| */
     {
-      packedmatrix *A_last_col = mzd_init_window(A, 0, mmm, m, m); 
-      packedmatrix *C_last_col = mzd_init_window(C, 0, mmm, m, m);
+      mzd_t *A_last_col = mzd_init_window(A, 0, mmm, m, m); 
+      mzd_t *C_last_col = mzd_init_window(C, 0, mmm, m, m);
       mzd_addmul_m4rm(C_last_col, A, A_last_col, 0);
       mzd_free_window(A_last_col);
       mzd_free_window(C_last_col);
@@ -1030,9 +1030,9 @@ packedmatrix *_mzd_addsqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
     /*         |  |    |  |   |B |
      * Compute |C | += |AA| x |B | */
     {
-      packedmatrix *A_last_row = mzd_init_window(A, mmm, 0, m, m);
-      packedmatrix *A_first_col= mzd_init_window(A,   0, 0, m, mmm);
-      packedmatrix *C_last_row = mzd_init_window(C, mmm, 0, m, mmm);
+      mzd_t *A_last_row = mzd_init_window(A, mmm, 0, m, m);
+      mzd_t *A_first_col= mzd_init_window(A,   0, 0, m, mmm);
+      mzd_t *C_last_row = mzd_init_window(C, mmm, 0, m, mmm);
       mzd_addmul_m4rm(C_last_row, A_last_row, A_first_col, 0);
       mzd_free_window(A_last_row);
       mzd_free_window(A_first_col);
@@ -1041,9 +1041,9 @@ packedmatrix *_mzd_addsqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
     /* Add to  |  |   | B|   |C |
      * result  |A | x |  | = |  | */
     {
-      packedmatrix *A_last_col = mzd_init_window(A,   0, mmm, mmm, m);
-      packedmatrix *A_last_row = mzd_init_window(A, mmm,   0,   m, mmm);
-      packedmatrix *C_bulk = mzd_init_window(C, 0, 0, mmm, mmm);
+      mzd_t *A_last_col = mzd_init_window(A,   0, mmm, mmm, m);
+      mzd_t *A_last_row = mzd_init_window(A, mmm,   0,   m, mmm);
+      mzd_t *C_bulk = mzd_init_window(C, 0, 0, mmm, mmm);
       mzd_addmul_m4rm(C_bulk, A_last_col, A_last_row, 0);
       mzd_free_window(A_last_col);
       mzd_free_window(A_last_row);
@@ -1054,7 +1054,7 @@ packedmatrix *_mzd_addsqr_even(packedmatrix *C, packedmatrix *A, int cutoff) {
   return C;
 }
 
-packedmatrix *_mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff){
+mzd_t *_mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
   /**
    * Assumes that B and C are aligned in the same manner (as in a Schur complement)
    */
@@ -1067,10 +1067,10 @@ packedmatrix *_mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int
       if (B->ncols <= bnc){
 	_mzd_addmul_even_weird  (C,  A, B, cutoff);
       } else {
-	packedmatrix * B0 = mzd_init_window (B, 0, 0, B->nrows, bnc);
-	packedmatrix * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
-	packedmatrix * B1 = mzd_init_window (B, 0, bnc, B->nrows, B->ncols);
-	packedmatrix * C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
+	mzd_t * B0 = mzd_init_window (B, 0, 0, B->nrows, bnc);
+	mzd_t * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
+	mzd_t * B1 = mzd_init_window (B, 0, bnc, B->nrows, B->ncols);
+	mzd_t * C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
 	_mzd_addmul_even_weird  (C0,  A, B0, cutoff);
 	_mzd_addmul_even(C1, A, B1, cutoff);
 	mzd_free_window (B0); mzd_free_window (B1);
@@ -1084,33 +1084,33 @@ packedmatrix *_mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int
       if (A->ncols <= anc)
 	_mzd_addmul_weird_weird (C, A, B, cutoff);
       else {
-	packedmatrix * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
-	packedmatrix * A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
-	packedmatrix * B0  = mzd_init_window (B, 0, 0, anc, B->ncols);
-	packedmatrix * B1  = mzd_init_window (B, anc, 0, B->nrows, B->ncols);
+	mzd_t * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
+	mzd_t * A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
+	mzd_t * B0  = mzd_init_window (B, 0, 0, anc, B->ncols);
+	mzd_t * B1  = mzd_init_window (B, anc, 0, B->nrows, B->ncols);
 	_mzd_addmul_weird_weird (C, A0, B0, cutoff);
 	_mzd_addmul_even_weird  (C, A1, B1, cutoff);
 	mzd_free_window (A0);  mzd_free_window (A1);
 	mzd_free_window (B0);  mzd_free_window (B1);
       }
     } else if (A->ncols <= anc) {
-      packedmatrix * B0 = mzd_init_window (B, 0, 0, B->nrows, bnc);
-      packedmatrix * B1 = mzd_init_window (B, 0, bnc, B->nrows, B->ncols);
-      packedmatrix * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
-      packedmatrix * C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
+      mzd_t * B0 = mzd_init_window (B, 0, 0, B->nrows, bnc);
+      mzd_t * B1 = mzd_init_window (B, 0, bnc, B->nrows, B->ncols);
+      mzd_t * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
+      mzd_t * C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
       _mzd_addmul_weird_weird (C0, A, B0, cutoff);
       _mzd_addmul_weird_even  (C1, A, B1, cutoff);
       mzd_free_window (B0); mzd_free_window (B1);
       mzd_free_window (C0); mzd_free_window (C1);
     } else {
-      packedmatrix * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
-      packedmatrix * A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
-      packedmatrix * B00 = mzd_init_window (B, 0, 0, anc, bnc);
-      packedmatrix * B01 = mzd_init_window (B, 0, bnc, anc, B->ncols);
-      packedmatrix * B10 = mzd_init_window (B, anc, 0, B->nrows, bnc);
-      packedmatrix * B11 = mzd_init_window (B, anc, bnc, B->nrows, B->ncols);
-      packedmatrix * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
-      packedmatrix * C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
+      mzd_t * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
+      mzd_t * A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
+      mzd_t * B00 = mzd_init_window (B, 0, 0, anc, bnc);
+      mzd_t * B01 = mzd_init_window (B, 0, bnc, anc, B->ncols);
+      mzd_t * B10 = mzd_init_window (B, anc, 0, B->nrows, bnc);
+      mzd_t * B11 = mzd_init_window (B, anc, bnc, B->nrows, B->ncols);
+      mzd_t * C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
+      mzd_t * C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
       
       _mzd_addmul_weird_weird (C0, A0, B00, cutoff);
       _mzd_addmul_even_weird  (C0,  A1, B10, cutoff);
@@ -1127,10 +1127,10 @@ packedmatrix *_mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int
     if (A->ncols <= anc){
       _mzd_addmul_weird_even  (C,  A, B, cutoff);
     } else {
-      packedmatrix * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
-      packedmatrix * A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
-      packedmatrix * B0  = mzd_init_window (B, 0, 0, anc, B->ncols);
-      packedmatrix * B1  = mzd_init_window (B, anc, 0, B->nrows, B->ncols);
+      mzd_t * A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
+      mzd_t * A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
+      mzd_t * B0  = mzd_init_window (B, 0, 0, anc, B->ncols);
+      mzd_t * B1  = mzd_init_window (B, anc, 0, B->nrows, B->ncols);
       _mzd_addmul_weird_even (C, A0, B0, cutoff);
       _mzd_addmul_even  (C, A1, B1, cutoff);
       mzd_free_window (A0); mzd_free_window (A1);
@@ -1140,25 +1140,25 @@ packedmatrix *_mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int
   return C;
 }
 
-packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff){
-  packedmatrix * tmp = mzd_init (A->nrows, MIN(RADIX- A->offset, A->ncols));
+mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
+  mzd_t * tmp = mzd_init (A->nrows, MIN(RADIX- A->offset, A->ncols));
   for (size_t i=0; i < A->nrows; ++i){
-    tmp->values [tmp->rowswap[i]] = (A->values [A->rowswap [i]] << A->offset);
+    tmp->rows[i][0] = (A->rows[i][0] << A->offset);
   }
   _mzd_addmul_even (C, tmp, B, cutoff);
   mzd_free(tmp);
   return C;
 }
 
- packedmatrix *_mzd_addmul_even_weird (packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff){
-   packedmatrix * tmp = mzd_init (B->nrows, RADIX);
+ mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
+   mzd_t * tmp = mzd_init (B->nrows, RADIX);
    size_t offset = C->offset;
    size_t cncols = C->ncols;
    C->offset=0;
    C->ncols = RADIX;
    word mask = ((ONE << B->ncols) - 1) << (RADIX-B->offset - B->ncols);
    for (size_t i=0; i < B->nrows; ++i)
-     tmp->values [tmp->rowswap[i]] = B->values [B->rowswap [i]] & mask;
+     tmp->rows[i][0] = B->rows[i][0] & mask;
    _mzd_addmul_even (C, A, tmp, cutoff);
    C->offset=offset;
    C->ncols = cncols;
@@ -1166,13 +1166,13 @@ packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedma
    return C;
 }
 
- packedmatrix* _mzd_addmul_weird_weird (packedmatrix* C, packedmatrix* A, packedmatrix *B, int cutoff){
-   packedmatrix *BT;
+ mzd_t* _mzd_addmul_weird_weird (mzd_t* C, mzd_t* A, mzd_t *B, int cutoff){
+   mzd_t *BT;
    word* temp;
    BT = mzd_init( B->ncols, B->nrows );
    
    for (size_t i = 0; i < B->ncols; ++i) {
-     temp = BT->values + BT->rowswap[i];
+     temp = BT->rows[i];
      for (size_t k = 0; k < B->nrows; k++) {
       *temp |= ((word)mzd_read_bit (B, k, i)) << (RADIX-1-k-A->offset);
 
@@ -1184,10 +1184,10 @@ packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedma
      parity[i] = 0;
    }
    for (size_t i = 0; i < A->nrows; ++i) {
-     word * a = A->values + A->rowswap[i];
-     word * c = C->values + C->rowswap[i];
+     word * a = A->rows[i];
+     word * c = C->rows[i];
      for (size_t k=0; k< C->ncols; k++) {
-       word *b = BT->values + BT->rowswap[k];
+       word *b = BT->rows[k];
        parity[k+C->offset] = (*a) & (*b);
      }
      word par = parity64(parity);
@@ -1197,7 +1197,7 @@ packedmatrix *_mzd_addmul_weird_even (packedmatrix *C, packedmatrix *A, packedma
    return C;
  }
 
- packedmatrix *mzd_addmul(packedmatrix *C, packedmatrix *A, packedmatrix *B, int cutoff) {
+ mzd_t *mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   if(A->ncols != B->nrows)
     m4ri_die("mzd_addmul: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
   

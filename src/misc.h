@@ -435,9 +435,16 @@ static inline void m4ri_mm_free(void *condemned, ...) {
 }
 
 /**
+ * \brief Maximum number of bytes allocated in one malloc() call.
+ */
+
+#define MM_MAX_MALLOC ((1ULL)<<31)
+
+/**
  * \brief Enable memory block cache (default: disabled)
  */
 //#define ENABLE_MMC
+
 
 /**
  * \brief Number of blocks that are cached.
@@ -467,13 +474,13 @@ typedef struct _mm_block {
    */
   void *data;
 
-} mm_block;
+} mmb_t;
 
 /**
  * The actual memory block cache.
  */
 
-extern mm_block m4ri_mmc_cache[M4RI_MMC_NBLOCKS];
+extern mmb_t m4ri_mmc_cache[M4RI_MMC_NBLOCKS];
 
 /**
  * \brief Return handle for locale memory management cache.
@@ -481,7 +488,7 @@ extern mm_block m4ri_mmc_cache[M4RI_MMC_NBLOCKS];
  * \attention Not thread safe.
  */
 
-static inline mm_block *m4ri_mmc_handle(void) {
+static inline mmb_t *m4ri_mmc_handle(void) {
   return m4ri_mmc_cache;
 }
 
@@ -493,7 +500,7 @@ static inline mm_block *m4ri_mmc_handle(void) {
 
 static inline void *m4ri_mmc_malloc(size_t size) {
 #ifdef ENABLE_MMC
-  mm_block *mm = m4ri_mmc_handle();
+  mmb_t *mm = m4ri_mmc_handle();
   if (size <= M4RI_MMC_THRESHOLD) {
     size_t i;
     for (i=0; i<M4RI_MMC_NBLOCKS; i++) {
@@ -536,7 +543,7 @@ static inline void *m4ri_mmc_calloc(size_t size, size_t count) {
 static inline void m4ri_mmc_free(void *condemned, size_t size) {
 #ifdef ENABLE_MMC
   static size_t j = 0;
-  mm_block *mm = m4ri_mmc_handle();
+  mmb_t *mm = m4ri_mmc_handle();
   if (size < M4RI_MMC_THRESHOLD) {
     size_t i;
     for(i=0; i<M4RI_MMC_NBLOCKS; i++) {
@@ -566,7 +573,7 @@ static inline void m4ri_mmc_free(void *condemned, size_t size) {
  */
 
 static inline void m4ri_mmc_cleanup(void) {
-  mm_block *mm = m4ri_mmc_handle();
+  mmb_t *mm = m4ri_mmc_handle();
   size_t i;
   for(i=0; i < M4RI_MMC_NBLOCKS; i++) {
     if (mm[i].size)
@@ -574,6 +581,5 @@ static inline void m4ri_mmc_cleanup(void) {
     mm[i].size = 0;
   }
 }
-
 
 #endif //MISC_H
