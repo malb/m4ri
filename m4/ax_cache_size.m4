@@ -42,8 +42,8 @@ AC_DEFUN([AX_CACHE_SIZE],
   AX_COUNT_CPUS
   AX_CPU_VENDOR
 
-    ax_l1_size=unknown
-    ax_l2_size=unknown
+    ax_l1_size=
+    ax_l2_size=
 
     #Check if the variable is present
     if test -e /sys/devices/system/cpu/cpu0/cache/index0/size; then
@@ -63,33 +63,45 @@ AC_DEFUN([AX_CACHE_SIZE],
       ax_l2_size=$CPU0_L2_CACHE
 
     else
-      if test "x$ax_cpu_vendor" != "xUnknown"; then
+      if test "x$ax_cv_cpu_vendor" != "xUnknown"; then
         #Or use CPUID
-        if test "x$ax_cpu_vendor" != "xIntel"; then
-          AX_GCC_X86_CPUID(0x80000005) # For L1 cache (not available on intel !!!)
-        
-          l1_hexval=$(( 16#`echo $ax_cv_gcc_x86_cpuid_0x80000005 | cut -d ":" -f 4`))
-          ax_l1_size=$(($l1_hexval >> 24))
+	AX_GCC_X86_CPUID(0x80000000)
+	cpu_exthigh=`echo $ax_cv_gcc_x86_cpuid_0x80000000 | cut -d ":" -f 1`
+	if test "x$cpu_exthi" > "x80000004"; then
+          AX_GCC_X86_CPUID(0x80000005) # For L1 cache
+          l1_hexval=`echo $ax_cv_gcc_x86_cpuid_0x80000005 | cut -d ":" -f 4`
+          ax_l1_size=$((0x$l1_hexval >> 24))
         fi
-        
-        AX_GCC_X86_CPUID(0x80000006) # For L2 cache
-        
-        l2_hexval=$(( 16#`echo $ax_cv_gcc_x86_cpuid_0x80000006 | cut -d ":" -f 3`))
-        ax_l2_size=$(($l2_hexval >> 16))
-      else
-        #Or use sysctl
-        if test "`/usr/sbin/sysctl -n hw.l2cachesize 2>/dev/null`"; then
-          ax_l2_size=$((`/usr/sbin/sysctl -n hw.l2cachesize` / 1024))
+
+	if test "x$cpu_exthi" > "x80000005"; then
+          AX_GCC_X86_CPUID(0x80000006) # For L1 cache
+          l2_hexval=`echo $ax_cv_gcc_x86_cpuid_0x80000006 | cut -d ":" -f 3`
+          ax_l2_size=$((0x$l2_hexval >> 16))
         fi
-        
-        if test "`/usr/sbin/sysctl -n hw.l1dcachesize 2>/dev/null`"; then
-          ax_l1_size=$((`/usr/sbin/sysctl -n hw.l1dcachesize` / 1024))
-        fi
-        if test "`/usr/sbin/sysctl -n hw.l1cachesize 2>/dev/null`"; then
-          ax_l1_size=$((`/usr/sbin/sysctl -n hw.l1cachesize` / 1024))
+      fi
+
+      #Or use sysctl
+      sysctl_exe=
+      if test -x /usr/sbin/sysctl ; then
+	sysctl_exe=/usr/sbin/sysctl
+      elif test -x /sbin/sysctl ; then
+	sysctl_exe=/sbin/sysctl
+      fi
+      if test -n "$sysctl_exe"; then
+	if test -z "$ax_l2_size" ; then
+	  ax_l2_size=$((0`$sysctl_exe -n hw.l2cachesize 2>/dev/null` / 1024))
+	fi
+	if test -z "$ax_l1_size" ; then
+	  ax_l1_size=$((0`$sysctl_exe -n hw.l1dcachesize 2>/dev/null` / 1024))
+	fi
+	if test -z "$ax_l1_size" ; then
+	  ax_l1_size=$((0`$sysctl_exe -n hw.l1cachesize 2>/dev/null` / 1024))
         fi
       fi
     fi
+
+    test -z "$ax_l1_size" && ax_l1_size=unknown
+    test -z "$ax_l2_size" && ax_l2_size=unknown
 
     # Keep only digits if there is a unit (ie 1024K -> 1024) and convert in Bytes
     AC_MSG_CHECKING(the L1 cache size)

@@ -64,7 +64,7 @@ AC_DEFUN([AX_GCC_X86_CPUID],
 AC_LANG_PUSH([C])
 AC_CACHE_CHECK(for x86 cpuid $1 output, ax_cv_gcc_x86_cpuid_$1,
  [AC_RUN_IFELSE([AC_LANG_PROGRAM([#include <stdio.h>], [
-     int op = $1, eax, ebx, ecx, edx;
+     int op = $1+0, eax, ebx, ecx, edx;
      FILE *f;
      /* 64-bit code is easy */
      if (sizeof(long) == 8) {

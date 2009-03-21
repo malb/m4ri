@@ -31,9 +31,11 @@ AC_DEFUN([AX_COUNT_CPUS], [
     AC_MSG_CHECKING(the number of available CPUs)
     CPU_COUNT="0"
 
-    #On MacOS
-    if test -x /usr/sbin/sysctl -a `/sbin/sysctl -a 2>/dev/null| grep -c hw.cpu`; then
+    #On MacOS & *BSD
+    if test -x /usr/sbin/sysctl -a -n "$(/usr/sbin/sysctl -n hw.ncpu 2>/dev/null)"; then
         CPU_COUNT=`/usr/sbin/sysctl -n hw.ncpu`
+    elif test -x /sbin/sysctl -a -n "$(/sbin/sysctl -n hw.ncpu 2>/dev/null)"; then
+        CPU_COUNT=`/sbin/sysctl -n hw.ncpu`
     fi
 
     #On Linux
