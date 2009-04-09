@@ -9,6 +9,9 @@
  * Gregory Bard <bard@fordham.edu>: initial author, M4RI algorithm and
    initial implementation.
 
+ * Marco Bodrato: new Strassen-like sequence for matrix multiplication
+   and squaring which improves performance for squaring
+
  * Michael Brickenstein: PolyBoRi author, standard conformity
    contributions for ANSIC, test data, discussion/suggestion of
    performance improvements, fast vector-matrix products.
