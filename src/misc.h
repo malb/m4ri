@@ -463,7 +463,7 @@ static inline void m4ri_mm_free(void *condemned, ...) {
  * \brief Maximum number of bytes allocated in one malloc() call.
  */
 
-#define MM_MAX_MALLOC ((1ULL)<<31)
+#define MM_MAX_MALLOC ((1ULL)<<30)
 
 /**
  * \brief Enable memory block cache (default: disabled)
