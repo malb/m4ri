@@ -57,7 +57,7 @@ mzd_t *mzd_init(size_t r, size_t c) {
     size_t rest = r % max_rows_per_block;
     
     size_t nblocks = (rest == 0) ? r / max_rows_per_block : r / max_rows_per_block + 1;
-    A->blocks = m4ri_mmc_calloc(nblocks + 1, sizeof(mmb_t));
+    A->blocks = (mmb_t*)m4ri_mmc_calloc(nblocks + 1, sizeof(mmb_t));
     for(i=0; i<nblocks-1; i++) {
       A->blocks[i].size = MM_MAX_MALLOC;
       A->blocks[i].data = m4ri_mmc_calloc(MM_MAX_MALLOC,1);

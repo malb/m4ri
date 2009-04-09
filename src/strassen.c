@@ -211,7 +211,7 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   {
     unsigned long mult = RADIX;
     unsigned long width = MIN(MIN(m,n),k)/2;
-    while (width > cutoff) {
+    while (width > (unsigned long)cutoff) {
       width>>=1;
       mult<<=1;
     }
@@ -363,7 +363,7 @@ mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t *A, int cutoff) {
   {
     unsigned long mult = RADIX;
     unsigned long width = m>>1;
-    while (width > cutoff) {
+    while (width > (unsigned long)cutoff) {
       width>>=1;
       mult<<=1;
     }
@@ -801,7 +801,7 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   {
     unsigned long mult = RADIX;
     unsigned long width = MIN(MIN(m,n),k)/2;
-    while (width > cutoff) {
+    while (width > (unsigned long)cutoff) {
       width>>=1;
       mult<<=1;
     }
@@ -950,7 +950,7 @@ mzd_t *_mzd_addsqr_even(mzd_t *C, mzd_t *A, int cutoff) {
   {
     unsigned long mult = RADIX;
     unsigned long width = m>>1;
-    while (width > cutoff) {
+    while (width > (unsigned long)cutoff) {
       width>>=1;
       mult<<=1;
     }
