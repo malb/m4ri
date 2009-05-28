@@ -111,7 +111,6 @@ void _mzd_pluq_solve_left (mzd_t *A, size_t rank,
   /* P L U Q B5 = B1 */
 }
 
-
 void _mzd_solve_left (mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency_check) {
   /**
    *  B is modified in place 
@@ -134,3 +133,34 @@ void _mzd_solve_left (mzd_t *A, mzd_t *B, const int cutoff, const int inconsiste
   mzp_free(Q);
 }
 
+mzd_t *mzd_kernel_left_pluq(mzd_t *A) {
+  mzp_t *P = mzp_init(A->nrows);
+  mzp_t *Q = mzp_init(A->ncols);
+
+  size_t r = mzd_pluq(A, P, Q, 0);
+
+  if (r == A->ncols) {
+    mzp_free(P);
+    mzp_free(Q);
+    return NULL;
+  }
+
+  mzd_t *U = mzd_init_window(A, 0, 0, r, r);
+  mzd_t *B = mzd_init_window(A, 0, r, r, A->ncols);
+
+  mzd_trsm_upper_left(U, B, 0);
+
+  mzd_t *R = mzd_init(A->ncols, A->ncols - r);
+  mzd_t *RU = mzd_init_window(R, 0, 0, r, R->ncols);
+  mzd_copy(RU, B);
+  for(size_t i=0;i<R->ncols;i++) {
+    mzd_write_bit(R, r+i, i, 1);
+  }
+  mzd_apply_p_left_trans(R, Q);
+  mzp_free(P);
+  mzp_free(Q);
+  mzd_free_window(RU);
+  mzd_free_window(U);
+  mzd_free_window(B);
+  return R;
+}

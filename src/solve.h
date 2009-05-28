@@ -119,4 +119,23 @@ void _mzd_pluq_solve_left(mzd_t *A, size_t rank,
  */
 void _mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency_check);
 
+
+/**
+ * \brief Solve X for A X = 0.
+ *
+ * If r is the rank of the nr x nc matrix A, return the nc x (nc-r)
+ * matrix X such that A*X == 0 and that the columns of X are linearly
+ * independent.
+ *
+ * \param A Matrix.
+ *
+ * \wordoffset
+ *
+ * \sa mzd_pluq()
+ *
+ * \return X
+ */
+
+mzd_t *mzd_kernel_left_pluq(mzd_t *A);
+
 #endif // SOLVE_H

@@ -24,6 +24,8 @@
 
 #define SAFECHAR (int)(RADIX+RADIX/3)
 
+void mzd_copy_row_weird_to_even(mzd_t* B, size_t i, const mzd_t* A, size_t j);
+
 mzd_t *mzd_init(size_t r, size_t c) {
   mzd_t *A;
   size_t i,j;
@@ -575,8 +577,16 @@ mzd_t *mzd_copy(mzd_t *N, const mzd_t *P) {
       if (N->nrows < P->nrows || N->ncols < P->ncols)
 	m4ri_die("mzd_copy: Target matrix is too small.");
     }
-    for(size_t i=0; i<P->nrows; i++) {
-      mzd_copy_row(N, i, P, i);
+    if(N->offset == P->offset) {
+      for(size_t i=0; i<P->nrows; i++) {
+        mzd_copy_row(N, i, P, i);
+      }
+    } else if(N->offset == 0) {
+      for(size_t i=0; i<P->nrows; i++) {
+        mzd_copy_row_weird_to_even(N, i, P, i);
+      }
+    } else {
+      m4ri_die("mzd_copy: completely unaligned copy not implemented yet.");
     }
   }
 /*     size_t i, j, p_truerow, n_truerow; */
@@ -984,6 +994,25 @@ int mzd_is_zero(mzd_t *A) {
   }
   
   return !status;
+}
+
+void mzd_copy_row_weird_to_even(mzd_t* B, size_t i, const mzd_t* A, size_t j) {
+  assert(B->offset == 0);
+  assert(B->ncols >= A->ncols);
+
+  word *b = B->rows[j];
+  size_t c;
+
+  size_t rest = A->ncols%RADIX;
+
+  for(c = 0; c+RADIX <= A->ncols; c+=RADIX) {
+    b[c/RADIX] = mzd_read_bits(A, i, c, RADIX);
+  }
+  if (rest) {
+    const word temp = mzd_read_bits(A, i, c, rest);
+    b[c/RADIX] &= LEFT_BITMASK(RADIX-rest);
+    b[c/RADIX] |= temp<<(RADIX-rest);
+  }
 }
 
 void mzd_copy_row(mzd_t* B, size_t i, const mzd_t* A, size_t j) {
