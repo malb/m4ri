@@ -30,16 +30,20 @@ int test_kernel_left_pluq(size_t m, size_t n) {
   mzd_t *Acopy = mzd_copy(NULL, A);
 
   size_t r = mzd_echelonize_m4ri(A, 0, 0);
-  printf("kernel_left m: %4zu, n: %4zu, r: ",m, n, r);
+  printf("kernel_left m: %4zu, n: %4zu, r: %4zu ",m, n, r);
   mzd_free(Acopy);
   Acopy = mzd_copy(NULL, A);
     
   mzd_t *X = mzd_kernel_left_pluq(A, 0);
+  if (X == NULL) {
+    printf("passed\n");
+    mzd_free(A);
+    mzd_free(Acopy);
+    return 0;
+  }
 
   mzd_t *Z = mzd_mul(NULL, Acopy, X, 0);
   
-  int status = 0;
-
   int status = 1 - mzd_is_zero(Z);
   
   if (!status)
@@ -48,6 +52,7 @@ int test_kernel_left_pluq(size_t m, size_t n) {
     printf("FAILED\n");
 
   mzd_free(A);
+  mzd_free(Acopy);
   mzd_free(X);
   mzd_free(Z);
   return status;
