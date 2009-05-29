@@ -40,7 +40,7 @@
  *
  * \param A Input matrix (overwritten).
  * \param B Input matrix, being overwritten by the solution matrix X
- * \param cutoff Minimal dimension for Strassen recursion.
+ * \param cutoff Minimal dimension for Strassen recursion (default: 0).
  * \param inconsistency_check decide wether or not to check for
  *        incosistency (faster without but output not defined if
  *        system is not consistent).
@@ -66,7 +66,7 @@ void mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff,
  * \param P Input row permutation matrix.
  * \param Q Input column permutation matrix.
  * \param B Input matrix, being overwritten by the solution matrix X.
- * \param cutoff Minimal dimension for Strassen recursion.
+ * \param cutoff Minimal dimension for Strassen recursion (default: 0).
  * \param inconsistency_check decide whether or not to check for
  *        incosistency (faster without but output not defined if
  *        system is not consistent).
@@ -92,7 +92,7 @@ void mzd_pluq_solve_left (mzd_t *A, size_t rank,
  * \param P Input row permutation matrix.
  * \param Q Input column permutation matrix.
  * \param B Input matrix, being overwritten by the solution matrix X.
- * \param cutoff Minimal dimension for Strassen recursion.
+ * \param cutoff Minimal dimension for Strassen recursion (default: 0).
  * \param inconsistency_check decide whether or not to check for
  *        incosistency (faster without but output not defined if
  *        system is not consistent).
@@ -112,7 +112,7 @@ void _mzd_pluq_solve_left(mzd_t *A, size_t rank,
  *
  * \param A Input matrix.
  * \param B Input matrix, being overwritten by the solution matrix X.
- * \param cutoff Minimal dimension for Strassen recursion.
+ * \param cutoff Minimal dimension for Strassen recursion (default: 0).
  * \param inconsistency_check decide whether or not to check for
  *        incosistency (faster without but output not defined if
  *        system is not consistent).
@@ -128,6 +128,7 @@ void _mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsisten
  * independent.
  *
  * \param A Matrix.
+ * \param cutoff Minimal dimension for Strassen recursion (default: 0).
  *
  * \wordoffset
  *
@@ -136,6 +137,6 @@ void _mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsisten
  * \return X
  */
 
-mzd_t *mzd_kernel_left_pluq(mzd_t *A);
+mzd_t *mzd_kernel_left_pluq(mzd_t *A, const int cutoff);
 
 #endif // SOLVE_H

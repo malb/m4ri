@@ -2,7 +2,7 @@ CFLAGS=-I.. -std=c99
 LDFLAGS=-L../.libs/ -lm4ri
 DEBUG=-ggdb
 
-TEST_PRGS=test_elimination test_multiplication test_trsm test_lqup test_solve
+TEST_PRGS=test_elimination test_multiplication test_trsm test_lqup test_solve test_kernel
 BENCH_PRGS=bench_elimination \
 	bench_multiplication \
 	bench_lqup \

@@ -12,7 +12,7 @@ pkgincludesub_HEADERS = src/m4ri.h src/brilliantrussian.h src/misc.h src/packedm
 #libm4ri_la_LDFLAGS = -version-info 0:0:0
 libm4ri_la_LDFLAGS = -release 0.0.20090409
 
-check_PROGRAMS=test_multiplication test_elimination test_trsm test_lqup test_solve
+check_PROGRAMS=test_multiplication test_elimination test_trsm test_lqup test_solve test_kernel
 test_multiplication_SOURCES=testsuite/test_multiplication.c
 test_multiplication_LDFLAGS=-lm4ri -lm
 
@@ -28,5 +28,7 @@ test_lqup_LDFLAGS=-lm4ri -lm
 test_solve_SOURCES=testsuite/test_solve.c
 test_solve_LDFLAGS=-lm4ri -lm
 
+test_kernel_SOURCES=testsuite/test_kernel.c
+test_kernel_LDFLAGS=-lm4ri -lm
 
-TESTS = test_multiplication test_elimination test_trsm test_lqup test_solve
+TESTS = test_multiplication test_elimination test_trsm test_lqup test_solve test_kernel

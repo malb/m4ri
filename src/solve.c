@@ -133,11 +133,11 @@ void _mzd_solve_left (mzd_t *A, mzd_t *B, const int cutoff, const int inconsiste
   mzp_free(Q);
 }
 
-mzd_t *mzd_kernel_left_pluq(mzd_t *A) {
+mzd_t *mzd_kernel_left_pluq(mzd_t *A, const int cutoff) {
   mzp_t *P = mzp_init(A->nrows);
   mzp_t *Q = mzp_init(A->ncols);
 
-  size_t r = mzd_pluq(A, P, Q, 0);
+  size_t r = mzd_pluq(A, P, Q, cutoff);
 
   if (r == A->ncols) {
     mzp_free(P);
@@ -148,7 +148,7 @@ mzd_t *mzd_kernel_left_pluq(mzd_t *A) {
   mzd_t *U = mzd_init_window(A, 0, 0, r, r);
   mzd_t *B = mzd_init_window(A, 0, r, r, A->ncols);
 
-  mzd_trsm_upper_left(U, B, 0);
+  mzd_trsm_upper_left(U, B, cutoff);
 
   mzd_t *R = mzd_init(A->ncols, A->ncols - r);
   mzd_t *RU = mzd_init_window(R, 0, 0, r, R->ncols);

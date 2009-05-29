@@ -105,7 +105,6 @@ int main(int argc, char **argv) {
   status += test_pluq_solve_left( 80,  20,  0, 15);
   status += test_pluq_solve_left( 80,  80,  0, 15);
 
-
 /*   status += test_pluq_solve_left (10, 20, 15, 0); */
 /*   status += test_pluq_solve_left (10, 80, 15, 0); */
 /*   status += test_pluq_solve_left (10, 20, 15, 20); */
