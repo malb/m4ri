@@ -378,15 +378,16 @@ void m4ri_fini(void);
 
 /* void *m4ri_mm_calloc( int count, int size ); */
 static inline void *m4ri_mm_calloc( int count, int size ) {
+  void *newthing;
 #ifdef HAVE_OPENMP
 #pragma omp critical
 {
 #endif
 
 #ifdef HAVE_MM_MALLOC
-  void *newthing = _mm_malloc(count*size, 16);
+  newthing = _mm_malloc(count*size, 16);
 #else
-  void *newthing = calloc(count, size);
+  newthing = calloc(count, size);
 #endif
 
 #ifdef HAVE_OPENMP
@@ -414,15 +415,16 @@ static inline void *m4ri_mm_calloc( int count, int size ) {
 
 /* void *m4ri_mm_malloc( int size ); */
 static inline void *m4ri_mm_malloc( int size ) {
+  void *newthing;
 #ifdef HAVE_OPENMP
 #pragma omp critical
 {
 #endif
 
 #ifdef HAVE_MM_MALLOC
-  void *newthing = _mm_malloc(size, 16);
+  newthing = _mm_malloc(size, 16);
 #else
-  void *newthing=malloc( size );
+  newthing = malloc( size );
 #endif  
 #ifdef HAVE_OPENMP
  }
