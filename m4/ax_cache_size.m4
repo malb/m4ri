@@ -89,13 +89,25 @@ AC_DEFUN([AX_CACHE_SIZE],
       fi
       if test -n "$sysctl_exe"; then
 	if test -z "$ax_l2_size" ; then
-	  ax_l2_size=$((`$sysctl_exe -n hw.l2cachesize 2>/dev/null` / 1024))
+          sysctl_out= `$sysctl_exe -n hw.l2cachesize 2>/dev/null`;
+          if test -z "$sysctl_out"; then
+            sysctl_out=0;
+          fi;
+	  ax_l2_size=$(($sysctl_out / 1024))
 	fi
 	if test -z "$ax_l1_size" ; then
-	  ax_l1_size=$((`$sysctl_exe -n hw.l1dcachesize 2>/dev/null` / 1024))
+          sysctl_out= `$sysctl_exe -n hw.l1dcachesize 2>/dev/null`;
+          if test -z "$sysctl_out"; then
+            sysctl_out=0;
+          fi;
+	  ax_l1_size=$(($sysctl_out / 1024))
 	fi
 	if test -z "$ax_l1_size" ; then
-	  ax_l1_size=$((`$sysctl_exe -n hw.l1cachesize 2>/dev/null` / 1024))
+          sysctl_out= `$sysctl_exe -n hw.l1cachesize 2>/dev/null`;
+          if test -z "$sysctl_out"; then
+            sysctl_out=0;
+          fi;
+	  ax_l1_size=$(($sysctl_out / 1024))
         fi
       fi
     fi
