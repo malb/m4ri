@@ -145,6 +145,9 @@ void mzd_process_rows2_pluq(mzd_t *M, size_t startrow, size_t stoprow, size_t st
   }
 
   wide -= 2;
+#ifdef HAVE_OPENMP
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
+#endif
   for(r=startrow; r<stoprow; r++) {
     const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka) ];
     word *t0 = T0->rows[x0] + blocknuma;

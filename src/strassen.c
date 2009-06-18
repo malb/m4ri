@@ -213,7 +213,7 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   }
 
 #ifdef HAVE_OPENMP
-  if (omp_get_max_threads()-omp_get_num_threads() > 0) {
+  if (omp_get_num_threads() <= omp_get_max_threads() - 4) {
     mzd_set_ui(C, 0);
     return _mzd_addmul_mp_even(C, A, B, cutoff);
   }
@@ -536,7 +536,7 @@ mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   mzd_t *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
   mzd_t *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
   
-#pragma omp parallel sections
+#pragma omp parallel sections num_threads(4)
   {
 #pragma omp section
     {
@@ -803,8 +803,9 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   }
 
 #ifdef HAVE_OPENMP
-  if (omp_get_max_threads() - omp_get_num_threads() > 0)
+  if (omp_get_num_threads() <= omp_get_max_threads()-4) {
     return _mzd_addmul_mp_even(C, A, B, cutoff);
+  }
 #endif
 
   /* adjust cutting numbers to work on words */
