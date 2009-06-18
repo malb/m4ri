@@ -213,7 +213,7 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   }
 
 #ifdef HAVE_OPENMP
-  if (omp_get_num_threads() <= omp_get_max_threads() - 4) {
+  if (omp_get_num_threads() < omp_get_max_threads()) {
     mzd_set_ui(C, 0);
     return _mzd_addmul_mp_even(C, A, B, cutoff);
   }
@@ -803,7 +803,7 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   }
 
 #ifdef HAVE_OPENMP
-  if (omp_get_num_threads() <= omp_get_max_threads()-4) {
+  if (omp_get_num_threads() < omp_get_max_threads()) {
     return _mzd_addmul_mp_even(C, A, B, cutoff);
   }
 #endif
