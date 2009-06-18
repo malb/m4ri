@@ -37,7 +37,7 @@ OPENMP SUPPORT
 OpenMP support for parallel multiplication and elimination is enabled
 with the
 
-  --with-openmp 
+  --enable-openmp 
 
 configure switch. If GCC is used to compile the library it is avised
 to use at least GCC 4.3 since earlier versions have problems with

@@ -33,6 +33,11 @@
 #include <omp.h>
 #endif
 
+/**
+ * Simple blockwise product
+ */
+mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
+
 
 mzd_t *_mzd_mul_even_orig(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   size_t a,b,c;
@@ -206,6 +211,12 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
     mzd_free(Cbar);
     return C;
   }
+
+#ifdef HAVE_OPENMP
+  if (omp_get_max_threads()-omp_get_num_threads() > 0)
+    mzd_set_ui(C, 0);
+    return _mzd_addmul_mp_even(C, A, B, cutoff);
+#endif
 
   /* adjust cutting numbers to work on words */
   {
@@ -470,7 +481,7 @@ mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t *A, int cutoff) {
 
 
 #ifdef HAVE_OPENMP
-mzd_t *_mzd_mul_mp_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
+mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   /**
    * \todo make sure not to overwrite crap after ncols and before width*RADIX
    */
@@ -528,22 +539,22 @@ mzd_t *_mzd_mul_mp_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   {
 #pragma omp section
     {
-      _mzd_mul_even(C00, A00, B00, cutoff);
+      _mzd_addmul_even(C00, A00, B00, cutoff);
       _mzd_addmul_even(C00, A01, B10, cutoff);
     }
 #pragma omp section 
     {
-      _mzd_mul_even(C01, A00, B01, cutoff);
+      _mzd_addmul_even(C01, A00, B01, cutoff);
       _mzd_addmul_even(C01, A01, B11, cutoff);
     }
 #pragma omp section
     {
-      _mzd_mul_even(C10, A10, B00, cutoff);
+      _mzd_addmul_even(C10, A10, B00, cutoff);
       _mzd_addmul_even(C10, A11, B10, cutoff);
     }
 #pragma omp section
     {
-      _mzd_mul_even(C11, A10, B01, cutoff);
+      _mzd_addmul_even(C11, A10, B01, cutoff);
       _mzd_addmul_even(C11, A11, B11, cutoff);
     }
   }
@@ -616,16 +627,7 @@ mzd_t *mzd_mul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
     return C;
   }
 
-#ifdef HAVE_OPENMP
-  /* this one isn't optimal */
-  if (omp_get_max_threads() > 1) {
-    C = _mzd_mul_mp_even(C, A, B, cutoff);
-  } else {
-    C = _mzd_mul_even(C, A, B, cutoff);
-  }
-#else
   C = (A==B)?_mzd_sqr_even(C, A, cutoff):_mzd_mul_even(C, A, B, cutoff);
-#endif  
   return C;
 }
 
@@ -796,6 +798,11 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
     mzd_free(Cbar);
     return C;
   }
+
+#ifdef HAVE_OPENMP
+  if (omp_get_max_threads() - omp_get_num_threads() > 0)
+    return _mzd_addmul_mp_even(C, A, B, cutoff);
+#endif
 
   /* adjust cutting numbers to work on words */
   {

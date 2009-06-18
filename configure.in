@@ -66,7 +66,7 @@ esac
 AC_CHECK_HEADER([mm_malloc.h],AC_DEFINE(HAVE_MM_MALLOC,,[Support aligned allocations]),)
 
 # OpenMP support
-AC_ARG_WITH(openmp, [  --with-openmp           add support for OpenMP Parallelism])
+AC_ARG_WITH(openmp, [  --enable-openmp           add support for OpenMP Parallelism])
 if test "x$enable_openmp" = "xyes"; then
    AX_OPENMP()
 fi
