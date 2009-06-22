@@ -967,9 +967,9 @@ int mzd_is_zero(mzd_t *A) {
   size_t nb = A->ncols;
   size_t Aoffset = A->offset;
   size_t nbrest = (nb + Aoffset) % RADIX;
-  int status=0;
+  word status=0;
   if (nb + Aoffset >= RADIX) {
-          // Large A
+    // Large A
     word mask_begin = RIGHT_BITMASK(RADIX-Aoffset);
     if (Aoffset == 0)
       mask_begin = ~mask_begin;
@@ -983,17 +983,15 @@ int mzd_is_zero(mzd_t *A) {
         status |= A->rows[i][A->width - 1] & mask_end;
     }
   } else {
-          // Small A
-    word mask = ((ONE << nb) - 1) ;
-    mask <<= (RADIX-nb-Aoffset);
-
+    // Small A
+    word mask = LEFT_BITMASK(nb);
     size_t i;
     for (i=0; i < mb; ++i) {
-        status |= A->rows[i][0] & mask;
+      status |= A->rows[i][0] & mask;
     }
   }
   
-  return !status;
+  return (int)(!status);
 }
 
 void mzd_copy_row_weird_to_even(mzd_t* B, size_t i, const mzd_t* A, size_t j) {
