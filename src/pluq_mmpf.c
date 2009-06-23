@@ -138,7 +138,7 @@ void mzd_process_rows2_pluq(mzd_t *M, size_t startrow, size_t stoprow, size_t st
   const size_t blockoffset = blocknumb - blocknuma;
   size_t wide = M->width - blocknuma;
 
-  if(wide < 4) {
+  if(wide < 3) {
     mzd_process_rows(M, startrow, stoprow, startcol, ka, T0, L0);
     mzd_process_rows(M, startrow, stoprow, startcol + ka, kb, T1, L1);
     return;
@@ -154,8 +154,6 @@ void mzd_process_rows2_pluq(mzd_t *M, size_t startrow, size_t stoprow, size_t st
     word *m0 = M->rows[r+0] + blocknuma;
     m0[0] ^= t0[0];
     m0[1] ^= t0[1];
-/*     m0[2] ^= t0[2]; */
-/*     m0[3] ^= t0[3]; */
     const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb) ];
     word *t1 = T1->rows[x1] + blocknumb;
     for(size_t i=blockoffset; i<2; i++) {
@@ -176,6 +174,149 @@ void mzd_process_rows2_pluq(mzd_t *M, size_t startrow, size_t stoprow, size_t st
       case 3:    *m0++ ^= *t0++ ^ *t1++;
       case 2:    *m0++ ^= *t0++ ^ *t1++;
       case 1:    *m0++ ^= *t0++ ^ *t1++;
+      } while (--n > 0);
+    }
+  }
+}
+
+void mzd_process_rows3_pluq(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol, int k, mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1, mzd_t *T2, size_t *L2) {
+  size_t r;
+
+  const int rem = k%3;
+  const int ka = k/3 + ((rem>=2) ? 1 : 0);
+  const int kb = k/3 + ((rem>=1) ? 1 : 0);
+  const int kc = k/3;
+  const size_t blocknuma=startcol/RADIX;
+  const size_t blocknumb=(startcol+ka)/RADIX;
+  const size_t blocknumc=(startcol+ka+kb)/RADIX;
+  const size_t blockoffsetb = blocknumb - blocknuma;
+  const size_t blockoffsetc = blocknumc - blocknuma;
+  size_t wide = M->width - blocknuma;
+
+  if(wide < 4) {
+    mzd_process_rows(M, startrow, stoprow, startcol, ka, T0, L0);
+    mzd_process_rows(M, startrow, stoprow, startcol + ka, kb, T1, L1);
+    mzd_process_rows(M, startrow, stoprow, startcol + ka + kb, kc, T2, L2);
+    return;
+  }
+
+  wide -= 3;
+#ifdef HAVE_OPENMP
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
+#endif
+  for(r=startrow; r<stoprow; r++) {
+    const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka) ];
+    word *t0 = T0->rows[x0] + blocknuma;
+    word *m0 = M->rows[r] + blocknuma;
+    m0[0] ^= t0[0];
+    m0[1] ^= t0[1];
+    m0[2] ^= t0[2];
+
+    t0+=3;
+
+    const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb) ];
+    word *t1 = T1->rows[x1] + blocknumb;
+    for(size_t i=blockoffsetb; i<3; i++) {
+      m0[i] ^= t1[i-blockoffsetb];
+    }
+    t1+=3-blockoffsetb;
+
+    const int x2 = L2[ (int)mzd_read_bits(M, r, startcol+ka+kb, kc) ];
+    word *t2 = T2->rows[x2] + blocknumc;
+    for(size_t i=blockoffsetc; i<3; i++) {
+      m0[i] ^= t2[i-blockoffsetc];
+    }
+    t2+=3-blockoffsetc;
+
+    m0+=3;
+
+    register int n = (wide + 7) / 8;
+    switch (wide % 8) {
+    case 0: do { *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 7:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 6:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 5:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 4:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 3:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 2:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      case 1:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
+      } while (--n > 0);
+    }
+  }
+}
+
+void mzd_process_rows4_pluq(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol, int k, mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1, mzd_t *T2, size_t *L2, mzd_t *T3, size_t *L3) {
+  size_t r;
+
+  const int rem = k%4;
+  const int ka = k/4 + ((rem>=3) ? 1 : 0);
+  const int kb = k/4 + ((rem>=2) ? 1 : 0);
+  const int kc = k/4 + ((rem>=1) ? 1 : 0);
+  const int kd = k/4;
+  const size_t blocknuma=startcol/RADIX;
+  const size_t blocknumb=(startcol+ka)/RADIX;
+  const size_t blocknumc=(startcol+ka+kb)/RADIX;
+  const size_t blocknumd=(startcol+ka+kb+kc)/RADIX;
+  const size_t blockoffsetb = blocknumb - blocknuma;
+  const size_t blockoffsetc = blocknumc - blocknuma;
+  const size_t blockoffsetd = blocknumd - blocknuma;
+  size_t wide = M->width - blocknuma;
+
+  if(wide < 5) {
+    mzd_process_rows(M, startrow, stoprow, startcol, ka, T0, L0);
+    mzd_process_rows(M, startrow, stoprow, startcol + ka, kb, T1, L1);
+    mzd_process_rows(M, startrow, stoprow, startcol + ka + kb, kc, T2, L2);
+    mzd_process_rows(M, startrow, stoprow, startcol + ka + kb + kc, kd, T3, L3);
+    return;
+  }
+  wide -= 4;
+#ifdef HAVE_OPENMP
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
+#endif
+  for(r=startrow; r<stoprow; r++) {
+    const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka) ];
+    word *t0 = T0->rows[x0] + blocknuma;
+    word *m0 = M->rows[r] + blocknuma;
+    m0[0] ^= t0[0];
+    m0[1] ^= t0[1];
+    m0[2] ^= t0[2];
+    m0[3] ^= t0[3];
+
+    t0+=4;
+
+    const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb) ];
+    word *t1 = T1->rows[x1] + blocknumb;
+    for(size_t i=blockoffsetb; i<4; i++) {
+      m0[i] ^= t1[i-blockoffsetb];
+    }
+    t1+=4-blockoffsetb;
+
+    const int x2 = L2[ (int)mzd_read_bits(M, r, startcol+ka+kb, kc) ];
+    word *t2 = T2->rows[x2] + blocknumc;
+    for(size_t i=blockoffsetc; i<4; i++) {
+      m0[i] ^= t2[i-blockoffsetc];
+    }
+    t2+=4-blockoffsetc;
+
+    const int x3 = L3[ (int)mzd_read_bits(M, r, startcol+ka+kb+kc, kd) ];
+    word *t3 = T3->rows[x3] + blocknumd;
+    for(size_t i=blockoffsetd; i<4; i++) {
+      m0[i] ^= t3[i-blockoffsetd];
+    }
+    t3+=4-blockoffsetd;
+
+    m0+=4;
+
+    register int n = (wide + 7) / 8;
+    switch (wide % 8) {
+    case 0: do { *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
+      case 7:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
+      case 6:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
+      case 5:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
+      case 4:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
+      case 3:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
+      case 2:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
+      case 1:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
       } while (--n > 0);
     }
   }
@@ -216,10 +357,10 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
 
   if(k == 0) {
     k = m4ri_opt_k(nrows, ncols, 0);
-    if(k>3)
-      k-=2;
+    //if(k>2)
+    //  k-=1;
   }
-  int kk = 2*k;
+  int kk = 4*k;
 
   for(size_t i = 0; i<ncols; i++)
     Q->values[i] = i;
@@ -228,10 +369,14 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
 
   mzd_t *T0 = mzd_init(TWOPOW(k), ncols);
   mzd_t *T1 = mzd_init(TWOPOW(k), ncols);
+  mzd_t *T2 = mzd_init(TWOPOW(k), ncols);
+  mzd_t *T3 = mzd_init(TWOPOW(k), ncols);
   mzd_t *U = mzd_init(kk, ncols);
 
   size_t *L0 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
   size_t *L1 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+  size_t *L2 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+  size_t *L3 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
   size_t *done = (size_t *)m4ri_mm_malloc(kk * sizeof(size_t));
 
   while(curr_pos < MIN(ncols,nrows)) {
@@ -249,8 +394,36 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
 
     /* 2. extract U */
     _mzd_pluq_to_u(U, A, curr_pos, curr_pos, kbar);
-    
-    if(kbar > (size_t)k) {
+
+    if(kbar > (size_t)3*k) {
+      const int rem = kbar%4;
+  
+      const int ka = kbar/4 + ((rem>=3) ? 1 : 0);
+      const int kb = kbar/4 + ((rem>=2) ? 1 : 0);
+      const int kc = kbar/4 + ((rem>=1) ? 1 : 0);
+      const int kd = kbar/4;
+
+      /* 2. generate table T */
+      mzd_make_table_pluq(U, 0, curr_pos, ka, T0, L0);
+      mzd_make_table_pluq(U, 0+ka, curr_pos + ka, kb, T1, L1);
+      mzd_make_table_pluq(U, 0+ka+kb, curr_pos + ka + kb, kc, T2, L2);
+      mzd_make_table_pluq(U, 0+ka+kb+kc, curr_pos + ka + kb + kc, kd, T3, L3);
+      /* 3. use that table to process remaining rows below */
+      mzd_process_rows4_pluq(A, done_row + 1, nrows, curr_pos, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
+      curr_pos += kbar;
+    } else if(kbar > (size_t)2*k) {
+      const int rem = kbar%3;
+      const int ka = kbar/3 + ((rem>=2) ? 1 : 0);
+      const int kb = kbar/3 + ((rem>=1) ? 1 : 0);
+      const int kc = kbar/3;
+      /* 2. generate table T */
+      mzd_make_table_pluq(U, 0, curr_pos, ka, T0, L0);
+      mzd_make_table_pluq(U, 0+ka, curr_pos + ka, kb, T1, L1);
+      mzd_make_table_pluq(U, 0+ka+kb, curr_pos + ka + kb, kc, T2, L2);
+      /* 3. use that table to process remaining rows below */
+      mzd_process_rows3_pluq(A, done_row + 1, nrows, curr_pos, kbar, T0, L0, T1, L1, T2, L2);
+      curr_pos += kbar;
+    } else if(kbar > (size_t)k) {
       const int ka = kbar/2;
       const int kb = kbar - ka;
       /* 2. generate table T */
@@ -290,13 +463,24 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
       if(curr_pos != stop_col)
         break;
     }
+    if (kbar > 0)
+      if (kbar == kk && kk < 4*k)
+        kk = kbar + 1;
+      else
+        kk = kbar;
+    else if(kk>2)
+      kk = kk/2;
   }
 
   mzd_free(U);
   mzd_free(T0);
   mzd_free(T1);
+  mzd_free(T2);
+  mzd_free(T3);
   m4ri_mm_free(L0);
   m4ri_mm_free(L1);
+  m4ri_mm_free(L2);
+  m4ri_mm_free(L3);
   m4ri_mm_free(done);
   return curr_pos;
 }

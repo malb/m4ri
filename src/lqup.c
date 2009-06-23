@@ -39,10 +39,10 @@ size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
   size_t nrows = A->nrows;
   size_t ncols = A->ncols;
 
-  if (ncols <= PLUQ_CUTOFF){
-    /* Base case */
+  if (ncols <= PLUQ_CUTOFF)
     return _mzd_pluq_mmpf(A, P, Q, 0);
-  } else{
+
+  {
     /* Block divide and conquer algorithm */
     
     /*                     n1
