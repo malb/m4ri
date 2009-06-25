@@ -1218,3 +1218,23 @@ double mzd_density(mzd_t *A, int res) {
   }
   return ((double)count)/(total);
 }
+
+
+size_t mzd_first_zero_row(mzd_t *A) {
+  word mask_begin = RIGHT_BITMASK(RADIX-A->offset);
+  word mask_end = LEFT_BITMASK((A->ncols + A->offset)%RADIX);
+  const size_t end = A->width - 1;
+  word *row;
+
+  for(long i = A->nrows - 1; i>=0; i--) {
+    word tmp = 0;
+    row = A->rows[i];
+    tmp |= row[0] & mask_begin;
+    for (size_t j = 1; j < end; ++j)
+      tmp |= row[j];
+    tmp |= row[end] & mask_end;
+    if(tmp)
+      return i+1;
+  }
+  return 0;
+}

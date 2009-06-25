@@ -32,12 +32,25 @@ size_t mzd_pluq (mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
     m4ri_die("mzd_pluq: Permutation P length (%d) must match A nrows (%d)\n",P->length, A->nrows);
   if (Q->length != A->ncols)
     m4ri_die("mzd_pluq: Permutation Q length (%d) must match A ncols (%d)\n",Q->length, A->ncols);
-  return _mzd_pluq(A, P, Q, cutoff);
+  size_t r = _mzd_pluq(A, P, Q, cutoff);
+  return r;
 }
 
 size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
-  size_t nrows = A->nrows;
   size_t ncols = A->ncols;
+
+#if 1  
+  size_t nrows = mzd_first_zero_row(A);
+  for(size_t i=nrows; i<A->nrows; i++)
+    P->values[i] = i;
+  for(size_t i=0; i<A->ncols; i++)
+    Q->values[i] = i;
+  if(!nrows) {
+    return 0;
+  }
+#else
+  size_t nrows = A->nrows;
+#endif
 
   if (ncols <= PLUQ_CUTOFF)
     return _mzd_pluq_mmpf(A, P, Q, 0);
@@ -61,7 +74,10 @@ size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
 
     size_t r1, r2;
     /* First recursive call */
-    r1 = _mzd_pluq(A0, P, Q, cutoff);
+
+    mzp_t *P0 = mzp_init_window(P, 0, nrows);
+    mzp_t *Q0 = mzp_init_window(Q, 0, A0->ncols);
+    r1 = _mzd_pluq(A0, P0, Q0, cutoff);
 
     /*           r1           n1
      *   ------------------------------------------
@@ -81,10 +97,12 @@ size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
 
     if (r1) {
       /* Computation of the Schur complement */
-      mzd_apply_p_left(A1, P);
+      mzd_apply_p_left(A1, P0);
       _mzd_trsm_lower_left(A00, A01, cutoff);
       mzd_addmul(A11, A10, A01, cutoff);
     }
+    mzp_free_window(P0);
+    mzp_free_window(Q0);
 
     /* Second recursive call */
     mzp_t *P2 = mzp_init_window(P, r1, nrows);
@@ -98,39 +116,14 @@ size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
     /* Update P */
     for (i = 0; i < nrows - r1; ++i)
       P2->values[i] += r1;
-
     
     /* Permute the Right side of U to the left */
 
-    /* // fast, buggy solution
-     * // Update A01 
-     * mzd_apply_p_right(A01, Q2);
-     * // Update Q
-     * for (i = 0; i < ncols - n1; ++i)
-     *  Q2->values[i] += n1;
-     * mzp_t * Q2b = mzp_init_window(Q, r1, ncols);
-     * mzd_t* A01b = mzd_init_window (A, 0, r1, r1, ncols);
-     * mzd_t* A11b = mzd_init_window (A, r1, r1, nrows, ncols);
-     * mzd_col_block_rotate (A01b, 0, n1-r1, n1 - r1 + r2, 1);
-     * mzd_col_block_rotate (A11b, 0, n1-r1, n1 - r1 + r2, 1);
-     * // Update Q
-     * mzp_free_window(Q2b);
-     * mzd_free_window(A01b);
-     * mzd_free_window(A11b);
-     * for(i=n1, j=r1; i<n1+r2; i++, j++) {
-     *   Q->values[j] = Q->values[i];
-     *   mzd_col_swap(A, j, i);
-     * }
-     */
-
-    // easy working solution
     /* undo permutation */
     mzd_apply_p_right_trans(A11, Q2);
 
-
     mzp_t *tmp = mzp_init(A->ncols);
     for(i=0, j=n1; j<n1+r2; i++, j++) {
-      //mzd_col_swap(A, r1 + i, n1 + Q2->values[i]);
       tmp->values[r1+i] = Q2->values[i] + n1;
       Q->values[r1+i] = Q2->values[i] + n1;
     }

@@ -888,7 +888,7 @@ int mzd_find_pivot(mzd_t *M, size_t start_row, size_t start_col, size_t *r, size
 
 /**
  * \brief Return the number of nonzero entries divided by nrows *
- * nclos
+ * ncols
  *
  * If res = 0 then 100 samples per row are made, if res > 0 the
  * function takes res sized steps within each row (res = 1 uses every
@@ -899,5 +899,15 @@ int mzd_find_pivot(mzd_t *M, size_t start_row, size_t start_col, size_t *r, size
  */
 
 double mzd_density(mzd_t *A, int res);
+
+/**
+ * \brief Return the first row with all zero entries.
+ *
+ * If no such row can be found returns nrows.
+ *
+ * \param A Matrix
+ */
+
+size_t mzd_first_zero_row(mzd_t *A);
 
 #endif //PACKEDMATRIX_H

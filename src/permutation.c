@@ -58,7 +58,7 @@ void mzd_apply_p_left(mzd_t *A, mzp_t *P) {
   size_t i;
   if(A->ncols == 0)
     return;
-  for (i=0; i<P->length; i++) {
+  for (i=0; i<A->nrows; i++) {
     assert(P->values[i] >= i);
     mzd_row_swap(A, i, P->values[i]);
   }
@@ -68,7 +68,7 @@ void mzd_apply_p_left_trans(mzd_t *A, mzp_t *P) {
   long i;
   if(A->ncols == 0)
     return;
-  for (i=P->length-1; i>=0; i--) {
+  for (i=A->nrows-1; i>=0; i--) {
     assert(P->values[i] >= (size_t)i);
     mzd_row_swap(A, i, P->values[i]);
   }

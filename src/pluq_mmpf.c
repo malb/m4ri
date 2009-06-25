@@ -30,31 +30,28 @@
 #include "brilliantrussian.h"
 #include "grayflex.h"
 
-size_t _mzd_pluq_submatrix(mzd_t *A, size_t start_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done)  {
-  size_t i, j, l, curr_pos;
+size_t _mzd_pluq_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done)  {
+  size_t i, l, curr_pos;
   int found;
 
   for(curr_pos=0; curr_pos < (size_t)k; curr_pos++) {
     found = 0;
     /* search for some pivot */
-    for(j = start_col + curr_pos; j < start_col + k; j++) {
-      for(i = start_row + curr_pos; i < A->nrows; i++) {
-        /* clear before but preserve transformation matrix */
-        for(l = 0; l < curr_pos; l++)
-          if(done[l] < i) {
-            if(mzd_read_bit(A, i, start_col + l))
-              mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
-            done[l] = i; /* encode up to which row we added for l already */
-          }
-        
-	if(mzd_read_bit(A, i, j)) {
-          found = 1;
-          break;
+    for(i = start_row + curr_pos; i < stop_row; i++) {
+      /* clear before but preserve transformation matrix */
+      for(l = 0; l < curr_pos; l++)
+        if(done[l] < i) {
+          if(mzd_read_bit(A, i, start_col + l))
+            mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
+          done[l] = i; /* encode up to which row we added for l already */
         }
-      }
-      if(found)
+        
+      if(mzd_read_bit(A, i, start_col + curr_pos)) {
+        found = 1;
         break;
+      }
     }
+    
     if(!found) {
       return curr_pos;
     }
@@ -64,8 +61,7 @@ size_t _mzd_pluq_submatrix(mzd_t *A, size_t start_row, size_t start_col, int k, 
     mzd_row_swap(A, i, start_row + curr_pos);
 
     //if (j > Q->values[start_col + curr_pos])
-    Q->values[start_col + curr_pos] = j;
-    mzd_col_swap(A, start_col + curr_pos, j);
+    Q->values[start_row + curr_pos] = start_col + curr_pos;
 
     done[curr_pos] = i;
   }
@@ -349,22 +345,22 @@ static inline size_t _max_value(size_t *data, size_t length) {
 /* method of many people factorisation */
 size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
   assert(A->offset == 0);
-  const size_t nrows = A->nrows; 
+  const size_t nrows = A->nrows;//mzd_first_zero_row(A);
   const size_t ncols = A->ncols; 
-  size_t curr_pos = 0;
+  size_t curr_row = 0;
+  size_t curr_col = 0;
   size_t kbar = 0;
   size_t done_row = 0;
 
   if(k == 0) {
     k = m4ri_opt_k(nrows, ncols, 0);
-    //if(k>2)
-    //  k-=1;
   }
   int kk = 4*k;
 
-  for(size_t i = 0; i<ncols; i++)
+  for(size_t i = 0; i<ncols; i++) 
     Q->values[i] = i;
-  for(size_t i = 0; i<nrows; i++)
+
+  for(size_t i = 0; i<A->nrows; i++)
     P->values[i] = i;
 
   mzd_t *T0 = mzd_init(TWOPOW(k), ncols);
@@ -379,21 +375,21 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
   size_t *L3 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
   size_t *done = (size_t *)m4ri_mm_malloc(kk * sizeof(size_t));
 
-  while(curr_pos < MIN(ncols,nrows)) {
-    if(curr_pos + kk > ncols)
-      kk = ncols - curr_pos;
+  while(curr_col < ncols && curr_row < nrows) {
+    if(curr_col + kk > ncols)
+      kk = ncols - curr_col;
 
     /* 1. compute PLUQ factorisation for a kxk submatrix */
-    kbar = _mzd_pluq_submatrix(A, curr_pos, curr_pos, kk, P, Q, done);
+    kbar = _mzd_pluq_submatrix(A, curr_row, nrows, curr_col, kk, P, Q, done);
     /* 1.5. finish submatrix*/
     done_row = _max_value(done, kbar);
-    for(size_t c2=0; c2<kbar && curr_pos + c2 < A->ncols -1; c2++)
+    for(size_t c2=0; c2<kbar && curr_col + c2 < A->ncols -1; c2++)
       for(size_t r2=done[c2]+1; r2<=done_row; r2++)
-        if(mzd_read_bit(A, r2, curr_pos + c2))
-          mzd_row_add_offset(A, r2, curr_pos + c2, curr_pos + c2 + 1);
+        if(mzd_read_bit(A, r2, curr_col + c2))
+          mzd_row_add_offset(A, r2, curr_row + c2, curr_col + c2 + 1);
 
     /* 2. extract U */
-    _mzd_pluq_to_u(U, A, curr_pos, curr_pos, kbar);
+    _mzd_pluq_to_u(U, A, curr_row, curr_col, kbar);
 
     if(kbar > (size_t)3*k) {
       const int rem = kbar%4;
@@ -403,66 +399,81 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
       const int kc = kbar/4 + ((rem>=1) ? 1 : 0);
       const int kd = kbar/4;
 
-      /* 2. generate table T */
-      mzd_make_table_pluq(U, 0, curr_pos, ka, T0, L0);
-      mzd_make_table_pluq(U, 0+ka, curr_pos + ka, kb, T1, L1);
-      mzd_make_table_pluq(U, 0+ka+kb, curr_pos + ka + kb, kc, T2, L2);
-      mzd_make_table_pluq(U, 0+ka+kb+kc, curr_pos + ka + kb + kc, kd, T3, L3);
-      /* 3. use that table to process remaining rows below */
-      mzd_process_rows4_pluq(A, done_row + 1, nrows, curr_pos, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
-      curr_pos += kbar;
+      if (kbar==kk) {
+        /* 2. generate table T */
+        mzd_make_table_pluq(U, 0,          curr_col,          ka, T0, L0);
+        mzd_make_table_pluq(U, 0+ka,       curr_col+ka,       kb, T1, L1);
+        mzd_make_table_pluq(U, 0+ka+kb,    curr_col+ka+kb,    kc, T2, L2);
+        mzd_make_table_pluq(U, 0+ka+kb+kc, curr_col+ka+kb+kc, kd, T3, L3);
+        /* 3. use that table to process remaining rows below */
+        mzd_process_rows4_pluq(A, done_row + 1, nrows, curr_col, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
+      } else {
+        curr_col += 1; 
+      }
+
     } else if(kbar > (size_t)2*k) {
       const int rem = kbar%3;
+
       const int ka = kbar/3 + ((rem>=2) ? 1 : 0);
       const int kb = kbar/3 + ((rem>=1) ? 1 : 0);
       const int kc = kbar/3;
-      /* 2. generate table T */
-      mzd_make_table_pluq(U, 0, curr_pos, ka, T0, L0);
-      mzd_make_table_pluq(U, 0+ka, curr_pos + ka, kb, T1, L1);
-      mzd_make_table_pluq(U, 0+ka+kb, curr_pos + ka + kb, kc, T2, L2);
-      /* 3. use that table to process remaining rows below */
-      mzd_process_rows3_pluq(A, done_row + 1, nrows, curr_pos, kbar, T0, L0, T1, L1, T2, L2);
-      curr_pos += kbar;
+
+      if (kbar==kk) {
+        /* 2. generate table T */
+        mzd_make_table_pluq(U, 0,       curr_col,       ka, T0, L0);
+        mzd_make_table_pluq(U, 0+ka,    curr_col+ka,    kb, T1, L1);
+        mzd_make_table_pluq(U, 0+ka+kb, curr_col+ka+kb, kc, T2, L2);
+        /* 3. use that table to process remaining rows below */
+        mzd_process_rows3_pluq(A, done_row + 1, nrows, curr_col, kbar, T0, L0, T1, L1, T2, L2);
+      } else {
+        curr_col += 1; 
+      }
+
     } else if(kbar > (size_t)k) {
       const int ka = kbar/2;
       const int kb = kbar - ka;
-      /* 2. generate table T */
-      mzd_make_table_pluq(U, 0, curr_pos, ka, T0, L0);
-      mzd_make_table_pluq(U, 0+ka, curr_pos + ka, kb, T1, L1);
-      /* 3. use that table to process remaining rows below */
-      mzd_process_rows2_pluq(A, done_row + 1, nrows, curr_pos, kbar, T0, L0, T1, L1);
-      curr_pos += kbar;
-    } else if(kbar > 0) {
-      /* 2. generate table T */
-      mzd_make_table_pluq(U, 0, curr_pos, kbar, T0, L0);
-      /* 3. use that table to process remaining rows below */
-      mzd_process_rows(A, done_row + 1, nrows, curr_pos, kbar, T0, L0);
-      curr_pos += kbar;
-    } else {
-      /* we have at least kk columns which are all zero! */
-      int found = 0;
-      size_t stop_col = curr_pos + kk;
-      while(curr_pos < stop_col) {
-        size_t i = curr_pos;
-        size_t j = curr_pos;
-        found = mzd_find_pivot(A, curr_pos, curr_pos, &i, &j);
-        if(found) {
-          P->values[curr_pos] = i;
-          Q->values[curr_pos] = j;
-          mzd_row_swap(A, curr_pos, i);
-          mzd_col_swap(A, curr_pos, j);
-          for(size_t l = i+1; l<A->nrows; l++)
-            if(mzd_read_bit(A, l, curr_pos))
-              mzd_row_add_offset(A, l, curr_pos, curr_pos + 1);
-          
-          curr_pos++;
-        } else {
-          break;
-        }
+
+      if(kbar==kk) {
+        /* 2. generate table T */
+        mzd_make_table_pluq(U, 0,    curr_col,    ka, T0, L0);
+        mzd_make_table_pluq(U, 0+ka, curr_col+ka, kb, T1, L1);
+        /* 3. use that table to process remaining rows below */
+        mzd_process_rows2_pluq(A, done_row + 1, nrows, curr_col, kbar, T0, L0, T1, L1);
+      } else {
+        curr_col += 1; 
       }
-      if(curr_pos != stop_col)
+
+    } else if(kbar > 0) {
+
+      if(kbar==kk) {
+        /* 2. generate table T */
+        mzd_make_table_pluq(U, 0, curr_col, kbar, T0, L0);
+        /* 3. use that table to process remaining rows below */
+        mzd_process_rows(A, done_row + 1, nrows, curr_col, kbar, T0, L0);
+      } else {
+        curr_col += 1; 
+      }
+
+    } else {
+      curr_col += 1;
+      size_t i = curr_row;
+      size_t j = curr_col;
+      int found = mzd_find_pivot(A, curr_row, curr_col, &i, &j);
+      if(found) {
+        P->values[curr_row] = i;
+        Q->values[curr_row] = j;
+        mzd_row_swap(A, curr_row, i);
+        for(size_t l = curr_row+1; l<nrows; l++)
+          if(mzd_read_bit(A, l, j))
+            mzd_row_add_offset(A, l, curr_row, j + 1);
+        curr_col = j + 1;
+        curr_row++;
+      } else {
         break;
+      }
     }
+    curr_col += kbar;
+    curr_row += kbar;
     if (kbar > 0)
       if (kbar == kk && kk < 4*k)
         kk = kbar + 1;
@@ -471,6 +482,8 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
     else if(kk>2)
       kk = kk/2;
   }
+
+  mzd_apply_p_right(A,Q);
 
   mzd_free(U);
   mzd_free(T0);
@@ -482,5 +495,5 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
   m4ri_mm_free(L2);
   m4ri_mm_free(L3);
   m4ri_mm_free(done);
-  return curr_pos;
+  return curr_row;
 }

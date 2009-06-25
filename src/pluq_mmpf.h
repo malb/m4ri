@@ -60,16 +60,17 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
  * far a particular row was already added.
  *
  * \param A Matrix.
- * \param r Row Offset.
- * \param c Column Offset.
+ * \param start_row Row Offset.
+ * \param stop_row Up to which row the matrix should be processed (exclusive).
+ * \param start_col Column Offset.
  * \param k Size of Gray code tables.
  * \param P Preallocated row permutation.
  * \param Q Preallocated column permutation.
- * \param todo Preallocated temporary buffer.
+ * \param done Preallocated temporary buffer.
  *
  * \retval kbar Maximum k for which a pivot could be found.
  */
 
-size_t _mzd_pluq_submatrix(mzd_t *A, size_t r, size_t c, int k, mzp_t *P, mzp_t *Q, size_t *todo);
+size_t _mzd_pluq_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done);
 
 #endif //PLUQ_MMPF_H
