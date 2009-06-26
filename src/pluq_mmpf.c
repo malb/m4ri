@@ -482,15 +482,24 @@ size_t _mzd_lqup_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
     else if(kk>2)
       kk = kk/2;
   }
+
+/*   printf("\nBefore\n"); */
+/*   mzd_print(A); */
   /* Now compressing L*/
   for (size_t j = 0; j<curr_row; ++j){
     if (Q->values[j]>j) {
       // To be optimized by a copy_row function
-      mzd_col_swap_in_rows (A,Q->values[j], j, j, A->nrows);
-      for(size_t i=j; i<A->nrows; i++)
-	mzd_write_bit(A,i,Q->values[j],0);
+      mzd_col_swap_in_rows (A,Q->values[j], j, j, curr_row);
+      //for(size_t i=j; i<A->nrows; i++)
+      //mzd_write_bit(A,i,Q->values[j],0);
     }
   }
+  mzp_t *Qbar = mzp_init_window(Q,0,curr_row);
+  mzd_apply_p_right_trans_even_capped(A, Qbar, curr_row);
+  mzp_free_window(Qbar);
+/*   printf("\nAfter"); */
+/*   mzd_print(A); */
+/*   printf("\n"); */
 
   mzd_free(U);
   mzd_free(T0);

@@ -59,14 +59,14 @@ mzp_t *mzp_init(size_t length);
 /**
  * Free a mzp_t.
  * 
- * \param P Mzp_T to free.
+ * \param P Permutation to free.
  */
 
 void mzp_free(mzp_t *P);
 
 
 /**
- * \brief Create a window/view into the mzp_t matrix P.
+ * \brief Create a window/view into the permutation P.
  *
  * Use mzp_free_mzp_t_window() to free the window.
  *
@@ -79,20 +79,20 @@ void mzp_free(mzp_t *P);
 mzp_t *mzp_init_window(mzp_t* P, size_t begin, size_t end);
 
 /**
- * \brief Free a mzp_t matrix window created with
+ * \brief Free a permutation window created with
  * mzp_init_mzp_t_window().
  * 
- * \param condemned Mzp_T Matrix
+ * \param condemned Permutation Matrix
  */
 
 void mzp_free_window(mzp_t* condemned);
 
 /**
- * \brief Set the mzp_t P to the identity mzp_t. The only
+ * \brief Set the permutation P to the identity permutation. The only
  * allowed value is 1.
  *
  *
- * \param P Mzp_T
+ * \param P Permutation
  * \param value 1
  *
  * \note This interface was chosen to be similar to mzd_set_ui().
@@ -102,37 +102,77 @@ void mzp_set_ui(mzp_t *P, unsigned int value);
 
 
 /**
- * Apply the mzp_t P to A from the left.
+ * Apply the permutation P to A from the left.
  *
- * This is equivalent to row swaps walking from length-1 to 0.
+ * This is equivalent to row swaps walking from 0 to length-1.
  *
  * \param A Matrix.
- * \param P Mzp_T.
+ * \param P Permutation.
  */
 
 void mzd_apply_p_left(mzd_t *A, mzp_t *P);
 
 /**
- * Apply the mzp_t P to A from the left but transpose P before.
+ * Apply the permutation P to A from the left but transpose P before.
  *
- * This is equivalent to row swaps walking from 0 to length-1.
+ * This is equivalent to row swaps walking from length-1 to 0.
  *
  * \param A Matrix.
- * \param P Mzp_T.
+ * \param P Permutation.
  */
 
 void mzd_apply_p_left_trans(mzd_t *A, mzp_t *P);
 
 /**
- * Apply the mzp_t P to A from the right.
+ * Apply the permutation P to A from the right.
  *
  * This is equivalent to column swaps walking from length-1 to 0.
  *
  * \param A Matrix.
- * \param P Mzp_T.
+ * \param P Permutation.
  */
 
 void mzd_apply_p_right(mzd_t *A, mzp_t *P);
+
+/**
+ * Apply the permutation P to A from the right but transpose P before.
+ *
+ * This is equivalent to column swaps walking from 0 to length-1.
+ *
+ * \param A Matrix.
+ * \param P Permutation.
+ */
+
+void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
+
+
+/**
+ * Apply the permutation P to A from the right starting at start_row.
+ *
+ * This is equivalent to column swaps walking from length-1 to 0.
+ *
+ * \param A Matrix.
+ * \param P Permutation.
+ * \param start_row Start swapping at this row.
+ *
+ * \wordoffset
+ */
+
+void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t *P, size_t start_row);
+
+/**
+ * Apply the permutation P^T to A from the right starting at start_row.
+ *
+ * This is equivalent to column swaps walking from 0 to length-1.
+ *
+ * \param A Matrix.
+ * \param P Permutation.
+ * \param start_row Start swapping at this row.
+ *
+ * \wordoffset
+ */
+
+void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t *P, size_t start_row);
 
 /**
  * Apply the mzp_t P to A from the right but transpose P before.
@@ -140,45 +180,45 @@ void mzd_apply_p_right(mzd_t *A, mzp_t *P);
  * This is equivalent to column swaps walking from 0 to length-1.
  *
  * \param A Matrix.
- * \param P Mzp_T.
+ * \param P Permutation.
  */
 
 void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
 
 
-
 /**
- * Apply the mzp_t P to A from the right, but only on the lower triangular
- * part of the matrix A. 
+ * Apply the permutation P to A from the right, but only on the lower
+ * triangular part of the matrix A.
  *
- * This is equivalent to column swaps walking from 0 to length-1.
+ * This is equivalent to column swaps walking from length-1 to 0.
  *
  * \param A Matrix.
- * \param P Mzp_T.
+ * \param P Permutation.
+ * \param rank a column where to stop.
  */
-void  mzd_apply_p_right_tri (mzd_t * A, mzp_t * Q);
+void  mzd_apply_p_right_tri(mzd_t * A, mzp_t * Q, size_t rank);
 
-/**
- * Rotate zero columns to the end.
- *
- * Given a matrix M with zero columns from zs up to ze (exclusive) and
- * nonzero columns from ze to de (excluse) with zs < ze < de rotate
- * the zero columns to the end such that the the nonzero block comes
- * before the zero block.
- *
- * \param M Matrix.
- * \param zs Start index of the zero columns.
- * \param ze End index of the zero columns (exclusive).
- * \param de End index of the nonzero columns (exclusive).
- *
- */
+/* /\** */
+/*  * Rotate zero columns to the end. */
+/*  * */
+/*  * Given a matrix M with zero columns from zs up to ze (exclusive) and */
+/*  * nonzero columns from ze to de (excluse) with zs < ze < de rotate */
+/*  * the zero columns to the end such that the the nonzero block comes */
+/*  * before the zero block. */
+/*  * */
+/*  * \param M Matrix. */
+/*  * \param zs Start index of the zero columns. */
+/*  * \param ze End index of the zero columns (exclusive). */
+/*  * \param de End index of the nonzero columns (exclusive). */
+/*  * */
+/*  *\/ */
 
-void mzd_col_block_rotate(mzd_t *M, size_t zs, size_t ze, size_t de) ;
+/* void mzd_col_block_rotate(mzd_t *M, size_t zs, size_t ze, size_t de) ; */
 
 /**
  * Print the mzp_t P
  *
- * \param P Mzp_T.
+ * \param P Permutation.
  */
 
 void mzp_print(mzp_t *P);

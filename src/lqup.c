@@ -47,14 +47,14 @@ size_t mzd_pluq (mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
 
 size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
   size_t r  = _mzd_lqup(A,P,Q,cutoff);
-  mzd_apply_p_right_tri (A,Q);
+  mzd_apply_p_right_tri(A, Q, r);
   return r;
 }
 
 size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
   size_t ncols = A->ncols;
 
-#if 1  
+#if 1
   size_t nrows = mzd_first_zero_row(A);
   for(size_t i=nrows; i<A->nrows; i++)
     P->values[i] = i;
@@ -82,7 +82,7 @@ size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
      *   ------------------------------------------
      */
 
-    size_t i, j,l;
+    size_t i, j;
     size_t n1 = (((ncols - 1) / RADIX + 1) >> 1) * RADIX;
     mzd_t *A0  = mzd_init_window(A,  0,  0, nrows,    n1);
     mzd_t *A1  = mzd_init_window(A,  0, n1, nrows, ncols);
@@ -155,8 +155,6 @@ size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
     if (r1 < n1){
       for (i=r1,j=n1;i<r1+r2;i++,j++){
 	mzd_col_swap_in_rows (A, i, j, i, A->nrows);
-	for(l=i; l<A->nrows; l++)
-	  mzd_write_bit(A,l,j,0);
       }
     }
 
@@ -270,8 +268,6 @@ size_t _mzd_lqup_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
     if (Q->values[j]>j){
       // To be optimized by a copy_row function
       mzd_col_swap_in_rows (A,Q->values[j], j, j, A->nrows);
-      for(i=j; i<A->nrows; i++)
-	mzd_write_bit(A,i,Q->values[j],0);
     }
   }
 
