@@ -39,7 +39,7 @@
  * Crossover point for PLUQ factorization.
  */
 
-#define PLUQ_CUTOFF 2048
+#define PLUQ_CUTOFF 64
 
 /**
  * \brief PLUQ matrix decomposition.
@@ -47,7 +47,7 @@
  * Computes the transposed PLUQ matrix decomposition using a block
  * recursive algorithm.
  *
- * If (P,L,U,Q) satisfy PLUQ = A, it returns (P^T, L, U, Q^T).
+ * If (P,L,U,Q) satisfy PLUQ = A, it returns (P, L, U, Q^T).
  *
  * P and Q must be preallocated but they don't have to be
  * identity permutations. If cutoff is zero a value is chosen
@@ -62,7 +62,7 @@
  *
  * \param A Input m x n matrix
  * \param P Output row permutation of length m
- * \param Q Output column permutation matrix of length n
+ * \param Qt Output column permutation matrix of length n
  * \param cutoff Minimal dimension for Strassen recursion.
  *
  * \sa _mzd_pluq() _mzd_pluq_mmpf() mzd_echelonize_pluq()
@@ -72,7 +72,38 @@
  * \return Rank of A.
  */
 
-size_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t * Q, const int cutoff);
+size_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t * Qt, const int cutoff);
+
+
+/**
+ * \brief LQUP matrix decomposition.
+ *
+ * Computes the transposed LQUP matrix decomposition using a block
+ * recursive algorithm.
+ *
+ * If (L,Q,U,P) satisfy LQUP = A^T, it returns (L, Q^T, U, P).
+ *
+ * P and Qt must be preallocated but they don't have to be
+ * identity permutations. If cutoff is zero a value is chosen
+ * automatically. It is recommended to set cutoff to zero for most
+ * applications.
+ *
+ * This is the wrapper function including bounds checks. See
+ * _mzd_lqup() for implementation details.
+ *
+ * \param A Input m x n matrix
+ * \param P Output row permutation of length m
+ * \param Qt Output column permutation matrix of length n
+ * \param cutoff Minimal dimension for Strassen recursion.
+ *
+ * \sa _mzd_lqup() _mzd_pluq() _mzd_pluq_mmpf() mzd_echelonize_pluq()
+ *
+ * \wordoffset
+ *
+ * \return Rank of A.
+ */
+
+size_t mzd_lqup(mzd_t *A, mzp_t *P, mzp_t * Q, const int cutoff);
 
 /**
  * \brief PLUQ matrix decomposition.
@@ -93,6 +124,24 @@ size_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t * Q, const int cutoff);
 size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff);
 
 /**
+ * \brief LQUP matrix decomposition.
+ *
+ * See mzd_lqup() for details.
+ *
+ * \param A Input matrix
+ * \param P Output row mzp_t matrix
+ * \param Qt Output column mzp_t matrix
+ * \param cutoff Minimal dimension for Strassen recursion.
+ *
+ * \sa mzd_lqup()
+ *
+ * \wordoffset
+ * \return Rank of A.
+ */
+
+size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Qt, const int cutoff);
+
+/**
  * \brief PLUQ matrix decomposition (naive base case).
  *
  * See mzd_pluq() for details.
@@ -108,6 +157,23 @@ size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff);
  */
 
 size_t _mzd_pluq_naive(mzd_t *A, mzp_t * P, mzp_t * Q);
+
+/**
+ * \brief LQUP matrix decomposition (naive base case).
+ *
+ * See mzd_lqup() for details.
+ * 
+ * \param A Input matrix
+ * \param P Output row mzp_t matrix
+ * \param Qt Output column mzp_t matrix
+ *
+ * \sa mzd_lqup()
+ *
+ * \wordoffset
+ * \return Rank of A.
+ */
+
+size_t _mzd_lqup_naive(mzd_t *A, mzp_t *P, mzp_t *Qt);
 
 /**
  * \brief (Reduced) row echelon form using PLUQ factorisation.

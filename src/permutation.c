@@ -114,7 +114,7 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t *B, size_t *perm
 /**
  * Implements both apply_p_right and apply_p_right_trans.
  */
-void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, int trans) {
+void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, int notrans) {
   assert(A->offset = 0);
   const size_t length = MIN(P->length,A->ncols);
   const size_t width = A->width;
@@ -130,7 +130,7 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, int trans) {
   for(size_t i=0; i<A->ncols; i++)
     permutation[i] = i;
 
-  if (!trans) {
+  if (!notrans) {
     for(size_t i=0; i<length; i++) {
       size_t t = permutation[i];
       permutation[i] = permutation[P->values[i]];
@@ -176,7 +176,7 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, int trans) {
   mzd_free(B);
 }
 
-void _mzd_apply_p_right(mzd_t *A, mzp_t *P) {
+void _mzd_apply_p_right_trans(mzd_t *A, mzp_t *P) {
   size_t i;
   if(A->nrows == 0)
     return;
@@ -195,7 +195,7 @@ void _mzd_apply_p_right(mzd_t *A, mzp_t *P) {
 /*   } */
 }
 
-void _mzd_apply_p_right_trans(mzd_t *A, mzp_t *P) {
+void _mzd_apply_p_right(mzd_t *A, mzp_t *P) {
   int i;
   if(A->nrows == 0)
     return;
@@ -215,77 +215,67 @@ void _mzd_apply_p_right_trans(mzd_t *A, mzp_t *P) {
 }
 
 
-void mzd_apply_p_right(mzd_t *A, mzp_t *P) {
+void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P) {
   if(!A->nrows)
     return;
-  if(A->offset) {
-    _mzd_apply_p_right(A,P);
+  if(1/*A->offset*/) {
+    _mzd_apply_p_right_trans(A,P);
     return;
   }
   _mzd_apply_p_right_even(A, P, 0); 
 }
 
-void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P) {
+void mzd_apply_p_right(mzd_t *A, mzp_t *P) {
   if(!A->nrows)
     return;
-  if(A->offset) {
-    _mzd_apply_p_right_trans(A,P);
+  if(1/*A->offset*/) {
+    _mzd_apply_p_right(A,P);
     return;
   }
   _mzd_apply_p_right_even(A, P, 1); 
 }
 
 
-void mzd_col_block_rotate(mzd_t *M, size_t zs, size_t ze, size_t de, int copy) {
+void mzd_col_block_rotate(mzd_t *M, size_t zs, size_t ze, size_t de) {
   size_t i,j;
-
   const size_t ds = ze;
-  const size_t ld_f = (de - ze)/RADIX;
-  const size_t ld_r = (de - ds)%RADIX;
-
+/*   const size_t ld_f = (de - ds)/RADIX; */
+/*   const size_t ld_r = (de - ds)%RADIX; */
+  
   const size_t lz_f = (ze - zs)/RADIX;
   const size_t lz_r = (ze - zs)%RADIX;
 
-  word *data = (word*)m4ri_mm_calloc(DIV_CEIL(de-ze, RADIX), sizeof(word));
-  word *begin = (word*)m4ri_mm_calloc(DIV_CEIL(ze-zs, RADIX), sizeof(word));
+  const size_t le_f = (M->ncols - de)/RADIX;
+  const size_t le_r = (M->ncols - de)%RADIX;
 
+  size_t n1 = ze;
+  size_t r1 = zs;
+  size_t r2 = de - ds;
+  
   for(i=0; i<M->nrows; i++) {
     
-    for(j=0; j < ld_f; j++) /* copy out */
-      data[j] = mzd_read_bits(M, i, ds + j*RADIX, RADIX);
-    if (ld_r)
-      data[ld_f] = mzd_read_bits(M, i, ds + ld_f*RADIX, ld_r);
-
-    for(j=0; j < lz_f; j++) /* copy out */
-      begin[j] = mzd_read_bits(M, i, zs + j*RADIX, RADIX);
-    if (lz_r)
-      begin[lz_f] = mzd_read_bits(M, i, zs + lz_f*RADIX, lz_r);
+/*     for(j=0; j < i; j++) /\* copy out *\/ */
+/*       data->rows[0][j] = M->rows[i][j]; */
 
     /* write */
+    size_t im = (i+1<r2)?i+1:r2;
+    size_t ld_f = im / RADIX;
+    size_t ld_r = im % RADIX;
     for(j=0; j<ld_f; j++) {
       mzd_clear_bits(M, i, zs + j*RADIX, RADIX);
-      mzd_xor_bits(M, i, zs + j*RADIX, RADIX, data[j]);
+      mzd_xor_bits(M, i, zs + j*RADIX, RADIX, mzd_read_bits(M,i,ds+j*RADIX,RADIX));
     }
     if(ld_r) {
       mzd_clear_bits(M, i, zs + ld_f*RADIX, ld_r);
-      mzd_xor_bits(M, i, zs + ld_f*RADIX, ld_r, data[ld_f]);
+      mzd_xor_bits(M, i, zs + ld_f*RADIX, ld_r, mzd_read_bits(M,i,ds+ld_f*RADIX,ld_r));
     }
-    
-    if (copy) {
-      /* zero rest */
-      for(j=0; j<lz_f; j++) {
-        mzd_clear_bits(M, i, zs + (de - ds) + j*RADIX, RADIX);
-        mzd_xor_bits(M, i, zs + (de - ds) + j*RADIX, RADIX, begin[j]);
-      }
-      if(lz_r) {
-        mzd_clear_bits(M, i, zs + (de - ds) + lz_f*RADIX, lz_r);
-        mzd_xor_bits(M, i, zs + (de - ds) + lz_f*RADIX, lz_r, begin[lz_f]);
-      }
-    }
+    //mzd_write_bit(M,i,i+r1,1);
+
+    /* Placing zeros */
+   for (j = r1+im; j<n1+im; ++j)
+     mzd_write_bit(M,i,j,0);
   }
-  
-  m4ri_mm_free(data);
-  m4ri_mm_free(begin);
+  // mzd_free(data);
 }
 
 void mzp_print(mzp_t *P) {
@@ -294,4 +284,16 @@ void mzp_print(mzp_t *P) {
     printf("%zu ",P->values[i]);
   }
   printf("]");
+}
+
+void  mzd_apply_p_right_tri (mzd_t * A, mzp_t * P){
+  /* To be optimized */
+  size_t i;
+  assert(P->length==A->ncols);
+  for (i =0 ; i<P->length; ++i){
+      assert(P->values[i] >= i);
+      if (P->values[i] > i){
+	mzd_col_swap_in_rows(A, i, P->values[i], 0,  i);
+      }
+  }
 }

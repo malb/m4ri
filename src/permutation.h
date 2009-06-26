@@ -145,6 +145,19 @@ void mzd_apply_p_right(mzd_t *A, mzp_t *P);
 
 void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
 
+
+
+/**
+ * Apply the mzp_t P to A from the right, but only on the lower triangular
+ * part of the matrix A. 
+ *
+ * This is equivalent to column swaps walking from 0 to length-1.
+ *
+ * \param A Matrix.
+ * \param P Mzp_T.
+ */
+void  mzd_apply_p_right_tri (mzd_t * A, mzp_t * Q);
+
 /**
  * Rotate zero columns to the end.
  *
@@ -157,11 +170,10 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
  * \param zs Start index of the zero columns.
  * \param ze End index of the zero columns (exclusive).
  * \param de End index of the nonzero columns (exclusive).
- * \param zero_out actually write zero to the end.
  *
  */
 
-void mzd_col_block_rotate(mzd_t *M, size_t zs, size_t ze, size_t de, int zero_out);
+void mzd_col_block_rotate(mzd_t *M, size_t zs, size_t ze, size_t de) ;
 
 /**
  * Print the mzp_t P
