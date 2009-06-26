@@ -129,7 +129,6 @@ int test_lqup_half_rank(size_t m, size_t n) {
     if(status)
       break;
   }
-  
   if (status)
     printf(" ... FAILED\n");
   else
@@ -195,7 +194,6 @@ int test_lqup_structured(size_t m, size_t n) {
 
   if (status) {
     printf("\n");
-    mzd_print(Acopy);
     printf(" ... FAILED\n");
   }  else
     printf (" ... passed\n");

@@ -47,7 +47,7 @@ size_t mzd_pluq (mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
 
 size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
   size_t r  = _mzd_lqup(A,P,Q,cutoff);
-  mzd_apply_p_right_tri(A, Q, r);
+  mzd_apply_p_right_tri(A, Q);
   return r;
 }
 
@@ -152,11 +152,15 @@ size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
 
     /* Compressing L */
 
+    mzp_t *shift = mzp_init(A->ncols);
     if (r1 < n1){
       for (i=r1,j=n1;i<r1+r2;i++,j++){
-	mzd_col_swap_in_rows (A, i, j, i, A->nrows);
+	mzd_col_swap_in_rows(A, i, j, i, r1+r2);
+        shift->values[i] = j;
       }
     }
+    mzd_apply_p_right_trans_even_capped(A, shift, r1+r2, 0);
+    mzp_free(shift);
 
     mzp_free_window(Q2);
     mzp_free_window(P2);

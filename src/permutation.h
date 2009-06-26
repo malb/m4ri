@@ -158,7 +158,7 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
  * \wordoffset
  */
 
-void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t *P, size_t start_row);
+void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t *P, size_t start_row, size_t start_col);
 
 /**
  * Apply the permutation P^T to A from the right starting at start_row.
@@ -172,7 +172,7 @@ void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t *P, size_t start_row);
  * \wordoffset
  */
 
-void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t *P, size_t start_row);
+void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t *P, size_t start_row, size_t start_col);
 
 /**
  * Apply the mzp_t P to A from the right but transpose P before.
@@ -194,9 +194,8 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
  *
  * \param A Matrix.
  * \param P Permutation.
- * \param rank a column where to stop.
  */
-void  mzd_apply_p_right_tri(mzd_t * A, mzp_t * Q, size_t rank);
+void  mzd_apply_p_right_tri(mzd_t * A, mzp_t * Q);
 
 /* /\** */
 /*  * Rotate zero columns to the end. */

@@ -495,7 +495,7 @@ size_t _mzd_lqup_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
     }
   }
   mzp_t *Qbar = mzp_init_window(Q,0,curr_row);
-  mzd_apply_p_right_trans_even_capped(A, Qbar, curr_row);
+  mzd_apply_p_right_trans_even_capped(A, Qbar, curr_row, 0);
   mzp_free_window(Qbar);
 /*   printf("\nAfter"); */
 /*   mzd_print(A); */

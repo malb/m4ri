@@ -183,7 +183,7 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t *B, size_t *perm
 /**
  * Implements both apply_p_right and apply_p_right_trans.
  */
-void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, size_t start_row, int notrans) {
+void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, size_t start_row, size_t start_col, int notrans) {
   assert(A->offset = 0);
   const size_t length = MIN(P->length,A->ncols);
   const size_t width = A->width;
@@ -200,13 +200,13 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, size_t start_row, int notrans) 
     permutation[i] = i;
 
   if (!notrans) {
-    for(size_t i=0; i<length; i++) {
+    for(size_t i=start_col; i<length; i++) {
       size_t t = permutation[i];
       permutation[i] = permutation[P->values[i]];
       permutation[P->values[i]] = t;
     }
   } else {
-    for(size_t i=0; i<length; i++) {
+    for(size_t i=start_col; i<length; i++) {
       size_t t = permutation[length-i-1];
       permutation[length-i-1] = permutation[P->values[length-i-1]];
       permutation[P->values[length-i-1]] = t;
@@ -291,7 +291,7 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P) {
     _mzd_apply_p_right_trans(A,P);
     return;
   }
-  _mzd_apply_p_right_even(A, P, 0, 0); 
+  _mzd_apply_p_right_even(A, P, 0, 0, 0); 
 }
 
 void mzd_apply_p_right(mzd_t *A, mzp_t *P) {
@@ -301,21 +301,21 @@ void mzd_apply_p_right(mzd_t *A, mzp_t *P) {
     _mzd_apply_p_right(A,P);
     return;
   }
-  _mzd_apply_p_right_even(A, P, 0, 1); 
+  _mzd_apply_p_right_even(A, P, 0, 0, 1); 
 }
 
-void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t *P, size_t start_row) {
+void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t *P, size_t start_row, size_t start_col) {
   assert(A->offset == 0);
   if(!A->nrows)
     return;
-  _mzd_apply_p_right_even(A, P, start_row, 0); 
+  _mzd_apply_p_right_even(A, P, start_row, start_col, 0); 
 }
 
-void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t *P, size_t start_row) {
+void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t *P, size_t start_row, size_t start_col) {
   assert(A->offset == 0);
   if(!A->nrows)
     return;
-  _mzd_apply_p_right_even(A, P, start_row, 1); 
+  _mzd_apply_p_right_even(A, P, start_row, start_col, 1); 
 }
 
 
@@ -370,7 +370,7 @@ void mzp_print(mzp_t *P) {
 }
 
 #if 0
-void  mzd_apply_p_right_tri (mzd_t * A, mzp_t * P){
+void  mzd_apply_p_right_tri (mzd_t * A, mzp_t * P, size_t rank){
   assert(P->length==A->ncols);
   for (size_t i =0 ; i<P->length; ++i) {
     assert(P->values[i] >= i);
@@ -380,13 +380,13 @@ void  mzd_apply_p_right_tri (mzd_t * A, mzp_t * P){
   }
 }
 #else
-void  mzd_apply_p_right_tri(mzd_t *A, mzp_t *P, size_t rank) {
+void mzd_apply_p_right_tri(mzd_t *A, mzp_t *P) {
   assert(P->length==A->ncols);
   const size_t step_size = MAX((CPU_L1_CACHE>>2)/A->width,1);
 
   for(size_t r=0; r<A->nrows; r+=step_size) {
     const size_t row_bound = MIN(r+step_size, A->nrows);
-    for (size_t i =0 ; i<rank; ++i) {
+    for (size_t i =0 ; i<A->ncols; ++i) {
       assert(P->values[i] >= i);
       if (P->values[i] > i) {
         mzd_col_swap_in_rows(A, i, P->values[i], r, MIN(row_bound,i));
