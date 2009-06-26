@@ -30,7 +30,7 @@
 #include "brilliantrussian.h"
 #include "grayflex.h"
 
-size_t _mzd_pluq_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done)  {
+size_t _mzd_lqup_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done)  {
   size_t i, l, curr_pos;
   int found;
 
@@ -69,7 +69,7 @@ size_t _mzd_pluq_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t s
 }
 
 /* create a table of all 2^k linear combinations */
-void mzd_make_table_pluq( mzd_t *M, size_t r, size_t c, int k, mzd_t *T, size_t *L) {
+void mzd_make_table_lqup( mzd_t *M, size_t r, size_t c, int k, mzd_t *T, size_t *L) {
   assert(T->blocks[1].size == 0);
   const size_t blockoffset= c/RADIX;
   size_t i, rowneeded;
@@ -125,7 +125,7 @@ void mzd_make_table_pluq( mzd_t *M, size_t r, size_t c, int k, mzd_t *T, size_t 
   }
 }
 
-void mzd_process_rows2_pluq(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol, int k, mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1) {
+void mzd_process_rows2_lqup(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol, int k, mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1) {
   size_t r;
   const int ka = k/2;
   const int kb = k-k/2;
@@ -175,7 +175,7 @@ void mzd_process_rows2_pluq(mzd_t *M, size_t startrow, size_t stoprow, size_t st
   }
 }
 
-void mzd_process_rows3_pluq(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol, int k, mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1, mzd_t *T2, size_t *L2) {
+void mzd_process_rows3_lqup(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol, int k, mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1, mzd_t *T2, size_t *L2) {
   size_t r;
 
   const int rem = k%3;
@@ -241,7 +241,7 @@ void mzd_process_rows3_pluq(mzd_t *M, size_t startrow, size_t stoprow, size_t st
   }
 }
 
-void mzd_process_rows4_pluq(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol, int k, mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1, mzd_t *T2, size_t *L2, mzd_t *T3, size_t *L3) {
+void mzd_process_rows4_lqup(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol, int k, mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1, mzd_t *T2, size_t *L2, mzd_t *T3, size_t *L3) {
   size_t r;
 
   const int rem = k%4;
@@ -319,7 +319,7 @@ void mzd_process_rows4_pluq(mzd_t *M, size_t startrow, size_t stoprow, size_t st
 }
 
 /* extract U from A for table creation */
-mzd_t *_mzd_pluq_to_u(mzd_t *U, mzd_t *A, size_t r, size_t c, int k) {
+mzd_t *_mzd_lqup_to_u(mzd_t *U, mzd_t *A, size_t r, size_t c, int k) {
   /* this function call is now rather cheap, but it could be avoided
      completetly if needed */
   assert(U->offset == 0);
@@ -343,7 +343,7 @@ static inline size_t _max_value(size_t *data, size_t length) {
 }
 
 /* method of many people factorisation */
-size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
+size_t _mzd_lqup_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
   assert(A->offset == 0);
   const size_t nrows = A->nrows;//mzd_first_zero_row(A);
   const size_t ncols = A->ncols; 
@@ -379,8 +379,8 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
     if(curr_col + kk > ncols)
       kk = ncols - curr_col;
 
-    /* 1. compute PLUQ factorisation for a kxk submatrix */
-    kbar = _mzd_pluq_submatrix(A, curr_row, nrows, curr_col, kk, P, Q, done);
+    /* 1. compute LQUP factorisation for a kxk submatrix */
+    kbar = _mzd_lqup_submatrix(A, curr_row, nrows, curr_col, kk, P, Q, done);
     /* 1.5. finish submatrix*/
     done_row = _max_value(done, kbar);
     for(size_t c2=0; c2<kbar && curr_col + c2 < A->ncols -1; c2++)
@@ -389,7 +389,7 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
           mzd_row_add_offset(A, r2, curr_row + c2, curr_col + c2 + 1);
 
     /* 2. extract U */
-    _mzd_pluq_to_u(U, A, curr_row, curr_col, kbar);
+    _mzd_lqup_to_u(U, A, curr_row, curr_col, kbar);
 
     if(kbar > (size_t)3*k) {
       const int rem = kbar%4;
@@ -401,12 +401,12 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
 
       if (kbar==kk) {
         /* 2. generate table T */
-        mzd_make_table_pluq(U, 0,          curr_col,          ka, T0, L0);
-        mzd_make_table_pluq(U, 0+ka,       curr_col+ka,       kb, T1, L1);
-        mzd_make_table_pluq(U, 0+ka+kb,    curr_col+ka+kb,    kc, T2, L2);
-        mzd_make_table_pluq(U, 0+ka+kb+kc, curr_col+ka+kb+kc, kd, T3, L3);
+        mzd_make_table_lqup(U, 0,          curr_col,          ka, T0, L0);
+        mzd_make_table_lqup(U, 0+ka,       curr_col+ka,       kb, T1, L1);
+        mzd_make_table_lqup(U, 0+ka+kb,    curr_col+ka+kb,    kc, T2, L2);
+        mzd_make_table_lqup(U, 0+ka+kb+kc, curr_col+ka+kb+kc, kd, T3, L3);
         /* 3. use that table to process remaining rows below */
-        mzd_process_rows4_pluq(A, done_row + 1, nrows, curr_col, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
+        mzd_process_rows4_lqup(A, done_row + 1, nrows, curr_col, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
       } else {
         curr_col += 1; 
       }
@@ -420,11 +420,11 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
 
       if (kbar==kk) {
         /* 2. generate table T */
-        mzd_make_table_pluq(U, 0,       curr_col,       ka, T0, L0);
-        mzd_make_table_pluq(U, 0+ka,    curr_col+ka,    kb, T1, L1);
-        mzd_make_table_pluq(U, 0+ka+kb, curr_col+ka+kb, kc, T2, L2);
+        mzd_make_table_lqup(U, 0,       curr_col,       ka, T0, L0);
+        mzd_make_table_lqup(U, 0+ka,    curr_col+ka,    kb, T1, L1);
+        mzd_make_table_lqup(U, 0+ka+kb, curr_col+ka+kb, kc, T2, L2);
         /* 3. use that table to process remaining rows below */
-        mzd_process_rows3_pluq(A, done_row + 1, nrows, curr_col, kbar, T0, L0, T1, L1, T2, L2);
+        mzd_process_rows3_lqup(A, done_row + 1, nrows, curr_col, kbar, T0, L0, T1, L1, T2, L2);
       } else {
         curr_col += 1; 
       }
@@ -435,10 +435,10 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
 
       if(kbar==kk) {
         /* 2. generate table T */
-        mzd_make_table_pluq(U, 0,    curr_col,    ka, T0, L0);
-        mzd_make_table_pluq(U, 0+ka, curr_col+ka, kb, T1, L1);
+        mzd_make_table_lqup(U, 0,    curr_col,    ka, T0, L0);
+        mzd_make_table_lqup(U, 0+ka, curr_col+ka, kb, T1, L1);
         /* 3. use that table to process remaining rows below */
-        mzd_process_rows2_pluq(A, done_row + 1, nrows, curr_col, kbar, T0, L0, T1, L1);
+        mzd_process_rows2_lqup(A, done_row + 1, nrows, curr_col, kbar, T0, L0, T1, L1);
       } else {
         curr_col += 1; 
       }
@@ -447,7 +447,7 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
 
       if(kbar==kk) {
         /* 2. generate table T */
-        mzd_make_table_pluq(U, 0, curr_col, kbar, T0, L0);
+        mzd_make_table_lqup(U, 0, curr_col, kbar, T0, L0);
         /* 3. use that table to process remaining rows below */
         mzd_process_rows(A, done_row + 1, nrows, curr_col, kbar, T0, L0);
       } else {
@@ -482,8 +482,15 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
     else if(kk>2)
       kk = kk/2;
   }
-
-  mzd_apply_p_right(A,Q);
+  /* Now compressing L*/
+  for (size_t j = 0; j<curr_row; ++j){
+    if (Q->values[j]>j) {
+      // To be optimized by a copy_row function
+      mzd_col_swap_in_rows (A,Q->values[j], j, j, A->nrows);
+      for(size_t i=j; i<A->nrows; i++)
+	mzd_write_bit(A,i,Q->values[j],0);
+    }
+  }
 
   mzd_free(U);
   mzd_free(T0);

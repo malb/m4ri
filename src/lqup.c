@@ -68,7 +68,7 @@ size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
 #endif
 
   if (ncols <= PLUQ_CUTOFF)
-    return _mzd_lqup_naive(A, P, Q);
+    return _mzd_lqup_mmpf(A, P, Q, 0);
 
   {
     /* Block divide and conquer algorithm */
@@ -135,9 +135,6 @@ size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
      *   |                 |
      *   -------------------
      */
-
-    mzd_t* A0b = mzd_init_window (A, 0, 0, r1, ncols);
-    mzd_t* A1b = mzd_init_window (A, r1,0, nrows, ncols);  
 
     /* Update A10 */
     mzd_apply_p_left(A10, P2);
@@ -225,16 +222,13 @@ size_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
 }
  
 size_t _mzd_lqup_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
-
-
   size_t i, j, l, col_pos, row_pos;
   int found;
   col_pos = 0;
   row_pos = 0;
 
     /* search for some pivot */
-
-  for (; row_pos<A->nrows, col_pos < A->ncols; ) {
+  for (; row_pos<A->nrows && col_pos < A->ncols; ) {
     found = 0;
     for (j = col_pos; j < A->ncols; j++) {
       for (i = row_pos; i< A->nrows; i++ ) {
@@ -281,11 +275,7 @@ size_t _mzd_lqup_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
     }
   }
 
-  //mzd_apply_p_right_tri (A,Q);
   return row_pos;
-    
-
-
 }
  
 size_t mzd_echelonize_pluq(mzd_t *A, int full) {

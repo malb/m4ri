@@ -1,6 +1,6 @@
 /**
- * \file pluq_mmpf.h
- * \brief PLUQ factorization using Gray codes.
+ * \file lqup_mmpf.h
+ * \brief LQUP factorization using Gray codes.
  *
  *
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
@@ -9,8 +9,8 @@
  */
 
 
-#ifndef PLUQ_MMPF_H
-#define PLUQ_MMPF_H
+#ifndef LQUP_MMPF_H
+#define LQUP_MMPF_H
  /*******************************************************************
  *
  *                 M4RI:  Linear Algebra over GF(2)
@@ -35,10 +35,10 @@
 #include "permutation.h"
 
 /**
- * \brief PLUQ matrix decomposition of A using Gray codes.
+ * \brief LQUP matrix decomposition of A using Gray codes.
  *
- * If (P,L,U,Q) satisfy PLUQ = A, this function returns
- * (P^T,L,U,Q^T). The matrix L and U are stored in place over A.
+ * If (L,Q,U,P) satisfy LQUP = A^T, this function returns
+ * (L,Q^T,U,P). The matrix L and U are stored in place over A.
  *
  * \param A Matrix.
  * \param P Preallocated row permutation.
@@ -50,14 +50,14 @@
  * \return Rank of A.
  */
 
-size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
+size_t _mzd_lqup_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
 
 /**
- * \brief PLUQ matrix decomposition of a submatrix for up to k columns
+ * \brief LQUP matrix decomposition of a submatrix for up to k columns
  * starting at (r,c).
  *
- * Updates P and Q and modifies A in place. The buffer done afterwards holds how
- * far a particular row was already added.
+ * Updates P and Q and modifies A in place. The buffer done afterwards
+ * holds how far a particular row was already added.
  *
  * \param A Matrix.
  * \param start_row Row Offset.
@@ -71,6 +71,6 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
  * \retval kbar Maximum k for which a pivot could be found.
  */
 
-size_t _mzd_pluq_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done);
+size_t _mzd_lqup_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done);
 
-#endif //PLUQ_MMPF_H
+#endif //LQUP_MMPF_H
