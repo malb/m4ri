@@ -185,6 +185,8 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t *B, size_t *perm
  */
 void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, size_t start_row, size_t start_col, int notrans) {
   assert(A->offset = 0);
+  if(A->nrows - start_row == 0)
+    return;
   const size_t length = MIN(P->length,A->ncols);
   const size_t width = A->width;
   size_t step_size = MIN(A->nrows-start_row, MAX((CPU_L1_CACHE>>3)/A->width,1));
