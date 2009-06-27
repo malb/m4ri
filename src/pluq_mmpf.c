@@ -34,24 +34,31 @@ size_t _mzd_lqup_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t s
   size_t i, l, curr_pos;
   int found;
 
+  size_t bm[k];
+  size_t os[k];
+
   for(curr_pos=0; curr_pos < (size_t)k; curr_pos++) {
+    os[curr_pos] = (start_col+curr_pos)/RADIX;
+    bm[curr_pos] = ONE<<(RADIX-(start_col+curr_pos)%RADIX-1);
     found = 0;
     /* search for some pivot */
     for(i = start_row + curr_pos; i < stop_row; i++) {
-      /* clear before but preserve transformation matrix */
-      for(l = 0; l < curr_pos; l++)
-        if(done[l] < i) {
-          if(mzd_read_bit(A, i, start_col + l))
-            mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
-          done[l] = i; /* encode up to which row we added for l already */
+      const word tmp = mzd_read_bits(A, i, start_col, curr_pos+1);
+      if(tmp) {
+        word *Arow = A->rows[i];
+        /* clear before but preserve transformation matrix */
+        for (l=0; l<curr_pos; l++)
+          if(done[l] < i) {
+            if(Arow[os[l]] & bm[l])
+              mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
+            done[l] = i; /* encode up to which row we added for l already */
+          }
+        if(mzd_read_bit(A, i, start_col + curr_pos)) {
+          found = 1;
+          break;
         }
-        
-      if(mzd_read_bit(A, i, start_col + curr_pos)) {
-        found = 1;
-        break;
       }
     }
-    
     if(!found) {
       return curr_pos;
     }
@@ -463,8 +470,10 @@ size_t _mzd_lqup_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
         P->values[curr_row] = i;
         Q->values[curr_row] = j;
         mzd_row_swap(A, curr_row, i);
+        const size_t wrd = j/RADIX;
+        const size_t bm = ONE<<(RADIX-(j%RADIX)-1);
         for(size_t l = curr_row+1; l<nrows; l++)
-          if(mzd_read_bit(A, l, j))
+          if(A->rows[l][wrd] & bm)
             mzd_row_add_offset(A, l, curr_row, j + 1);
         curr_col = j + 1;
         curr_row++;
@@ -483,23 +492,15 @@ size_t _mzd_lqup_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
       kk = kk/2;
   }
 
-/*   printf("\nBefore\n"); */
-/*   mzd_print(A); */
   /* Now compressing L*/
   for (size_t j = 0; j<curr_row; ++j){
     if (Q->values[j]>j) {
-      // To be optimized by a copy_row function
-      mzd_col_swap_in_rows (A,Q->values[j], j, j, curr_row);
-      //for(size_t i=j; i<A->nrows; i++)
-      //mzd_write_bit(A,i,Q->values[j],0);
+      mzd_col_swap_in_rows(A,Q->values[j], j, j, curr_row);
     }
   }
   mzp_t *Qbar = mzp_init_window(Q,0,curr_row);
   mzd_apply_p_right_trans_even_capped(A, Qbar, curr_row, 0);
   mzp_free_window(Qbar);
-/*   printf("\nAfter"); */
-/*   mzd_print(A); */
-/*   printf("\n"); */
 
   mzd_free(U);
   mzd_free(T0);

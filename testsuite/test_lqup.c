@@ -51,8 +51,6 @@ int test_lqup_full_rank (size_t m, size_t n){
       }
     }
   if (status){
-    printf("\n");
-    mzd_print(Acopy);
     printf(" ... FAILED\n");
   }  else
     printf (" ... passed\n");
