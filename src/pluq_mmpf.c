@@ -514,3 +514,9 @@ size_t _mzd_lqup_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
   m4ri_mm_free(done);
   return curr_row;
 }
+
+size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, const int k) {
+  size_t r  = _mzd_lqup_mmpf(A,P,Q,k);
+  mzd_apply_p_right_tri(A, Q);
+  return r;
+}

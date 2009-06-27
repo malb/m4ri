@@ -53,6 +53,24 @@
 size_t _mzd_lqup_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
 
 /**
+ * \brief PLUQ matrix decomposition of A using Gray codes.
+ *
+ * If (P,L,U,Q) satisfy PLUQ = A, it returns (P, L, U, Q^T).
+ *
+ * \param A Matrix.
+ * \param P Preallocated row permutation.
+ * \param Q Preallocated column permutation.
+ * \param k Size of Gray code tables.
+ *
+ * \wordoffset
+ *
+ * \return Rank of A.
+ */
+
+size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
+
+
+/**
  * \brief LQUP matrix decomposition of a submatrix for up to k columns
  * starting at (r,c).
  *

@@ -44,9 +44,6 @@
 /**
  * \brief PLUQ matrix decomposition.
  *
- * Computes the transposed PLUQ matrix decomposition using a block
- * recursive algorithm.
- *
  * If (P,L,U,Q) satisfy PLUQ = A, it returns (P, L, U, Q^T).
  *
  * P and Q must be preallocated but they don't have to be
