@@ -1237,9 +1237,10 @@ static inline int m4ri_bitcount(word n)  {
    return (int)n;
 }
 
-double mzd_density(mzd_t *A, int res) {
-  long count = 0;
-  long total = 0;
+
+double _mzd_density(mzd_t *A, int res, size_t r, size_t c) {
+  size_t count = 0;
+  size_t total = 0;
   
   if(res == 0)
     res = (int)(A->width/100.0);
@@ -1247,31 +1248,36 @@ double mzd_density(mzd_t *A, int res) {
     res = 1;
 
   if(A->width == 1) {
-    for(size_t i=0; i<A->nrows; i++)
-      for(size_t j=0; j<A->ncols; j++)
+    for(size_t i=r; i<A->nrows; i++)
+      for(size_t j=c; j<A->ncols; j++)
         if(mzd_read_bit(A, i, j))
           count++;
     return ((double)count)/(A->ncols * A->nrows);
-  } else {
-    for(size_t i=0; i<A->nrows; i++) {
-      word *truerow = A->rows[i];
-      for(size_t j = A->offset; j<RADIX; j++)
-        if(mzd_read_bit(A, i, j))
-          count++;
-      total += (long)RADIX - A->offset;
-      for(size_t j=1; j<A->width-1; j+=res) {
+  }
+
+  for(size_t i=r; i<A->nrows; i++) {
+    word *truerow = A->rows[i];
+    for(size_t j = c; j< RADIX-A->offset; j++)
+      if(mzd_read_bit(A, i, j))
+        count++;
+    total += RADIX - A->offset;
+
+    for(size_t j=MAX(1,((A->offset+c)/RADIX)); j<A->width-1; j+=res) {
         count += m4ri_bitcount(truerow[j]);
         total += RADIX;
-      }
-      for(size_t j = 0; j < (A->offset + A->ncols)%RADIX; j++)
-        if(mzd_read_bit(A, i, j))
-          count++;
-      total += (A->offset + A->ncols)%RADIX;
     }
+    for(size_t j = 0; j < (A->offset + A->ncols)%RADIX; j++)
+      if(mzd_read_bit(A, i, j+ RADIX*((A->offset + A->ncols)/RADIX)))
+        count++;
+    total += (A->offset + A->ncols)%RADIX;
   }
+
   return ((double)count)/(total);
 }
 
+double mzd_density(mzd_t *A, int res) {
+  return _mzd_density(A, res, 0, 0);
+}
 
 size_t mzd_first_zero_row(mzd_t *A) {
   word mask_begin = RIGHT_BITMASK(RADIX-A->offset);

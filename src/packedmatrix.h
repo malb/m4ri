@@ -904,6 +904,23 @@ int mzd_find_pivot(mzd_t *M, size_t start_row, size_t start_col, size_t *r, size
 double mzd_density(mzd_t *A, int res);
 
 /**
+ * \brief Return the number of nonzero entries divided by nrows *
+ * ncols considering only the submatrix starting at (r,c).
+ *
+ * If res = 0 then 100 samples per row are made, if res > 0 the
+ * function takes res sized steps within each row (res = 1 uses every
+ * word).
+ *
+ * \param A Matrix
+ * \param res Resolution of sampling
+ * \param r Row to start counting
+ * \param c Column to start counting
+ */
+
+double _mzd_density(mzd_t *A, int res, size_t r, size_t c);
+
+
+/**
  * \brief Return the first row with all zero entries.
  *
  * If no such row can be found returns nrows.

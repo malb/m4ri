@@ -172,10 +172,26 @@ size_t mzd_echelonize_m4ri(mzd_t *M, int full, int k);
  *
  * \wordoffset
  *
- * \note This function isn't as optimized as it should be.
  */
 
 void mzd_top_echelonize_m4ri(mzd_t *M, int k);
+
+/**
+ * \brief Given a matrix in upper triangular form compute the reduced
+ * row echelon form of that matrix but only start to do anything for
+ * the pivot at (r,c).
+ * 
+ * \param M Matrix to be reduced.
+ * \param k M4RI parameter, may be 0 for auto-choose.
+ * \param r Row index.
+ * \paran c Column index.
+ *
+ * \param max_r Only clear top max_r rows.
+ * \wordoffset
+ *
+ */
+
+size_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, size_t r, size_t c, size_t max_r);
 
 /**
  * \brief Invert the matrix M using Konrod's method. 
@@ -259,5 +275,11 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear);
  */
 
 #define M4RM_GRAY8
+
+/**
+ *
+ */
+
+size_t mzd_echelonize(mzd_t *A, int full);
 
 #endif //BRILLIANTRUSSIAN_H

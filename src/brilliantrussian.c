@@ -29,7 +29,7 @@
 
 #include "brilliantrussian.h"
 #include "grayflex.h"
-
+#include "lqup.h"
 
 /**
  * \brief Perform Gaussian reduction to reduced row echelon form on a
@@ -569,7 +569,7 @@ void mzd_process_rows6(mzd_t *M, size_t startrow, size_t stoprow, size_t startco
   }
 }
 
-size_t mzd_echelonize_m4ri(mzd_t *A, int full, int k) {
+size_t _mzd_echelonize_m4ri(mzd_t *A, const int full, int k, int heuristic, const double threshold) {
   /**
    * \par General algorithm
    * \li Step 1.Denote the first column to be processed in a given
@@ -602,7 +602,9 @@ size_t mzd_echelonize_m4ri(mzd_t *A, int full, int k) {
    * 2.5 coeffcient to 3.
    *
    * \attention This function implements a variant of the algorithm
-   * described above.
+   * described above. If heuristic is true, then this algorithm, will
+   * switch to PLUQ based echelon form computation once the density
+   * reaches the threshold.
    */
 
   const size_t ncols = A->ncols; 
@@ -617,7 +619,6 @@ size_t mzd_echelonize_m4ri(mzd_t *A, int full, int k) {
     if ( (6*(1<<k)*A->ncols / 8.0) > CPU_L2_CACHE / 2.0 )
       k -= 1;
   }
-  /*printf("k: %d\n",k);*/
   int kk = 6*k;
 
   mzd_t *U  = mzd_init(kk, A->ncols);
@@ -634,7 +635,42 @@ size_t mzd_echelonize_m4ri(mzd_t *A, int full, int k) {
   size_t *L4 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
   size_t *L5 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
 
+  size_t last_check = 0;
+
+  if (heuristic) {
+    if (c<A->ncols && r< A->nrows && _mzd_density(A,32, 0, 0) >= threshold) {
+      //#ifndef NDEBUG
+      printf("switching at %zu x %zu (%.5f)\n",r,c,mzd_density(A,32));
+      //#endif
+      mzd_t *Abar = mzd_init_window(A, r, (c/RADIX)*RADIX, A->nrows, A->ncols);
+      r += mzd_echelonize_pluq(Abar, full);
+      mzd_free(Abar);
+      c = ncols;
+    }
+  }
+
   while(c<ncols) {
+    if (heuristic && c > (last_check + 256)) {
+      last_check = c;
+      if (c<A->ncols && r< A->nrows && _mzd_density(A,32, r, c) >= threshold) {
+        //#ifndef NDEBUG
+        printf("switching at %zu x %zu (%.5f)\n",r,c,_mzd_density(A,32,r,c));
+        //#endif
+        mzd_t *Abar = mzd_init_window(A, r, (c/RADIX)*RADIX, A->nrows, A->ncols);
+        if (!full) {
+          r += mzd_echelonize_pluq(Abar, full);
+        } else {
+          size_t r2 = mzd_echelonize_pluq(Abar, full);
+          if (r>0)
+            _mzd_top_echelonize_m4ri(A, 0, r, c, r);
+          r += r2;
+        }
+        mzd_free(Abar);
+        c = ncols;
+        break;
+      }
+    }
+
     if(c+kk > A->ncols) {
       kk = ncols - c;
     }
@@ -777,68 +813,107 @@ size_t mzd_echelonize_m4ri(mzd_t *A, int full, int k) {
   return r;
 }
 
-void mzd_top_echelonize_m4ri(mzd_t *A, int k) {
+size_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, size_t r, size_t c, size_t max_r) {
   const size_t ncols = A->ncols; 
-  size_t r = 0;
-  size_t c = 0;
   int kbar = 0;
 
   if (k == 0) {
-    k = m4ri_opt_k(A->nrows, A->ncols, 0);
-    if (k>5) {
-      k -= 4;
-    }
+    k = m4ri_opt_k(max_r, A->ncols, 0);
+    if (k>=7)
+      k = 7;
+    if ( (6*(1<<k)*A->ncols / 8.0) > CPU_L2_CACHE / 2.0 )
+      k -= 1;
   }
-  int kk = 4*k;
+  int kk = 6*k;
 
+  mzd_t *U  = mzd_init(kk, A->ncols);
   mzd_t *T0 = mzd_init(TWOPOW(k), A->ncols);
   mzd_t *T1 = mzd_init(TWOPOW(k), A->ncols);
   mzd_t *T2 = mzd_init(TWOPOW(k), A->ncols);
   mzd_t *T3 = mzd_init(TWOPOW(k), A->ncols);
+  mzd_t *T4 = mzd_init(TWOPOW(k), A->ncols);
+  mzd_t *T5 = mzd_init(TWOPOW(k), A->ncols);
   size_t *L0 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
   size_t *L1 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
   size_t *L2 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
   size_t *L3 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+  size_t *L4 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+  size_t *L5 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
 
   while(c<ncols) {
     if(c+kk > A->ncols) {
       kk = ncols - c;
     }
-    kbar = _mzd_gauss_submatrix_full(A, r, c, A->nrows, kk);
+    kbar = _mzd_gauss_submatrix_full(A, r, c, MIN(A->nrows,r+kk), kk);
 
-    if (kbar>3*k) {
+    if (kbar>5*k) {
+      const int rem = kbar%6;
+      const int ka = kbar/6 + ((rem>=5) ? 1 : 0);
+      const int kb = kbar/6 + ((rem>=4) ? 1 : 0);
+      const int kc = kbar/6 + ((rem>=3) ? 1 : 0);
+      const int kd = kbar/6 + ((rem>=2) ? 1 : 0);
+      const int ke = kbar/6 + ((rem>=1) ? 1 : 0);;
+      const int kf = kbar/6;
+
+      mzd_make_table(A, r, c, ka, T0, L0);
+      mzd_make_table(A, r+ka, c, kb, T1, L1);
+      mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
+      mzd_make_table(A, r+ka+kb+kc, c, kd, T3, L3);
+      mzd_make_table(A, r+ka+kb+kc+kd, c, ke, T4, L4);
+      mzd_make_table(A, r+ka+kb+kc+kd+ke, c, kf, T5, L5);
+      mzd_process_rows6(A, 0, MIN(r, max_r), c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4, T5, L5);
+
+  } else if (kbar>4*k) { 
+      const int rem = kbar%5;
+      const int ka = kbar/5 + ((rem>=4) ? 1 : 0);
+      const int kb = kbar/5 + ((rem>=3) ? 1 : 0);
+      const int kc = kbar/5 + ((rem>=2) ? 1 : 0);
+      const int kd = kbar/5 + ((rem>=1) ? 1 : 0);
+      const int ke = kbar/5;
+
+      mzd_make_table(A, r, c, ka, T0, L0);
+      mzd_make_table(A, r+ka, c, kb, T1, L1);
+      mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
+      mzd_make_table(A, r+ka+kb+kc, c, kd, T3, L3);
+      mzd_make_table(A, r+ka+kb+kc+kd, c, ke, T4, L4);
+      mzd_process_rows5(A, 0, MIN(r, max_r), c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4);
+      
+    } else if (kbar>3*k) {
       const int rem = kbar%4;
       const int ka = kbar/4 + ((rem>=3) ? 1 : 0);
       const int kb = kbar/4 + ((rem>=2) ? 1 : 0);
       const int kc = kbar/4 + ((rem>=1) ? 1 : 0);
       const int kd = kbar/4;
+
       mzd_make_table(A, r, c, ka, T0, L0);
       mzd_make_table(A, r+ka, c, kb, T1, L1);
       mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
       mzd_make_table(A, r+ka+kb+kc, c, kd, T3, L3);
-      mzd_process_rows4(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
+      mzd_process_rows4(A, 0, MIN(r, max_r), c, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
       
     } else if (kbar>2*k) {
-      int rem = kbar%3;
-      int ka = kbar/3 + ((rem>=2) ? 1 : 0);
-      int kb = kbar/3 + ((rem>=1) ? 1 : 0);
-      int kc = kbar/3;
+      const int rem = kbar%3;
+      const int ka = kbar/3 + ((rem>=2) ? 1 : 0);
+      const int kb = kbar/3 + ((rem>=1) ? 1 : 0);
+      const int kc = kbar/3;
+
       mzd_make_table(A, r, c, ka, T0, L0);
       mzd_make_table(A, r+ka, c, kb, T1, L1);
       mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
-      mzd_process_rows3(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2);
+      mzd_process_rows3(A, 0, MIN(r, max_r), c, kbar, T0, L0, T1, L1, T2, L2);
       
     } else if (kbar>k) {
       const int ka = kbar/2;
       const int kb = kbar - ka;
       mzd_make_table(A, r, c, ka, T0, L0);
       mzd_make_table(A, r+ka, c, kb, T1, L1);
-      mzd_process_rows2(A, 0, r, c, kbar, T0, L0, T1, L1);
+      mzd_process_rows2(A, 0, MIN(r, max_r), c, kbar, T0, L0, T1, L1);
       
     } else if(kbar > 0) {
       mzd_make_table(A, r, c, kbar, T0, L0);
-      mzd_process_rows(A, 0, r, c, kbar, T0, L0);
+      mzd_process_rows(A, 0, MIN(r, max_r), c, kbar, T0, L0);
     }
+
     r += kbar;
     c += kbar;
     if(kk!=kbar) {
@@ -854,7 +929,18 @@ void mzd_top_echelonize_m4ri(mzd_t *A, int k) {
   m4ri_mm_free(L2);
   mzd_free(T3);
   m4ri_mm_free(L3);
+  mzd_free(T4);
+  m4ri_mm_free(L4);
+  mzd_free(T5);
+  m4ri_mm_free(L5);
+  mzd_free(U);
+  return r;
 }
+
+void mzd_top_echelonize_m4ri(mzd_t *M, int k) {
+  _mzd_top_echelonize_m4ri(M,k,0,0,M->nrows);
+}
+
 
 mzd_t *mzd_invert_m4ri(mzd_t *m, mzd_t *I, int k) {
   mzd_t *big = mzd_concat(NULL, m, I);
@@ -1265,3 +1351,11 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
   return C;
 }
 
+
+size_t mzd_echelonize_m4ri(mzd_t *A, int full, int k) {
+  return _mzd_echelonize_m4ri(A, full, k, 1, 0.15);
+}
+
+size_t mzd_echelonize(mzd_t *A, int full) {
+  return _mzd_echelonize_m4ri(A, full, 0, 1, 0.15);
+}

@@ -98,6 +98,7 @@ size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
 
     size_t i, j;
     size_t n1 = (((ncols - 1) / RADIX + 1) >> 1) * RADIX;
+
     mzd_t *A0  = mzd_init_window(A,  0,  0, nrows,    n1);
     mzd_t *A1  = mzd_init_window(A,  0, n1, nrows, ncols);
 
