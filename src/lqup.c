@@ -67,8 +67,8 @@ size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
   size_t nrows = A->nrows;
 #endif
 
-  /*if (A->width*A->nrows <= CPU_L2_CACHE>>3) { */
-  if(ncols <= PLUQ_CUTOFF) {
+  if (ncols <= RADIX || A->width*A->nrows <= CPU_L2_CACHE>>3) {
+/*   if(ncols <= PLUQ_CUTOFF) { */
     /* this improves data locality and runtime considerably */
     mzd_t *Abar = mzd_copy(NULL, A);
     size_t r = _mzd_lqup_mmpf(Abar, P, Q, 0);

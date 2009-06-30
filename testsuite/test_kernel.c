@@ -25,8 +25,6 @@ int test_kernel_left_pluq(size_t m, size_t n) {
   mzd_t* A = mzd_init(m, n);
   mzd_randomize(A);
   
-  size_t i,j;
-
   mzd_t *Acopy = mzd_copy(NULL, A);
 
   size_t r = mzd_echelonize_m4ri(A, 0, 0);

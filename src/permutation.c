@@ -184,7 +184,7 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t *B, size_t *perm
  * Implements both apply_p_right and apply_p_right_trans.
  */
 void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, size_t start_row, size_t start_col, int notrans) {
-  assert(A->offset = 0);
+  assert(A->offset == 0);
   if(A->nrows - start_row == 0)
     return;
   const size_t length = MIN(P->length,A->ncols);

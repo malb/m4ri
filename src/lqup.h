@@ -35,11 +35,11 @@
 #include "misc.h"
 #include "packedmatrix.h"
 
-/**
- * Crossover point for PLUQ factorization.
- */
+/* /\** */
+/*  * Crossover point for PLUQ factorization. */
+/*  *\/ */
 
-#define PLUQ_CUTOFF 2048
+/* #define PLUQ_CUTOFF 2048 */
 
 /**
  * \brief PLUQ matrix decomposition.

@@ -107,7 +107,7 @@ mzd_t *mzd_init_window (const mzd_t *m, size_t lowr, size_t lowc, size_t highr, 
   window->blocks = NULL;
 
   if(nrows)
-    window->rows = (word **)m4ri_mmc_malloc( nrows * sizeof(word*));
+    window->rows = (word **)m4ri_mmc_calloc(sizeof(word*), nrows+1);
   else
     window->rows = NULL;
 

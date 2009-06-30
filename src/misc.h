@@ -470,7 +470,7 @@ static inline void m4ri_mm_free(void *condemned, ...) {
 /**
  * \brief Enable memory block cache (default: disabled)
  */
-//#define ENABLE_MMC
+#define ENABLE_MMC
 
 
 /**
@@ -561,7 +561,7 @@ static inline void *m4ri_mmc_malloc(size_t size) {
 
 static inline void *m4ri_mmc_calloc(size_t size, size_t count) {
   void *ret = m4ri_mmc_malloc(size*count);
-  memset(ret, 0, count*size);
+  memset((char*)ret, 0, count*size);
   return ret;
 }
 
