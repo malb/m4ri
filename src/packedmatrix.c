@@ -239,6 +239,53 @@ int mzd_echelonize_naive(mzd_t *m, int full) {
   return mzd_gauss_delayed(m, 0, full); 
 }
 
+/**
+ * Transpose the 128 x 128-bit matrix inp and write the result in DST.
+ */
+
+static inline mzd_t *_mzd_transpose_direct_128(mzd_t *DST, const mzd_t *SRC) {
+  assert(DST->offset==0);
+  assert(SRC->offset==0);
+  int j, k;
+  word m, t[4];
+
+  /* we do one recursion level 
+   * [AB] -> [AC]
+   * [CD]    [BD]
+   */
+  for(j=0; j<64; j++)  {
+    DST->rows[   j][0] = SRC->rows[   j][0]; //A
+    DST->rows[64+j][0] = SRC->rows[   j][1]; //B
+    DST->rows[   j][1] = SRC->rows[64+j][0]; //C
+    DST->rows[64+j][1] = SRC->rows[64+j][1]; //D
+  }
+
+  /* now transpose each block A,B,C,D separately, cf. Hacker's Delight */
+  m = 0x00000000FFFFFFFFULL;
+  for (j = 32; j != 0; j = j >> 1, m = m ^ (m << j)) {
+    for (k = 0; k < 64; k = (k + j + 1) & ~j) {
+      t[0] = (DST->rows[k][0] ^ (DST->rows[k+j][0] >> j)) & m;
+      t[1] = (DST->rows[k][1] ^ (DST->rows[k+j][1] >> j)) & m;
+      t[2] = (DST->rows[64+k][0] ^ (DST->rows[64+k+j][0] >> j)) & m;
+      t[3] = (DST->rows[64+k][1] ^ (DST->rows[64+k+j][1] >> j)) & m;
+
+      DST->rows[k][0] = DST->rows[k][0] ^ t[0];
+      DST->rows[k][1] = DST->rows[k][1] ^ t[1];
+
+      DST->rows[k+j][0] = DST->rows[k+j][0] ^ (t[0] << j);
+      DST->rows[k+j][1] = DST->rows[k+j][1] ^ (t[1] << j);
+
+      DST->rows[64+k][0] = DST->rows[64+k][0] ^ t[2];
+      DST->rows[64+k][1] = DST->rows[64+k][1] ^ t[3];
+
+      DST->rows[64+k+j][0] = DST->rows[64+k+j][0] ^ (t[2] << j);
+      DST->rows[64+k+j][1] = DST->rows[64+k+j][1] ^ (t[3] << j);
+    }
+  }
+  return DST;
+}
+
+
 static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, const mzd_t *A) {
   size_t i,j,k, eol;
   word *temp;
@@ -249,6 +296,11 @@ static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, const mzd_t *A) {
         mzd_write_bit(DST, j, i, mzd_read_bit(A,i,j));
       }
     }
+    return DST;
+  }
+
+  if (A->nrows == 128 && A->ncols == 128 && RADIX == 64) {
+    _mzd_transpose_direct_128(DST, A);
     return DST;
   }
 
@@ -279,7 +331,7 @@ static inline mzd_t *_mzd_transpose(mzd_t *DST, const mzd_t *X) {
 
   const size_t nr = X->nrows;
   const size_t nc = X->ncols;
-  const size_t cutoff = 256; /* 256 seems optimal */
+  const size_t cutoff = 128; // must be >= 128.
 
   if(nr <= cutoff || nc <= cutoff) {
     mzd_t *x = mzd_copy(NULL, X);
@@ -288,8 +340,9 @@ static inline mzd_t *_mzd_transpose(mzd_t *DST, const mzd_t *X) {
     return DST;
   }
 
-  const size_t nr2 = RADIX*(X->nrows/(2*RADIX));
-  const size_t nc2 = RADIX*(X->ncols/(2*RADIX));
+  /* we cut at multiples of 128 if possible, otherwise at multiples of 64 */
+  size_t nr2 = (X->nrows > 256) ? 2*RADIX*(X->nrows/(4*RADIX)) : RADIX*(X->nrows/(2*RADIX));
+  size_t nc2 = (X->ncols > 256) ? 2*RADIX*(X->ncols/(4*RADIX)) : RADIX*(X->ncols/(2*RADIX));
 
   mzd_t *A = mzd_init_window(X,    0,   0, nr2, nc2);
   mzd_t *B = mzd_init_window(X,    0, nc2, nr2,  nc);
