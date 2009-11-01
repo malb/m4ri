@@ -59,7 +59,7 @@
  * algorithm.
  */
 
-#define MZD_MUL_BLOCKSIZE ((int)sqrt((double)(4*CPU_L2_CACHE)))/2
+#define MZD_MUL_BLOCKSIZE MIN(((int)sqrt((double)(4*CPU_L2_CACHE)))/2,2048)
 
 
 /**
