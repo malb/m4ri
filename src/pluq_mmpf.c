@@ -30,7 +30,15 @@
 #include "brilliantrussian.h"
 #include "grayflex.h"
 
-size_t _mzd_lqup_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done)  {
+static inline size_t _max_value(size_t *data, size_t length) {
+  size_t max = 0;
+  for(size_t i=0; i<length; i++) {
+    max = MAX(max, data[i]);
+  }
+  return max;
+}
+
+size_t _mzd_lqup_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done, size_t *done_row)  {
   size_t i, l, curr_pos;
   int found;
 
@@ -60,18 +68,22 @@ size_t _mzd_lqup_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t s
       }
     }
     if(!found) {
-      return curr_pos;
+      break;
     }
 
-    //if (i > P->values[start_row + curr_pos])
     P->values[start_row + curr_pos] = i;
     mzd_row_swap(A, i, start_row + curr_pos);
 
-    //if (j > Q->values[start_col + curr_pos])
     Q->values[start_row + curr_pos] = start_col + curr_pos;
-
     done[curr_pos] = i;
   }
+  
+  /* finish submatrix */
+  *done_row = _max_value(done, curr_pos);
+  for(size_t c2=0; c2<curr_pos && start_col + c2 < A->ncols -1; c2++)
+    for(size_t r2=done[c2]+1; r2<=*done_row; r2++)
+      if(mzd_read_bit(A, r2, start_col + c2))
+        mzd_row_add_offset(A, r2, start_row + c2, start_col + c2 + 1);
   return curr_pos;
 }
 
@@ -341,14 +353,6 @@ mzd_t *_mzd_lqup_to_u(mzd_t *U, mzd_t *A, size_t r, size_t c, int k) {
   return U;
 }
 
-static inline size_t _max_value(size_t *data, size_t length) {
-  size_t max = 0;
-  for(size_t i=0; i<length; i++) {
-    max = MAX(max, data[i]);
-  }
-  return max;
-}
-
 /* method of many people factorisation */
 size_t _mzd_lqup_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
   assert(A->offset == 0);
@@ -387,13 +391,7 @@ size_t _mzd_lqup_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
       kk = ncols - curr_col;
 
     /* 1. compute LQUP factorisation for a kxk submatrix */
-    kbar = _mzd_lqup_submatrix(A, curr_row, nrows, curr_col, kk, P, Q, done);
-    /* 1.5. finish submatrix*/
-    done_row = _max_value(done, kbar);
-    for(size_t c2=0; c2<kbar && curr_col + c2 < A->ncols -1; c2++)
-      for(size_t r2=done[c2]+1; r2<=done_row; r2++)
-        if(mzd_read_bit(A, r2, curr_col + c2))
-          mzd_row_add_offset(A, r2, curr_row + c2, curr_col + c2 + 1);
+    kbar = _mzd_lqup_submatrix(A, curr_row, nrows, curr_col, kk, P, Q, done, &done_row);
 
     /* 2. extract U */
     _mzd_lqup_to_u(U, A, curr_row, curr_col, kbar);
