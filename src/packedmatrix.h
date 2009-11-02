@@ -366,6 +366,9 @@ static inline void mzd_row_add_offset(mzd_t *M, size_t dstrow, size_t srcrow, si
   word *src = M->rows[srcrow] + startblock;
   word *dst = M->rows[dstrow] + startblock;
 
+  if(!wide)
+    return;
+
   word temp = *src++;
   if (coloffset%RADIX)
     temp = RIGHTMOST_BITS(temp, (RADIX-(coloffset%RADIX)-1));
