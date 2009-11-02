@@ -42,7 +42,7 @@ size_t _mzd_lqup_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t s
   size_t i, l, curr_pos;
   int found;
 
-  size_t bm[k];
+  word bm[k];
   size_t os[k];
 
   for(curr_pos=0; curr_pos < (size_t)k; curr_pos++) {
@@ -469,7 +469,7 @@ size_t _mzd_lqup_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
         Q->values[curr_row] = j;
         mzd_row_swap(A, curr_row, i);
         const size_t wrd = j/RADIX;
-        const size_t bm = ONE<<(RADIX-(j%RADIX)-1);
+        const word bm = ONE<<(RADIX-(j%RADIX)-1);
         for(size_t l = curr_row+1; l<nrows; l++)
           if(A->rows[l][wrd] & bm)
             mzd_row_add_offset(A, l, curr_row, j + 1);
