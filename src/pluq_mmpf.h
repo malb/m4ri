@@ -85,10 +85,11 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
  * \param P Preallocated row permutation.
  * \param Q Preallocated column permutation.
  * \param done Preallocated temporary buffer.
+ * \param done_row Stores the last row which is already reduced processed after function execution.
  *
  * \retval kbar Maximum k for which a pivot could be found.
  */
 
-size_t _mzd_lqup_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done);
+size_t _mzd_lqup_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done, size_t *done_row);
 
 #endif //LQUP_MMPF_H
