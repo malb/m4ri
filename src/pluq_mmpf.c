@@ -42,8 +42,8 @@ size_t _mzd_lqup_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t s
   size_t i, l, curr_pos;
   int found;
 
-  word bm[k];
-  size_t os[k];
+  word bm[4*MAXKAY];
+  size_t os[4*MAXKAY];
 
   for(curr_pos=0; curr_pos < (size_t)k; curr_pos++) {
     os[curr_pos] = (start_col+curr_pos)/RADIX;
