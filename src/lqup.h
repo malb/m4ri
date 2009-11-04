@@ -59,7 +59,7 @@
  *
  * \param A Input m x n matrix
  * \param P Output row permutation of length m
- * \param Qt Output column permutation matrix of length n
+ * \param Q Output column permutation matrix of length n
  * \param cutoff Minimal dimension for Strassen recursion.
  *
  * \sa _mzd_pluq() _mzd_pluq_mmpf() mzd_echelonize_pluq()
@@ -69,7 +69,7 @@
  * \return Rank of A.
  */
 
-size_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t * Qt, const int cutoff);
+size_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t * Q, const int cutoff);
 
 
 /**
@@ -80,7 +80,7 @@ size_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t * Qt, const int cutoff);
  *
  * If (L,Q,U,P) satisfy LQUP = A^T, it returns (L, Q^T, U, P).
  *
- * P and Qt must be preallocated but they don't have to be
+ * P and Q must be preallocated but they don't have to be
  * identity permutations. If cutoff is zero a value is chosen
  * automatically. It is recommended to set cutoff to zero for most
  * applications.
@@ -90,7 +90,7 @@ size_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t * Qt, const int cutoff);
  *
  * \param A Input m x n matrix
  * \param P Output row permutation of length m
- * \param Qt Output column permutation matrix of length n
+ * \param Q Output column permutation matrix of length n
  * \param cutoff Minimal dimension for Strassen recursion.
  *
  * \sa _mzd_lqup() _mzd_pluq() _mzd_pluq_mmpf() mzd_echelonize_pluq()

@@ -1,5 +1,5 @@
 /**
- * \file lqup_mmpf.h
+ * \file pluq_mmpf.h
  * \brief LQUP factorization using Gray codes.
  *
  *

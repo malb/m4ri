@@ -154,6 +154,7 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
  * \param A Matrix.
  * \param P Permutation.
  * \param start_row Start swapping at this row.
+ * \param start_col Start swapping at this column.
  *
  * \wordoffset
  */
@@ -168,6 +169,7 @@ void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t *P, size_t start_row, size_t 
  * \param A Matrix.
  * \param P Permutation.
  * \param start_row Start swapping at this row.
+ * \param start_col Start swapping at this column.
  *
  * \wordoffset
  */
@@ -193,7 +195,7 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
  * This is equivalent to column swaps walking from length-1 to 0.
  *
  * \param A Matrix.
- * \param P Permutation.
+ * \param Q Permutation.
  */
 void  mzd_apply_p_right_tri(mzd_t * A, mzp_t * Q);
 
