@@ -1,30 +1,6 @@
-################################# 
-# Check this is SUN compiler # 
-################################# 
-
-AC_DEFUN([AX_CHECK_SUN_COMPILER], 
-[ 
-       $CC -V 2>test.txt 
-       SUN_STR=`head -1 test.txt |cut -f2 -d" "` 
-       rm -rf test.txt 
-       if test "$SUN_STR" = "Sun"; then 
-               ax_sun_cc_compiler=yes 
-       fi 
-
-       $CXX -V 2>test.txt 
-       SUN_STR=`head -1 test.txt |cut -f2 -d" "` 
-       rm -rf test.txt 
-       if test "$SUN_STR" = "Sun"; then 
-               ax_sun_cc_compiler=yes 
-       fi 
-
-]) 
-
-# ===========================================================================
-#                                    Main
-# ===========================================================================
-
 AC_INIT(libm4ri,1.0.1)
+
+AC_PREREQ([2.64])
 
 AC_CANONICAL_HOST
 
@@ -46,13 +22,11 @@ m4_include([m4/ax_cache_size_tune.m4])dnl
 m4_include([m4/ax_check_compiler_flags.m4])dnl
 m4_include([m4/ax_openmp.m4])dnl
 
-# C99 for suncc
-AX_CHECK_SUN_COMPILER()
-C99_FLAG="-std=c99"
-if test "x$ax_sun_cc_compiler" = "xyes"; then
-   C99_FLAG="-xc99=all,lib"
+AC_PROG_CC_C99()
+
+if test "$ac_cv_prog_cc_c99" = "no"; then
+   AC_MSG_ERROR([C99 support is required but not found.])
 fi
-AC_SUBST(C99_FLAG)
 
 # SSE2 support
 case $host_cpu in
