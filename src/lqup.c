@@ -318,9 +318,14 @@ size_t mzd_echelonize_pluq(mzd_t *A, int full) {
     mzd_t *R = mzd_init_window(A, r, 0, A->nrows, A->ncols);
     mzd_set_ui(R, 0);
     mzd_free_window(R);
+
+    mzd_t *A0 = mzd_init_window(A, 0, 0, r, A->ncols);
+    mzd_apply_p_right(A0, Q);
+    mzd_free_window(A0);
+  } else {
+    mzd_apply_p_right(A, Q);
   }
 
-  mzd_apply_p_right(A, Q);
   mzp_free(P);
   mzp_free(Q);
   return r;
