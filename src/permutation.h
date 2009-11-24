@@ -197,7 +197,7 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
  * \param A Matrix.
  * \param Q Permutation.
  */
-void  mzd_apply_p_right_tri(mzd_t * A, mzp_t * Q);
+void  mzd_apply_p_right_trans_tri(mzd_t * A, mzp_t * Q);
 
 /* /\** */
 /*  * Rotate zero columns to the end. */

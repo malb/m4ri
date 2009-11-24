@@ -320,49 +320,6 @@ void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t *P, size_t start_row, size_t 
   _mzd_apply_p_right_even(A, P, start_row, start_col, 1); 
 }
 
-
-/* void mzd_col_block_rotate(mzd_t *M, size_t zs, size_t ze, size_t de) { */
-/*   size_t i,j; */
-/*   const size_t ds = ze; */
-/* /\*   const size_t ld_f = (de - ds)/RADIX; *\/ */
-/* /\*   const size_t ld_r = (de - ds)%RADIX; *\/ */
-  
-/*   const size_t lz_f = (ze - zs)/RADIX; */
-/*   const size_t lz_r = (ze - zs)%RADIX; */
-
-/*   const size_t le_f = (M->ncols - de)/RADIX; */
-/*   const size_t le_r = (M->ncols - de)%RADIX; */
-
-/*   size_t n1 = ze; */
-/*   size_t r1 = zs; */
-/*   size_t r2 = de - ds; */
-  
-/*   for(i=0; i<M->nrows; i++) { */
-    
-/* /\*     for(j=0; j < i; j++) /\\* copy out *\\/ *\/ */
-/* /\*       data->rows[0][j] = M->rows[i][j]; *\/ */
-
-/*     /\* write *\/ */
-/*     size_t im = (i+1<r2)?i+1:r2; */
-/*     size_t ld_f = im / RADIX; */
-/*     size_t ld_r = im % RADIX; */
-/*     for(j=0; j<ld_f; j++) { */
-/*       mzd_clear_bits(M, i, zs + j*RADIX, RADIX); */
-/*       mzd_xor_bits(M, i, zs + j*RADIX, RADIX, mzd_read_bits(M,i,ds+j*RADIX,RADIX)); */
-/*     } */
-/*     if(ld_r) { */
-/*       mzd_clear_bits(M, i, zs + ld_f*RADIX, ld_r); */
-/*       mzd_xor_bits(M, i, zs + ld_f*RADIX, ld_r, mzd_read_bits(M,i,ds+ld_f*RADIX,ld_r)); */
-/*     } */
-/*     //mzd_write_bit(M,i,i+r1,1); */
-
-/*     /\* Placing zeros *\/ */
-/*    for (j = r1+im; j<n1+im; ++j) */
-/*      mzd_write_bit(M,i,j,0); */
-/*   } */
-/*   // mzd_free(data); */
-/* } */
-
 void mzp_print(mzp_t *P) {
   printf("[ ");
   for(size_t i=0; i<P->length; i++) {
@@ -372,17 +329,17 @@ void mzp_print(mzp_t *P) {
 }
 
 #if 0
-void  mzd_apply_p_right_tri (mzd_t * A, mzp_t * P, size_t rank){
+void  mzd_apply_p_right_trans_tri (mzd_t * A, mzp_t * P, size_t rank){
   assert(P->length==A->ncols);
   for (size_t i =0 ; i<P->length; ++i) {
     assert(P->values[i] >= i);
-    if (P->values[i] > i) {
-      mzd_col_swap_in_rows(A, i, P->values[i], 0, i);
-    }
+    //if (P->values[i] > i) {
+    mzd_col_swap_in_rows(A, i, P->values[i], 0, i);
+    //}
   }
 }
 #else
-void mzd_apply_p_right_tri(mzd_t *A, mzp_t *P) {
+void mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t *P) {
   assert(P->length==A->ncols);
   const size_t step_size = MAX((CPU_L1_CACHE>>2)/A->width,1);
 
@@ -390,9 +347,9 @@ void mzd_apply_p_right_tri(mzd_t *A, mzp_t *P) {
     const size_t row_bound = MIN(r+step_size, A->nrows);
     for (size_t i =0 ; i<A->ncols; ++i) {
       assert(P->values[i] >= i);
-      if (P->values[i] > i) {
-        mzd_col_swap_in_rows(A, i, P->values[i], r, MIN(row_bound,i));
-      }
+      //if (P->values[i] > i) {
+      mzd_col_swap_in_rows(A, i, P->values[i], r, MIN(row_bound,i));
+      //}
     }
   }
 }
