@@ -216,7 +216,7 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, size_t start_row, size_t start_
   }
 
   /* we have a bitmask to encode where to write to */
-  word *write_mask = (word*)m4ri_mm_calloc(sizeof(word), length);
+  word *write_mask = (word*)m4ri_mm_calloc(sizeof(word), width);
   for(size_t i=0; i<A->ncols; i+=RADIX) {
     const size_t todo = MIN(RADIX,A->ncols-i);
     for(size_t k=0; k<todo; k++) {
@@ -228,7 +228,6 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, size_t start_row, size_t start_
 
   for(size_t i=start_row; i<A->nrows; i+=step_size) {
     step_size = MIN(step_size, A->nrows-i);
-
     for(size_t k=0; k<step_size; k++) {
       Arow = A->rows[i+k];
       Brow = B->rows[k];
