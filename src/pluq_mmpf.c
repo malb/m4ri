@@ -365,7 +365,12 @@ size_t _mzd_lqup_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
 
   if(k == 0) {
     k = m4ri_opt_k(nrows, ncols, 0);
+    if (k>=7)
+      k = 7;
+    if ( (4*(1<<k)*A->ncols / 8.0) > CPU_L2_CACHE / 2.0 )
+      k -= 1;
   }
+
   int kk = 4*k;
 
   for(size_t i = 0; i<ncols; i++) 
