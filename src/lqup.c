@@ -78,6 +78,7 @@ size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
     /* this improves data locality and runtime considerably */
     mzd_t *Abar = mzd_copy(NULL, A);
     size_t r = _mzd_lqup_mmpf(Abar, P, Q, 0);
+    //size_t r = _mzd_lqup_naive(Abar, P, Q);
     mzd_copy(A, Abar);
     mzd_free(Abar);
     return r;
