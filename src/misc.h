@@ -447,17 +447,10 @@ static inline void *m4ri_mm_malloc( int size ) {
 
 /* void m4ri_mm_free(void *condemned, ...); */
 static inline void m4ri_mm_free(void *condemned, ...) { 
-#ifdef HAVE_OPENMP
-#pragma omp critical
-{
-#endif
 #ifdef HAVE_MM_MALLOC
   _mm_free(condemned); 
 #else
   free(condemned);
-#endif  
-#ifdef HAVE_OPENMP
- }
 #endif
 }
 
@@ -526,28 +519,43 @@ static inline mmb_t *m4ri_mmc_handle(void) {
  */
 
 static inline void *m4ri_mmc_malloc(size_t size) {
+
+#ifdef ENABLE_MMC
+  void *ret = NULL;
+#endif
+
 #ifdef HAVE_OPENMP
 #pragma omp critical
 {
 #endif
+
 #ifdef ENABLE_MMC
   mmb_t *mm = m4ri_mmc_handle();
   if (size <= M4RI_MMC_THRESHOLD) {
     size_t i;
     for (i=0; i<M4RI_MMC_NBLOCKS; i++) {
       if(mm[i].size == size) {
-        void *ret = mm[i].data;
+        ret = mm[i].data;
         mm[i].data = NULL;
         mm[i].size = 0;
-        return ret;
+        break;
       }
     }
   }
 #endif //ENABLE_MMC
+
 #ifdef HAVE_OPENMP
  }
 #endif
-  return m4ri_mm_malloc(size);
+
+#ifdef ENABLE_MMC
+ if (ret)
+   return ret;
+ else
+   return m4ri_mm_malloc(size);
+#else 
+ return m4ri_mm_malloc(size);
+#endif
 }
 
 /**
@@ -579,7 +587,7 @@ static inline void m4ri_mmc_free(void *condemned, size_t size) {
 #pragma omp critical
 {
 #endif
-#ifdef ENABLE_MMC
+#ifdef ENABLE_MMC  
   static size_t j = 0;
   mmb_t *mm = m4ri_mmc_handle();
   if (size < M4RI_MMC_THRESHOLD) {
@@ -588,20 +596,24 @@ static inline void m4ri_mmc_free(void *condemned, size_t size) {
       if(mm[i].size == 0) {
         mm[i].size = size;
         mm[i].data = condemned;
-        return;
+        break;
       }
     }
-    m4ri_mm_free(mm[j].data);
-    mm[j].size = size;
-    mm[j].data = condemned;
-    j = (j+1) % M4RI_MMC_NBLOCKS;
-    return;
+    if (i == M4RI_MMC_NBLOCKS) {
+      m4ri_mm_free(mm[j].data);
+      mm[j].size = size;
+      mm[j].data = condemned;
+      j = (j+1) % M4RI_MMC_NBLOCKS;
+    }
+  } else {
+    m4ri_mm_free(condemned);
   }
+#else
+  m4ri_mm_free(condemned);
 #endif //ENABLE_MMC
 #ifdef HAVE_OPENMP
  }
 #endif
-  m4ri_mm_free(condemned);
 }
 
 /**
