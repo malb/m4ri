@@ -354,7 +354,7 @@ void mzd_process_rows2(mzd_t *M, size_t startrow, size_t stoprow, size_t startco
   const int kb = k-k/2;
 
 #ifdef HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //MAX((CPU_L1_CACHE>>3)/wide,
 #endif
   for(r=startrow; r<stoprow; r++) {
     const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
@@ -392,7 +392,7 @@ void mzd_process_rows3(mzd_t *M, size_t startrow, size_t stoprow, size_t startco
   const int kc = k/3;
 
 #ifdef HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r=startrow; r<stoprow; r++) {
     const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
@@ -435,7 +435,7 @@ void mzd_process_rows4(mzd_t *M, size_t startrow, size_t stoprow, size_t startco
   const int kd = k/4;
 
 #ifdef HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r=startrow; r<stoprow; r++) {
     const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
@@ -481,7 +481,7 @@ void mzd_process_rows5(mzd_t *M, size_t startrow, size_t stoprow, size_t startco
   const int ke = k/5;
 
 #ifdef HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r=startrow; r<stoprow; r++) {
     
@@ -533,7 +533,7 @@ void mzd_process_rows6(mzd_t *M, size_t startrow, size_t stoprow, size_t startco
   const int kf = k/6;
 
 #ifdef HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r=startrow; r<stoprow; r++) {
     const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
