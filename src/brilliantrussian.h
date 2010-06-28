@@ -18,7 +18,7 @@
  *                 M4RI:  Linear Algebra over GF(2)
  *
  *    Copyright (C) 2007, 2008 Gregory Bard <bard@fordham.edu>
- *    Copyright (C) 2008 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
+ *    Copyright (C) 2008-2010 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
  *
  *  Distributed under the terms of the GNU General Public License (GPL)
  *  version 2 or higher.
@@ -145,10 +145,19 @@ void mzd_process_rows4(mzd_t *M, size_t startrow, size_t endrow, size_t startcol
                        mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1,
                        mzd_t *T2, size_t *L2, mzd_t *T3, size_t *L3);
 
+
 /**
  * \brief Matrix elimination using the 'Method of the Four Russians'
  * (M4RI).
  *
+ * The M4RI algorithm was proposed in Gregory Bard; Accelerating
+ * Cryptanalysis with the Method of Four Russians; 2006;
+ * http://eprint.iacr.org/2006/251
+ *
+ * Our implementatation is discussed in in Martin Albrecht and Clément
+ * Pernet; Efficient Decomposition of Dense Matrices over GF(2);
+ * http://arxiv.org/abs/1006.1744
+ * 
  * \param M Matrix to be reduced.
  * \param full Return the reduced row echelon form, not only upper triangular form.
  * \param k M4RI parameter, may be 0 for auto-choose.
@@ -161,7 +170,7 @@ void mzd_process_rows4(mzd_t *M, size_t startrow, size_t endrow, size_t startcol
  * \return Rank of A.
  */
 
-size_t mzd_echelonize_m4ri(mzd_t *M, int full, int k);
+size_t _mzd_echelonize_m4ri(mzd_t *A, const int full, int k, int heuristic, const double threshold);
 
 /**
  * \brief Given a matrix in upper triangular form compute the reduced row
@@ -181,12 +190,12 @@ void mzd_top_echelonize_m4ri(mzd_t *M, int k);
  * row echelon form of that matrix but only start to do anything for
  * the pivot at (r,c).
  * 
- * \param M Matrix to be reduced.
+ * \param A Matrix to be reduced.
  * \param k M4RI parameter, may be 0 for auto-choose.
  * \param r Row index.
- * \paran c Column index.
- *
+ * \param c Column index.
  * \param max_r Only clear top max_r rows.
+ *
  * \wordoffset
  *
  */
@@ -208,7 +217,7 @@ size_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, size_t r, size_t c, size_t max_
  * \return Inverse of M
  *
  * \note This function allocates a new matrix for the inverse which
- * must be free'd using mzd_free() once not needed anymore.
+ * must be free'd using mzd_free() once it is not needed anymore.
  */
 
 mzd_t *mzd_invert_m4ri(mzd_t *M, mzd_t *I, int k);
@@ -236,6 +245,9 @@ mzd_t *mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k);
 /**
  * Set C to C + AB using Konrod's method.
  *
+ * This is the convenient wrapper function, please see _mzd_mul_m4rm
+ * for authors and implementation details.
+ *
  * \param C Preallocated product matrix, may be NULL for zero matrix.
  * \param A Input matrix A
  * \param B Input matrix B
@@ -252,7 +264,11 @@ mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k);
  * \brief Matrix multiplication using Konrod's method, i.e. compute C such
  * that C == AB.
  * 
- * This is the actual implementation.
+ * This is the actual implementation. 
+ * 
+ * This function is described in Martin Albrecht, Gregory Bard and
+ * William Hart; Efficient Multiplication of Dense Matrices over
+ * GF(2); pre-print available at http://arxiv.org/abs/0811.1714
  *
  * \param C Preallocated product matrix.
  * \param A Input matrix A
@@ -261,7 +277,8 @@ mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k);
  * \param clear clear the matrix C first
  *
  * \author Martin Albrecht -- initial implementation
- * \author William Hart -- block matrix implementation, use of several Gray code tables, general speed-ups
+ * \author William Hart -- block matrix implementation, use of several
+ * Gray code tables, general speed-ups
  *
  * \wordoffset
  *
@@ -275,11 +292,5 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear);
  */
 
 #define M4RM_GRAY8
-
-/**
- *
- */
-
-size_t mzd_echelonize(mzd_t *A, int full);
 
 #endif //BRILLIANTRUSSIAN_H

@@ -53,9 +53,10 @@ extern "C" {
 #include "grayflex.h"
 #include "parity.h"
 #include "trsm.h"
-#include "lqup.h"
-#include "pluq_mmpf.h"
+#include "pls.h"
+#include "pls_mmpf.h"
 #include "solve.h"
+#include "echelonform.h"
 
 #ifdef __cplusplus
 }

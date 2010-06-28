@@ -20,7 +20,7 @@
 
 #include "solve.h"
 #include "strassen.h"
-#include "lqup.h"
+#include "pls.h"
 #include "trsm.h"
 #include "permutation.h"
 

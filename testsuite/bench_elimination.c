@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
   else if(strcmp(algorithm,"pluq")==0)
     r = mzd_echelonize_pluq(A, 1);
   else if(strcmp(algorithm,"mmpf")==0)
-    r = _mzd_lqup_mmpf(A, mzp_init(A->nrows),mzp_init(A->ncols),0);
+    r = _mzd_pluq_mmpf(A, mzp_init(A->nrows),mzp_init(A->ncols),0);
   else if(strcmp(algorithm,"naive")==0)
     r = mzd_echelonize_naive(A, 1);
   printf("m: %5d, n: %5d, r: %5d, cpu cycles: %llu wall time: %lf\n",m, n, r, cpucycles() - t, walltime(&wt));

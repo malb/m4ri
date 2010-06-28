@@ -1,13 +1,11 @@
 /**
- * \file pluq_mmpf.h
- * \brief LQUP factorization using Gray codes.
- *
+ * \file pls_mmpf.h
+ * \brief PLS and PLUQ factorization using Gray codes.
  *
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
  * 
- * \example testsuite/test_lqup.c
+ * \example testsuite/test_pluq.c
  */
-
 
 #ifndef LQUP_MMPF_H
 #define LQUP_MMPF_H
@@ -15,7 +13,7 @@
  *
  *                 M4RI:  Linear Algebra over GF(2)
  *
- *    Copyright (C) 2008 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
+ *    Copyright (C) 2008-2010 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
  *
  *  Distributed under the terms of the GNU General Public License (GPL)
  *  version 2 or higher.
@@ -35,10 +33,14 @@
 #include "permutation.h"
 
 /**
- * \brief LQUP matrix decomposition of A using Gray codes.
+ * \brief PLS matrix decomposition of A using Gray codes.
  *
- * If (L,Q,U,P) satisfy LQUP = A^T, this function returns
- * (L,Q^T,U,P). The matrix L and U are stored in place over A.
+ * Returns (P,L,S) satisfying PLS = A where P is a permutation matrix
+ * of dimension m x m, L is m x r unit lower triangular and S is an r
+ * x n matrix which is upper triangular except that its columns are
+ * permuted, that is S = UQ for U r x n upper triangular and Q is a n
+ * x n permutation matrix. The matrix L and S are stored in place over
+ * A.
  *
  * \param A Matrix.
  * \param P Preallocated row permutation.
@@ -50,12 +52,14 @@
  * \return Rank of A.
  */
 
-size_t _mzd_lqup_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
+size_t _mzd_pls_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
 
 /**
  * \brief PLUQ matrix decomposition of A using Gray codes.
  *
- * If (P,L,U,Q) satisfy PLUQ = A, it returns (P, L, U, Q^T).
+ * Returns (P,L,U,Q) satisfying PLUQ = A where P and Q are two
+ * permutation matrices, of dimension respectively m x m and n x n, L
+ * is m x r unit lower triangular and U is r x n upper triangular.
  *
  * \param A Matrix.
  * \param P Preallocated row permutation.
@@ -71,11 +75,11 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
 
 
 /**
- * \brief LQUP matrix decomposition of a submatrix for up to k columns
+ * \brief PLS matrix decomposition of a submatrix for up to k columns
  * starting at (r,c).
  *
  * Updates P and Q and modifies A in place. The buffer done afterwards
- * holds how far a particular row was already added.
+ * holds how far a particular row was already eliminated.
  *
  * \param A Matrix.
  * \param start_row Row Offset.
@@ -90,6 +94,6 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
  * \retval kbar Maximum k for which a pivot could be found.
  */
 
-size_t _mzd_lqup_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done, size_t *done_row);
+size_t _mzd_pls_submatrix(mzd_t *A, size_t start_row, size_t stop_row, size_t start_col, int k, mzp_t *P, mzp_t *Q, size_t *done, size_t *done_row);
 
 #endif //LQUP_MMPF_H

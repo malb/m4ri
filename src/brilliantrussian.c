@@ -3,7 +3,7 @@
 *                 M4RI: Linear Algebra over GF(2)
 *
 *    Copyright (C) 2007, 2008 Gregory Bard <bard@fordham.edu>
-*    Copyright (C) 2008 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
+*    Copyright (C) 2008-2010 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
 *
 *  Distributed under the terms of the GNU General Public License (GPL) 
 *  version 2 or higher.
@@ -29,7 +29,7 @@
 
 #include "brilliantrussian.h"
 #include "grayflex.h"
-#include "lqup.h"
+#include "echelonform.h"
 
 /**
  * \brief Perform Gaussian reduction to reduced row echelon form on a
@@ -639,9 +639,6 @@ size_t _mzd_echelonize_m4ri(mzd_t *A, const int full, int k, int heuristic, cons
 
   if (heuristic) {
     if (c<A->ncols && r< A->nrows && _mzd_density(A,32, 0, 0) >= threshold) {
-      //#ifndef NDEBUG
-      printf("switching at %zu x %zu (%.5f)\n",r,c,mzd_density(A,32));
-      //#endif
       mzd_t *Abar = mzd_init_window(A, r, (c/RADIX)*RADIX, A->nrows, A->ncols);
       r += mzd_echelonize_pluq(Abar, full);
       mzd_free(Abar);
@@ -653,9 +650,6 @@ size_t _mzd_echelonize_m4ri(mzd_t *A, const int full, int k, int heuristic, cons
     if (heuristic && c > (last_check + 256)) {
       last_check = c;
       if (c<A->ncols && r< A->nrows && _mzd_density(A,32, r, c) >= threshold) {
-        //#ifndef NDEBUG
-        printf("switching at %zu x %zu (%.5f)\n",r,c,_mzd_density(A,32,r,c));
-        //#endif
         mzd_t *Abar = mzd_init_window(A, r, (c/RADIX)*RADIX, A->nrows, A->ncols);
         if (!full) {
           r += mzd_echelonize_pluq(Abar, full);
@@ -1351,11 +1345,3 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
   return C;
 }
 
-
-size_t mzd_echelonize_m4ri(mzd_t *A, int full, int k) {
-  return _mzd_echelonize_m4ri(A, full, k, 1, 0.15);
-}
-
-size_t mzd_echelonize(mzd_t *A, int full) {
-  return _mzd_echelonize_m4ri(A, full, 0, 1, 0.15);
-}

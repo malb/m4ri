@@ -23,16 +23,16 @@
 #include "trsm.h"
 #include "parity.h"
 #include <stdio.h>
-#include "pluq_mmpf.h"
+#include "pls_mmpf.h"
 #include "strassen.h"
-#include "lqup.h"
+#include "pls.h"
 
-size_t mzd_lqup (mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
+size_t mzd_pls (mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
   if (P->length != A->nrows)
-    m4ri_die("mzd_lqup: Permutation P length (%d) must match A nrows (%d)\n",P->length, A->nrows);
+    m4ri_die("mzd_pls: Permutation P length (%d) must match A nrows (%d)\n",P->length, A->nrows);
   if (Q->length != A->ncols)
-    m4ri_die("mzd_lqup: Permutation Q length (%d) must match A ncols (%d)\n",Q->length, A->ncols);
-  return _mzd_lqup(A, P, Q, cutoff);
+    m4ri_die("mzd_pls: Permutation Q length (%d) must match A ncols (%d)\n",Q->length, A->ncols);
+  return _mzd_pls(A, P, Q, cutoff);
 }
 
 size_t mzd_pluq (mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
@@ -46,7 +46,7 @@ size_t mzd_pluq (mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
 
 
 size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
-  size_t r  = _mzd_lqup(A,P,Q,cutoff);
+  size_t r  = _mzd_pls(A,P,Q,cutoff);
   if(r && r<A->nrows) {
     mzd_t *A0 = mzd_init_window(A,0,0,r,A->ncols);
     mzd_apply_p_right_trans_tri(A0, Q);
@@ -57,7 +57,7 @@ size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
   return r;
 }
 
-size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
+size_t _mzd_pls(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
   size_t ncols = A->ncols;
 
 #if 1
@@ -73,12 +73,12 @@ size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
   size_t nrows = A->nrows;
 #endif
 
-  if (ncols <= RADIX || A->width*A->nrows <= LQUP_CUTOFF) {
+  if (ncols <= RADIX || A->width*A->nrows <= PLS_CUTOFF) {
 /*   if(ncols <= PLUQ_CUTOFF) { */
     /* this improves data locality and runtime considerably */
     mzd_t *Abar = mzd_copy(NULL, A);
-    size_t r = _mzd_lqup_mmpf(Abar, P, Q, 0);
-    //size_t r = _mzd_lqup_naive(Abar, P, Q);
+    size_t r = _mzd_pls_mmpf(Abar, P, Q, 0);
+    //size_t r = _mzd_pls_naive(Abar, P, Q);
     mzd_copy(A, Abar);
     mzd_free(Abar);
     return r;
@@ -107,7 +107,7 @@ size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
 
     mzp_t *P1 = mzp_init_window(P, 0, nrows);
     mzp_t *Q1 = mzp_init_window(Q, 0, A0->ncols);
-    r1 = _mzd_lqup(A0, P1, Q1, cutoff);
+    r1 = _mzd_pls(A0, P1, Q1, cutoff);
 
     /*           r1           n1
      *   ------------------------------------------
@@ -139,7 +139,7 @@ size_t _mzd_lqup(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
     mzp_t *P2 = mzp_init_window(P, r1, nrows);
     mzp_t *Q2 = mzp_init_window(Q, n1, ncols);
 
-    r2 = _mzd_lqup(A11, P2, Q2, cutoff);
+    r2 = _mzd_pls(A11, P2, Q2, cutoff);
 
     /*           n
      *   -------------------
@@ -238,7 +238,7 @@ size_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
   return curr_pos;
 }
  
-size_t _mzd_lqup_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
+size_t _mzd_pls_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
   size_t i, j, l, col_pos, row_pos;
   int found;
   col_pos = 0;
@@ -292,49 +292,5 @@ size_t _mzd_lqup_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
 
   return row_pos;
 }
- 
-size_t mzd_echelonize_pluq(mzd_t *A, int full) {
-  mzp_t *P = mzp_init(A->nrows);
-  mzp_t *Q = mzp_init(A->ncols);
 
-  size_t r = mzd_pluq(A, P, Q, 0);
 
-  if(full) {
-    mzd_t *U = mzd_init_window(A, 0, 0, r, r);
-    mzd_t *B = mzd_init_window(A, 0, r, r, A->ncols);
-    if(r!=A->ncols) 
-      mzd_trsm_upper_left(U, B, 0);
-    if(r!=0) 
-      mzd_set_ui(U, 0);
-    for(size_t i=0; i<r; i++)
-      mzd_write_bit(A, i, i, 1);
-    mzd_free_window(U);
-    mzd_free_window(B);
-
-  } else {
-    for(size_t i=0; i<r; i++) {
-      for(size_t j=0; j< i; j+=RADIX) {
-        const size_t length = MIN(RADIX, i-j);
-        mzd_clear_bits(A, i, j, length);
-      }
-    }
-  }
-
-  if(r!=0) {
-    mzd_t *A0 = mzd_init_window(A, 0, 0, r, A->ncols);
-    mzd_apply_p_right(A0, Q);
-    mzd_free_window(A0);
-  } else {
-    mzd_apply_p_right(A, Q);
-  }
-
-  if(r!=A->nrows) {
-    mzd_t *R = mzd_init_window(A, r, 0, A->nrows, A->ncols);
-    mzd_set_ui(R, 0);
-    mzd_free_window(R);
-  }
-  
-  mzp_free(P);
-  mzp_free(Q);
-  return r;
-}

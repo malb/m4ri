@@ -2,10 +2,10 @@ CFLAGS=-I.. -std=c99
 LDFLAGS=-L../.libs/ -lm4ri
 DEBUG=-ggdb
 
-TEST_PRGS=test_elimination test_multiplication test_trsm test_lqup test_solve test_kernel
+TEST_PRGS=test_elimination test_multiplication test_trsm test_pluq test_solve test_kernel
 BENCH_PRGS=bench_elimination \
 	bench_multiplication \
-	bench_lqup \
+	bench_pluq \
 	bench_trsm_lowerleft \
 	bench_trsm_upperleft \
 	bench_trsm_lowerright \
@@ -24,8 +24,8 @@ bench_elimination: cpucycles.o bench_elimination.c Makefile
 bench_multiplication: cpucycles.o bench_multiplication.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) bench_multiplication.c cpucycles.o $(LDFLAGS) -o $@
 
-bench_lqup: cpucycles.o bench_lqup.c Makefile
-	$(CC) $(DEBUG) $(CFLAGS) bench_lqup.c cpucycles.o $(LDFLAGS) -o $@
+bench_pluq: cpucycles.o bench_pluq.c Makefile
+	$(CC) $(DEBUG) $(CFLAGS) bench_pluq.c cpucycles.o $(LDFLAGS) -o $@
 
 bench_trsm_lowerleft: cpucycles.o bench_trsm_lowerleft.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o $(LDFLAGS) -o $@
