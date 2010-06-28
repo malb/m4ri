@@ -35,7 +35,7 @@
 /**
  * \brief PLS matrix decomposition of A using Gray codes.
  *
- * Returns (P,L,S) satisfying PLS = A where P is a permutation matrix
+ * Returns (P,L,S,Q) satisfying PLS = A where P is a permutation matrix
  * of dimension m x m, L is m x r unit lower triangular and S is an r
  * x n matrix which is upper triangular except that its columns are
  * permuted, that is S = UQ for U r x n upper triangular and Q is a n
