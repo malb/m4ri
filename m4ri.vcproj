@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
@@ -172,11 +172,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\grayflex.h"
+				RelativePath=".\src\echelonform.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\pls.h"
+				RelativePath=".\src\grayflex.h"
 				>
 			</File>
 			<File
@@ -200,7 +200,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\pluq_mmpf.h"
+				RelativePath=".\src\pls.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\pls_mmpf.h"
 				>
 			</File>
 			<File
@@ -232,11 +236,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\grayflex.c"
+				RelativePath=".\src\echelonform.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\pls.c"
+				RelativePath=".\src\grayflex.c"
 				>
 			</File>
 			<File
@@ -252,7 +256,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\pluq_mmpf.c"
+				RelativePath=".\src\pls.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\pls_mmpf.c"
 				>
 			</File>
 			<File
