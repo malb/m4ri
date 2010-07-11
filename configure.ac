@@ -29,21 +29,27 @@ if test "$ac_cv_prog_cc_c99" = "no"; then
 fi
 
 # SSE2 support
-case $host_cpu in
-     i[[3456]]86*|x86_64*)
-        AX_CPU_VENDOR()
-        if test "x$ax_cv_cpu_vendor" = "xIntel"; then
-            AX_EXT() # SSE2 is slower on the Opteron
-        fi
-esac
+AC_ARG_ENABLE([sse2],
+        AS_HELP_STRING([--disable-sse2], [don't use SSE2 instruction set.]))
+
+AS_IF([test "x$enable_sse2" != "xno"], [
+   case $host_cpu in i[[3456]]86*|x86_64*)
+          AX_CPU_VENDOR()
+          if test "x$ax_cv_cpu_vendor" = "xIntel"; then
+             AX_EXT() # SSE2 is slower on the Opteron
+          fi
+   esac
+])
 
 AC_CHECK_HEADER([mm_malloc.h],AC_DEFINE(HAVE_MM_MALLOC,,[Support aligned allocations]),)
 
 # OpenMP support
-AC_ARG_WITH(openmp, [  --enable-openmp           add support for OpenMP Parallelism])
-if test "x$enable_openmp" = "xyes"; then
+AC_ARG_ENABLE([openmp],
+        AS_HELP_STRING( [--enable-openmp],[add support for OpenMP multicore support.]))
+
+AS_IF([test "x$enable_openmp" != "xno"], [
    AX_OPENMP()
-fi
+])
 AC_SUBST(OPENMP_CFLAGS)
 
 # Debugging support
@@ -57,10 +63,11 @@ fi
 
 # L1 and L2 Cache Size
 AX_CACHE_SIZE()
-AC_ARG_ENABLE(cachetune, [  --enable-cachetune Calculate cache size from timing information.])
-if test "x$enable_cachetune" = x"yes"; then
+AC_ARG_ENABLE([cachetune], 
+        AS_HELP_STRING([--enable-cachetune],[calculate cache size from timing information.]))
+AS_IF([test "x$enable_cachetune" != "xno"], [
     AX_CACHE_SIZE_TUNE()
-fi
+])
 
 AC_PROG_MAKE_SET
 
