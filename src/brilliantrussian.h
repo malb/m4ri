@@ -147,6 +147,64 @@ void mzd_process_rows4(mzd_t *M, size_t startrow, size_t endrow, size_t startcol
 
 
 /**
+ * \brief Same as mzd_process_rows but works with five Gray code tables
+ * in parallel.
+ *
+ * \param M Matrix to operate on
+ * \param startrow top row which is operated on
+ * \param endrow bottom row which is operated on
+ * \param startcol Starting column for addition
+ * \param k M4RI parameter
+ * \param T0 contains the correct row to be added
+ * \param L0 Contains row number to be added
+ * \param T1 contains the correct row to be added
+ * \param L1 Contains row number to be added
+ * \param T2 contains the correct row to be added
+ * \param L2 Contains row number to be added
+ * \param T3 contains the correct row to be added
+ * \param L3 Contains row number to be added
+ * \param T4 contains the correct row to be added
+ * \param L4 Contains row number to be added
+ *
+ * \wordoffset
+ */
+
+void mzd_process_rows5(mzd_t *M, size_t startrow, size_t endrow, size_t startcol, int k,
+                       mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1,
+                       mzd_t *T2, size_t *L2, mzd_t *T3, size_t *L3,
+                       mzd_t* T4, size_t *L4);
+
+/**
+ * \brief Same as mzd_process_rows but works with six Gray code tables
+ * in parallel.
+ *
+ * \param M Matrix to operate on
+ * \param startrow top row which is operated on
+ * \param endrow bottom row which is operated on
+ * \param startcol Starting column for addition
+ * \param k M4RI parameter
+ * \param T0 contains the correct row to be added
+ * \param L0 Contains row number to be added
+ * \param T1 contains the correct row to be added
+ * \param L1 Contains row number to be added
+ * \param T2 contains the correct row to be added
+ * \param L2 Contains row number to be added
+ * \param T3 contains the correct row to be added
+ * \param L3 Contains row number to be added
+ * \param T4 contains the correct row to be added
+ * \param L4 Contains row number to be added
+ * \param T5 contains the correct row to be added
+ * \param L5 Contains row number to be added
+ *
+ * \wordoffset
+ */
+
+void mzd_process_rows6(mzd_t *M, size_t startrow, size_t endrow, size_t startcol, int k,
+                       mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1,
+                       mzd_t *T2, size_t *L2, mzd_t *T3, size_t *L3,
+                       mzd_t* T4, size_t *L4, mzd_t *T5, size_t *L5);
+
+/**
  * \brief Matrix elimination using the 'Method of the Four Russians'
  * (M4RI).
  *
