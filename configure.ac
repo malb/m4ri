@@ -47,13 +47,14 @@ AC_CHECK_HEADER([mm_malloc.h],AC_DEFINE(HAVE_MM_MALLOC,,[Support aligned allocat
 AC_ARG_ENABLE([openmp],
         AS_HELP_STRING( [--enable-openmp],[add support for OpenMP multicore support.]))
 
-AS_IF([test "x$enable_openmp" != "xno"], [
+AS_IF([test "x$enable_openmp" = "xyes"], [
    AX_OPENMP()
 ])
 AC_SUBST(OPENMP_CFLAGS)
 
 # Debugging support
 AC_ARG_ENABLE(debug, [  --enable-debug          Enable assert() statements for debugging.])
+
 if test "x$enable_debug" = x"yes"; then
    DEBUG_FLAGS="-g"
    AC_SUBST(DEBUG_FLAGS)
@@ -65,7 +66,7 @@ fi
 AX_CACHE_SIZE()
 AC_ARG_ENABLE([cachetune], 
         AS_HELP_STRING([--enable-cachetune],[calculate cache size from timing information.]))
-AS_IF([test "x$enable_cachetune" != "xno"], [
+AS_IF([test "x$enable_cachetune" = "xyes"], [
     AX_CACHE_SIZE_TUNE()
 ])
 
