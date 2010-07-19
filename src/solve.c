@@ -17,6 +17,9 @@
  *                  http://www.gnu.org/licenses/
  *
  ********************************************************************/
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "solve.h"
 #include "strassen.h"

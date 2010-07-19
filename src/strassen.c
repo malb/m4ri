@@ -20,6 +20,11 @@
 *
 ********************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+
 #include "grayflex.h"
 #include "strassen.h"
 #include "misc.h"

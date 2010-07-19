@@ -33,8 +33,6 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "misc.h"
-
 #ifdef HAVE_SSE2
 #include <emmintrin.h>
 #endif

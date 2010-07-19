@@ -18,6 +18,12 @@
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "misc.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include "packedmatrix.h"
@@ -1105,9 +1111,8 @@ void mzd_row_clear_offset(mzd_t *M, size_t row, size_t coloffset) {
     temp = 0;
   }
   M->rows[row][startblock] = temp;
-  temp=0;
   for ( i=startblock+1; i < M->width; i++ ) {
-    M->rows[row][i] = temp;
+    M->rows[row][i] = 0ULL;
   }
 }
 

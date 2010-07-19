@@ -17,8 +17,12 @@
 *                  http://www.gnu.org/licenses/
 *
 ********************************************************************/
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "misc.h"
+
 #include "packedmatrix.h"
 #include "trsm.h"
 #include "parity.h"

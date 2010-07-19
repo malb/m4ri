@@ -17,6 +17,10 @@
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef _MSC_VER
 #include <windows.h>
 #endif

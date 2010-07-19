@@ -29,10 +29,6 @@
 *
 ********************************************************************/
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #ifdef HAVE_MM_MALLOC
 #include <mm_malloc.h>
 #endif

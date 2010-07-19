@@ -3,7 +3,7 @@
  * \brief M4RI and M4RM.
  *
  * \author Gregory Bard <bard@fordham.edu>
- * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
+ * \author Martin Albrecht <martinralbrecht@googlemail.com>
  *
  * \note For reference see Gregory Bard; Accelerating Cryptanalysis with
  * the Method of Four Russians; 2006;
@@ -18,7 +18,7 @@
  *                 M4RI:  Linear Algebra over GF(2)
  *
  *    Copyright (C) 2007, 2008 Gregory Bard <bard@fordham.edu>
- *    Copyright (C) 2008-2010 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
+ *    Copyright (C) 2008-2010 Martin Albrecht <martinralbrecht@googlemail.com>
  *
  *  Distributed under the terms of the GNU General Public License (GPL)
  *  version 2 or higher.
