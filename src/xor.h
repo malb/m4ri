@@ -42,7 +42,7 @@
  */
 
 #ifdef HAVE_SSE2
-static inline void _mzd_combine8(word *c, word *t1, word *t2, word *t3, word *t4, word *t5, word *t6, word *t7, word *t8, int wide) {
+static inline void _mzd_combine8(word *c, word *t1, word *t2, word *t3, word *t4, word *t5, word *t6, word *t7, word *t8, size_t wide) {
   size_t i;
   /* assuming t1 ... t8 are aligned, but c might not be */
   if (ALIGNMENT(c,16)==0) {
