@@ -1,3 +1,4 @@
+
 /**
  * \file misc.h
  * \brief Helper functions.
@@ -28,6 +29,10 @@
 *                  http://www.gnu.org/licenses/
 *
 ********************************************************************/
+
+#ifndef HAVE_SSE2
+#undef HAVE_MM_MALLOC
+#endif
 
 #ifdef HAVE_MM_MALLOC
 #include <mm_malloc.h>
