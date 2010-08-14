@@ -114,11 +114,11 @@ AC_DEFUN([AX_CACHE_SIZE_TUNE],
     
         printf("%5zu %9.3f %9.3f\n",candidates[i],times[i],dtimes[i]);
     
-        if (result > 2) {
+        if (result > 4) {
           trials = trials/2;
           mult = 2*mult;
         }
-        if (result > 3) {
+        if (result > 6) {
           trials = trials/3;
           mult = 3*mult;
         }
@@ -148,10 +148,10 @@ AC_DEFUN([AX_CACHE_SIZE_TUNE],
       FILE *f;
       printf("\n");
       const size_t c1[] = {4,8,16,32,64,128,256,512};
-      const size_t _l1 = cache_size(c1,50000,8);
+      const size_t _l1 = cache_size(c1,1000000,8);
       printf("\n");
       const size_t c2[] = {512,1024,1536,2048,3072,4096,6144,8192,16384,32768};
-      const size_t _l2 = cache_size(c2,5000,10);
+      const size_t _l2 = cache_size(c2,10000,10);
       f = fopen("conftest_cache_sizes", "w"); if (!f) return 1;
       fprintf(f,"%lu:%lu\n",(unsigned long)(_l1*1024),(unsigned long)(_l2*1024));
       fclose(f);
