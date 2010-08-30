@@ -41,13 +41,16 @@
  * \param A Input matrix (overwritten).
  * \param B Input matrix, being overwritten by the solution matrix X
  * \param cutoff Minimal dimension for Strassen recursion (default: 0).
- * \param inconsistency_check decide wether or not to check for
- *        incosistency (faster without but output not defined if
- *        system is not consistent).
+ * \param inconsistency_check decide wether or not to perform a quick
+ *        check for incosistency (faster without but output not
+ *        defined if system is not consistent).
+ * \return 0 if a solution was found, -1 otherwise
  *
+ * \warn This function may return wrong solutions if no solution
+ * exists even with inconsistency_check set to 1. To check the result
+ * perform a matrix multiplication.
  */
-void mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, 
-                    const int inconsistency_check);
+int mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency_check);
 
 /**
  * \brief Solves (P L U Q) X = B
@@ -67,13 +70,19 @@ void mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff,
  * \param Q Input column permutation matrix.
  * \param B Input matrix, being overwritten by the solution matrix X.
  * \param cutoff Minimal dimension for Strassen recursion (default: 0).
- * \param inconsistency_check decide whether or not to check for
- *        incosistency (faster without but output not defined if
- *        system is not consistent).
+ * \param inconsistency_check decide whether or not to perform a quick
+ *        check for incosistency (faster without but output not
+ *        defined if system is not consistent).  \return 0 if a
+ *        solution was found, -1 otherwise
+ * \return 0 if a solution was found, -1 otherwise
+ *
+ * \warn This function may return wrong solutions if no solution
+ * exists even with inconsistency_check set to 1. To check the result
+ * perform a matrix multiplication.
  */
-void mzd_pluq_solve_left (mzd_t *A, size_t rank, 
-                          mzp_t *P, mzp_t *Q, 
-                          mzd_t *B, const int cutoff, const int inconsistency_check);
+int mzd_pluq_solve_left (mzd_t *A, size_t rank, 
+                         mzp_t *P, mzp_t *Q, 
+                         mzd_t *B, const int cutoff, const int inconsistency_check);
 
 /**
  * \brief  Solves (P L U Q) X = B
@@ -93,14 +102,15 @@ void mzd_pluq_solve_left (mzd_t *A, size_t rank,
  * \param Q Input column permutation matrix.
  * \param B Input matrix, being overwritten by the solution matrix X.
  * \param cutoff Minimal dimension for Strassen recursion (default: 0).
- * \param inconsistency_check decide whether or not to check for
- *        incosistency (faster without but output not defined if
- *        system is not consistent).
- *
+ * \param inconsistency_check decide whether or not to perform a quick
+ *        check for incosistency (faster without but output not
+ *        defined if system is not consistent).  \return 0 if a
+ *        solution was found, -1 otherwise
+ * \return 0 if a solution was found, -1 otherwise
  */
-void _mzd_pluq_solve_left(mzd_t *A, size_t rank, 
-                          mzp_t *P, mzp_t *Q, 
-                          mzd_t *B, const int cutoff, const int inconsistency_check);
+int _mzd_pluq_solve_left(mzd_t *A, size_t rank, 
+                         mzp_t *P, mzp_t *Q, 
+                         mzd_t *B, const int cutoff, const int inconsistency_check);
 
 /**
  * \brief Solves A X = B with A and B matrices.
@@ -113,11 +123,17 @@ void _mzd_pluq_solve_left(mzd_t *A, size_t rank,
  * \param A Input matrix.
  * \param B Input matrix, being overwritten by the solution matrix X.
  * \param cutoff Minimal dimension for Strassen recursion (default: 0).
- * \param inconsistency_check decide whether or not to check for
- *        incosistency (faster without but output not defined if
- *        system is not consistent).
+ * \param inconsistency_check decide whether or not to perform a quick
+ *        check for incosistency (faster without but output not
+ *        defined if system is not consistent).  \return 0 if a
+ *        solution was found, -1 otherwise
+ * \return 0 if a solution was found, -1 otherwise
+ *
+ * \warn This function may return wrong solutions if no solution
+ * exists even with inconsistency_check set to 1. To check the result
+ * perform a matrix multiplication.
  */
-void _mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency_check);
+int _mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency_check);
 
 
 /**
@@ -134,7 +150,7 @@ void _mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsisten
  *
  * \sa mzd_pluq()
  *
- * \return X
+ * \return X, NULL if kernel is empty
  */
 
 mzd_t *mzd_kernel_left_pluq(mzd_t *A, const int cutoff);

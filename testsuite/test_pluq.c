@@ -93,8 +93,6 @@ int test_pluq_half_rank(size_t m, size_t n) {
 
   mzd_t* Acopy = mzd_copy (NULL,A);
 
-
-
   mzp_t* Pt = mzp_init(m);
   mzp_t* Q = mzp_init(n);
   int r = mzd_pluq(A, Pt, Q, 0);

@@ -575,8 +575,6 @@ int mzd_cmp(const mzd_t *A, const mzd_t *B);
  *
  * \param DST May be NULL for automatic creation.
  * \param A Source matrix.
- *
- * \wordoffset
  */
 
 mzd_t *mzd_copy(mzd_t *DST, const mzd_t *A);
