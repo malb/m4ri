@@ -62,6 +62,7 @@ size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
 }
 
 size_t _mzd_pls(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
+  assert(A->offset == 0);
   size_t ncols = A->ncols;
 
 #if 1

@@ -16,54 +16,59 @@ int elim_test_equality(int nr, int nc) {
   mzd_t *G = mzd_copy(NULL, A);
 
   /* M4RI k=auto */
-  mzd_echelonize_m4ri(A, 1, 0);
+  size_t ra = mzd_echelonize_m4ri(A, 1, 0);
 
   /* M4RI k=8 */
-  mzd_echelonize_m4ri(B, 1, 8);
+  size_t rb = mzd_echelonize_m4ri(B, 1, 8);
 
   /* M4RI Upper Triangular k=auto*/
-  mzd_echelonize_m4ri(C, 0, 0);
+  size_t rc = mzd_echelonize_m4ri(C, 0, 0);
   mzd_top_echelonize_m4ri(C, 0);
 
   /* M4RI Upper Triangular k=4*/
-  mzd_echelonize_m4ri(D, 0, 4);
+  size_t rd = mzd_echelonize_m4ri(D, 0, 4);
   mzd_top_echelonize_m4ri(D, 4);
 
   /* Gauss */
-  mzd_echelonize_naive(E, 1);
+  size_t re = mzd_echelonize_naive(E, 1);
 
   /* Gauss Upper Triangular */
-  mzd_echelonize_naive(F, 0);
+  size_t rf = mzd_echelonize_naive(F, 0);
   mzd_top_echelonize_m4ri(F, 0);
 
   /* PLUQ */
-  mzd_echelonize_pluq(G, 1);
+  size_t rg = mzd_echelonize_pluq(G, 1);
   
-  if(mzd_equal(A, B) != TRUE) {
+  if(mzd_equal(A, B) != TRUE || ra != rb) {
     printf("A != B ");
     ret -= 1;
   }
  
-  if(mzd_equal(B, C) != TRUE) {
+  if(mzd_equal(B, C) != TRUE || rb != rc) {
     printf("B != C ");
     ret -= 1;
   }
 
-  if(mzd_equal(D, E) != TRUE) {
+  if(mzd_equal(C, D) != TRUE || rc != rd) {
+    printf("C != D ");
+    ret -= 1;
+  }
+
+  if(mzd_equal(D, E) != TRUE || rd != re) {
     printf("D != E ");
     ret -= 1;
   }
 
-  if(mzd_equal(E, F) != TRUE) {
+  if(mzd_equal(E, F) != TRUE || re != rf) {
     printf("E != F ");
     ret -= 1;
   }
 
-  if(mzd_equal(F, G) != TRUE) {
+  if(mzd_equal(F, G) != TRUE || rf != rg) {
     printf("F != G ");
     ret -= 1;
   }
-  if(mzd_equal(G, A) != TRUE) {
+  if(mzd_equal(G, A) != TRUE || rg != ra) {
     printf("G != A ");
     ret -= 1;
   }

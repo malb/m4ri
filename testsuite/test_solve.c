@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include "m4ri/m4ri.h"
 
@@ -23,7 +24,7 @@ int test_pluq_solve_left(size_t m, size_t n, size_t offsetA, size_t offsetB){
   }
 
   mzd_t *Acopy = mzd_copy(NULL, A);
-  size_t r = mzd_echelonize_m4ri(Acopy,0,0);
+  size_t r = mzd_echelonize(Acopy,1);
   printf("solve_left m: %4zu, n: %4zu, r: %4zu da: %4zu db: %4zu ",m, n, r, offsetA, offsetB);
   mzd_free(Acopy);
   Acopy = mzd_copy(NULL, A);
@@ -45,10 +46,7 @@ int test_pluq_solve_left(size_t m, size_t n, size_t offsetA, size_t offsetB){
     status = 1 - mzd_is_zero(Z);
     if (status == 0) {
       printf("passed\n");
-    } else if (r != n) {
-      printf("failed (but expected)\n");
-      status = 0;
-    } else {
+    }  else {
       printf("FAILED\n");
     }
   } else {
@@ -70,60 +68,14 @@ int test_pluq_solve_left(size_t m, size_t n, size_t offsetA, size_t offsetB){
 int main(int argc, char **argv) {
   int status = 0;
 
-  status += test_pluq_solve_left(  2,   4,  0,  0);
-  status += test_pluq_solve_left(  4,   1,  0,  0);
-  status += test_pluq_solve_left( 10,  20,  0,  0);
-  status += test_pluq_solve_left( 20,   1,  0,  0);
-  status += test_pluq_solve_left( 20,  20,  0,  0);
-  status += test_pluq_solve_left( 30,   1,  0,  0);
-  status += test_pluq_solve_left( 30,  30,  0,  0);
-  status += test_pluq_solve_left( 80,   1,  0,  0);
-  status += test_pluq_solve_left( 80,  20,  0,  0);
-  status += test_pluq_solve_left( 80,  80,  0,  0);
+  for(size_t i=0; i<100; i++) {
+    size_t m = random() & 511;
+    size_t n = random() & 1023;
+    m = m ? (m) : 1;
+    n = n ? (n) : 1;
 
-  status += test_pluq_solve_left (10, 20, 0, 0);
-  status += test_pluq_solve_left (10, 80, 0, 0);
-  status += test_pluq_solve_left (10, 20, 0, 0);
-  status += test_pluq_solve_left (10, 80, 0, 0);
-  status += test_pluq_solve_left (70, 20, 0, 0);
-  status += test_pluq_solve_left (70, 80, 0, 0);
-  status += test_pluq_solve_left (70, 20, 0, 0);
-  status += test_pluq_solve_left (70, 80, 0, 0);
-  status += test_pluq_solve_left (770, 1600, 0, 0);
-  status += test_pluq_solve_left (1764, 1345, 0, 0);
-
-  status += test_pluq_solve_left(  2,   4,  0,  1);
-  status += test_pluq_solve_left(  4,   1,  0,  1);
-  status += test_pluq_solve_left( 10,  20,  0,  1);
-  status += test_pluq_solve_left( 20,   1,  0,  1);
-  status += test_pluq_solve_left( 20,  20,  0,  1);
-  status += test_pluq_solve_left( 30,   1,  0,  1);
-  status += test_pluq_solve_left( 30,  30,  0,  1);
-  status += test_pluq_solve_left( 80,   1,  0,  1);
-  status += test_pluq_solve_left( 80,  20,  0,  1);
-  status += test_pluq_solve_left( 80,  80,  0,  1);
-
-  status += test_pluq_solve_left(  2,   4,  0, 15);
-  status += test_pluq_solve_left(  4,   1,  0, 15);
-  status += test_pluq_solve_left( 10,  20,  0, 15);
-  status += test_pluq_solve_left( 20,   1,  0, 15);
-  status += test_pluq_solve_left( 20,  20,  0, 15);
-  status += test_pluq_solve_left( 30,   1,  0, 15);
-  status += test_pluq_solve_left( 30,  30,  0, 15);
-  status += test_pluq_solve_left( 80,   1,  0, 15);
-  status += test_pluq_solve_left( 80,  20,  0, 15);
-  status += test_pluq_solve_left( 80,  80,  0, 15);
-
-  status += test_pluq_solve_left (10, 20, 15, 0);
-  status += test_pluq_solve_left (10, 80, 15, 0);
-  status += test_pluq_solve_left (10, 20, 15, 20);
-  status += test_pluq_solve_left (10, 80, 15, 20);
-  status += test_pluq_solve_left (70, 20, 15, 0);
-  status += test_pluq_solve_left (70, 80, 15, 0);
-  status += test_pluq_solve_left (70, 20, 15, 20);
-  status += test_pluq_solve_left (70, 80, 15, 20);
-  status += test_pluq_solve_left (770, 1600, 75, 89);
-  status += test_pluq_solve_left (1764, 1345, 198, 123);
+    status += test_pluq_solve_left(  m,   n,  0,  0);
+  }
 
   if (!status) {
     printf("All tests passed.\n");

@@ -29,9 +29,9 @@
 
 int mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency_check) {    
   if(A->ncols > B->nrows)
-    m4ri_die("mzd_solve_left: A ncols (%d) need to be lower than B nrows (%d).\n", A->ncols, B->nrows);
+    m4ri_die("mzd_solve_left: A ncols (%d) must be smaller than B nrows (%d).\n", A->ncols, B->nrows);
 
-  return _mzd_solve_left (A, B, cutoff, inconsistency_check);
+  return _mzd_solve_left(A, B, cutoff, inconsistency_check);
 }
  
 int mzd_pluq_solve_left (mzd_t *A, size_t rank, 
@@ -71,7 +71,7 @@ int _mzd_pluq_solve_left (mzd_t *A, size_t rank,
   mzd_t *LU = mzd_init_window(A,0,0,rank,rank);
   mzd_t *Y1 = mzd_init_window(B,0,0,rank,B->ncols);
   mzd_trsm_lower_left(LU, Y1, cutoff);
-  
+
   if (inconsistency_check) { /* Check for inconsistency */    
     /** FASTER without this check; update with the lower part of L
      */
@@ -82,7 +82,6 @@ int _mzd_pluq_solve_left (mzd_t *A, size_t rank,
       mzd_set_ui(Y3, 0);
       mzd_free_window(Y3);
     }
-
     mzd_addmul(Y2, H, Y1, cutoff);
     /*
      * test whether Y2 is the zero matrix
@@ -130,7 +129,7 @@ int _mzd_solve_left (mzd_t *A, mzd_t *B, const int cutoff, const int inconsisten
   mzp_t * Q = mzp_init(A->ncols);
   
   /* PLUQ = A */
-  size_t rank = _mzd_pluq(A, P, Q, cutoff);  
+  size_t rank = _mzd_pluq(A, P, Q, cutoff);
   /* 2, 3, 4, 5 */
   int retval = mzd_pluq_solve_left(A, rank, P, Q, B, cutoff, inconsistency_check);
   
