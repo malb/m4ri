@@ -1235,6 +1235,9 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
     m4ri_die("mzd_addmul: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
 	     C->nrows, C->ncols, A->nrows, B->ncols);
   }
+  if(A->nrows == 0 || A->ncols == 0 || B->ncols == 0)
+    return C;
+
   C = _mzd_addmul(C, A, B, cutoff);
   return C;
 }
