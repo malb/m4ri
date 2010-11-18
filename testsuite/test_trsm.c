@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "m4ri/m4ri.h"
 
+//#define RANDOMIZE
 
 int test_trsm_upper_right (int m, int n, int offset, const char* description){
   printf("upper_right: %s  m: %4d n: %4d offset: %4d ... ",description, m, n, offset);
@@ -204,9 +205,8 @@ int test_trsm_upper_left (int m, int n, int offsetU, int offsetB, const char *de
   mzd_copy (B, W);
 
   for ( i=0; i<2048; ++i)
-    for ( j=n; j<2048; ++j){
-      //if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
-      if (mzd_read_bit(Bbase,i,j) != mzd_read_bit(Bbasecopy,i,j)) {
+    for ( j=n; j<2048/RADIX; ++j){
+      if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
 	status = 1;
       }
     }
@@ -240,6 +240,12 @@ int main(int argc, char **argv) {
   status += test_trsm_upper_right(  57,   80,  60, "      large, odd placed");
   status += test_trsm_upper_right(1577, 1802, 189, "     larger, odd placed");
 
+#ifdef RANDOMIZE
+  for(size_t i=0; i<256; i++) {
+    status += test_trsm_upper_right(random() & 2047, random() & 2047, random() & 63, "randomized");
+  } 
+#endif
+
   printf("\n");
 
   status += test_trsm_lower_right(  63,   63,  0,"  word boundaries, even");
@@ -254,6 +260,12 @@ int main(int argc, char **argv) {
   status += test_trsm_lower_right(  57,    4, 62,"     medium, odd placed");
   status += test_trsm_lower_right(  57,   80, 60,"      large, odd placed");
   status += test_trsm_lower_right(1577, 1802,189,"     larger, odd placed");
+
+#ifdef RANDOMIZE
+  for(size_t i=0; i<256; i++) {
+    status += test_trsm_lower_right(random() & 2047, random() & 2047, random() & 63, "randomized");
+  } 
+#endif
 
   printf("\n");
 
@@ -281,6 +293,12 @@ int main(int argc, char **argv) {
   status += test_trsm_lower_left(  70,   80,  15,  20, "   large L odd, large B odd");
   status += test_trsm_lower_left( 770, 1600,  75,  89, " larger L odd, larger B odd");
   status += test_trsm_lower_left(1764, 1345, 198, 123, " larger L odd, larger B odd");
+
+#ifdef RANDOMIZE
+  for(size_t i=0; i<256; i++) {
+    status += test_trsm_lower_left(random() & 2047, random() & 2047, random() & 63, random() & 63, "randomized");
+  } 
+#endif
 
 
   printf("\n");
@@ -310,6 +328,12 @@ int main(int argc, char **argv) {
   status += test_trsm_upper_left(  70,  80, 15, 20,"  large U odd, large B odd");
   status += test_trsm_upper_left( 770,1600, 75, 89,"larger U odd, larger B odd");
   status += test_trsm_upper_left(1764,1345,198,123,"larger U odd, larger B odd");
+
+#ifdef RANDOMIZE
+  for(size_t i=0; i<256; i++) {
+    status += test_trsm_upper_left(random() & 2047, random() & 2047, random() & 63, random() & 63, "randomized");
+  } 
+#endif
 
   if (!status) {
     printf("All tests passed.\n");
