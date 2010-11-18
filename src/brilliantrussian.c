@@ -1223,3 +1223,46 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
   return C;
 }
 
+/* TRSM */
+
+void _mzd_trsm_upper_left_even_submatrix(mzd_t *U, mzd_t *B, const size_t start_row, const size_t k) {
+  for (size_t i=0; i<k; i++) {
+    for (size_t j= 0; j < i; j++) {
+      if (mzd_read_bit(U, start_row+(k-i-1), start_row+(k-i)+j)) 
+        mzd_row_add_offset(B, start_row+(k-i-1), start_row+(k-i)+j, 0);  /* too many conditional jumps */
+    }
+  }
+}
+
+void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, size_t k) {
+  assert(U->offset == 0 && B->offset == 0);
+  const size_t wide = B->width;
+
+  if (k == 0) {
+    k = m4ri_opt_k(B->nrows, B->ncols, 0);
+    if (k>=7)
+      k = 7;
+  }
+
+  mzd_t *T0 = mzd_init(TWOPOW(k), B->ncols);
+  size_t *L0 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+
+  for (int i=0; i < B->nrows; i+=k) {
+    if (k > (B->nrows - i))
+      k = B->nrows - i;
+
+    _mzd_trsm_upper_left_even_submatrix(U, B, B->nrows-i-k, k);
+
+    mzd_make_table(B, B->nrows-i-k, 0, k, T0, L0);
+
+    for(size_t j = 0; j<B->nrows-i-k; j++) {
+      const int x0 = L0[ (int)mzd_read_bits(U, j, B->nrows-i-k, k) ];
+      for(size_t ii=0; ii<wide; ii++) {
+        B->rows[j][ii] ^= T0->rows[x0][ii];
+      }
+    }
+  }
+  
+  mzd_free(T0);
+  m4ri_mm_free(L0);
+}
