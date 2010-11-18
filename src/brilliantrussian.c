@@ -1227,16 +1227,32 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
 void _mzd_trsm_upper_left_even_submatrix(mzd_t *U, mzd_t *B, const size_t start_row, const size_t k, const word mask_begin, const word mask_end) {
   size_t ii;
   for (size_t i=0; i<k; i++) {
-    word *a = B->rows[start_row+(k-i-1)];
     for (size_t j= 0; j < i; j++) {
       if (mzd_read_bit(U, start_row+(k-i-1), start_row+(k-i)+j)) {
-        const word *b = B->rows[start_row+(k-i)+j];
-        a[0] ^= (b[0] & mask_begin);
-        for(ii=1; ii<B->width-1; ii++) {
-          a[ii] ^= b[ii];
+        word *a = B->rows[start_row+(k-i-1)];
+        word *b = B->rows[start_row+(k-i)+j];
+
+        *a++ ^= *b++ & mask_begin; 
+        for(ii = 1; ii+8 <= B->width-1; ii+=8) {
+          *a++ ^= *b++;
+          *a++ ^= *b++;
+          *a++ ^= *b++;
+          *a++ ^= *b++;
+          *a++ ^= *b++;
+          *a++ ^= *b++;
+          *a++ ^= *b++;
+          *a++ ^= *b++;
         }
-        if (B->width != 1)
-          a[B->width-1] ^= (b[B->width-1] & mask_end);
+        switch( B->width-ii ) {
+        case 8:  *a++ ^= *b++;
+        case 7:  *a++ ^= *b++;
+        case 6:  *a++ ^= *b++;
+        case 5:  *a++ ^= *b++;
+        case 4:  *a++ ^= *b++;
+        case 3:  *a++ ^= *b++;
+        case 2:  *a++ ^= *b++;
+        case 1:  *a++ ^= (*b++ & mask_end);
+        }
       }
     }
   }
