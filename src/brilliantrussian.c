@@ -1235,7 +1235,8 @@ void _mzd_trsm_upper_left_even_submatrix(mzd_t *U, mzd_t *B, const size_t start_
         for(ii=1; ii<B->width-1; ii++) {
           a[ii] ^= b[ii];
         }
-        a[B->width-1] ^= (b[B->width-1] & mask_end);
+        if (B->width != 1)
+          a[B->width-1] ^= (b[B->width-1] & mask_end);
       }
     }
   }
@@ -1248,8 +1249,11 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, size_t k) {
   const size_t blocksize = MZD_MUL_BLOCKSIZE;
   size_t i, j;
 
-  const word mask_begin = RIGHT_BITMASK(RADIX - B->offset);
-  const word mask_end = LEFT_BITMASK(((B->ncols + B->offset) % RADIX));
+  word mask_begin = RIGHT_BITMASK(RADIX - B->offset);
+  word mask_end = LEFT_BITMASK(((B->ncols + B->offset) % RADIX));
+  
+  if (B->width == 1)
+    mask_begin = mask_begin & mask_end;
 
   if (k == 0) {
     k = m4ri_opt_k(blocksize, B->nrows, B->ncols);

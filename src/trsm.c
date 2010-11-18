@@ -483,7 +483,7 @@ void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B, const int cutoff) {
   size_t nb = B->ncols;
   size_t Boffset = B->offset;
   size_t nbrest = (nb + Boffset) % RADIX;
-  if (nb + B->offset >= RADIX) {
+  if (nb + B->offset > RADIX) {
 
     // Large B
     word mask_begin = RIGHT_BITMASK(RADIX-B->offset);
@@ -509,9 +509,10 @@ void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B, const int cutoff) {
       }
     }
   } else { // Small B
-
+    
     word mask = ((ONE << nb) - 1) ;
     mask <<= (RADIX-nb-B->offset);
+    if (nb == RADIX) mask = FFFF;
 
     for (size_t i=1; i < mb; ++i) {
       /* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
@@ -563,9 +564,9 @@ void _mzd_trsm_lower_left_even(mzd_t *L, mzd_t *B, const int cutoff) {
       }
     } else { // B is small
       word mask = ((ONE << nb) - 1) ;
-      if (nb==RADIX)
-	mask = 0xFFFFFFFFFFFFFFFFll;
       mask <<= (RADIX-nb-B->offset);
+      if (nb == RADIX)
+	mask = FFFF;
       for (size_t i=1; i < mb; ++i) {
 	/* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
 	/** Need to be optimized !!! **/
@@ -704,7 +705,8 @@ void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B, const int cutoff) {
 
     word mask = ((ONE << nb) - 1) ;
     mask <<= (RADIX-nb-B->offset);
-
+    if (nb == RADIX)
+      mask = FFFF;
     // U[mb-1,mb-1] = 1, so no work required for i=mb-1
     for (int i=mb-2; i >= 0; --i) {
       /* Computes X_i = B_i + U_{i,i+1..mb} X_{i+1..mb}  */
@@ -753,6 +755,7 @@ void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff) {
     } else { // B is small
       word mask = ((ONE << nb) - 1) ;
       mask <<= (RADIX-nb-B->offset);
+      if (nb == RADIX) mask = FFFF;
       // U[mb-1,mb-1] = 1, so no work required for i=mb-1
       for (int i=mb-2; i >= 0; --i) {
         
@@ -767,8 +770,8 @@ void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff) {
 	}
       }
     }
-  /* } else if (mb <= MZD_MUL_BLOCKSIZE) { */
-  /*   _mzd_trsm_upper_left_even_m4r(U, B, 0); */
+  } else if (mb <= MZD_MUL_BLOCKSIZE) {
+    _mzd_trsm_upper_left_even_m4r(U, B, 0);
   } else {
     size_t mb1 = (((mb-1) / RADIX + 1) >> 1) * RADIX;
 
