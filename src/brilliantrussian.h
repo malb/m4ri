@@ -351,6 +351,6 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear);
 
 #define M4RM_GRAY8
 
-void _mzd_trsm_upper_left_even_m4ri(mzd_t *U, mzd_t *B, size_t k);
+void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, size_t k);
 
 #endif //BRILLIANTRUSSIAN_H

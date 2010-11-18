@@ -169,7 +169,7 @@ int test_trsm_lower_left (int m, int n, int offsetL, int offsetB){
 
 
 int test_trsm_upper_left (int m, int n, int offsetU, int offsetB, const char *description) {
-  printf("upper_left: %s  m: %4d n: %4d offset: %4d ... ",description, m, n, offsetU);
+  printf("upper_left: %s  m: %4d n: %4d offset U: %4d offset B: %4d ... ",description, m, n, offsetU, offsetB);
   mzd_t* Ubase = mzd_init (2048,2048);
   mzd_t* Bbase = mzd_init (2048,2048);
   mzd_randomize (Ubase);
@@ -197,16 +197,17 @@ int test_trsm_upper_left (int m, int n, int offsetU, int offsetB, const char *de
 	status = 1;
       }
     }
-
   // Verifiying that nothing has been changed around the submatrices
   mzd_addmul(W, U, B, 2048);
 
   mzd_copy (B, W);
 
   for ( i=0; i<2048; ++i)
-    for ( j=0; j<2048/RADIX; ++j){
-      if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
+    for ( j=n; j<2048; ++j){
+      //if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
+      if (mzd_read_bit(Bbase,i,j) != mzd_read_bit(Bbasecopy,i,j)) {
 	status = 1;
+        printf("%d x %d\n",i,j);
       }
     }
   mzd_free_window (U);
@@ -225,6 +226,9 @@ int test_trsm_upper_left (int m, int n, int offsetU, int offsetB, const char *de
 
 int main(int argc, char **argv) {
   int status = 0;
+
+  /* status += test_trsm_upper_left(  10,  64,  0,  0,"large U even, small B even"); */
+  /* exit(status); */
 
   status += test_trsm_upper_right(  57,   10,   0, "small, even placed");
   status += test_trsm_upper_right(  57,  150,   0, "large, even placed");

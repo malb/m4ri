@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
   
   wt = walltime(&clockZero);
   t = cpucycles();
-  mzd_trsm_upper_left(U, B, 2048);
+  _mzd_trsm_upper_left_even_m4r(U, B, 0);
   printf("n: %5d, cpu cycles: %llu wall time: %lf\n",n, cpucycles() - t, walltime(&wt));
 
   mzd_free(B);

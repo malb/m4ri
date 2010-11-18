@@ -174,55 +174,54 @@ static inline void _mzd_copy_back_rows(mzd_t *A, mzd_t *U, size_t r, size_t c, s
 }
 
 void mzd_make_table( mzd_t *M, size_t r, size_t c, int k, mzd_t *T, size_t *L) {
-  assert(T->blocks[1].size == 0);
-  const size_t homeblock= c/RADIX;
+  const size_t homeblock= (M->offset + c)/RADIX;
+  word mask_begin = RIGHT_BITMASK(RADIX - ((M->offset + c) % RADIX));
+  word mask_end = LEFT_BITMASK((M->ncols + M->offset) % RADIX);
+
+  if (M->width - homeblock == 1) {
+    mask_begin = mask_begin & mask_end;
+  }
+
   size_t i, j, rowneeded, id;
   size_t twokay= TWOPOW(k);
-  size_t wide = T->width - homeblock;
+  size_t wide = M->width - homeblock;
 
   word *ti, *ti1, *m;
 
-  ti1 = T->rows[0] + homeblock;
-  ti = ti1 + T->width;
-#ifdef HAVE_SSE2
-  unsigned long incw = 0;
-  if (T->width & 1) incw = 1;
-  ti += incw;
-#endif
-
   L[0]=0;
   for (i=1; i<twokay; i++) {
+    ti = T->rows[i] + homeblock;
+    ti1 = T->rows[i-1] + homeblock;   
+
     rowneeded = r + codebook[k]->inc[i-1];
     id = codebook[k]->ord[i];
     L[id] = i;
-    if (rowneeded >= M->nrows) {
-      for (j = 0; j < wide; j++) {
-        *ti++ = *ti1++;
-      }
-#ifdef HAVE_SSE2
-      ti+=incw; ti1+=incw;
-#endif
-    } else {
-      m = M->rows[rowneeded] + homeblock;
+    if (rowneeded >= M->nrows)
+      continue;
 
-      /* Duff's device loop unrolling */
-      register int n = (wide + 7) / 8;
-      switch (wide % 8) {
-      case 0: do { *(ti++) = *(m++) ^ *(ti1++);
-      case 7:      *(ti++) = *(m++) ^ *(ti1++);
-      case 6:      *(ti++) = *(m++) ^ *(ti1++);
-      case 5:      *(ti++) = *(m++) ^ *(ti1++);
-      case 4:      *(ti++) = *(m++) ^ *(ti1++);
-      case 3:      *(ti++) = *(m++) ^ *(ti1++);
-      case 2:      *(ti++) = *(m++) ^ *(ti1++);
-      case 1:      *(ti++) = *(m++) ^ *(ti1++);
-        } while (--n > 0);
-      }
-#ifdef HAVE_SSE2
-      ti+=incw; ti1+=incw;
-#endif
-      ti += homeblock;
-      ti1 += homeblock;
+    m = M->rows[rowneeded] + homeblock;
+
+    *ti++ = (*m++ ^ *ti1++) & mask_begin;
+    
+    for(j = 1; j+8 <= wide-1; j+=8) {
+      *ti++ = *m++ ^ *ti1++;
+      *ti++ = *m++ ^ *ti1++;
+      *ti++ = *m++ ^ *ti1++;
+      *ti++ = *m++ ^ *ti1++;
+      *ti++ = *m++ ^ *ti1++;
+      *ti++ = *m++ ^ *ti1++;
+      *ti++ = *m++ ^ *ti1++;
+      *ti++ = *m++ ^ *ti1++;
+    }
+    switch( wide-j ) {
+    case 8:  *ti++ = *m++ ^ *ti1++;
+    case 7:  *ti++ = *m++ ^ *ti1++;
+    case 6:  *ti++ = *m++ ^ *ti1++;
+    case 5:  *ti++ = *m++ ^ *ti1++;
+    case 4:  *ti++ = *m++ ^ *ti1++;
+    case 3:  *ti++ = *m++ ^ *ti1++;
+    case 2:  *ti++ = *m++ ^ *ti1++;
+    case 1:  *ti++ = (*m++ ^ *ti1++) & mask_end;
     }
   }
 }
@@ -1225,44 +1224,168 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
 
 /* TRSM */
 
-void _mzd_trsm_upper_left_even_submatrix(mzd_t *U, mzd_t *B, const size_t start_row, const size_t k) {
+void _mzd_trsm_upper_left_even_submatrix(mzd_t *U, mzd_t *B, const size_t start_row, const size_t k, const word mask_begin, const word mask_end) {
+  size_t ii;
   for (size_t i=0; i<k; i++) {
+    word *a = B->rows[start_row+(k-i-1)];
     for (size_t j= 0; j < i; j++) {
-      if (mzd_read_bit(U, start_row+(k-i-1), start_row+(k-i)+j)) 
-        mzd_row_add_offset(B, start_row+(k-i-1), start_row+(k-i)+j, 0);  /* too many conditional jumps */
+      if (mzd_read_bit(U, start_row+(k-i-1), start_row+(k-i)+j)) {
+        const word *b = B->rows[start_row+(k-i)+j];
+        a[0] ^= (b[0] & mask_begin);
+        for(ii=1; ii<B->width-1; ii++) {
+          a[ii] ^= b[ii];
+        }
+        a[B->width-1] ^= (b[B->width-1] & mask_end);
+      }
     }
   }
 }
 
+//#undef M4RM_GRAY8
+
 void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, size_t k) {
-  assert(U->offset == 0 && B->offset == 0);
   const size_t wide = B->width;
+  const size_t blocksize = MZD_MUL_BLOCKSIZE;
+  size_t i, j;
+
+  const word mask_begin = RIGHT_BITMASK(RADIX - B->offset);
+  const word mask_end = LEFT_BITMASK(((B->ncols + B->offset) % RADIX));
 
   if (k == 0) {
-    k = m4ri_opt_k(B->nrows, B->ncols, 0);
-    if (k>=7)
-      k = 7;
+    k = m4ri_opt_k(blocksize, B->nrows, B->ncols);
+#ifdef M4RM_GRAY8
+    if (k>3)
+      k -= 2;
+    /* reduce k further if that has a chance of hitting L1 */
+    const size_t tsize = (int)(0.8*(TWOPOW(k) * B->nrows));
+    if(tsize > CPU_L1_CACHE && tsize/2 <= CPU_L1_CACHE)
+      k -= 1;
+#else
+    if (k>2)
+      k -= 1;
+#endif
   }
 
-  mzd_t *T0 = mzd_init(TWOPOW(k), B->ncols);
+  mzd_t  *T0 = mzd_init(TWOPOW(k), B->ncols + B->offset);
+  mzd_t  *T1 = mzd_init(TWOPOW(k), B->ncols + B->offset);
+  mzd_t  *T2 = mzd_init(TWOPOW(k), B->ncols + B->offset);
+  mzd_t  *T3 = mzd_init(TWOPOW(k), B->ncols + B->offset);
+#ifdef M4RM_GRAY8
+  mzd_t  *T4 = mzd_init(TWOPOW(k), B->ncols + B->offset);
+  mzd_t  *T5 = mzd_init(TWOPOW(k), B->ncols + B->offset);
+  mzd_t  *T6 = mzd_init(TWOPOW(k), B->ncols + B->offset);
+  mzd_t  *T7 = mzd_init(TWOPOW(k), B->ncols + B->offset);
+#endif
+
   size_t *L0 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+  size_t *L1 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+  size_t *L2 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+  size_t *L3 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+#ifdef M4RM_GRAY8
+  size_t *L4 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+  size_t *L5 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+  size_t *L6 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+  size_t *L7 = (size_t *)m4ri_mm_calloc(TWOPOW(k), sizeof(size_t));
+#endif
 
-  for (int i=0; i < B->nrows; i+=k) {
+#ifdef M4RM_GRAY8
+  size_t kk = 8*k;
+#else
+  size_t kk = 4*k;
+#endif
+
+  for (i=0; i < B->nrows; i+=kk) {
+    if (kk > (B->nrows - i))
+      break;
+
+    _mzd_trsm_upper_left_even_submatrix(U, B, B->nrows-i-kk, kk, mask_begin, mask_end);
+
+#ifdef M4RM_GRAY8
+    mzd_make_table(B, B->nrows-i-8*k, 0, k, T7, L7);
+    mzd_make_table(B, B->nrows-i-7*k, 0, k, T6, L6);
+    mzd_make_table(B, B->nrows-i-6*k, 0, k, T5, L5);
+    mzd_make_table(B, B->nrows-i-5*k, 0, k, T4, L4);
+#endif
+    mzd_make_table(B, B->nrows-i-4*k, 0, k, T3, L3);
+    mzd_make_table(B, B->nrows-i-3*k, 0, k, T2, L2);
+    mzd_make_table(B, B->nrows-i-2*k, 0, k, T1, L1);
+    mzd_make_table(B, B->nrows-i-1*k, 0, k, T0, L0);
+
+    for(j = 0; j<B->nrows-i-kk; j++) {
+#ifdef M4RM_GRAY8
+      const int x7 = L7[ (int)mzd_read_bits(U, j, B->nrows-i-8*k, k) ];
+      const int x6 = L6[ (int)mzd_read_bits(U, j, B->nrows-i-7*k, k) ];
+      const int x5 = L5[ (int)mzd_read_bits(U, j, B->nrows-i-6*k, k) ];
+      const int x4 = L4[ (int)mzd_read_bits(U, j, B->nrows-i-5*k, k) ];
+#endif
+      const int x3 = L3[ (int)mzd_read_bits(U, j, B->nrows-i-4*k, k) ];
+      const int x2 = L2[ (int)mzd_read_bits(U, j, B->nrows-i-3*k, k) ];
+      const int x1 = L1[ (int)mzd_read_bits(U, j, B->nrows-i-2*k, k) ];
+      const int x0 = L0[ (int)mzd_read_bits(U, j, B->nrows-i-1*k, k) ];
+
+
+      word *b = B->rows[j];
+#ifdef M4RM_GRAY8
+      word *t7 = T7->rows[x7];
+      word *t6 = T6->rows[x6];
+      word *t5 = T5->rows[x5];
+      word *t4 = T4->rows[x4];
+#endif
+      word *t3 = T3->rows[x3];
+      word *t2 = T2->rows[x2];
+      word *t1 = T1->rows[x1];
+      word *t0 = T0->rows[x0];
+
+#ifdef M4RM_GRAY8
+      _mzd_combine8(b, t0, t1, t2, t3, t4, t5, t6, t7, wide);
+      //b[wide-1] ^= (t0[wide-1] ^ t1[wide-1] ^ t2[wide-1] ^ t3[wide-1] ^ t4[wide-1] ^ t5[wide-1] ^ t6[wide-1] ^ t7[wide-1]) & mask_end;
+#else
+      _mzd_combine4(b, t0, t1, t2, t3, wide);
+      //b[wide-1] ^= (t0[wide-1] ^ t1[wide-1] ^ t2[wide-1] ^ t3[wide-1]) & mask_end;
+#endif
+      
+    }
+  }
+
+  /* handle stuff that doesn't fit in multiples of kk */
+  for ( ;i < B->nrows; i+=k) {
     if (k > (B->nrows - i))
-      k = B->nrows - i;
+      k = (B->nrows - i);
 
-    _mzd_trsm_upper_left_even_submatrix(U, B, B->nrows-i-k, k);
+    _mzd_trsm_upper_left_even_submatrix(U, B, B->nrows-i-k, k, mask_begin, mask_end);
 
-    mzd_make_table(B, B->nrows-i-k, 0, k, T0, L0);
+    mzd_make_table(B, B->nrows-i-1*k, 0, k, T0, L0);
 
     for(size_t j = 0; j<B->nrows-i-k; j++) {
-      const int x0 = L0[ (int)mzd_read_bits(U, j, B->nrows-i-k, k) ];
-      for(size_t ii=0; ii<wide; ii++) {
-        B->rows[j][ii] ^= T0->rows[x0][ii];
-      }
+      const int x0 = L0[ (int)mzd_read_bits(U, j, B->nrows-i-1*k, k) ];
+
+      word *b = B->rows[j];
+      word *t0 = T0->rows[x0];
+
+      for (size_t ii=0; ii<wide; ii++)
+        b[ii] ^= t0[ii];
     }
   }
   
   mzd_free(T0);
+  mzd_free(T1);
+  mzd_free(T2);
+  mzd_free(T3);
+#ifdef M4RM_GRAY8
+  mzd_free(T4);
+  mzd_free(T5);
+  mzd_free(T6);
+  mzd_free(T7);
+#endif
+
   m4ri_mm_free(L0);
+  m4ri_mm_free(L1);
+  m4ri_mm_free(L2);
+  m4ri_mm_free(L3);
+#ifdef M4RM_GRAY8
+  m4ri_mm_free(L4);
+  m4ri_mm_free(L5);
+  m4ri_mm_free(L6);
+  m4ri_mm_free(L7);
+#endif
 }

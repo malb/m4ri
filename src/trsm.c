@@ -726,36 +726,36 @@ void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff) {
   size_t Boffset = B->offset;
   size_t nbrest = (nb + Boffset) % RADIX;
 
-  if (mb <= RADIX){
+  if (mb <= RADIX) {
     /* base case */
-
+    
     if (nb + B->offset > RADIX) {
       // B is large
       word mask_begin = RIGHT_BITMASK(RADIX-B->offset);
       word mask_end = LEFT_BITMASK(nbrest);
-
+      
       // U[mb-1,mb-1] = 1, so no work required for i=mb-1
       for (int i=mb-2; i >= 0; --i) {
-
-	/* Computes X_i = B_i + U_{i,i+1..mb} X_{i+1..mb}  */
-	word* Urow = U->rows[i];
-	word *Brow = B->rows[i];
-
-	for (size_t k=i+1; k<mb; ++k) {
-	  if (GET_BIT (Urow[0], k)){
-	    Brow[0] ^= B->rows[k][0] & mask_begin;
-	    for (size_t j = 1; j < B->width-1; ++j)
-	      Brow[j] ^= B->rows[k][j];
-	    Brow[B->width - 1] ^= B->rows[k][B->width - 1] & mask_end;
-	  }
-	}
+        
+        /* Computes X_i = B_i + U_{i,i+1..mb} X_{i+1..mb}  */
+        word* Urow = U->rows[i];
+        word *Brow = B->rows[i];
+        
+        for (size_t k=i+1; k<mb; ++k) {
+          if (GET_BIT (Urow[0], k)){
+            Brow[0] ^= B->rows[k][0] & mask_begin;
+            for (size_t j = 1; j < B->width-1; ++j)
+              Brow[j] ^= B->rows[k][j];
+            Brow[B->width - 1] ^= B->rows[k][B->width - 1] & mask_end;
+          }
+        }
       }
     } else { // B is small
       word mask = ((ONE << nb) - 1) ;
       mask <<= (RADIX-nb-B->offset);
       // U[mb-1,mb-1] = 1, so no work required for i=mb-1
       for (int i=mb-2; i >= 0; --i) {
-
+        
 	/* Computes X_i = B_i + U_{i,i+1..mb} X_{i+1..mb}  */
 	word *Urow = U->rows [i];
 	word *Brow = B->rows [i];
@@ -767,6 +767,8 @@ void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff) {
 	}
       }
     }
+  /* } else if (mb <= MZD_MUL_BLOCKSIZE) { */
+  /*   _mzd_trsm_upper_left_even_m4r(U, B, 0); */
   } else {
     size_t mb1 = (((mb-1) / RADIX + 1) >> 1) * RADIX;
 
