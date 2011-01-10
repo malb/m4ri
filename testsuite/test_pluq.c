@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "m4ri/m4ri.h"
+#include "m4ri.h"
 
 int test_pluq_full_rank (size_t m, size_t n){
   printf("pluq: testing full rank m: %5zu, n: %5zu",m,n);

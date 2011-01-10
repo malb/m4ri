@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "m4ri/m4ri.h"
+#include "m4ri.h"
 #include "cpucycles.h"
 #include "walltime.h"
 

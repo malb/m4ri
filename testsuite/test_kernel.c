@@ -19,7 +19,7 @@
 ********************************************************************/
 
 #include <stdlib.h>
-#include "m4ri/m4ri.h"
+#include "m4ri.h"
 
 int test_kernel_left_pluq(size_t m, size_t n) {
   mzd_t* A = mzd_init(m, n);

@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "m4ri/m4ri.h"
+#include "m4ri.h"
 
 int elim_test_equality(int nr, int nc) {
   int ret = 0; 
