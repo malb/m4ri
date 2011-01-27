@@ -1,4 +1,4 @@
-CFLAGS=-I.. -std=c99 -D_XOPEN_SOURCE=600
+CFLAGS=-I../m4ri -std=c99 -D_XOPEN_SOURCE=600
 LDFLAGS=-L../.libs/ -lm4ri
 DEBUG=-ggdb
 
