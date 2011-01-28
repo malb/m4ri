@@ -224,4 +224,16 @@ void  mzd_apply_p_right_trans_tri(mzd_t * A, mzp_t * Q);
 
 void mzp_print(mzp_t *P);
 
+/**
+ * Compresses the matrix L in a step in blockwise-recursive PLS
+ * decomposition.
+ *
+ * \param A Matrix.
+ * \param r1 Rank of left matrix.
+ * \param n1 Column cut which separates left and right matrix.
+ * \param r2 Rank of right matrix.
+ */
+
+void _mzd_compress_l(mzd_t *A, size_t r1, size_t n1, size_t r2);
+
 #endif //PERMUTATION_H

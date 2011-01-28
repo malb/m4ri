@@ -356,4 +356,51 @@ void mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t *P) {
     }
   }
 }
+
+void _mzd_compress_l(mzd_t *A, size_t r1, size_t n1, size_t r2) {
+  size_t i,j;
+
+  if (r1 == n1)
+    return;
+
+#if 0
+
+  mzp_t *shift = mzp_init(A->ncols);
+  for (i=r1,j=n1;i<r1+r2;i++,j++){
+    mzd_col_swap_in_rows(A, i, j, i, r1+r2);
+    shift->values[i] = j;
+  }
+
+  mzd_apply_p_right_trans_even_capped(A, shift, r1+r2, 0);
+  mzp_free(shift);
+
+#else
+
+  for (i=r1,j=n1;i<r1+r2;i++,j++){
+    mzd_col_swap_in_rows(A, i, j, i, r1+r2);
+  }
+  
+  word tmp;
+  for(i=r1+r2; i<A->nrows; i++) {
+    for(j=0; j+RADIX<=r2; j+=RADIX) {
+      tmp = mzd_read_bits(A, i, n1+j, RADIX);
+      mzd_clear_bits(A, i, r1+j, RADIX);
+      mzd_xor_bits(A, i, r1+j, RADIX, tmp);
+    }
+    if (j<r2) {
+      tmp = mzd_read_bits(A, i, n1+j, r2-j);
+      mzd_clear_bits(A, i, r1+j, r2-j);
+      mzd_xor_bits(A, i, r1+j, r2-j, tmp);
+    }
+
+    for(j=r1+r2; j+RADIX<=n1+r2; j+=RADIX) {
+      mzd_clear_bits(A, i, j, RADIX);
+    }
+    if (j < n1+r2)
+      mzd_clear_bits(A, i , j, n1+r2-j);
+  }
+ 
+#endif
+}
+
 #endif
