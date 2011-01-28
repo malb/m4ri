@@ -381,6 +381,7 @@ void _mzd_compress_l(mzd_t *A, size_t r1, size_t n1, size_t r2) {
   }
   
   word tmp;
+  /** TODO: optimise this **/
   for(i=r1+r2; i<A->nrows; i++) {
     for(j=0; j+RADIX<=r2; j+=RADIX) {
       tmp = mzd_read_bits(A, i, n1+j, RADIX);
@@ -393,11 +394,15 @@ void _mzd_compress_l(mzd_t *A, size_t r1, size_t n1, size_t r2) {
       mzd_xor_bits(A, i, r1+j, r2-j, tmp);
     }
 
-    for(j=r1+r2; j+RADIX<=n1+r2; j+=RADIX) {
-      mzd_clear_bits(A, i, j, RADIX);
+    j = r1+r2;
+    mzd_clear_bits(A, i, j, RADIX - (j+A->offset%RADIX));
+
+    j += RADIX - (j%RADIX);
+
+    for(; j<n1+r2; j+=RADIX) {
+      //mzd_clear_bits(A, i, j, RADIX);      
+      A->rows[i][j/RADIX] = 0;
     }
-    if (j < n1+r2)
-      mzd_clear_bits(A, i , j, n1+r2-j);
   }
  
 #endif
