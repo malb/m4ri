@@ -358,6 +358,35 @@ void mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t *P) {
 }
 
 void _mzd_compress_l(mzd_t *A, size_t r1, size_t n1, size_t r2) {
+  /**
+   * We are compressing this matrix
+\verbatim
+           r1           n1
+   ------------------------------------------
+   | \ \____|___        | A01               |
+   |  \     |   \       |                   |
+ r1------------------------------------------ 
+   |   |    |           | \  \_____         |
+   | L1|    |           |  \       \________|
+   |   |    |           | L2|               |
+   ------------------------------------------
+\endverbatim
+  *
+  * to this matrix
+  *
+\verbatim
+           r1           n1
+   ------------------------------------------
+   | \ \____|___        | A01               |
+   |  \     |   \       |                   |
+ r1------------------------------------------ 
+   |    \   |           |    \_____         |
+   |     \  |           |          \________|
+   |      | |           |                   |
+   ------------------------------------------
+\endverbatim
+  */
+
   size_t i,j;
 
   if (r1 == n1)
@@ -381,26 +410,58 @@ void _mzd_compress_l(mzd_t *A, size_t r1, size_t n1, size_t r2) {
   }
   
   word tmp;
-  /** TODO: optimise this **/
+  size_t block;
+
   for(i=r1+r2; i<A->nrows; i++) {
-    for(j=0; j+RADIX<=r2; j+=RADIX) {
-      tmp = mzd_read_bits(A, i, n1+j, RADIX);
-      mzd_clear_bits(A, i, r1+j, RADIX);
-      mzd_xor_bits(A, i, r1+j, RADIX, tmp);
-    }
-    if (j<r2) {
-      tmp = mzd_read_bits(A, i, n1+j, r2-j);
-      mzd_clear_bits(A, i, r1+j, r2-j);
-      mzd_xor_bits(A, i, r1+j, r2-j, tmp);
+
+    j = r1;
+
+    /* first we deal with the rest of the current word we need to
+       write */
+    const size_t rest = RADIX - ((j+A->offset)%RADIX);
+
+    tmp = mzd_read_bits(A, i, n1, rest);
+    mzd_clear_bits(A, i, j, rest);
+    mzd_xor_bits(A, i, j, rest, tmp);
+    
+    j += rest;
+
+    /* now each write is simply a word write */
+
+    block = (n1+j-r1+A->offset) / RADIX;
+
+    if (rest%RADIX == 0) {
+      for( ;j+RADIX<=r1+r2; j+=RADIX, block++) {
+        tmp = A->rows[i][block];
+        A->rows[i][j/RADIX] = tmp;
+      }
+    } else {
+      for(; j+RADIX<=r1+r2; j+=RADIX, block++) {
+        tmp = (A->rows[i][block] << rest) | ( A->rows[i][block + 1] >> (RADIX - rest)); 
+        A->rows[i][j/RADIX] = tmp;
+      }
     }
 
+    /* we deal with the remaining bits. While we could write past the
+       end of r1+r2 here, but we have no guarantee that we can read
+       past the end of n1+r2. */
+
+    if (j<r1+r2) {
+      tmp = mzd_read_bits(A, i, n1+j-r1, r1+r2-j);
+      A->rows[i][j/RADIX] = tmp<<(RADIX-(r1+r2+j));
+    }
+
+    /* now clear the rest of L2 */
     j = r1+r2;
-    mzd_clear_bits(A, i, j, RADIX - (j+A->offset%RADIX));
+    mzd_clear_bits(A, i, j, RADIX - ((j+A->offset)%RADIX));
 
-    j += RADIX - (j%RADIX);
+    j += RADIX - ((j+A->offset)%RADIX);
+
+    /* it's okay to write the full word, i.e. past n1+r2, because
+       everything is zero there anyway. Thus, we can omit the code
+       which deals with last few bits. */
 
     for(; j<n1+r2; j+=RADIX) {
-      //mzd_clear_bits(A, i, j, RADIX);      
       A->rows[i][j/RADIX] = 0;
     }
   }

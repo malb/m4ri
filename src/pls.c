@@ -39,6 +39,7 @@ size_t mzd_pls (mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
   return _mzd_pls(A, P, Q, cutoff);
 }
 
+
 size_t mzd_pluq (mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
   if (P->length != A->nrows)
     m4ri_die("mzd_pluq: Permutation P length (%d) must match A nrows (%d)\n",P->length, A->nrows);
