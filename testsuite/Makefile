@@ -9,7 +9,8 @@ BENCH_PRGS=bench_elimination \
 	bench_trsm_lowerleft \
 	bench_trsm_upperleft \
 	bench_trsm_lowerright \
-	bench_trsm_upperright
+	bench_trsm_upperright \
+	bench_elimination_sparse
 
 CPUCYCLES_DIR=./cpucycles-20060326
 
@@ -20,6 +21,9 @@ all: $(TEST_PRGS) $(BENCH_PRGS)
 
 bench_elimination: cpucycles.o bench_elimination.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) bench_elimination.c cpucycles.o $(LDFLAGS) -o $@
+
+bench_elimination_sparse: cpucycles.o bench_elimination_sparse.c Makefile
+	$(CC) $(DEBUG) $(CFLAGS) bench_elimination_sparse.c cpucycles.o $(LDFLAGS) -o $@
 
 bench_multiplication: cpucycles.o bench_multiplication.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) bench_multiplication.c cpucycles.o $(LDFLAGS) -o $@
