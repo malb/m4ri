@@ -159,16 +159,54 @@ mzd_t *mzd_init_window(const mzd_t *M, const size_t lowr, const size_t lowc, con
 #define mzd_free_window mzd_free
 
 /**
+ * \brief Swap the two rows rowa and rowb starting at startblock.
+ * 
+ * \param M Matrix
+ * \param rowa Row index.
+ * \param rowb Row index.
+ * \param startblock Start swapping only in this block.
+ */
+ 
+static inline void _mzd_row_swap(mzd_t *M, const size_t rowa, const size_t rowb, const size_t startblock) {
+  if ((rowa == rowb) || (startblock >= M->width))
+    return;
+  size_t i;
+  size_t width = M->width - startblock - 1;
+  word *a = M->rows[rowa] + startblock;
+  word *b = M->rows[rowb] + startblock;
+  word tmp; 
+  word mask_end = LEFT_BITMASK( (M->offset + M->ncols)%RADIX );
+
+  if (width != 0) {
+    for(i = 0; i<width; i++) {
+      tmp = a[i];
+      a[i] = b[i];
+      b[i] = tmp;
+    }
+    tmp = a[width];
+    a[width] = (a[width] & ~mask_end) | (b[width] & mask_end);
+    b[width] = (b[width] & ~mask_end) | (tmp & mask_end);
+    
+  } else {
+    tmp = a[0];
+    a[0] = (a[0] & ~mask_end) | (b[0] & mask_end);
+    b[0] = (b[0] & ~mask_end) | (tmp & mask_end);
+  }
+}
+
+/**
  * \brief Swap the two rows rowa and rowb.
  * 
  * \param M Matrix
  * \param rowa Row index.
  * \param rowb Row index.
+ * \param startblock Start swapping only in this block.
  */
  
 static inline void mzd_row_swap(mzd_t *M, const size_t rowa, const size_t rowb) {
   if(rowa == rowb)
     return;
+
   size_t i;
   size_t width = M->width - 1;
   word *a = M->rows[rowa];
@@ -356,7 +394,6 @@ void mzd_print_tight(const mzd_t *M);
  * \param coloffset Column offset
  */
 
-/*void mzd_row_add_offset(mzd_t *M, size_t dstrow, size_t srcrow, size_t coloffset); */
 static inline void mzd_row_add_offset(mzd_t *M, size_t dstrow, size_t srcrow, size_t coloffset) {
   coloffset += M->offset;
   const size_t startblock= coloffset/RADIX;
@@ -717,7 +754,6 @@ mzd_t *_mzd_add(mzd_t *C, const mzd_t *A, const mzd_t *B);
  * \param startblock2 starting block to work on in matrix sc2
  * \param row2 source row for matrix sc2
  *
- * \wordoffset
  */
 
 void mzd_combine(mzd_t * DST, const size_t row3, const size_t startblock3,

@@ -41,9 +41,10 @@
  * from mzd_process_rows8
  */
 
-#ifdef HAVE_SSE2
-static inline void _mzd_combine8(word *c, word *t1, word *t2, word *t3, word *t4, word *t5, word *t6, word *t7, word *t8, size_t wide) {
+static inline void _mzd_combine8(word *c, const word *t1, const word *t2, const word *t3, const word *t4, 
+                                 const word *t5, const word *t6, const word *t7, const word *t8, size_t wide) {
   size_t i;
+#ifdef HAVE_SSE2
   /* assuming t1 ... t8 are aligned, but c might not be */
   if (ALIGNMENT(c,16)==0) {
     __m128i *__c = (__m128i*)c;
@@ -80,27 +81,19 @@ static inline void _mzd_combine8(word *c, word *t1, word *t2, word *t3, word *t4
     t8 = (word*)__t8;
     wide = ((sizeof(word)*wide)%16)/sizeof(word);
   }
+#endif
   for(i=0; i<wide; i++) {
     c[i] ^= t1[i] ^ t2[i] ^ t3[i] ^ t4[i] ^ t5[i] ^ t6[i] ^ t7[i] ^ t8[i];
   }
 }
-#else
-
-#define _mzd_combine8(c,t1,t2,t3,t4,t5,t6,t7,t8,wide) for(ii=0; ii<wide ; ii++) c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii] ^ t5[ii] ^ t6[ii] ^ t7[ii] ^ t8[ii]
-
-#endif
 
 /**
  * Compute c[i] += t1[i] + t2[i] + t3[i] + t4[i] for 0 <= i < wide
  *
- * \todo the non SSE2 version of this code is slow, replace by code
- * from mzd_process_rows4
  */
 
-
+static inline void _mzd_combine4(word *c, const word *t1, const word *t2, const word *t3, const word *t4, size_t wide) {
 #ifdef HAVE_SSE2
-static inline void _mzd_combine4(word *c, word *t1, word *t2, word *t3, word *t4, size_t wide) {
-  size_t i;
   /* assuming t1 ... t4 are aligned, but c might not be */
   if (ALIGNMENT(c,16)==0) {
     __m128i *__c = (__m128i*)c;
@@ -125,26 +118,76 @@ static inline void _mzd_combine4(word *c, word *t1, word *t2, word *t3, word *t4
     t4 = (word*)__t4;
     wide = ((sizeof(word)*wide)%16)/sizeof(word);
   }
-  for(i=0; i<wide; i++) {
-    c[i] ^= t1[i] ^ t2[i] ^ t3[i] ^ t4[i];
+  if(!wide)
+    return;
+#endif //HAVE_SSE2
+  register int n = (wide + 7) / 8;
+  switch (wide % 8) {
+  case 0: do { *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
+    case 7:    *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
+    case 6:    *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
+    case 5:    *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
+    case 4:    *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
+    case 3:    *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
+    case 2:    *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
+    case 1:    *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
+    } while (--n > 0);
   }
 }
-#else
 
-#define _mzd_combine4(c, t1, t2, t3, t4, wide) for(ii=0; ii<wide ; ii++) c[ii] ^= t1[ii] ^ t2[ii] ^ t3[ii] ^ t4[ii]
+/**
+ * Compute c[i] += t1[i] + t2[i] + t3[i] + t4[i] for 0 <= i < wide
+ *
+ */
 
+static inline void _mzd_combine3(word *c, const word *t1, const word *t2, const word *t3, size_t wide) {
+#ifdef HAVE_SSE2
+  /* assuming t1 ... t4 are aligned, but c might not be */
+  if (ALIGNMENT(c,16)==0) {
+    __m128i *__c = (__m128i*)c;
+    __m128i *__t1 = (__m128i*)t1;
+    __m128i *__t2 = (__m128i*)t2;
+    __m128i *__t3 = (__m128i*)t3;
+    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xF);
+    __m128i xmm1;
+    
+    while(__c < eof) {
+      xmm1 = _mm_xor_si128(*__c, *__t1++);
+      xmm1 = _mm_xor_si128(xmm1, *__t2++);
+      xmm1 = _mm_xor_si128(xmm1, *__t3++);
+      *__c++ = xmm1;
+    }
+    c  = (word*)__c;
+    t1 = (word*)__t1;
+    t2 = (word*)__t2;
+    t3 = (word*)__t3;
+    wide = ((sizeof(word)*wide)%16)/sizeof(word);
+  }
+  if(!wide)
+    return;
 #endif //HAVE_SSE2
+  register int n = (wide + 7) / 8;
+  switch (wide % 8) {
+  case 0: do { *c++ ^= *t1++ ^ *t2++ ^ *t3++;
+    case 7:    *c++ ^= *t1++ ^ *t2++ ^ *t3++;
+    case 6:    *c++ ^= *t1++ ^ *t2++ ^ *t3++;
+    case 5:    *c++ ^= *t1++ ^ *t2++ ^ *t3++;
+    case 4:    *c++ ^= *t1++ ^ *t2++ ^ *t3++;
+    case 3:    *c++ ^= *t1++ ^ *t2++ ^ *t3++;
+    case 2:    *c++ ^= *t1++ ^ *t2++ ^ *t3++;
+    case 1:    *c++ ^= *t1++ ^ *t2++ ^ *t3++;
+    } while (--n > 0);
+  }
+}
+
 
 /**
  * Compute c[i] += t1[i] + t2[i] for 0 <= i < wide
  *
- * \todo the non SSE2 version of this code is slow, replace by code
- * from mzd_process_rows2
  */
 
+static inline void _mzd_combine2(word *c, const word *t1, const word *t2, size_t wide) {
 #ifdef HAVE_SSE2
-static inline void _mzd_combine2(word *c, word *t1, word *t2, size_t wide) {
-  size_t i;
   /* assuming t1 ... t2 are aligned, but c might not be */
   if (ALIGNMENT(c,16)==0) {
     __m128i *__c = (__m128i*)c;
@@ -163,15 +206,61 @@ static inline void _mzd_combine2(word *c, word *t1, word *t2, size_t wide) {
     t2 = (word*)__t2;
     wide = ((sizeof(word)*wide)%16)/sizeof(word);
   }
-  for(i=0; i<wide; i++) {
-    c[i] ^= t1[i] ^ t2[i];
+  if(!wide)
+    return;
+#endif //HAVE_SSE2
+  register int n = (wide + 7) / 8;
+  switch (wide % 8) {
+  case 0: do { *c++ ^= *t1++ ^ *t2++;
+    case 7:    *c++ ^= *t1++ ^ *t2++;
+    case 6:    *c++ ^= *t1++ ^ *t2++;
+    case 5:    *c++ ^= *t1++ ^ *t2++;
+    case 4:    *c++ ^= *t1++ ^ *t2++;
+    case 3:    *c++ ^= *t1++ ^ *t2++;
+    case 2:    *c++ ^= *t1++ ^ *t2++;
+    case 1:    *c++ ^= *t1++ ^ *t2++;
+    } while (--n > 0);
   }
 }
-#else
 
-#define _mzd_combine2(c, t1, t2, wide) for(ii=0; ii<wide ; ii++) c[ii] ^= t1[ii] ^ t2[ii]
+/**
+ * Compute c[i] += t1[i] + t2[i] for 0 <= i < wide
+ *
+ */
 
+static inline void _mzd_combine(word *c, const word *t1, size_t wide) {
+#ifdef HAVE_SSE2
+  /* assuming t1 ... t2 are aligned, but c might not be */
+  if (ALIGNMENT(c,16)==0) {
+    __m128i *__c = (__m128i*)c;
+    __m128i *__t1 = (__m128i*)t1;
+    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xF);
+    __m128i xmm1;
+    
+    while(__c < eof) {
+      xmm1 = _mm_xor_si128(*__c, *__t1++);
+      *__c++ = xmm1;
+    }
+    c  = (word*)__c;
+    t1 = (word*)__t1;
+    wide = ((sizeof(word)*wide)%16)/sizeof(word);
+  }
+  if(!wide)
+    return;
 #endif //HAVE_SSE2
+  register int n = (wide + 7) / 8;
+  switch (wide % 8) {
+  case 0: do { *c++ ^= *t1++;
+    case 7:    *c++ ^= *t1++;
+    case 6:    *c++ ^= *t1++;
+    case 5:    *c++ ^= *t1++;
+    case 4:    *c++ ^= *t1++;
+    case 3:    *c++ ^= *t1++;
+    case 2:    *c++ ^= *t1++;
+    case 1:    *c++ ^= *t1++;
+    } while (--n > 0);
+  }
+}
 
 
 #ifdef M4RM_GRAY8

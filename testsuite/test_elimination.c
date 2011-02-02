@@ -16,6 +16,7 @@ int elim_test_equality(int nr, int nc) {
   mzd_t *G = mzd_copy(NULL, A);
 
   /* M4RI k=auto */
+
   size_t ra = mzd_echelonize_m4ri(A, 1, 0);
 
   /* M4RI k=8 */
@@ -38,7 +39,7 @@ int elim_test_equality(int nr, int nc) {
 
   /* PLUQ */
   size_t rg = mzd_echelonize_pluq(G, 1);
-  
+
   if(mzd_equal(A, B) != TRUE || ra != rb) {
     printf("A != B ");
     ret -= 1;
@@ -92,6 +93,15 @@ int elim_test_equality(int nr, int nc) {
 
 int main(int argc, char **argv) {
   int status = 0;
+
+  status += elim_test_equality(4, 67);
+  status += elim_test_equality(17, 121);
+  status += elim_test_equality(65, 17);
+  status += elim_test_equality(128, 128);
+  status += elim_test_equality(1024, 1024);
+  status += elim_test_equality(2047, 2047);
+  status += elim_test_equality(65, 65);
+
   status += elim_test_equality(100, 100);
   status += elim_test_equality(21, 171);
   status += elim_test_equality(31, 121);

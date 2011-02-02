@@ -228,20 +228,23 @@ void mzd_make_table( mzd_t *M, size_t r, size_t c, int k, mzd_t *T, size_t *L) {
 
 void mzd_process_rows(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol, int k, mzd_t *T, size_t *L) {
   size_t r;
-  const size_t blocknum=startcol/RADIX;
-  size_t wide = M->width - blocknum;
+  const size_t block=startcol/RADIX;
+  size_t wide = M->width - block;
 
   if(k==1) {
     word bm = ONE << ((RADIX - startcol - 1) % RADIX);
 
     for (r=startrow; r+2<=stoprow; r+=2) {
-      word *t  = T->rows[1] + blocknum;
-      word *m0 = M->rows[r+0] + blocknum;
-      word *m1 = M->rows[r+1] + blocknum;
+      word *t  = T->rows[1] + block;
+      const word b0 = M->rows[r+0][block] & bm;
+      const word b1 = M->rows[r+1][block] & bm;
+      word *m0 = M->rows[r+0] + block;
+      word *m1 = M->rows[r+1] + block;
       register int n = (wide + 7) / 8;
 
-      if(*m0 & bm) {
-        if(*m1 & bm) {
+      /* TODO: we could drop one conditional jump with a switch/case */
+      if(b0) {
+        if(b1) {
           switch (wide % 8) {
           case 0: do { *m0++ ^= *t; *m1++ ^= *t++;
           case 7:    *m0++ ^= *t; *m1++ ^= *t++;
@@ -266,7 +269,7 @@ void mzd_process_rows(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol
             } while (--n > 0);
           }
         }
-      } else if(*m1 & bm) {
+      } else if(b1) {
           switch (wide % 8) {
           case 0: do { *m1++ ^= *t++;
           case 7:    *m1++ ^= *t++;
@@ -281,10 +284,11 @@ void mzd_process_rows(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol
       }
     }
 
+    /* TODO: this code is a bit silly/overkill, it just takes care of the last row */
     for( ; r<stoprow; r++) {
       const int x0 = L[ (int)mzd_read_bits(M, r, startcol, k) ];
-      word *m0 = M->rows[r] + blocknum;
-      word *t0 = T->rows[x0] + blocknum;
+      word *m0 = M->rows[r] + block;
+      word *t0 = T->rows[x0] + block;
       
       register int n = (wide + 7) / 8;
       switch (wide % 8) {
@@ -306,11 +310,11 @@ void mzd_process_rows(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol
     const int x0 = L[ (int)mzd_read_bits(M, r+0, startcol, k) ];
     const int x1 = L[ (int)mzd_read_bits(M, r+1, startcol, k) ];
     
-    word *m0 = M->rows[r+0] + blocknum;
-    word *t0 = T->rows[x0] + blocknum;
+    word *m0 = M->rows[r+0] + block;
+    word *t0 = T->rows[x0] + block;
 
-    word *m1 = M->rows[r+1] + blocknum;
-    word *t1 = T->rows[x1] + blocknum;
+    word *m1 = M->rows[r+1] + block;
+    word *t1 = T->rows[x1] + block;
 
     register int n = (wide + 7) / 8;
     switch (wide % 8) {
@@ -328,8 +332,8 @@ void mzd_process_rows(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol
 
   for( ; r<stoprow; r++) {
     const int x0 = L[ (int)mzd_read_bits(M, r, startcol, k) ];
-    word *m0 = M->rows[r] + blocknum;
-    word *t0 = T->rows[x0] + blocknum;
+    word *m0 = M->rows[r] + block;
+    word *t0 = T->rows[x0] + block;
 
     register int n = (wide + 7) / 8;
     switch (wide % 8) {
