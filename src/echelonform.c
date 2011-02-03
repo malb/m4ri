@@ -41,9 +41,10 @@ size_t mzd_echelonize_pluq(mzd_t *A, int full) {
   mzp_t *P = mzp_init(A->nrows);
   mzp_t *Q = mzp_init(A->ncols);
 
-  size_t r = mzd_pluq(A, P, Q, 0);
+  size_t r;
 
   if(full) {
+    r = mzd_pluq(A, P, Q, 0);
     mzd_t *U = mzd_init_window(A, 0, 0, r, r);
     mzd_t *B = mzd_init_window(A, 0, r, r, A->ncols);
     if(r!=A->ncols) 
@@ -55,21 +56,23 @@ size_t mzd_echelonize_pluq(mzd_t *A, int full) {
     mzd_free_window(U);
     mzd_free_window(B);
 
+    if(r!=0) {
+      mzd_t *A0 = mzd_init_window(A, 0, 0, r, A->ncols);
+      mzd_apply_p_right(A0, Q);
+      mzd_free_window(A0);
+    } else {
+      mzd_apply_p_right(A, Q);
+    }
+
   } else {
+    r = mzd_pls(A, P, Q, 0);
     for(size_t i=0; i<r; i++) {
-      for(size_t j=0; j< i; j+=RADIX) {
-        const size_t length = MIN(RADIX, i-j);
+      for(size_t j=0; j<=i; j+=RADIX) {
+        const size_t length = MIN(RADIX, i-j+1);
         mzd_clear_bits(A, i, j, length);
       }
+      mzd_write_bit(A, i, Q->values[i], 1);
     }
-  }
-
-  if(r!=0) {
-    mzd_t *A0 = mzd_init_window(A, 0, 0, r, A->ncols);
-    mzd_apply_p_right(A0, Q);
-    mzd_free_window(A0);
-  } else {
-    mzd_apply_p_right(A, Q);
   }
 
   if(r!=A->nrows) {

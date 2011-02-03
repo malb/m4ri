@@ -189,8 +189,8 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
 
 
 /**
- * Apply the permutation P to A from the right, but only on the lower
- * triangular part of the matrix A.
+ * Apply the permutation P to A from the right, but only on the upper
+ * the matrix A above the main diagonal.
  *
  * This is equivalent to column swaps walking from length-1 to 0.
  *
@@ -198,23 +198,6 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
  * \param Q Permutation.
  */
 void  mzd_apply_p_right_trans_tri(mzd_t * A, mzp_t * Q);
-
-/* /\** */
-/*  * Rotate zero columns to the end. */
-/*  * */
-/*  * Given a matrix M with zero columns from zs up to ze (exclusive) and */
-/*  * nonzero columns from ze to de (excluse) with zs < ze < de rotate */
-/*  * the zero columns to the end such that the the nonzero block comes */
-/*  * before the zero block. */
-/*  * */
-/*  * \param M Matrix. */
-/*  * \param zs Start index of the zero columns. */
-/*  * \param ze End index of the zero columns (exclusive). */
-/*  * \param de End index of the nonzero columns (exclusive). */
-/*  * */
-/*  *\/ */
-
-/* void mzd_col_block_rotate(mzd_t *M, size_t zs, size_t ze, size_t de) ; */
 
 /**
  * Print the mzp_t P

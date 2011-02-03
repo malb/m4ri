@@ -11,6 +11,7 @@ int main(int argc, char **argv) {
   unsigned long long t;
   double wt;
   double clockZero = 0.0;
+  int full = 1;
 
   if (argc < 3) {
     m4ri_die("Parameters m,n, (alg,r) expected.\n");
@@ -19,8 +20,11 @@ int main(int argc, char **argv) {
     algorithm = argv[3];
   else
     algorithm = "m4ri";
-  if (argc == 5)
+  if (argc >= 5)
     density = RAND_MAX * atof(argv[4]);
+
+  if(argc >= 6)
+    full = atoi(argv[5]);
 
   m = atoi(argv[1]);
   n = atoi(argv[2]);
@@ -35,16 +39,17 @@ int main(int argc, char **argv) {
     }
   }
 
+
   wt = walltime(&clockZero);
   t = cpucycles();
   if(strcmp(algorithm,"m4ri")==0)
-    r = mzd_echelonize_m4ri(A, 1, 0);
+    r = mzd_echelonize_m4ri(A, full, 0);
+  else if(strcmp(algorithm,"cross")==0)
+    r = mzd_echelonize(A, full);
   else if(strcmp(algorithm,"pluq")==0)
-    r = mzd_echelonize_pluq(A, 1);
-  else if(strcmp(algorithm,"mmpf")==0)
-    r = _mzd_pluq_mmpf(A, mzp_init(A->nrows),mzp_init(A->ncols),0);
+    r = mzd_echelonize_pluq(A, full);
   else if(strcmp(algorithm,"naive")==0)
-    r = mzd_echelonize_naive(A, 1);
+    r = mzd_echelonize_naive(A, full);
   printf("m: %5d, n: %5d, r: %5d, cpu cycles: %10llu wall time: %lf\n",m, n, r, cpucycles() - t, walltime(&wt));
 
   mzd_free(A);

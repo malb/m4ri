@@ -331,17 +331,6 @@ void mzp_print(mzp_t *P) {
   printf("]");
 }
 
-#if 0
-void  mzd_apply_p_right_trans_tri (mzd_t * A, mzp_t * P, size_t rank){
-  assert(P->length==A->ncols);
-  for (size_t i =0 ; i<P->length; ++i) {
-    assert(P->values[i] >= i);
-    //if (P->values[i] > i) {
-    mzd_col_swap_in_rows(A, i, P->values[i], 0, i);
-    //}
-  }
-}
-#else
 void mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t *P) {
   assert(P->length==A->ncols);
   const size_t step_size = MAX((CPU_L1_CACHE>>2)/A->width,1);
@@ -350,9 +339,7 @@ void mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t *P) {
     const size_t row_bound = MIN(r+step_size, A->nrows);
     for (size_t i =0 ; i<A->ncols; ++i) {
       assert(P->values[i] >= i);
-      //if (P->values[i] > i) {
       mzd_col_swap_in_rows(A, i, P->values[i], r, MIN(row_bound,i));
-      //}
     }
   }
 }
@@ -469,4 +456,3 @@ void _mzd_compress_l(mzd_t *A, size_t r1, size_t n1, size_t r2) {
 #endif
 }
 
-#endif
