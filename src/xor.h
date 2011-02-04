@@ -230,24 +230,39 @@ static inline void _mzd_combine2(word *c, const word *t1, const word *t2, size_t
 
 static inline void _mzd_combine(word *c, const word *t1, size_t wide) {
 #ifdef HAVE_SSE2
-  /* assuming t1 ... t2 are aligned, but c might not be */
-  if (ALIGNMENT(c,16)==0) {
-    __m128i *__c = (__m128i*)c;
-    __m128i *__t1 = (__m128i*)t1;
-    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xF);
-    __m128i xmm1;
-    
-    while(__c < eof) {
-      xmm1 = _mm_xor_si128(*__c, *__t1++);
-      *__c++ = xmm1;
-    }
-    c  = (word*)__c;
-    t1 = (word*)__t1;
-    wide = ((sizeof(word)*wide)%16)/sizeof(word);
+  /* assuming c, t1 are alligned the same way */
+
+  if (ALIGNMENT(c,16)==8 && wide) {
+    *c++ ^= *t1++;
+    wide--;
   }
+
+  __m128i *__c = (__m128i*)c;
+  __m128i *__t1 = (__m128i*)t1;
+  const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xF);
+  __m128i xmm1;
+  
+  
+  while(__c < eof-1) {
+    xmm1 = _mm_xor_si128(*__c, *__t1++);
+    *__c++ = xmm1;
+    xmm1 = _mm_xor_si128(*__c, *__t1++);
+    *__c++ = xmm1;
+  }
+
+  if(__c < eof) {
+    xmm1 = _mm_xor_si128(*__c, *__t1++); 
+    *__c++ = xmm1;      
+  }
+  
+  c  = (word*)__c;
+  t1 = (word*)__t1;
+  wide = ((sizeof(word)*wide)%16)/sizeof(word);
+
   if(!wide)
     return;
 #endif //HAVE_SSE2
+
   register int n = (wide + 7) / 8;
   switch (wide % 8) {
   case 0: do { *c++ ^= *t1++;
