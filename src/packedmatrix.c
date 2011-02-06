@@ -5,7 +5,7 @@
 *    Copyright (C) 2007 Gregory Bard <gregory.bard@ieee.org> 
 *    Copyright (C) 2009,2010 Martin Albrecht <martinralbrecht@googlemail.com>
 *
-*  Distributed under the terms of the GNU General Public License (GEL)
+*  Distributed under the terms of the GNU General Public License (GPL)
 *  version 2 or higher.
 *
 *    This code is distributed in the hope that it will be useful,
