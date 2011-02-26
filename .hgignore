@@ -1,0 +1,15 @@
+syntax: glob
+
+INSTALL
+Makefile.in
+aclocal.m4
+autogen.sh
+autom4te.cache
+compile
+config.guess
+config.sub
+src/config.h.in
+configure
+depcomp
+install-sh
+missing
