@@ -41,6 +41,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <stdint.h>
 
 /*
  * These define entirely the word width used in the library.
@@ -51,7 +52,7 @@
  * bits.
  */
 
-typedef unsigned long long word;
+typedef uint64_t word;
 
 /**
  * \brief The number of bits in a word.
