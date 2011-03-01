@@ -280,7 +280,7 @@ int main(int argc, char **argv) {
   status += test_trsm_lower_left(  10,   20,   0,  15, "  small L even, small B odd");
   status += test_trsm_lower_left(  10,   80,   0,  15, "  small L even, large B odd");
   status += test_trsm_lower_left(  10,   20,  15,   0, "  small L odd, small B even");
-  status += test_trsm_lower_left(  10,   80,  15,   0, " s mall L odd, large B even");
+  status += test_trsm_lower_left(  10,   80,  15,   0, "  small L odd, large B even");
   status += test_trsm_lower_left(  10,   20,  15,  20, "   small L odd, small B odd");
   status += test_trsm_lower_left(  10,   80,  15,  20, "   small L odd, large B odd");
   status += test_trsm_lower_left(  70,   20,   0,   0, " large L even, small B even");
