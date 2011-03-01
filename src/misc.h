@@ -71,7 +71,7 @@ typedef uint64_t word;
  * \brief The number 2^64-1 as a word.
  */
 
-#define FFFF ((word)0xffffffffffffffffull)
+#define FFFF ((word)-1)
 
 /**
  * \brief Return the maximal element of x and y
@@ -460,7 +460,7 @@ static inline void m4ri_mm_free(void *condemned, ...) {
  * \brief Maximum number of bytes allocated in one malloc() call.
  */
 
-#define MM_MAX_MALLOC ((1ULL)<<30)
+#define MM_MAX_MALLOC (((size_t)1)<<30)
 
 /**
  * \brief Enable memory block cache (default: disabled)

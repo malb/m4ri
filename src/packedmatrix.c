@@ -268,7 +268,7 @@ static inline mzd_t *_mzd_transpose_direct_128(mzd_t *DST, const mzd_t *SRC) {
   }
 
   /* now transpose each block A,B,C,D separately, cf. Hacker's Delight */
-  m = 0x00000000FFFFFFFFULL;
+  m = 0xFFFFFFFF;
   for (j = 32; j != 0; j = j >> 1, m = m ^ (m << j)) {
     for (k = 0; k < 64; k = (k + j + 1) & ~j) {
       t[0] = (DST->rows[k][0] ^ (DST->rows[k+j][0] >> j)) & m;
@@ -1112,7 +1112,7 @@ void mzd_row_clear_offset(mzd_t *M, size_t row, size_t coloffset) {
   }
   M->rows[row][startblock] = temp;
   for ( i=startblock+1; i < M->width; i++ ) {
-    M->rows[row][i] = 0ULL;
+    M->rows[row][i] = 0;
   }
 }
 
