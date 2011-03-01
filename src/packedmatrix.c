@@ -1130,7 +1130,7 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
       const size_t length = MIN(RADIX, ncols-j);
       for(i=start_row; i<nrows; i++) {
         const word curr_data = (word)mzd_read_bits(A, i, j, length);
-        if (curr_data > data && leftmost_bit(curr_data) > leftmost_bit(data)) {
+        if (larger_log2(curr_data, data)) {
           row_candidate = i;
           data = curr_data;
           if(GET_BIT(data,RADIX-length-1))
@@ -1158,7 +1158,7 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
     const word mask_begin = RIGHT_BITMASK(RADIX-bit_offset);
     for(i=start_row; i<nrows; i++) {
       const word curr_data = A->rows[i][word_offset] & mask_begin;
-      if (curr_data > data && leftmost_bit(curr_data) > leftmost_bit(data)) {
+      if (larger_log2(curr_data, data)) {
         row_candidate = i;
         data = curr_data;
         if(GET_BIT(data,bit_offset)) {
@@ -1182,7 +1182,7 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
     for(j=word_offset + 1; j<A->width - 1; j++) {
       for(i=start_row; i<nrows; i++) {
         const word curr_data = A->rows[i][j];
-        if (curr_data > data && leftmost_bit(curr_data) > leftmost_bit(data)) {
+        if (larger_log2(curr_data, data)) {
           row_candidate = i;
           data = curr_data;
           if(GET_BIT(data, 0))
@@ -1207,7 +1207,7 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
     j = A->width-1;
     for(i=start_row; i<nrows; i++) {
       const word curr_data = A->rows[i][j] & mask_end;
-      if (curr_data > data && leftmost_bit(curr_data) > leftmost_bit(data)) {
+      if (larger_log2(curr_data, data)) {
         row_candidate = i;
         data = curr_data;
         if(GET_BIT(data,0))

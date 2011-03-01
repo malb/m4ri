@@ -155,7 +155,7 @@ typedef unsigned char BIT;
  * \param spot Integer with 0 <= spot < RADIX
  */
 
-#define GET_BIT(w, spot) (((w) & (ONE<<(RADIX - (spot) - 1))) >> (RADIX - (spot) - 1))
+#define GET_BIT(w, spot) (((w) >> (RADIX - 1 - (spot))) & ONE)
 
 /**
  * \brief Write the value to the bit spot in the word w
@@ -165,7 +165,7 @@ typedef unsigned char BIT;
  * \param value Either 0 or 1.
  */
 
-#define WRITE_BIT(w, spot, value) ((w) = (((w) &~(ONE<<(RADIX - (spot) - 1))) | (((word)(value))<<(RADIX - (spot) - 1))))
+#define WRITE_BIT(w, spot, value) ((w) = ((w) & ~(ONE << (RADIX - 1 - (spot))) | (-(word)value & (ONE << (RADIX - 1 - (spot))))))
 
 /**
  * \brief Flip the spot in the word w
@@ -180,42 +180,42 @@ typedef unsigned char BIT;
 * \brief Return the n leftmost bits of the word w.
 *
 * \param w Word
-* \param n Integer with 0 <= spot < RADIX
+* \param n Integer with 0 < n <= RADIX
 */
 
-#define LEFTMOST_BITS(w, n)  ((w) & ~((ONE<<(RADIX-(n)))-1))>>(RADIX-(n))
+#define LEFTMOST_BITS(w, n) ((w) >> (RADIX - (n)))
 
 /**
 * \brief Return the n rightmost bits of the word w.
 *
 * \param w Word
-* \param n Integer with 0 <= spot < RADIX
+* \param n Integer with 0 <= n < RADIX
 */
 
 #define RIGHTMOST_BITS(w, n) (((w)<<(RADIX-(n)-1))>>(RADIX-(n)-1))
 
 /**
-* \brief creat a bit mask to zero out all but the n%RADIX leftmost
-* bits.
+* \brief create a bit mask to zero out all but the (n - 1) % RADIX + 1 leftmost bits.
+*
+* This function returns 1..64 bits, never zero bits.
 *
 * \param n Integer
 */
 
-#define LEFT_BITMASK(n) (~((ONE << ((RADIX - (n % RADIX))%RADIX) ) - 1))
+#define LEFT_BITMASK(n) (~((ONE << (RADIX - (n % RADIX))) - 1))
 
 /**
-* \brief creat a bit mask to zero out all but the n%RADIX rightmost
-* bits.
+* \brief create a bit mask to zero out all but the (n - 1) % RADIX + 1 rightmost bits.
+*
+* This function returns 1..64 bits, never zero bits.
 *
 * \param n Integer
-*
-* \warning Does not handle multiples of RADIX correctly
 */
 
-#define RIGHT_BITMASK(n) (FFFF>>( (RADIX - (n%RADIX))%RADIX ))
+#define RIGHT_BITMASK(n) (FFFF >> (RADIX - (n % RADIX)))
 
 /**
-* \brief creat a bit mask to zero out all but the n%RADIX bit.
+* \brief create a bit mask to zero out all but the n%RADIX bit.
 *
 * \param n Integer
 *
@@ -235,28 +235,19 @@ typedef unsigned char BIT;
 #define ALIGNMENT(addr, n) (((unsigned long)(addr))%(n))
 
 /**
- * Return the index of the leftmost bit in a for a nonzero.
+ * Return true if a's most significant bit is larger than b's most significant bit.
+ *
+ * If a is zero return false, otherwise
+ * if b is zero return true iff a > 0, otherwise
+ * return true if (int)log2(a) > (int)log2(b).
  *
  * \param a Word
+ * \param b Word
  */
 
-static inline int leftmost_bit(word a) {
-  int r = 0;
-  if(a>>32)
-    r+=32, a>>=32;
-  if(a>>16)
-    r+=16, a>>=16;
-  if(a>>8)
-    r+=8, a>>=8;
-  if(a>>4)
-    r+=4, a>>=4;
-  if(a>>2)
-    r+=2, a>>=2;
-  if(a>>1)
-    r+=1, a>>=1;
-  if(a)
-    r+=1, a>>=1;
-  return r;
+static inline int larger_log2(word a, word b)
+{
+  return a > b && (a ^ b) > b;
 }
 
 
