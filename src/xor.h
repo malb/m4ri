@@ -37,7 +37,7 @@
  ********************************************************************/
 
 /**
- * Compute c[i] += t1[i] + t2[i] + t3[i] + t4[i] + t5[i] + t5[i] + t6[i] + t7[i] for 0 <= i < wide
+ * Compute c[i] += t1[i] + t2[i] + t3[i] + t4[i] + t5[i] + t6[i] + t7[i] + t8[i] for 0 <= i < wide
  *
  * \todo the non SSE2 version of this code is slow, replace by code
  * from mzd_process_rows8
@@ -58,7 +58,7 @@ static inline void _mzd_combine8(word *c, const word *t1, const word *t2, const 
     __m128i *__t6 = (__m128i*)t6;
     __m128i *__t7 = (__m128i*)t7;
     __m128i *__t8 = (__m128i*)t8;
-    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xF);
+    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xFUL);
     __m128i xmm1;
     
     while(__c < eof) {
@@ -103,7 +103,7 @@ static inline void _mzd_combine4(word *c, const word *t1, const word *t2, const 
     __m128i *__t2 = (__m128i*)t2;
     __m128i *__t3 = (__m128i*)t3;
     __m128i *__t4 = (__m128i*)t4;
-    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xF);
+    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xFUL);
     __m128i xmm1;
     
     while(__c < eof) {
@@ -138,19 +138,19 @@ static inline void _mzd_combine4(word *c, const word *t1, const word *t2, const 
 }
 
 /**
- * Compute c[i] += t1[i] + t2[i] + t3[i] + t4[i] for 0 <= i < wide
+ * Compute c[i] += t1[i] + t2[i] + t3[i] for 0 <= i < wide
  *
  */
 
 static inline void _mzd_combine3(word *c, const word *t1, const word *t2, const word *t3, size_t wide) {
 #ifdef HAVE_SSE2
-  /* assuming t1 ... t4 are aligned, but c might not be */
+  /* assuming t1 ... t3 are aligned, but c might not be */
   if (ALIGNMENT(c,16)==0) {
     __m128i *__c = (__m128i*)c;
     __m128i *__t1 = (__m128i*)t1;
     __m128i *__t2 = (__m128i*)t2;
     __m128i *__t3 = (__m128i*)t3;
-    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xF);
+    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xFUL);
     __m128i xmm1;
     
     while(__c < eof) {
@@ -195,7 +195,7 @@ static inline void _mzd_combine2(word *c, const word *t1, const word *t2, size_t
     __m128i *__c = (__m128i*)c;
     __m128i *__t1 = (__m128i*)t1;
     __m128i *__t2 = (__m128i*)t2;
-    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xF);
+    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xFUL);
     __m128i xmm1;
     
     while(__c < eof) {
@@ -226,7 +226,7 @@ static inline void _mzd_combine2(word *c, const word *t1, const word *t2, size_t
 }
 
 /**
- * Compute c[i] += t1[i] + t2[i] for 0 <= i < wide
+ * Compute c[i] += t1[i] for 0 <= i < wide
  *
  */
 
@@ -241,7 +241,7 @@ static inline void _mzd_combine(word *c, const word *t1, size_t wide) {
 
   __m128i *__c = (__m128i*)c;
   __m128i *__t1 = (__m128i*)t1;
-  const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xF);
+  const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xFUL);
   __m128i xmm1;
   
   

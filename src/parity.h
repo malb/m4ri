@@ -104,7 +104,7 @@ static inline word _parity64_helper(word* buf)
 /**
  * \brief Computes parity of each of buf[0], buf[1], ..., buf[63].
  * Returns single word whose bits are the parities of buf[0], ...,
- * buf[63].  Assumes 64-bit machine unsigned long.
+ * buf[63].
  *
  * \param buf buffer of words of length 64
  */

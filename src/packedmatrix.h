@@ -41,7 +41,7 @@
 
 #ifdef HAVE_SSE2
 /**
- * \brief SSE2 curoff in words.
+ * \brief SSE2 cutoff in words.
  *
  * Cutoff in words after which row length SSE2 instructions should be
  * used.
@@ -162,7 +162,7 @@ mzd_t *mzd_init_window(const mzd_t *M, const size_t lowr, const size_t lowc, con
 /**
  * \brief Swap the two rows rowa and rowb starting at startblock.
  * 
- * \param M Matrix
+ * \param M Matrix with a zero offset.
  * \param rowa Row index.
  * \param rowb Row index.
  * \param startblock Start swapping only in this block.
@@ -171,12 +171,18 @@ mzd_t *mzd_init_window(const mzd_t *M, const size_t lowr, const size_t lowc, con
 static inline void _mzd_row_swap(mzd_t *M, const size_t rowa, const size_t rowb, const size_t startblock) {
   if ((rowa == rowb) || (startblock >= M->width))
     return;
+
+  /* This is the case since we're only called from _mzd_pls_mmpf,
+   * which makes the same assumption. Therefore we don't need
+   * to take a mask_begin into account. */
+  assert(M->offset == 0);
+
   size_t i;
   size_t width = M->width - startblock - 1;
   word *a = M->rows[rowa] + startblock;
   word *b = M->rows[rowb] + startblock;
   word tmp; 
-  word mask_end = LEFT_BITMASK( (M->offset + M->ncols)%RADIX );
+  word const mask_end = LEFT_BITMASK((M->offset + M->ncols) % RADIX);
 
   if (width != 0) {
     for(i = 0; i<width; i++) {
@@ -184,15 +190,10 @@ static inline void _mzd_row_swap(mzd_t *M, const size_t rowa, const size_t rowb,
       a[i] = b[i];
       b[i] = tmp;
     }
-    tmp = a[width];
-    a[width] = (a[width] & ~mask_end) | (b[width] & mask_end);
-    b[width] = (b[width] & ~mask_end) | (tmp & mask_end);
-    
-  } else {
-    tmp = a[0];
-    a[0] = (a[0] & ~mask_end) | (b[0] & mask_end);
-    b[0] = (b[0] & ~mask_end) | (tmp & mask_end);
   }
+  tmp = (a[width] ^ b[width]) & mask_end;
+  a[width] ^= tmp;
+  b[width] ^= tmp;
 }
 
 /**
@@ -212,28 +213,27 @@ static inline void mzd_row_swap(mzd_t *M, const size_t rowa, const size_t rowb) 
   size_t width = M->width - 1;
   word *a = M->rows[rowa];
   word *b = M->rows[rowb];
-  word tmp; 
-  word mask_begin = RIGHT_BITMASK(RADIX - M->offset);
-  word mask_end = LEFT_BITMASK( (M->offset + M->ncols)%RADIX );
+  word const mask_begin = RIGHT_BITMASK(RADIX - M->offset);
+  word const mask_end = LEFT_BITMASK((M->offset + M->ncols) % RADIX);
 
+  word tmp = (a[0] ^ b[0]) & mask_begin;
   if (width != 0) {
-    tmp = a[0];
-    a[0] = (a[0] & ~mask_begin) | (b[0] & mask_begin);
-    b[0] = (b[0] & ~mask_begin) | (tmp & mask_begin);
+    a[0] ^= tmp;
+    b[0] ^= tmp;
     
     for(i = 1; i<width; i++) {
       tmp = a[i];
       a[i] = b[i];
       b[i] = tmp;
     }
-    tmp = a[width];
-    a[width] = (a[width] & ~mask_end) | (b[width] & mask_end);
-    b[width] = (b[width] & ~mask_end) | (tmp & mask_end);
+    tmp = (a[width] ^ b[width]) & mask_end;
+    a[width] ^= tmp;
+    b[width] ^= tmp;
     
   } else {
-    tmp = a[0];
-    a[0] = (a[0] & ~mask_begin) | (b[0] & mask_begin & mask_end) | (a[0] & ~mask_end);
-    b[0] = (b[0] & ~mask_begin) | (tmp & mask_begin & mask_end) | (b[0] & ~mask_end);
+    tmp &= mask_end;
+    a[0] ^= tmp;
+    b[0] ^= tmp;
   }
 }
 
@@ -278,59 +278,44 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, const size_t cola, const size_
   const size_t _cola = cola + M->offset;
   const size_t _colb = colb + M->offset;
 
-  const size_t a_word = _cola/RADIX;
-  const size_t b_word = _colb/RADIX;
-  const size_t a_bit = _cola%RADIX;
-  const size_t b_bit = _colb%RADIX;
-  
-  word a, b, *base;
+  /* Make sure that a_spill >= b_spill (larger if a_word == b_word) */
+  int const swap_a_b = _cola % RADIX < _colb % RADIX;
+  size_t const a_spill = swap_a_b ? _colb % RADIX : _cola % RADIX;
+  size_t const b_spill = swap_a_b ? _cola % RADIX : _colb % RADIX;
+  size_t const a_word = swap_a_b ? _colb / RADIX : _cola / RADIX;
+  size_t const b_word = swap_a_b ? _cola / RADIX : _colb / RADIX;
 
-  size_t i;
-  
-  if(a_word == b_word) {
-    const word ai = RADIX - a_bit - 1;
-    const word bi = RADIX - b_bit - 1;
-    for (i=start_row; i<stop_row; i++) {
-      base = (M->rows[i] + a_word);
-      register word b = *base;
-      register word x = ((b >> ai) ^ (b >> bi)) & 1; // XOR temporary
-      *base = b ^ ((x << ai) | (x << bi));
+  word const b_bm = BITMASK(b_spill);
+  size_t const coldiff = a_spill - b_spill;
+
+  if (a_word == b_word)
+  {
+    for (size_t i = start_row; i < stop_row; ++i)
+    {
+      word* vp = (M->rows[i] + a_word);
+      word v = *vp;
+      word x = ((v << coldiff) ^ v) & b_bm;	/* Move column a on top of column b, and calcuate XOR. */
+      x |= x >> coldiff;			/* Duplicate this bit at both column positions. */
+      *vp = v ^ x;				/* Swap column bits and store result. */
     }
     return;
   }
 
-  const word a_bm = BITMASK(a_bit);
-  const word b_bm = BITMASK(b_bit);
+  word const a_bm = BITMASK(a_spill);
 
-  if(a_bit > b_bit) {
-    const size_t offset = a_bit - b_bit;
-    for (i=start_row; i<stop_row; i++) {
-      base = M->rows[i];
-      a = *(base + a_word);
-      b = *(base + b_word);
+  for (size_t i = start_row; i < stop_row; ++i)
+  {
+    word* base = M->rows[i];
+    word a = *(base + a_word);
+    word b = *(base + b_word);
 
-      a ^= (b & b_bm) >> offset;
-      b ^= (a & a_bm) << offset;
-      a ^= (b & b_bm) >> offset;
+    word x = ((a << coldiff) ^ b) & b_bm;	/* Move column a on top of column b, and calculate XOR (in place of column b). */
+    b ^= x;					/* Assign bit from column a to b */
+    a ^= x >> coldiff;				/* Move the XOR bit to the place of column a and assign bit from column b to a */
 
-      *(base + a_word) = a;
-      *(base + b_word) = b;
-    }
-  } else {
-    const size_t offset = b_bit - a_bit;
-    for (i=start_row; i<stop_row; i++) {
-      base = M->rows[i];
-      a = *(base + a_word);
-      b = *(base + b_word);
-
-      a ^= (b & b_bm) << offset;
-      b ^= (a & a_bm) >> offset;
-      a ^= (b & b_bm) << offset;
-      *(base + a_word) = a;
-      *(base + b_word) = b;
-    }
+    *(base + a_word) = a;
+    *(base + b_word) = b;
   }
-
 }
 
 /**
@@ -361,10 +346,7 @@ static inline BIT mzd_read_bit(const mzd_t *M, const size_t row, const size_t co
  */
 
 static inline void mzd_write_bit(mzd_t *M, const size_t row, const size_t col, const BIT value) {
-  if (value==1)
-    SET_BIT(M->rows[row][(col+M->offset)/RADIX], (col+M->offset) % RADIX);
-  else
-    CLR_BIT(M->rows[row][(col+M->offset)/RADIX], (col+M->offset) % RADIX);
+  WRITE_BIT(M->rows[row][(col + M->offset) / RADIX], (col + M->offset) % RADIX, value);
 }
 
 /**
@@ -392,7 +374,7 @@ void mzd_print_tight(const mzd_t *M);
  * \param M Matrix
  * \param dstrow Index of target row
  * \param srcrow Index of source row
- * \param coloffset Column offset
+ * \param coloffset Start column (0 <= coloffset < M->ncols)
  */
 
 static inline void mzd_row_add_offset(mzd_t *M, size_t dstrow, size_t srcrow, size_t coloffset) {
@@ -401,38 +383,46 @@ static inline void mzd_row_add_offset(mzd_t *M, size_t dstrow, size_t srcrow, si
   size_t wide = M->width - startblock;
   word *src = M->rows[srcrow] + startblock;
   word *dst = M->rows[dstrow] + startblock;
+  word const mask_begin = RIGHT_BITMASK(RADIX - coloffset % RADIX);
+  word const mask_end = LEFT_BITMASK((M->offset + M->ncols) % RADIX);
 
-  if(!wide)
-    return;
-
-  word temp = *src++;
-  if (coloffset%RADIX)
-    temp = RIGHTMOST_BITS(temp, (RADIX-(coloffset%RADIX)-1));
-  *dst++ ^= temp;
-  wide--;
+  *dst++ ^= *src++ & mask_begin;
+  --wide;
 
 #ifdef HAVE_SSE2 
-  if (ALIGNMENT(src,16)==8 && wide) {
-    *dst++ ^= *src++;
-    wide--;
+  int not_aligned = ALIGNMENT(src,16) != 0;	/* 0: Aligned, 1: Not aligned */
+  if (wide > not_aligned + 1)			/* Speed up for small matrices */
+  {
+    if (not_aligned) {
+      *dst++ ^= *src++;
+      --wide;
+    }
+    /* Now wide > 1 */
+    __m128i* __src = (__m128i*)src;
+    __m128i* __dst = (__m128i*)dst;
+    __m128i* const eof = (__m128i*)((unsigned long)(src + wide) & ~0xFUL);
+    do
+    {
+      __m128i xmm1 = _mm_xor_si128(*__dst, *__src);
+      *__dst++ = xmm1;
+    }
+    while(++__src < eof);
+    src  = (word*)__src;
+    dst = (word*)__dst;
+    wide = ((sizeof(word)*wide)%16)/sizeof(word);
   }
-  __m128i *__src = (__m128i*)src;
-  __m128i *__dst = (__m128i*)dst;
-  const __m128i *eof = (__m128i*)((unsigned long)(src + wide) & ~0xF);
-  __m128i xmm1;
-  
-  while(__src < eof) {
-    xmm1 = _mm_xor_si128(*__dst, *__src++);
-    *__dst++ = xmm1;
-  }
-  src  = (word*)__src;
-  dst = (word*)__dst;
-  wide = ((sizeof(word)*wide)%16)/sizeof(word);
 #endif
-  size_t i;
-  for(i=0; i<wide; i++) {
+  int i = -1;
+  while(++i < (int)wide)
     dst[i] ^= src[i];
-  }
+  /* 
+   * Revert possibly non-zero excess bits.
+   * Note that i == wide here, and wide can be 0.
+   * But really, src[wide - 1] is M->rows[srcrow][M->width - 1] ;)
+   * We use i - 1 here to let the compiler know these are the same addresses
+   * that we last accessed, in the previous loop.
+   */
+  dst[i - 1] ^= src[i - 1] & ~mask_end;
 }
 
 /**

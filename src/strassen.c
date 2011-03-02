@@ -1194,9 +1194,7 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
    }
    
    word parity[64];
-   for (size_t i = 0; i < 64; i++) {
-     parity[i] = 0;
-   }
+   memset(parity, 0, sizeof(parity));
    for (size_t i = 0; i < A->nrows; ++i) {
      word * a = A->rows[i];
      word * c = C->rows[i];

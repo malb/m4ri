@@ -186,24 +186,6 @@ typedef unsigned char BIT;
 #define FLIP_BIT(w, spot) ((w) ^= BITMASK(spot))
 
 /**
-* \brief Return the n leftmost bits of the word w.
-*
-* \param w Word
-* \param n Integer with 0 < n <= RADIX
-*/
-
-#define LEFTMOST_BITS(w, n) ((w) >> (RADIX - (n)))
-
-/**
-* \brief Return the n rightmost bits of the word w.
-*
-* \param w Word
-* \param n Integer with 0 <= n < RADIX
-*/
-
-#define RIGHTMOST_BITS(w, n) (((w)<<(RADIX-(n)-1))>>(RADIX-(n)-1))
-
-/**
 * \brief create a bit mask to zero out all but the (n - 1) % RADIX + 1 leftmost bits.
 *
 * This function returns 1..64 bits, never zero bits.

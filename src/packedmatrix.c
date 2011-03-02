@@ -893,7 +893,7 @@ void mzd_combine( mzd_t * C, const size_t c_row, const size_t c_startblock,
       if (ALIGNMENT(a,16)==0 && ALIGNMENT(b,16)==0) {
 	__m128i *a128 = (__m128i*)a;
 	__m128i *b128 = (__m128i*)b;
-	const __m128i *eof = (__m128i*)((unsigned long)(a + wide) & ~0xF);
+	const __m128i *eof = (__m128i*)((unsigned long)(a + wide) & ~0xFUL);
 
 	do {
 	  *a128 = _mm_xor_si128(*a128, *b128);
@@ -933,7 +933,7 @@ void mzd_combine( mzd_t * C, const size_t c_row, const size_t c_startblock,
 	__m128i *a128 = (__m128i*)a;
 	__m128i *b128 = (__m128i*)b;
 	__m128i *c128 = (__m128i*)c;
-	const __m128i *eof = (__m128i*)((unsigned long)(a + wide) & ~0xF);
+	const __m128i *eof = (__m128i*)((unsigned long)(a + wide) & ~0xFUL);
 	
 	do {
           *c128 = _mm_xor_si128(*a128, *b128);
