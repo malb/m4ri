@@ -24,7 +24,6 @@
 #include "trsm.h"
 #include "strassen.h"
 #include "packedmatrix.h"
-#include "misc.h"
 #include "parity.h"
 #include "stdio.h"
 

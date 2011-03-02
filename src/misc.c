@@ -32,10 +32,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include "misc.h"
-
 #include "grayflex.h"
-
+#include "misc.h"
 
 /* blocks of memory we like to keep around for later re-use */
 mmb_t m4ri_mmc_cache[M4RI_MMC_NBLOCKS];

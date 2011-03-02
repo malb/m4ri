@@ -22,8 +22,9 @@
 #include "config.h"
 #endif
 
-#include "grayflex.h"
 #include <stdio.h>
+#include "misc.h"
+#include "grayflex.h"
 
 code **codebook = NULL;
 

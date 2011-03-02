@@ -38,7 +38,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "misc.h"
 #include "packedmatrix.h"
 #include "permutation.h"
 

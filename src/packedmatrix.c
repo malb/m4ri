@@ -22,8 +22,6 @@
 #include "config.h"
 #endif
 
-#include "misc.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include "packedmatrix.h"

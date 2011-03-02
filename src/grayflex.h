@@ -32,8 +32,6 @@
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
  
-#include "misc.h"
-
 /**
  * Maximum allowed value for k.
  */

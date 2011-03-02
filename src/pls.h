@@ -29,7 +29,6 @@
 *
 ********************************************************************/
 
-#include "misc.h"
 #include "packedmatrix.h"
 #include "permutation.h"
 

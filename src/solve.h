@@ -28,8 +28,6 @@
  *
  ********************************************************************/
 
-#include <stdio.h>
-#include "misc.h"
 #include "permutation.h"
 #include "packedmatrix.h"
 

@@ -14,6 +14,8 @@
 #include <emmintrin.h>
 #endif
 
+#include "misc.h"
+
  /*******************************************************************
  *
  *                 M4RI:  Linear Algebra over GF(2)

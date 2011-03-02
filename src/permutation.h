@@ -27,7 +27,6 @@
 #ifndef PERMUTATION_H
 #define PERMUTATION_H
 
-#include "misc.h"
 #include "packedmatrix.h"
 
 /**

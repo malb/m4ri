@@ -24,10 +24,8 @@
 #include "config.h"
 #endif
 
-
 #include "grayflex.h"
 #include "strassen.h"
-#include "misc.h"
 #include "parity.h"
 #define CLOSER(a,b,target) (abs((long)a-(long)target)<abs((long)b-(long)target))
 #ifndef MIN

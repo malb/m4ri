@@ -33,7 +33,6 @@
 ********************************************************************/
 
 #include <math.h>
-#include "misc.h"
 #include "packedmatrix.h"
 #include "brilliantrussian.h"
 

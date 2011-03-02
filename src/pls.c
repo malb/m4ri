@@ -21,12 +21,10 @@
 #include "config.h"
 #endif
 
-#include "misc.h"
-
+#include <stdio.h>
 #include "packedmatrix.h"
 #include "trsm.h"
 #include "parity.h"
-#include <stdio.h>
 #include "pls_mmpf.h"
 #include "strassen.h"
 #include "pls.h"

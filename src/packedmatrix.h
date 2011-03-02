@@ -37,6 +37,7 @@
 #include <emmintrin.h>
 #endif
 
+#include "misc.h"
 
 #ifdef HAVE_SSE2
 /**

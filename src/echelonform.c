@@ -22,8 +22,6 @@
 #include "config.h"
 #endif
 
-#include "misc.h"
-
 #include "echelonform.h"
 #include "brilliantrussian.h"
 #include "pls.h"
