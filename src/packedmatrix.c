@@ -428,11 +428,12 @@ mzd_t *_mzd_mul_naive(mzd_t *C, const mzd_t *A, const mzd_t *B, const int clear)
   word *a, *b, *c;
 
   if (clear) {
+    word const mask_end = LEFT_BITMASK(C->ncols % RADIX);
     for (i=0; i<C->nrows; i++) {
       for (j=0; j<C->width-1; j++) {
   	C->rows[i][j] = 0;
       }
-      C->rows[i][j] &= ~LEFT_BITMASK(C->ncols);
+      C->rows[i][j] &= ~mask_end;
     }
   }
 
@@ -464,13 +465,14 @@ mzd_t *_mzd_mul_naive(mzd_t *C, const mzd_t *A, const mzd_t *B, const int clear)
       }
       
       if (eol != C->width) {
+	word const mask_end = LEFT_BITMASK(C->ncols % RADIX);
         for (k=0; k<(int)(C->ncols%RADIX); k++) {
           b = B->rows[RADIX*eol+k];
           parity[k] = a[0] & b[0];
           for (ii=1; ii<A->width; ii++)
             parity[k] ^= a[ii] & b[ii];
         }
-        c[eol] ^= parity64(parity) & LEFT_BITMASK(C->ncols);
+        c[eol] ^= parity64(parity) & mask_end;
       }
     }
   }
@@ -489,13 +491,14 @@ mzd_t *_mzd_mul_naive(mzd_t *C, const mzd_t *A, const mzd_t *B, const int clear)
       }
     
     if (eol != C->width) {
+      word const mask_end = LEFT_BITMASK(C->ncols % RADIX);
       for (k=0; k<(int)(C->ncols%RADIX); k++) {
         b = B->rows[RADIX*eol+k];
         parity[k] = a[0] & b[0];
         for (ii=1; ii<A->width; ii++)
           parity[k] ^= a[ii] & b[ii];
       }
-      c[eol] ^= parity64(parity) & LEFT_BITMASK(C->ncols);
+      c[eol] ^= parity64(parity) & mask_end;
     }
   }
 
@@ -616,7 +619,7 @@ mzd_t *mzd_copy(mzd_t *N, const mzd_t *P) {
     size_t i, j;
     word *p_truerow, *n_truerow;
     const size_t wide = P->width-1; 
-    word mask = LEFT_BITMASK(P->ncols);
+    word mask = LEFT_BITMASK(P->ncols % RADIX);
     for (i=0; i<P->nrows; i++) {
       p_truerow = P->rows[i];
       n_truerow = N->rows[i];
@@ -822,9 +825,10 @@ mzd_t *mzd_submatrix(mzd_t *S, const mzd_t *M, const size_t startrow, const size
       }
     }
     if (ncols%RADIX) {
+      word const mask_end = LEFT_BITMASK(ncols % RADIX);
       for(x = startrow, i=0; i<nrows; i++, x++) {
         /* process remaining bits */
-	temp = M->rows[x][startword + ncols/RADIX] & LEFT_BITMASK(ncols);
+	temp = M->rows[x][startword + ncols/RADIX] & mask_end;
 	S->rows[i][ncols/RADIX] = temp;
       } 
     }
@@ -1201,7 +1205,7 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
     }
     /* handle last word */
     const size_t end_offset = A->ncols % RADIX ? (A->ncols%RADIX) : RADIX;
-    const word mask_end = LEFT_BITMASK(end_offset);
+    const word mask_end = LEFT_BITMASK(end_offset % RADIX);
     j = A->width-1;
     for(i=start_row; i<nrows; i++) {
       const word curr_data = A->rows[i][j] & mask_end;

@@ -299,8 +299,8 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, const size_t cola, const size_
     return;
   }
 
-  const word a_bm = (ONE<<(RADIX - (a_bit) - 1));
-  const word b_bm = (ONE<<(RADIX - (b_bit) - 1));
+  const word a_bm = BITMASK(a_bit);
+  const word b_bm = BITMASK(b_bit);
 
   if(a_bit > b_bit) {
     const size_t offset = a_bit - b_bit;
@@ -879,9 +879,9 @@ static inline void mzd_clear_bits(const mzd_t *M, const size_t x, const size_t y
   } else {
     /* two words are affected */
     const size_t block = (y+M->offset) / RADIX; /* correct block */
-    const size_t spot  = (y+M->offset+n) % RADIX; /* correct offset */
-    M->rows[x][block]   ^=  M->rows[x][block] & ((ONE<<(n-spot))-1);
-    M->rows[x][block+1] ^= (M->rows[x][block+1]>>(RADIX-spot))<<(RADIX-spot);
+    const size_t spill  = (y+M->offset+n) % RADIX; /* spill over into second block */
+    M->rows[x][block]   &= ~RIGHT_BITMASK(n - spill);
+    M->rows[x][block+1] &= ~LEFT_BITMASK(spill);
   }
 }
 

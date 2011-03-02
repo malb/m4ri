@@ -1267,7 +1267,7 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, size_t k) {
   size_t i, j;
 
   word mask_begin = RIGHT_BITMASK(RADIX - B->offset);
-  word mask_end = LEFT_BITMASK(((B->ncols + B->offset) % RADIX));
+  word mask_end = LEFT_BITMASK((B->ncols + B->offset) % RADIX);
   
   if (B->width == 1)
     mask_begin = mask_begin & mask_end;

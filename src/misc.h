@@ -131,13 +131,22 @@ typedef uint64_t word;
 typedef unsigned char BIT;
 
 /**
+* \brief Create a bit mask with just bit n set.
+*
+* \param n Integer with 0 <= n < RADIX
+*
+*/
+
+#define BITMASK(n) (ONE << (RADIX - 1 - (n)))
+
+/**
  * \brief Clear the bit spot (counting from the left) in the word w
  * 
  * \param w Word
  * \param spot Integer with 0 <= spot < RADIX
  */
 
-#define CLR_BIT(w, spot) ((w) &= ~(ONE<<(RADIX - (spot) - 1)))
+#define CLR_BIT(w, spot) ((w) &= ~BITMASK(spot))
 
 /**
  * \brief Set the bit spot (counting from the left) in the word w
@@ -146,7 +155,7 @@ typedef unsigned char BIT;
  * \param spot Integer with 0 <= spot < RADIX
  */
 
-#define SET_BIT(w, spot) ((w) |= (ONE<<(RADIX - (spot) - 1)))
+#define SET_BIT(w, spot) ((w) |= BITMASK(spot))
 
 /**
  * \brief Get the bit spot (counting from the left) in the word w
@@ -165,7 +174,7 @@ typedef unsigned char BIT;
  * \param value Either 0 or 1.
  */
 
-#define WRITE_BIT(w, spot, value) ((w) = ((w) & ~(ONE << (RADIX - 1 - (spot))) | (-(word)value & (ONE << (RADIX - 1 - (spot))))))
+#define WRITE_BIT(w, spot, value) ((w) = ((w) & ~BITMASK(spot) | (-(word)value & BITMASK(spot))))
 
 /**
  * \brief Flip the spot in the word w
@@ -174,7 +183,7 @@ typedef unsigned char BIT;
  * \param spot Integer with 0 <= spot < RADIX.
  */
 
-#define FLIP_BIT(w, spot) ((w) ^= (ONE<<(RADIX - (spot) - 1)))
+#define FLIP_BIT(w, spot) ((w) ^= BITMASK(spot))
 
 /**
 * \brief Return the n leftmost bits of the word w.
@@ -198,31 +207,27 @@ typedef unsigned char BIT;
 * \brief create a bit mask to zero out all but the (n - 1) % RADIX + 1 leftmost bits.
 *
 * This function returns 1..64 bits, never zero bits.
+* This mask is mainly used to mask the valid bits in the most significant word,
+* by using LEFT_BITMASK((M->ncols + M->offset) % RADIX).
+* In other words, the set bits represent the columns with the lowest index in the word.
 *
-* \param n Integer
+* \param n Integer with 0 <= n < RADIX
 */
 
-#define LEFT_BITMASK(n) (~((ONE << (RADIX - (n % RADIX))) - 1))
+#define LEFT_BITMASK(n) (~((ONE << (RADIX - (n)) % RADIX) - 1))
 
 /**
-* \brief create a bit mask to zero out all but the (n - 1) % RADIX + 1 rightmost bits.
+* \brief create a bit mask to zero out all but the n rightmost bits.
 *
 * This function returns 1..64 bits, never zero bits.
+* This mask is mainly used to mask the n valid bits in the least significant word
+* with valid bits by using RIGHT_BITMASK(RADIX - (col + M->offset) % RADIX).
+* In other words, the set bits represent the columns with the highest index in the word.
 *
-* \param n Integer
+* \param n Integer with 0 < n <= RADIX
 */
 
-#define RIGHT_BITMASK(n) (FFFF >> (RADIX - (n % RADIX)))
-
-/**
-* \brief create a bit mask to zero out all but the n%RADIX bit.
-*
-* \param n Integer
-*
-*/
-
-#define BITMASK(n) (ONE<<(RADIX-((n)%RADIX)-1))
-
+#define RIGHT_BITMASK(n) (FFFF >> (RADIX - (n)))
 
 /**
  * \brief Return alignment of addr w.r.t. n. For example the address
