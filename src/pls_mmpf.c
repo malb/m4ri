@@ -461,7 +461,7 @@ size_t _mzd_pls_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
   const size_t ncols = A->ncols; 
   size_t curr_row = 0;
   size_t curr_col = 0;
-  size_t kbar = 0;
+  int kbar = 0;
   size_t done_row = 0;
   size_t splitblock = 1;
 
@@ -545,7 +545,7 @@ size_t _mzd_pls_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
 
     _mzd_pls_to_u(U, A, curr_row, curr_col, kbar);
 
-    if(kbar > (size_t)3*k) {
+    if(kbar > 3*k) {
       const int rem = kbar%4;
   
       const int ka = kbar/4 + ((rem>=3) ? 1 : 0);
@@ -570,7 +570,7 @@ size_t _mzd_pls_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
         curr_col += 1; 
       }
 
-    } else if(kbar > (size_t)2*k) {
+    } else if(kbar > 2*k) {
       const int rem = kbar%3;
 
       const int ka = kbar/3 + ((rem>=2) ? 1 : 0);
@@ -593,7 +593,7 @@ size_t _mzd_pls_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
         curr_col += 1; 
       }
 
-    } else if(kbar > (size_t)k) {
+    } else if(kbar > k) {
       const int ka = kbar/2;
       const int kb = kbar - ka;
 

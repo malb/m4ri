@@ -301,8 +301,6 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, const size_t cola, const size_
     return;
   }
 
-  word const a_bm = BITMASK(a_spill);
-
   for (size_t i = start_row; i < stop_row; ++i)
   {
     word* base = M->rows[i];
@@ -390,8 +388,8 @@ static inline void mzd_row_add_offset(mzd_t *M, size_t dstrow, size_t srcrow, si
   --wide;
 
 #ifdef HAVE_SSE2 
-  int not_aligned = ALIGNMENT(src,16) != 0;	/* 0: Aligned, 1: Not aligned */
-  if (wide > not_aligned + 1)			/* Speed up for small matrices */
+  unsigned int not_aligned = ALIGNMENT(src,16) != 0;	/* 0: Aligned, 1: Not aligned */
+  if (wide > not_aligned + 1)				/* Speed up for small matrices */
   {
     if (not_aligned) {
       *dst++ ^= *src++;
@@ -764,8 +762,9 @@ static inline word mzd_read_bits(const mzd_t *M, const size_t x, const size_t y,
   int const spot = (y + M->offset) % RADIX;
   size_t const block = (y + M->offset) / RADIX;
   word temp = M->rows[x][block] << spot;
-  if (n > RADIX - spot)
-    temp |= M->rows[x][block + 1] >> (RADIX - spot);
+  int const space = RADIX - spot;
+  if (n > space)
+    temp |= M->rows[x][block + 1] >> space;
   return temp >> (RADIX - n);
 }
 
@@ -786,8 +785,9 @@ static inline void mzd_xor_bits(const mzd_t *M, const size_t x, const size_t y, 
   int const spot = (y + M->offset) % RADIX;
   size_t const block = (y + M->offset) / RADIX;
   M->rows[x][block] ^= values >> spot;
-  if (n > RADIX - spot)
-    M->rows[x][block + 1] ^= values << (RADIX - spot);
+  int const space = RADIX - spot;
+  if (n > space)
+    M->rows[x][block + 1] ^= values << space;
 }
 
 /**
@@ -807,8 +807,9 @@ static inline void mzd_and_bits(const mzd_t *M, const size_t x, const size_t y, 
   int const spot = (y + M->offset) % RADIX;
   size_t const block = (y + M->offset) / RADIX;
   M->rows[x][block] &= values >> spot;
-  if (n > RADIX - spot)
-    M->rows[x][block + 1] &= values << (RADIX - spot);
+  int const space = RADIX - spot;
+  if (n > space)
+    M->rows[x][block + 1] &= values << space;
 }
 
 /**
@@ -825,8 +826,9 @@ static inline void mzd_clear_bits(const mzd_t *M, const size_t x, const size_t y
   int const spot = (y + M->offset) % RADIX;
   size_t const block = (y + M->offset) / RADIX;
   M->rows[x][block] &= ~(values >> spot);
-  if (n > RADIX - spot)
-    M->rows[x][block + 1] &= ~(values << (RADIX - spot));
+  int const space = RADIX - spot;
+  if (n > space)
+    M->rows[x][block + 1] &= ~(values << space);
 }
 
 /**

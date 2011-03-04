@@ -48,8 +48,8 @@ void m4ri_die(const char *errormessage, ...) {
 
 /* Warning: I assume *destination has RADIX+1 bytes available */
 void m4ri_word_to_str( char *destination, word data, int colon) {
-  int i;
-  int j = 0;
+  unsigned int i;
+  unsigned int j = 0;
 
   if (colon == 0) {
 

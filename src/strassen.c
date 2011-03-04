@@ -150,21 +150,21 @@ mzd_t *_mzd_mul_even_orig(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   _mzd_add(C00, C00, X0);              /*22  C00 = X0 + C00 */
 
   /* deal with rest */
-  if (B->ncols > (int)(2*bnc)) {
+  if (B->ncols > (2*bnc)) {
     mzd_t *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
     mzd_t *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
     _mzd_mul_m4rm(C_last_col, A, B_last_col, 0, TRUE);
     mzd_free_window(B_last_col);
     mzd_free_window(C_last_col);
   }
-  if (A->nrows > (int)(2*anr)) {
+  if (A->nrows > (2*anr)) {
     mzd_t *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
     mzd_t *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, C->ncols);
     _mzd_mul_m4rm(C_last_row, A_last_row, B, 0, TRUE);
     mzd_free_window(A_last_row);
     mzd_free_window(C_last_row);
   }
-  if (A->ncols > (int)(2*anc)) {
+  if (A->ncols > (2*anc)) {
     mzd_t *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
     mzd_t *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
     mzd_t *C_bulk = mzd_init_window(C, 0, 0, 2*anr, bnc*2);
@@ -616,7 +616,7 @@ mzd_t *mzd_mul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   }
 
   cutoff = cutoff/RADIX * RADIX;
-  if (cutoff < RADIX) {
+  if (cutoff < (int)RADIX) {
     cutoff = RADIX;
   };
 
@@ -1221,7 +1221,7 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
   }
   
   cutoff = cutoff/RADIX * RADIX;
-  if (cutoff < RADIX) {
+  if (cutoff < (int)RADIX) {
     cutoff = RADIX;
   };
 

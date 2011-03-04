@@ -839,7 +839,7 @@ mzd_t *mzd_submatrix(mzd_t *S, const mzd_t *M, const size_t startrow, const size
       truerow = M->rows[x];
 
       /* process full words first */
-      for(colword=0; colword<(int)(ncols/RADIX); colword++) {
+      for(colword=0; colword<(ncols/RADIX); colword++) {
 	block = colword + startword;
 	temp = (truerow[block] << (spot)) | (truerow[block + 1] >> (RADIX-spot) ); 
 	S->rows[i][colword] = temp;

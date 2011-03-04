@@ -54,15 +54,13 @@ int m4ri_gray_code(int number, int length) {
 }
 
 void m4ri_build_code(int *ord, int *inc, int l) {
-  int i,j;
-
-  for(i=0 ; i < TWOPOW(l) ; i++) {
+  for(unsigned int i = 0 ; i < TWOPOW(l); ++i) {
     ord[i] = m4ri_gray_code(i, l);
   }
 
-  for(i = l ; i>0 ; i--) {
-    for(j=1 ; j < TWOPOW(i) + 1 ; j++) {
-      inc[j *TWOPOW(l-i) -1 ] = l - i;
+  for(int i = l; i > 0; --i) {
+    for(unsigned int j = 1; j < TWOPOW(i) + 1; ++j) {
+      inc[j * TWOPOW(l - i) - 1] = l - i;
     }
   }
 }
@@ -96,10 +94,19 @@ void m4ri_destroy_all_codes() {
   codebook = NULL;
 }
 
-static inline int log2_floor(int n){
-  int i;
-  for(i=0;TWOPOW(i)<=n;i++){}
-  return i;
+static int log2_floor(int v) {
+  static unsigned const int b[] = { 0x2, 0xC, 0xF0, 0xFF00, 0xFFFF0000 };
+  static unsigned const int S[] = { 1, 2, 4, 8, 16 };
+  register unsigned int r = 0;
+  for (int i = 4; i >= 0; --i)
+  {
+    if ((v & b[i]))
+    {
+      v >>= S[i];
+      r |= S[i];
+    } 
+  }
+  return r;
 }
 
 int m4ri_opt_k(int a,int b,int c) {
