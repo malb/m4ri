@@ -761,28 +761,13 @@ void mzd_combine(mzd_t * DST, const size_t row3, const size_t startblock3,
  */ 
 
 static inline word mzd_read_bits(const mzd_t *M, const size_t x, const size_t y, const int n) {
-  word temp;
-
-  /* there are two possible situations. Either all bits are in one
-   * word or they are spread across two words. */
-
-  if ( ((y+M->offset)%RADIX + n - 1) < RADIX ) {
-    /* everything happens in one word here */
-    temp =  M->rows[x][(y+M->offset) / RADIX]; /* get the value */
-    temp <<= (y+M->offset)%RADIX; /* clear upper bits */
-    temp >>= RADIX - n; /* clear lower bits and move to correct position.*/
-    return temp;
-
-  } else {
-    /* two words are affected */
-    const size_t block = (y+M->offset) / RADIX; /* correct block */
-    const size_t spot  = (y+M->offset+n) % RADIX; /* correct offset */
-    /* make room by shifting spot times to the right, and add stuff from the second word */
-    temp = (M->rows[x][block] << spot) | ( M->rows[x][block + 1] >> (RADIX - spot) ); 
-    return (temp << (RADIX-n)) >> (RADIX-n); /* clear upper bits and return */
-   }
+  int const spot = (y + M->offset) % RADIX;
+  size_t const block = (y + M->offset) / RADIX;
+  word temp = M->rows[x][block] << spot;
+  if (n > RADIX - spot)
+    temp |= M->rows[x][block + 1] >> (RADIX - spot);
+  return temp >> (RADIX - n);
 }
-
 
 /**
  * \brief XOR n bits from values to M starting a position (x,y).
@@ -795,23 +780,14 @@ static inline word mzd_read_bits(const mzd_t *M, const size_t x, const size_t y,
  */
 
 static inline void mzd_xor_bits(const mzd_t *M, const size_t x, const size_t y, const int n, word values) {
-  word *temp;
+  /* This is the best way, since this will drop out once we inverse the bits in values: */
+  values <<= (RADIX - n);	/* Move the bits to the lowest columns */
 
-  /* there are two possible situations. Either all bits are in one
-   * word or they are spread across two words. */
-
-  if ( ((y+M->offset)%RADIX + n - 1) < RADIX ) {
-    /* everything happens in one word here */
-    temp =  M->rows[x] + (y+M->offset) / RADIX;
-    *temp ^= values<<(RADIX-((y+M->offset)%RADIX)-n);
-
-  } else {
-    /* two words are affected */
-    const size_t block = (y+M->offset) / RADIX; /* correct block */
-    const size_t spot  = (y+M->offset+n) % RADIX; /* correct offset */
-    M->rows[x][block] ^= values >> (spot);
-    M->rows[x][block + 1] ^= values<<(RADIX-spot);
-  }
+  int const spot = (y + M->offset) % RADIX;
+  size_t const block = (y + M->offset) / RADIX;
+  M->rows[x][block] ^= values >> spot;
+  if (n > RADIX - spot)
+    M->rows[x][block + 1] ^= values << (RADIX - spot);
 }
 
 /**
@@ -825,23 +801,14 @@ static inline void mzd_xor_bits(const mzd_t *M, const size_t x, const size_t y, 
  */
 
 static inline void mzd_and_bits(const mzd_t *M, const size_t x, const size_t y, const int n, word values) {
-  word *temp;
+  /* This is the best way, since this will drop out once we inverse the bits in values: */
+  values <<= (RADIX - n);	/* Move the bits to the lowest columns */
 
-  /* there are two possible situations. Either all bits are in one
-   * word or they are spread across two words. */
-
-  if ( ((y+M->offset)%RADIX + n - 1) < RADIX ) {
-    /* everything happens in one word here */
-    temp =  M->rows[x] + (y+M->offset) / RADIX;
-    *temp &= values<<(RADIX-((y+M->offset)%RADIX)-n);
-
-  } else {
-    /* two words are affected */
-    const size_t block = (y+M->offset) / RADIX; /* correct block */
-    const size_t spot  = (y+M->offset+n) % RADIX; /* correct offset */
-    M->rows[x][block] &= values >> (spot);
-    M->rows[x][block + 1] &= values<<(RADIX-spot);
-  }
+  int const spot = (y + M->offset) % RADIX;
+  size_t const block = (y + M->offset) / RADIX;
+  M->rows[x][block] &= values >> spot;
+  if (n > RADIX - spot)
+    M->rows[x][block + 1] &= values << (RADIX - spot);
 }
 
 /**
@@ -850,29 +817,16 @@ static inline void mzd_and_bits(const mzd_t *M, const size_t x, const size_t y, 
  * \param M Source matrix.
  * \param x Starting row.
  * \param y Starting column.
- * \param n Number of bits (<= RADIX);
+ * \param n Number of bits (0 < n <= RADIX);
  */
 
 static inline void mzd_clear_bits(const mzd_t *M, const size_t x, const size_t y, const int n) {
-  word temp;
-
-  /* there are two possible situations. Either all bits are in one
-   * word or they are spread across two words. */
-
-  if ( ((y+M->offset)%RADIX + n - 1) < RADIX ) {
-    /* everything happens in one word here */
-    temp =  M->rows[x][(y+M->offset) / RADIX];
-    temp <<= (y+M->offset)%RADIX; /* clear upper bits */
-    temp >>= RADIX-n; /* clear lower bits and move to correct position.*/
-    temp <<= RADIX-n - (y+M->offset)%RADIX;
-    M->rows[x][(y+M->offset) / RADIX] ^= temp;
-  } else {
-    /* two words are affected */
-    const size_t block = (y+M->offset) / RADIX; /* correct block */
-    const size_t spill  = (y+M->offset+n) % RADIX; /* spill over into second block */
-    M->rows[x][block]   &= ~RIGHT_BITMASK(n - spill);
-    M->rows[x][block+1] &= ~LEFT_BITMASK(spill);
-  }
+  word values = FFFF << (RADIX - n);
+  int const spot = (y + M->offset) % RADIX;
+  size_t const block = (y + M->offset) / RADIX;
+  M->rows[x][block] &= ~(values >> spot);
+  if (n > RADIX - spot)
+    M->rows[x][block + 1] &= ~(values << (RADIX - spot));
 }
 
 /**
