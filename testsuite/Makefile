@@ -44,6 +44,9 @@ bench_trsm_upperleft: cpucycles.o bench_trsm_upperleft.c Makefile
 bench_trsm_upperright: cpucycles.o bench_trsm_upperright.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o $(LDFLAGS) -o $@
 
+matops: matops.c Makefile
+	$(CC) $(DEBUG) -I.. $(CFLAGS) matops.c $(LDFLAGS) -o $@
+
 clean:
 	rm -f $(TEST_PRGS)
 	rm -f $(BENCH_PRGS)
