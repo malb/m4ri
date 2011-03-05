@@ -485,8 +485,8 @@ void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B, const int cutoff) {
   if (nb + B->offset > RADIX) {
 
     // Large B
-    word mask_begin = RIGHT_BITMASK(RADIX-B->offset);
-    word mask_end = LEFT_BITMASK(nbrest);
+    word const mask_begin = RIGHT_BITMASK(RADIX-B->offset);
+    word const mask_end = LEFT_BITMASK(nbrest);
 
     // L[0,0] = 1, so no work required for i=0
     for (size_t i=1; i < mb; ++i) {
@@ -508,11 +508,7 @@ void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B, const int cutoff) {
       }
     }
   } else { // Small B
-    
-    word mask = ((ONE << nb) - 1) ;
-    mask <<= (RADIX-nb-B->offset);
-    if (nb == RADIX) mask = FFFF;
-
+    word const mask = MIDDLE_BITMASK(nb, B->offset);
     for (size_t i=1; i < mb; ++i) {
       /* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
       /**
@@ -541,8 +537,8 @@ void _mzd_trsm_lower_left_even(mzd_t *L, mzd_t *B, const int cutoff) {
 
     if (nb + B->offset > RADIX) {
       // B is large
-      word mask_begin = RIGHT_BITMASK(RADIX-B->offset);
-      word mask_end = LEFT_BITMASK(nbrest);
+      word const mask_begin = RIGHT_BITMASK(RADIX-B->offset);
+      word const mask_end = LEFT_BITMASK(nbrest);
 
       for (size_t i=1; i < mb; ++i) {
 	/* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
@@ -562,10 +558,7 @@ void _mzd_trsm_lower_left_even(mzd_t *L, mzd_t *B, const int cutoff) {
 	}
       }
     } else { // B is small
-      word mask = ((ONE << nb) - 1) ;
-      mask <<= (RADIX-nb-B->offset);
-      if (nb == RADIX)
-	mask = FFFF;
+      word const mask = MIDDLE_BITMASK(nb, B->offset);
       for (size_t i=1; i < mb; ++i) {
 	/* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
 	/** Need to be optimized !!! **/
@@ -681,8 +674,8 @@ void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B, const int cutoff) {
   if (nb + Boffset > RADIX) {
 
     // Large B
-    word mask_begin = RIGHT_BITMASK(RADIX-B->offset);
-    word mask_end = LEFT_BITMASK(nbrest);
+    word const mask_begin = RIGHT_BITMASK(RADIX-B->offset);
+    word const mask_end = LEFT_BITMASK(nbrest);
 
     // U[mb-1,mb-1] = 1, so no work required for i=mb-1
     for (int i=mb-2; i >= 0; --i) {
@@ -701,11 +694,7 @@ void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B, const int cutoff) {
       }
     }
   } else { // Small B
-
-    word mask = ((ONE << nb) - 1) ;
-    mask <<= (RADIX-nb-B->offset);
-    if (nb == RADIX)
-      mask = FFFF;
+    word const mask = MIDDLE_BITMASK(nb, B->offset);
     // U[mb-1,mb-1] = 1, so no work required for i=mb-1
     for (int i=mb-2; i >= 0; --i) {
       /* Computes X_i = B_i + U_{i,i+1..mb} X_{i+1..mb}  */
@@ -732,8 +721,8 @@ void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff) {
     
     if (nb + B->offset > RADIX) {
       // B is large
-      word mask_begin = RIGHT_BITMASK(RADIX-B->offset);
-      word mask_end = LEFT_BITMASK(nbrest);
+      word const mask_begin = RIGHT_BITMASK(RADIX-B->offset);
+      word const mask_end = LEFT_BITMASK(nbrest);
       
       // U[mb-1,mb-1] = 1, so no work required for i=mb-1
       for (int i=mb-2; i >= 0; --i) {
@@ -752,9 +741,7 @@ void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff) {
         }
       }
     } else { // B is small
-      word mask = ((ONE << nb) - 1) ;
-      mask <<= (RADIX-nb-B->offset);
-      if (nb == RADIX) mask = FFFF;
+      word const mask = MIDDLE_BITMASK(nb, B->offset);
       // U[mb-1,mb-1] = 1, so no work required for i=mb-1
       for (int i=mb-2; i >= 0; --i) {
         

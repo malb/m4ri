@@ -58,7 +58,7 @@ typedef uint64_t word;
  * \brief The number of bits in a word.
  */
 
-#define RADIX (sizeof(word)<<3)
+#define RADIX 64
 
 /**
  * \brief The number one as a word.
@@ -193,6 +193,19 @@ typedef unsigned char BIT;
 * by using LEFT_BITMASK((M->ncols + M->offset) % RADIX).
 * In other words, the set bits represent the columns with the lowest index in the word.
 *
+*  Thus,
+*
+*  n	Output
+*  0    1111111111111111111111111111111111111111111111111111111111111111
+*  1	1000000000000000000000000000000000000000000000000000000000000000
+*  2    1100000000000000000000000000000000000000000000000000000000000000
+*  .                                   ...
+* 62    1111111111111111111111111111111111111111111111111111111111111100
+* 63	1111111111111111111111111111111111111111111111111111111111111110
+*
+* Note that while n == 64 is never passed, it still works (behaves the same
+* as n == 0: the input is modulo 64).
+*
 * \param n Integer with 0 <= n < RADIX
 */
 
@@ -203,13 +216,42 @@ typedef unsigned char BIT;
 *
 * This function returns 1..64 bits, never zero bits.
 * This mask is mainly used to mask the n valid bits in the least significant word
-* with valid bits by using RIGHT_BITMASK(RADIX - (col + M->offset) % RADIX).
+* with valid bits by using RIGHT_BITMASK(RADIX - M->offset % RADIX).
 * In other words, the set bits represent the columns with the highest index in the word.
+*
+*  Thus,
+*
+*  n	Output
+*  1	0000000000000000000000000000000000000000000000000000000000000001
+*  2    0000000000000000000000000000000000000000000000000000000000000011
+*  3    0000000000000000000000000000000000000000000000000000000000000111
+*  .                                   ...
+* 63	0111111111111111111111111111111111111111111111111111111111111111
+* 64	1111111111111111111111111111111111111111111111111111111111111111
+*
+* Note that while n == 0 is never passed and would fail.
 *
 * \param n Integer with 0 < n <= RADIX
 */
 
 #define RIGHT_BITMASK(n) (FFFF >> (RADIX - (n)))
+
+/**
+* \brief create a bit mask that is the combination of LEFT_BITMASK and RIGHT_BITMASK.
+*
+* This function returns 1..64 bits, never zero bits.
+* This mask is mainly used to mask the n valid bits in the only word with valid bits,
+* when M->ncols + M->offset <= RADIX), by using MIDDLE_BITMASK(M->ncols, M->offset).
+* It is equivalent to LEFT_BITMASK(n + offset) & RIGHT_BITMASK(RADIX - offset).
+* In other words, the set bits represent the valid columns in the word.
+*
+* Note that when n == RADIX (and thus offset == 0) then LEFT_BITMASK is called with n == 64.
+*
+* \param n Integer with 0 < n <= RADIX - offset
+* \param offset Column offset, with 0 <= offset < RADIX
+*/
+
+#define MIDDLE_BITMASK(n, offset) (LEFT_BITMASK(n) >> (offset))
 
 /**
  * \brief Return alignment of addr w.r.t. n. For example the address
