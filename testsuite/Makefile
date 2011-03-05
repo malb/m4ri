@@ -1,5 +1,6 @@
 CFLAGS=-I../m4ri -std=c99 -D_XOPEN_SOURCE=600
-LDFLAGS=-L../.libs/ -lm4ri
+STAGEDIR:=$(PWD)/../.libs
+LDFLAGS=-L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri
 DEBUG=-ggdb
 
 TEST_PRGS=test_elimination test_multiplication test_trsm test_pluq test_solve test_kernel
