@@ -111,6 +111,6 @@ static int log2_floor(int v) {
 
 int m4ri_opt_k(int a,int b,int c) {
   int n = MIN(a,b);
-  int res = MIN( MAXKAY, MAX(1, (int)(0.75*log2_floor(n))) );
+  int res = MIN( MAXKAY, MAX(1, (int)(0.75*(1 + log2_floor(n)))) );
   return res;
 }
