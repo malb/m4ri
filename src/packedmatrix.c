@@ -292,12 +292,9 @@ static inline mzd_t *_mzd_transpose_direct_128(mzd_t *DST, const mzd_t *SRC) {
 
 
 static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, const mzd_t *A) {
-  size_t i,j,k, eol;
-  word *temp;
-
   if(A->offset || DST->offset) {
-    for(i=0; i<A->nrows; i++) {
-      for(j=0; j<A->ncols; j++) {
+    for(int i=0; i<A->nrows; i++) {
+      for(int j=0; j<A->ncols; j++) {
         mzd_write_bit(DST, j, i, mzd_read_bit(A,i,j));
       }
     }
@@ -309,23 +306,39 @@ static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, const mzd_t *A) {
     return DST;
   }
 
-  if(DST->ncols%RADIX) {
-    eol = RADIX*(DST->width-1);
-  } else {
-    eol = RADIX*(DST->width);
-  }
-
-  for (i=0; i<DST->nrows; i++) {
-    temp = DST->rows[i];
-    for (j=0; j < eol; j+=RADIX) {
-      for (k=0; k<RADIX; k++) {
-        *temp |= ((word)mzd_read_bit(A, j+k, i+A->offset))<<(RADIX-1-k);
-      }
-      temp++;
+  int const spill = DST->ncols % RADIX;
+  int const have_incomplete_word = (spill != 0);			/* 0: all words are full; 1: last word is incomplete */
+  int const complete_words = DST->width - have_incomplete_word;
+  size_t const rowdiff = A->rows[1] - A->rows[0];			/* Assume that the distance between every row is the same */
+  for (int i = 0; i < DST->nrows; ++i)
+  {
+    int const shift = RADIX - 1 - i % RADIX;
+    int const wordi = i / RADIX;
+    word* dstp = &DST->rows[i][complete_words + 1];			/* If there is no incomplete word, then the first k loop will be empty (k = -1) */
+    int k = spill - 1;
+    int j = DST->ncols - spill;
+    word* ap = &A->rows[j + k][wordi];
+    word collect = 0;
+    /* Make k even... */
+    if ((spill & 1))
+    {
+      collect = ((*ap >> shift) & 1) << (RADIX - 1 - k);
+      ap -= rowdiff;
+      --k;
     }
-    j = A->nrows - (A->nrows%RADIX);
-    for (k=0; k<(size_t)(A->nrows%RADIX); k++) {
-      *temp |= ((word)mzd_read_bit(A, j+k, i+A->offset))<<(RADIX-1-k);
+    for (; j >= 0; j -= RADIX)
+    {
+      /* ...so that we can unroll this loop a factor of two */
+      for (; k >= 0; k -=2)
+      {
+        collect |= ((*ap >> shift) & 1) << (RADIX - 1 - k);
+	ap -= rowdiff;
+        collect |= ((*ap >> shift) & 1) << (RADIX - 1 - (k - 1));
+	ap -= rowdiff;
+      }
+      k = RADIX - 1;
+      *--dstp = collect;
+      collect = 0;
     }
   }
   return DST;
