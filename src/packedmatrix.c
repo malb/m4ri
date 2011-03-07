@@ -442,6 +442,7 @@ mzd_t *_mzd_mul_naive(mzd_t *C, const mzd_t *A, const mzd_t *B, const int clear)
 
   if (clear) {
     word const mask_end = LEFT_BITMASK(C->ncols % RADIX);
+    asm __volatile__ (".p2align 4\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop");
     for (i=0; i<C->nrows; i++) {
       for (j=0; j<C->width-1; j++) {
   	C->rows[i][j] = 0;
@@ -479,6 +480,7 @@ mzd_t *_mzd_mul_naive(mzd_t *C, const mzd_t *A, const mzd_t *B, const int clear)
       
       if (eol != C->width) {
 	word const mask_end = LEFT_BITMASK(C->ncols % RADIX);
+	asm __volatile__ (".p2align 4\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop");
         for (k=0; k<(int)(C->ncols%RADIX); k++) {
           b = B->rows[RADIX*eol+k];
           parity[k] = a[0] & b[0];
@@ -505,6 +507,7 @@ mzd_t *_mzd_mul_naive(mzd_t *C, const mzd_t *A, const mzd_t *B, const int clear)
     
     if (eol != C->width) {
       word const mask_end = LEFT_BITMASK(C->ncols % RADIX);
+      //asm __volatile__ (".p2align 4\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop");
       for (k=0; k<(int)(C->ncols%RADIX); k++) {
         b = B->rows[RADIX*eol+k];
         parity[k] = a[0] & b[0];
