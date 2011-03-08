@@ -11,8 +11,8 @@ AM_INIT_AUTOMAKE
 dnl Include maintainer mode targets.
 AM_MAINTAINER_MODE
 
-dnl Because we use cwautomacros.
-CW_AUTOMACROS([20110201])
+dnl Needed when reconfiguring with 'autoreconf -i -s'
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl Compiling with per-target flags (test_elimination.c) requires AM_PROG_CC_C_O.
 AM_PROG_CC_C_O
