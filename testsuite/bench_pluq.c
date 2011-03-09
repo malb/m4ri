@@ -62,10 +62,10 @@ int main(int argc, char **argv) {
   mzp_t* Q = mzp_init(n);
 
   
-  wt = walltime(&clockZero);
+  wt = walltime(0.0);
   t = cpucycles();
   size_t r = mzd_pluq(A, P, Q, 0);
-  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %12llu, wall time: %6.3lf\n", m, n, r, cpucycles() - t, walltime(&wt));
+  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %12llu, wall time: %6.3lf\n", m, n, r, cpucycles() - t, walltime(wt));
 
   mzd_free(A);
   mzp_free(P);

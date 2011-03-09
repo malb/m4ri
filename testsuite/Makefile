@@ -19,13 +19,13 @@ all: $(TEST_PRGS) $(BENCH_PRGS)
 .c:	
 	$(CC) $(DEBUG) $(CFLAGS) $@.c $(LDFLAGS) -o $@
 
-bench_elimination: cpucycles.o bench_elimination.c Makefile
+bench_elimination: benchmarketing.h cpucycles.o bench_elimination.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) bench_elimination.c cpucycles.o $(LDFLAGS) -o $@
 
-bench_elimination_sparse: cpucycles.o bench_elimination_sparse.c Makefile
+bench_elimination_sparse: benchmarketing.h cpucycles.o bench_elimination_sparse.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) bench_elimination_sparse.c cpucycles.o $(LDFLAGS) -o $@
 
-bench_multiplication: cpucycles.o bench_multiplication.c Makefile
+bench_multiplication: benchmarketing.h cpucycles.o bench_multiplication.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) bench_multiplication.c cpucycles.o $(LDFLAGS) -o $@
 
 bench_pluq: cpucycles.o bench_pluq.c Makefile

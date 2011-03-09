@@ -1,10 +1,12 @@
+#ifndef WALLTIME_H
+#define WALLTIME_H
 /* wall clock */
 /* see "Software Optimization for High Performance Computing" p. 135 */
 
 #include <time.h>
 #include <sys/time.h>
 
-double walltime( double *t0 )
+double walltime( double t0 )
 {
   double mic, time;
   double mega = 0.000001;
@@ -21,6 +23,8 @@ double walltime( double *t0 )
 
   time = (double) (tp.tv_sec - base_sec);
   mic = (double) (tp.tv_usec - base_usec);
-  time = (time + mic * mega) - *t0;
+  time = (time + mic * mega) - t0;
   return(time);
 }
+
+#endif

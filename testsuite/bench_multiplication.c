@@ -3,38 +3,54 @@
 #include "cpucycles.h"
 #include "walltime.h"
 #include "m4ri.h"
+#include "benchmarketing.h"
 
-int main(int argc, char **argv) {
-  int n, cutoff;
-  unsigned long long t;
-  double wt;
-  double clockZero = 0.0;
+struct mul_params {
+  size_t n;
+  size_t cutoff;
+};
 
-  if (argc != 3) {
-    m4ri_die("Parameters n and cutoff expected.\n");
-  }
-  n = atoi(argv[1]);
-  cutoff = atoi(argv[2]);
+int run(void *_p, double *wt, unsigned long long *cycles) {
+  struct mul_params *p = (struct mul_params *)_p;
 
-  if (n<=0) {
-    m4ri_die("Parameter n must be > 0\n");
-  }
-
-  if (cutoff<=0) {
-    m4ri_die("Parameter cutoff must be > 0\n");
-  }
-
-  mzd_t *A = mzd_init(n, n);
-  mzd_t *B = mzd_init(n, n);
+  mzd_t *A = mzd_init(p->n, p->n);
+  mzd_t *B = mzd_init(p->n, p->n);
   mzd_randomize(A);
   mzd_randomize(B);
 
-  wt = walltime(&clockZero);
-  t = cpucycles();
-  mzd_t *C = mzd_mul(NULL, A, B, cutoff);
-  printf("n: %5d, cutoff: %5d, cpu cycles: %llu wall time: %lf\n",n, cutoff, cpucycles() - t, walltime(&wt));
+  *wt = walltime(0.0);
+  *cycles = cpucycles();
+  mzd_t *C = mzd_mul(NULL, A, B, p->cutoff);
+  *wt = walltime(*wt);
+  *cycles = cpucycles() - *cycles;
 
   mzd_free(A);
   mzd_free(B);
   mzd_free(C);
+  return (0);
+}
+
+int main(int argc, char **argv) {
+  unsigned long long t;
+  double wt;
+
+  struct mul_params p;
+
+  if (argc != 3) {
+    m4ri_die("Parameters n and cutoff expected.\n");
+  }
+  p.n = atoi(argv[1]);
+  p.cutoff = atoi(argv[2]);
+
+  if (p.n<=0) {
+    m4ri_die("Parameter n must be > 0\n");
+  }
+
+  /* put this call in run() to benchmark one particular matrix over
+     and over again instead of computing the average of various
+     matrices.*/
+  srandom(17);
+  run_bench(run,(void*)&p,&wt,&t);
+
+  printf("n: %5d, cutoff: %5d, cpu cycles: %llu, wall time: %lf\n",p.n, p.cutoff, t, wt);
 }

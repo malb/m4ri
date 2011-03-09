@@ -28,10 +28,10 @@ int main(int argc, char **argv) {
     mzd_write_bit(U,i,i, 1);
   }
   
-  wt = walltime(&clockZero);
+  wt = walltime(0.0);
   t = cpucycles();
   mzd_trsm_upper_left(U, B, 0);
-  printf("m: %5d, n: %5d, cpu cycles: %llu wall time: %lf\n",m, n, cpucycles() - t, walltime(&wt));
+  printf("m: %5d, n: %5d, cpu cycles: %llu wall time: %lf\n",m, n, cpucycles() - t, walltime(wt));
 
   mzd_free(B);
   mzd_free(U);
