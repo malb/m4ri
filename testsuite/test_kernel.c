@@ -59,6 +59,8 @@ int test_kernel_left_pluq(size_t m, size_t n) {
 int main(int argc, char **argv) {
   int status = 0;
 
+  srandom(17);
+
   status += test_kernel_left_pluq(  2,   4);
   status += test_kernel_left_pluq(  4,   1);
   status += test_kernel_left_pluq( 10,  20);

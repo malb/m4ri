@@ -10,6 +10,8 @@ int main(int argc, char **argv) {
   double wt;
   double clockZero = 0.0;
 
+  srandom(17);
+  
   if (argc != 3) {
     m4ri_die("Parameters m, n expected.\n");
   }

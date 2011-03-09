@@ -227,6 +227,8 @@ int test_trsm_upper_left (int m, int n, int offsetU, int offsetB, const char *de
 int main(int argc, char **argv) {
   int status = 0;
 
+  srandom(17);
+
   status += test_trsm_upper_right(  63,   63,   0, "  word boundaries, even");
   status += test_trsm_upper_right(  64,   64,   0, "  word boundaries, even");
   status += test_trsm_upper_right(  65,   65,   0, "  word boundaries, even");

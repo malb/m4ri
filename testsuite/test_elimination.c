@@ -94,6 +94,8 @@ int elim_test_equality(int nr, int nc) {
 int main(int argc, char **argv) {
   int status = 0;
 
+  srandom(17);
+
   status += elim_test_equality(4, 67);
   status += elim_test_equality(17, 121);
   status += elim_test_equality(65, 17);

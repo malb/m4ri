@@ -263,6 +263,8 @@ int test_pluq_random(size_t m, size_t n) {
 int main(int argc, char **argv) {
   int status = 0;
 
+  srandom(17);
+
   status += test_pluq_structured(37, 37);
   status += test_pluq_structured(63, 63);
   status += test_pluq_structured(64, 64);
