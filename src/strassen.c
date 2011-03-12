@@ -1192,14 +1192,17 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
      temp = BT->rows[i];
      for (size_t k = 0; k < B->nrows; k++) {
        // this can be done faster
-       word bit(mzd_read_bit(B, k, i) ? 1UL : 0UL);
+       word bit = CONVERT_TO_WORD(mzd_read_bit(B, k, i));
        *temp |= bit << (RADIX-1-k-A->offset);
      }
    }
    
    word parity[64];
    memset(parity, 0, sizeof(parity));
-   for (int i = 0; i < 64; ++i) new (&parity[i]) word(0UL);
+#ifdef WRAPWORD
+   for (int i = 0; i < 64; ++i)
+     new (&parity[i]) word(0UL);
+#endif
    for (size_t i = 0; i < A->nrows; ++i) {
      word * a = A->rows[i];
      word * c = C->rows[i];

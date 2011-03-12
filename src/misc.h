@@ -42,20 +42,20 @@
 #include <assert.h>
 #include <string.h>
 #include <stdint.h>
-#include <limits.h>
 
 /*
  * These define entirely the word width used in the library.
  */
 
 /**
- * \brief Pretty for unsigned char.
+ * \brief Pretty for a boolean int.
+ *
+ * The value of a BIT is either 0 or 1.
  */
 
 typedef int BIT;
 
 #ifndef WRAPWORD
-
 /**
  * A word is the typical packed data structure to represent packed
  * bits.
@@ -86,6 +86,12 @@ typedef uint64_t word;
  */
 
 #define CONVERT_TO_UINT64_T(w) (w)
+
+/*
+ * Explicit conversion of an integer to a word.
+ */
+
+#define CONVERT_TO_WORD(i) ((word)(i))
 
 #else
 enum int_to_word_conversion_type { int_to_word_conversion };
@@ -137,7 +143,7 @@ class word {
     uint64_t print_value(void) const { assert(M_initialized); return M_word; }
 
     BIT convert_to_BIT(void) const { assert(M_initialized); assert((M_word & ~1UL) == 0); return M_word; }
-    int convert_to_int(void) const { assert(M_initialized); assert(M_word <= (uint32_t)INT_MAX); return M_word; }
+    int convert_to_int(void) const { assert(M_initialized); assert(M_word <= 0x7fffffffU); return M_word; }
     uint64_t convert_to_uint64_t(void) const { assert(M_initialized); return M_word; }
 
     // Automatic converstion to boolean.
@@ -151,6 +157,7 @@ class word {
 #define CONVERT_TO_BIT(w) ((w).convert_to_BIT())
 #define CONVERT_TO_INT(w) ((w).convert_to_int())
 #define CONVERT_TO_UINT64_T(w) ((w).convert_to_uint64_t())
+#define CONVERT_TO_WORD(i) word((uint64_t)(i))
 
 #endif // WRAPWORD
 
@@ -161,19 +168,16 @@ class word {
 #define RADIX 64
 
 /**
- * \brief The number one as a word.
+ * \brief A word with only the least significant bit set.
  */
 
-//#define ONE ((word)1)
-static word const ONE(1UL);
-
+static word const ONE = CONVERT_TO_WORD(1);
 
 /**
- * \brief The number 2^64-1 as a word.
+ * \brief A word with all bits set.
  */
 
-//#define FFFF ((word)-1)
-static word const FFFF(0xFFFFFFFFFFFFFFFFUL);
+static word const FFFF = CONVERT_TO_WORD(-1);
 
 /**
  * \brief Return the maximal element of x and y
@@ -224,7 +228,7 @@ static word const FFFF(0xFFFFFFFFFFFFFFFFUL);
  * \param i Integer.
  */ 
 
-#define TWOPOW(i) (1UL << (i))
+#define TWOPOW(i) ((uint64_t)1 << (i))
 
 /**
 * \brief Create a bit mask with just bit n set.
@@ -260,7 +264,7 @@ static word const FFFF(0xFFFFFFFFFFFFFFFFUL);
  * \param spot Integer with 0 <= spot < RADIX
  */
 
-inline BIT GET_BIT(word w, int spot)
+static inline BIT GET_BIT(word w, int spot)
 {
   return CONVERT_TO_BIT(((w) >> (RADIX - 1 - (spot))) & ONE);
 }
@@ -273,8 +277,7 @@ inline BIT GET_BIT(word w, int spot)
  * \param value Either 0 or 1.
  */
 
-//#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~BITMASK(spot)) | (-(word)value & BITMASK(spot))))
-#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~BITMASK(spot)) | (-word((uint64_t)value) & BITMASK(spot))))
+#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~BITMASK(spot)) | (-CONVERT_TO_WORD(value) & BITMASK(spot))))
 
 /**
  * \brief Flip the spot in the word w

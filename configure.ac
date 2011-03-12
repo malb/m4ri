@@ -31,17 +31,33 @@ m4_include([m4/ax_cache_size_tune.m4])dnl
 m4_include([m4/ax_check_compiler_flags.m4])dnl
 m4_include([m4/ax_openmp.m4])dnl
 
-dnl AC_PROG_CC_C99()
+dnl Check if a C++ compiler was specified. If so, assume we want to wrap word in a C++ class.
+AC_EGREP_CPP(YES, [
+#ifdef __cplusplus
+YES
+#endif
+], [m4ri_wrapword="yes"], [m4ri_wrapword="no"])
 
-if test "$ac_cv_prog_cc_c99" = "no"; then
-   AC_MSG_ERROR([C99 support is required but not found.])
+if test "$m4ri_wrapword" = "yes"; then
+  AC_DEFINE([WRAPWORD], [/**/],
+      [Defined when compiling with a C++ compiler and word should be a C++ class.])
+else
+  dnl We can only run this test when we're using a C compiler.
+  AC_PROG_CC_C99()
+  if test "$ac_cv_prog_cc_c99" = "no"; then
+    AC_MSG_ERROR([C99 support is required but not found.])
+  fi
 fi
 
 # SSE2 support
 AC_ARG_ENABLE([sse2],
-        AS_HELP_STRING([--disable-sse2], [don't use SSE2 instruction set.]))
+        AS_HELP_STRING([--disable-sse2], [don't use SSE2 instruction set.]),
+	, [if test "$m4ri_wrapword" = "yes"; then enable_sse2="no"; else enable_sse2="yes"; fi])
 
 AS_IF([test "x$enable_sse2" != "xno"], [
+   if test "$m4ri_wrapword" = "yes"; then
+      AC_MSG_ERROR([SSE2 cannot be supported when wrapping word in a C++ class.])
+   fi
    case $host_cpu in i[[3456]]86*|x86_64*)
           AX_CPU_VENDOR()
           if test "x$ax_cv_cpu_vendor" = "xIntel"; then
@@ -81,6 +97,6 @@ AS_IF([test "x$enable_cachetune" = "xyes"], [
 
 AC_PROG_MAKE_SET
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile testsuite/Makefile])
 AC_OUTPUT
 

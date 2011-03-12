@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include "config.h"
 #include "cpucycles.h"
 #include "walltime.h"
 #include "m4ri.h"

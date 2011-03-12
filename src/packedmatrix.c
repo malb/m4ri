@@ -83,14 +83,14 @@ mzd_t *mzd_init(size_t r, size_t c) {
       A->rows[max_rows_per_block*(nblocks-1) + j] = (word*)(A->blocks[nblocks-1].data) + j*A->width;
     }
 
-    for (int i = 0; i < A->nrows; ++i)
-    {
+#ifdef WRAPWORD
+    for (int i = 0; i < A->nrows; ++i) {
       word* row = A->rows[i];
       for (int w = 0; w < A->width; ++w)
-      {
 	new (&row[w]) word(0UL);
-      }
     }
+#endif
+
   } else {
     A->blocks = NULL;
   }
@@ -278,7 +278,7 @@ static inline mzd_t *_mzd_transpose_direct_128(mzd_t *DST, const mzd_t *SRC) {
   }
 
   /* now transpose each block A,B,C,D separately, cf. Hacker's Delight */
-  m = word(0x00000000FFFFFFFFUL);
+  m = CONVERT_TO_WORD(0xFFFFFFFF);
   for (j = 32; j != 0; j = j >> 1, m = m ^ (m << j)) {
     for (k = 0; k < 64; k = (k + j + 1) & ~j) {
       t[0] = (DST->rows[k][0] ^ (DST->rows[k+j][0] >> j)) & m;
@@ -360,10 +360,7 @@ static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, const mzd_t *A) {
 	  ap = &A->rows[j + k - 2][wordi];
       }
       k = RADIX - 1;
-      --dstp;
-      assert(dstp == &DST->rows[i][j / RADIX]);
-      assert(j < DST->ncols);
-      *dstp = collect;
+      *--dstp = collect;
       collect = 0;
     }
   }
@@ -863,7 +860,7 @@ mzd_t *mzd_submatrix(mzd_t *S, const mzd_t *M, const size_t startrow, const size
   if ((M->offset + startcol)%RADIX == 0) {
     if(ncols/RADIX) {
       for(x = startrow, i=0; i<nrows; i++, x++) {
-        memcpy(S->rows[i], M->rows[x] + startword, sizeof(word)*(ncols/RADIX));
+        memcpy(S->rows[i], M->rows[x] + startword, sizeof(word) * (ncols / RADIX));
       }
     }
     if (ncols%RADIX) {
