@@ -21,6 +21,9 @@
 #include "config.h"
 #endif
 
+#ifdef WRAPWORD
+#include <new>
+#endif
 #include "permutation.h"
 #include "packedmatrix.h"
 
@@ -221,6 +224,7 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, size_t start_row, size_t start_
 
   /* we have a bitmask to encode where to write to */
   word *write_mask = (word*)m4ri_mm_calloc(sizeof(word), width);
+  for (int i = 0; i < width; ++i) new (&write_mask[i]) word(0UL);
   for(size_t i=0; i<A->ncols; i+=RADIX) {
     const size_t todo = MIN(RADIX,A->ncols-i);
     for(size_t k=0; k<todo; k++) {

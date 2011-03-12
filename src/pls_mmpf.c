@@ -73,7 +73,7 @@ size_t _mzd_pls_submatrix(mzd_t *A,
         /* clear before but preserve transformation matrix */
         for (l=0; l<curr_pos; l++)
           if(done[l] < i) {
-            if(Arow[os[l]] & bm[l])
+            if((Arow[os[l]] & bm[l]))
               mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
             done[l] = i; /* encode up to which row we added for l already */
           }
@@ -162,7 +162,11 @@ void mzd_make_table_pls( mzd_t *M, size_t r, size_t c, int k, mzd_t *T, size_t *
      below with [1 0 1] we need to encode that this row is cleared by
      adding the first row only ([1 0 0]).*/
   for(i=1; i < twokay; i++) {
-    const word correction = (word)codebook[k]->ord[i];
+#ifdef WRAPWORD
+    const word correction(codebook[k]->ord[i], int_to_word_conversion);
+#else
+    const word correction = codebook[k]->ord[i];
+#endif
     mzd_xor_bits(T, i,c, k, correction);
   }
 }
@@ -339,7 +343,7 @@ void _mzd_finish_pls_done_pivots(mzd_t *A, const mzp_t *P, const size_t start_ro
     const word tmp = mzd_read_bits(A, start_row + i, start_col, i);
     word *target = A->rows[start_row + i];
     for(j=0; j<i; j++) {
-      if(tmp & ONE<<(i-j-1)) {
+      if((tmp & ONE<<(i-j-1))) {
         const word *source = A->rows[start_row + j];
         for(w=addblock; w<A->width; w+=1) {
           target[w] ^= source[w];
@@ -644,9 +648,10 @@ size_t _mzd_pls_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
         mzd_row_swap(A, curr_row, i);
         const size_t wrd = j/RADIX;
         const word bm = ONE<<(RADIX-(j%RADIX)-1);
-        for(size_t l = curr_row+1; l<nrows; l++)
-          if(A->rows[l][wrd] & bm)
-            mzd_row_add_offset(A, l, curr_row, j + 1);
+	if (j + 1 < A->ncols)
+	  for(size_t l = curr_row+1; l<nrows; l++)
+	    if((A->rows[l][wrd] & bm))
+	      mzd_row_add_offset(A, l, curr_row, j + 1);
         curr_col = j + 1;
         curr_row++;
       } else {

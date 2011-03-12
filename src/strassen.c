@@ -27,6 +27,9 @@
 #include "grayflex.h"
 #include "strassen.h"
 #include "parity.h"
+#ifdef WRAPWORD
+#include <new>
+#endif
 #define CLOSER(a,b,target) (abs((long)a-(long)target)<abs((long)b-(long)target))
 #ifndef MIN
 #define MIN(a,b) (((a)<(b))?(a):(b))
@@ -1188,13 +1191,15 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
    for (size_t i = 0; i < B->ncols; ++i) {
      temp = BT->rows[i];
      for (size_t k = 0; k < B->nrows; k++) {
-      *temp |= ((word)mzd_read_bit (B, k, i)) << (RADIX-1-k-A->offset);
-
+       // this can be done faster
+       word bit(mzd_read_bit(B, k, i) ? 1UL : 0UL);
+       *temp |= bit << (RADIX-1-k-A->offset);
      }
    }
    
    word parity[64];
    memset(parity, 0, sizeof(parity));
+   for (int i = 0; i < 64; ++i) new (&parity[i]) word(0UL);
    for (size_t i = 0; i < A->nrows; ++i) {
      word * a = A->rows[i];
      word * c = C->rows[i];

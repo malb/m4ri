@@ -42,7 +42,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#ifdef __cplusplus
+#if !defined(WRAPWORD) && defined(__cplusplus)
 extern "C" {
 #endif //__cplusplus
 
@@ -58,7 +58,7 @@ extern "C" {
 #include "solve.h"
 #include "echelonform.h"
 
-#ifdef __cplusplus
+#if !defined(WRAPWORD) && defined(__cplusplus)
 }
 #endif //__cplusplus
 

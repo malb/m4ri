@@ -1,4 +1,6 @@
-CFLAGS=-I../m4ri -std=c99 -D_XOPEN_SOURCE=600
+#CFLAGS=-I../m4ri -std=c99 -D_XOPEN_SOURCE=600
+CFLAGS=-I../m4ri -D_XOPEN_SOURCE=600
+CC=g++
 STAGEDIR:=$(PWD)/../.libs
 LDFLAGS=-L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri
 DEBUG=-ggdb

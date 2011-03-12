@@ -24,6 +24,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#ifdef WRAPWORD
+#include <new>
+#endif
 #include "packedmatrix.h"
 #include "parity.h"
 
@@ -78,6 +81,15 @@ mzd_t *mzd_init(size_t r, size_t c) {
     A->blocks[nblocks-1].data = m4ri_mmc_calloc(rest, bytes_per_row);
     for(j=0; j<rest; j++) {
       A->rows[max_rows_per_block*(nblocks-1) + j] = (word*)(A->blocks[nblocks-1].data) + j*A->width;
+    }
+
+    for (int i = 0; i < A->nrows; ++i)
+    {
+      word* row = A->rows[i];
+      for (int w = 0; w < A->width; ++w)
+      {
+	new (&row[w]) word(0UL);
+      }
     }
   } else {
     A->blocks = NULL;
@@ -194,7 +206,7 @@ void mzd_print_tight( const mzd_t *M ) {
     }
     row = row + M->width - 1;
     for (j=0; j< (int)(M->ncols%RADIX); j++) {
-      printf("%d", (int)GET_BIT(*row, j));
+      printf("%d", GET_BIT(*row, j));
     }
     printf("]\n");
   }
@@ -266,7 +278,7 @@ static inline mzd_t *_mzd_transpose_direct_128(mzd_t *DST, const mzd_t *SRC) {
   }
 
   /* now transpose each block A,B,C,D separately, cf. Hacker's Delight */
-  m = 0xFFFFFFFF;
+  m = word(0x00000000FFFFFFFFUL);
   for (j = 32; j != 0; j = j >> 1, m = m ^ (m << j)) {
     for (k = 0; k < 64; k = (k + j + 1) & ~j) {
       t[0] = (DST->rows[k][0] ^ (DST->rows[k+j][0] >> j)) & m;
@@ -309,7 +321,7 @@ static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, const mzd_t *A) {
   int const spill = DST->ncols % RADIX;
   int const have_incomplete_word = (spill != 0);			/* 0: all words are full; 1: last word is incomplete */
   int const complete_words = DST->width - have_incomplete_word;
-  size_t const rowdiff = A->rows[1] - A->rows[0];			/* Assume that the distance between every row is the same */
+  //size_t const rowdiff = A->rows[1] - A->rows[0];			/* Assume that the distance between every row is the same */
   for (int i = 0; i < DST->nrows; ++i)
   {
     int const shift = RADIX - 1 - i % RADIX;
@@ -319,25 +331,39 @@ static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, const mzd_t *A) {
     int j = DST->ncols - spill;
     word* ap = &A->rows[j + k][wordi];
     word collect = 0;
-    /* Make k even... */
-    if ((spill & 1))
+    if (spill == 0)
     {
-      collect = ((*ap >> shift) & 1) << (RADIX - 1 - k);
-      ap -= rowdiff;
+      k = RADIX - 1;
+      --dstp;
+      j -= RADIX;
+    }
+    /* Make k even... */
+    else if ((spill & 1))
+    {
+      collect = ((*ap >> shift) & ONE) << (RADIX - 1 - k);
+      //ap -= rowdiff;
       --k;
+      ap = &A->rows[j + k][wordi];
     }
     for (; j >= 0; j -= RADIX)
     {
       /* ...so that we can unroll this loop a factor of two */
-      for (; k >= 0; k -=2)
+      for (; k > 0; k -=2)
       {
-        collect |= ((*ap >> shift) & 1) << (RADIX - 1 - k);
-	ap -= rowdiff;
-        collect |= ((*ap >> shift) & 1) << (RADIX - 1 - (k - 1));
-	ap -= rowdiff;
+        collect |= ((*ap >> shift) & ONE) << (RADIX - 1 - k);
+	//ap -= rowdiff;
+	ap = &A->rows[j + k - 1][wordi];
+        collect |= ((*ap >> shift) & ONE) << (RADIX - 1 - (k - 1));
+	//ap -= rowdiff;
+	//FIXME (this test is too slow, use rowstride)
+	if (j > 0 || k > 1)
+	  ap = &A->rows[j + k - 2][wordi];
       }
       k = RADIX - 1;
-      *--dstp = collect;
+      --dstp;
+      assert(dstp == &DST->rows[i][j / RADIX]);
+      assert(j < DST->ncols);
+      *dstp = collect;
       collect = 0;
     }
   }
@@ -837,7 +863,7 @@ mzd_t *mzd_submatrix(mzd_t *S, const mzd_t *M, const size_t startrow, const size
   if ((M->offset + startcol)%RADIX == 0) {
     if(ncols/RADIX) {
       for(x = startrow, i=0; i<nrows; i++, x++) {
-        memcpy(S->rows[i], M->rows[x] + startword, 8*(ncols/RADIX));
+        memcpy(S->rows[i], M->rows[x] + startword, sizeof(word)*(ncols/RADIX));
       }
     }
     if (ncols%RADIX) {
@@ -863,8 +889,8 @@ mzd_t *mzd_submatrix(mzd_t *S, const mzd_t *M, const size_t startrow, const size
       /* process remaining bits (lazy)*/
       colword = ncols/RADIX;
       for (y=0; y < (int)(ncols%RADIX); y++) {
-	temp = mzd_read_bit(M, x, startcol + colword*RADIX + y);
-	mzd_write_bit(S, i, colword*RADIX + y, (BIT)temp);
+	int tmp = mzd_read_bit(M, x, startcol + colword*RADIX + y);
+	mzd_write_bit(S, i, colword*RADIX + y, (BIT)tmp);
       }
     }
   }
@@ -991,12 +1017,12 @@ void mzd_col_swap(mzd_t *M, const size_t cola, const size_t colb) {
   size_t i;
   
   if(a_word == b_word) {
-    const word ai = RADIX - a_bit - 1;
-    const word bi = RADIX - b_bit - 1;
+    const size_t ai = RADIX - a_bit - 1;
+    const size_t bi = RADIX - b_bit - 1;
     for (i=0; i<M->nrows; i++) {
       base = (M->rows[i] + a_word);
       register word b = *base;
-      register word x = ((b >> ai) ^ (b >> bi)) & 1; // XOR temporary
+      register word x = ((b >> ai) ^ (b >> bi)) & ONE; // XOR temporary
       *base = b ^ ((x << ai) | (x << bi));
     }
     return;
@@ -1248,10 +1274,12 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
 }
 
 
-#define MASK(c)    (((word)(-1)) / (TWOPOW(TWOPOW(c)) + ONE))
+//#define MASK(c)    (((word)(-1)) / (TWOPOW(TWOPOW(c)) + 1))
+#define MASK(c)    (((uint64_t)(-1)) / (TWOPOW(TWOPOW(c)) + 1))
 #define COUNT(x,c) ((x) & MASK(c)) + (((x) >> (TWOPOW(c))) & MASK(c))
 
-static inline int m4ri_bitcount(word n)  {
+static inline int m4ri_bitcount(word on)  {
+   uint64_t n = CONVERT_TO_UINT64_T(on);
    n = COUNT(n, 0);
    n = COUNT(n, 1);
    n = COUNT(n, 2);

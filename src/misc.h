@@ -42,10 +42,19 @@
 #include <assert.h>
 #include <string.h>
 #include <stdint.h>
+#include <limits.h>
 
 /*
  * These define entirely the word width used in the library.
  */
+
+/**
+ * \brief Pretty for unsigned char.
+ */
+
+typedef int BIT;
+
+#ifndef WRAPWORD
 
 /**
  * A word is the typical packed data structure to represent packed
@@ -62,6 +71,89 @@ typedef uint64_t word;
 
 #define CONVERT_TO_INT(w) ((int)(w))
 
+/*
+ * Explicit conversion of a word, representing 64 columns, to a BIT
+ * to be used as boolean: this is an int with value 0 (false) or 1 (true).
+ * No error checking is done that only the least significant bit is set (if any).
+ */
+
+#define CONVERT_TO_BIT(w) ((BIT)(w))
+
+/*
+ * Explicit conversion of a word, representing 64 columns, to an uint64_t.
+ * The latter does not necessarily represent columns anymore and thus
+ * it's bit order is irrelevant.
+ */
+
+#define CONVERT_TO_UINT64_T(w) (w)
+
+#else
+enum int_to_word_conversion_type { int_to_word_conversion };
+
+class word {
+  private:
+    bool M_initialized;
+    uint64_t M_word;
+
+  public:
+    word(void) : M_initialized(false), M_word(0xdead12344321deadUL) { }
+    word(word const& w) : M_initialized(w.M_initialized), M_word(w.M_word) { assert(M_initialized); }
+    word(int value) : M_initialized(true), M_word(0) { assert(value == 0); }
+    explicit word(uint64_t value) : M_initialized(true), M_word(value) { }
+    ~word() { M_initialized = false; M_word = 0xdeaddeaddeaddeadUL; }
+    word& operator=(word const& w) { assert(w.M_initialized); M_initialized = w.M_initialized; M_word = w.M_word;  return *this; }
+    word& operator=(int value) { assert(value == 0); M_initialized = true; M_word = 0;  return *this; }
+    word(int value, int_to_word_conversion_type) : M_initialized(true), M_word(value) { assert(value >= 0); }
+
+    friend bool operator==(word const& w1, word const& w2) { assert(w1.M_initialized && w2.M_initialized); return w1.M_word == w2.M_word; }
+    friend bool operator!=(word const& w1, word const& w2) { assert(w1.M_initialized && w2.M_initialized); return w1.M_word != w2.M_word; }
+    friend bool operator<(word const& w1, word const& w2) { assert(w1.M_initialized && w2.M_initialized); return w1.M_word < w2.M_word; }
+    friend bool operator<=(word const& w1, word const& w2) { assert(w1.M_initialized && w2.M_initialized); return w1.M_word <= w2.M_word; }
+    friend bool operator>(word const& w1, word const& w2) { assert(w1.M_initialized && w2.M_initialized); return w1.M_word > w2.M_word; }
+    friend bool operator>=(word const& w1, word const& w2) { assert(w1.M_initialized && w2.M_initialized); return w1.M_word >= w2.M_word; }
+    word operator~(void) const { return word(~M_word); }
+    bool operator!(void) const { return !M_word; }
+    word operator-(void) const { assert((M_word & ~1UL) == 0); return word(-M_word); }
+    friend word operator^(word const& w1, word const& w2) { assert(w1.M_initialized && w2.M_initialized); return word(w1.M_word ^ w2.M_word); }
+    friend word operator&(word const& w1, word const& w2) { assert(w1.M_initialized && w2.M_initialized); return word(w1.M_word & w2.M_word); }
+    friend word operator|(word const& w1, word const& w2) { assert(w1.M_initialized && w2.M_initialized); return word(w1.M_word | w2.M_word); }
+    //friend word operator+(word const& w1, word const& w2) { assert(w1.M_initialized && w2.M_initialized); return word(w1.M_word + w2.M_word); }
+    friend word operator-(word const& w, int value) { assert(w.M_initialized); assert((w.M_word & (w.M_word - 1)) == 0); assert(value == 1); return word(w.M_word - 1); }
+    //friend word operator%(word const& w1, word const& w2) { assert(w1.M_initialized && w2.M_initialized); return word(w1.M_word % w2.M_word); }
+    word& operator^=(word const& w) { assert(M_initialized && w.M_initialized); M_word ^= w.M_word; return *this; }
+    word& operator&=(word const& w) { assert(M_initialized && w.M_initialized); M_word &= w.M_word; return *this; }
+    word& operator|=(word const& w) { assert(M_initialized && w.M_initialized); M_word |= w.M_word; return *this; }
+    //word& operator+=(word const& w) { assert(M_initialized && w.M_initialized); M_word += w.M_word; return *this; }
+    //word& operator-=(word const& w) { assert(M_initialized && w.M_initialized); M_word -= w.M_word; return *this; }
+    //word& operator%=(word const& w) { assert(M_initialized && w.M_initialized); M_word %= w.M_word; return *this; }
+
+    friend word operator<<(word const& w, size_t shift) { assert(w.M_initialized); return word(w.M_word << shift); }
+    friend word operator<<(word const& w, int shift) { assert(w.M_initialized); return word(w.M_word << shift); }
+    friend word operator>>(word const& w, size_t shift) { assert(w.M_initialized); return word(w.M_word >> shift); }
+    friend word operator>>(word const& w, int shift) { assert(w.M_initialized); return word(w.M_word >> shift); }
+    word& operator<<=(int shift) { assert(M_initialized); M_word <<= shift; return *this; }
+    word& operator>>=(int shift) { assert(M_initialized); M_word >>= shift; return *this; }
+
+    uint64_t print_value(void) const { assert(M_initialized); return M_word; }
+
+    BIT convert_to_BIT(void) const { assert(M_initialized); assert((M_word & ~1UL) == 0); return M_word; }
+    int convert_to_int(void) const { assert(M_initialized); assert(M_word <= (uint32_t)INT_MAX); return M_word; }
+    uint64_t convert_to_uint64_t(void) const { assert(M_initialized); return M_word; }
+
+    // Automatic converstion to boolean.
+    operator bool(void) const { assert(M_initialized); return M_word != 0; }
+
+  private:
+    // Disallowed.
+    operator int(void) const { assert(false); return 0; }
+};
+
+#define CONVERT_TO_BIT(w) ((w).convert_to_BIT())
+#define CONVERT_TO_INT(w) ((w).convert_to_int())
+#define CONVERT_TO_UINT64_T(w) ((w).convert_to_uint64_t())
+
+#endif // WRAPWORD
+
 /**
  * \brief The number of bits in a word.
  */
@@ -72,14 +164,16 @@ typedef uint64_t word;
  * \brief The number one as a word.
  */
 
-#define ONE ((word)1)
+//#define ONE ((word)1)
+static word const ONE(1UL);
 
 
 /**
  * \brief The number 2^64-1 as a word.
  */
 
-#define FFFF ((word)-1)
+//#define FFFF ((word)-1)
+static word const FFFF(0xFFFFFFFFFFFFFFFFUL);
 
 /**
  * \brief Return the maximal element of x and y
@@ -130,13 +224,7 @@ typedef uint64_t word;
  * \param i Integer.
  */ 
 
-#define TWOPOW(i) (ONE<<(i))
-
-/**
- * \brief Pretty for unsigned char.
- */
-
-typedef unsigned char BIT;
+#define TWOPOW(i) (1UL << (i))
 
 /**
 * \brief Create a bit mask with just bit n set.
@@ -172,7 +260,10 @@ typedef unsigned char BIT;
  * \param spot Integer with 0 <= spot < RADIX
  */
 
-#define GET_BIT(w, spot) (((w) >> (RADIX - 1 - (spot))) & ONE)
+inline BIT GET_BIT(word w, int spot)
+{
+  return CONVERT_TO_BIT(((w) >> (RADIX - 1 - (spot))) & ONE);
+}
 
 /**
  * \brief Write the value to the bit spot in the word w
@@ -182,7 +273,8 @@ typedef unsigned char BIT;
  * \param value Either 0 or 1.
  */
 
-#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~BITMASK(spot)) | (-(word)value & BITMASK(spot))))
+//#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~BITMASK(spot)) | (-(word)value & BITMASK(spot))))
+#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~BITMASK(spot)) | (-word((uint64_t)value) & BITMASK(spot))))
 
 /**
  * \brief Flip the spot in the word w
