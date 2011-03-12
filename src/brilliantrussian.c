@@ -283,7 +283,7 @@ void mzd_process_rows(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol
 
     /* TODO: this code is a bit silly/overkill, it just takes care of the last row */
     for( ; r<stoprow; r++) {
-      const int x0 = L[ (int)mzd_read_bits(M, r, startcol, k) ];
+      const int x0 = L[ mzd_read_bits_int(M, r, startcol, k) ];
       word *m0 = M->rows[r] + block;
       word *t0 = T->rows[x0] + block;
       
@@ -304,8 +304,8 @@ void mzd_process_rows(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol
   }
 
   for (r=startrow; r+2<=stoprow; r+=2) {
-    const int x0 = L[ (int)mzd_read_bits(M, r+0, startcol, k) ];
-    const int x1 = L[ (int)mzd_read_bits(M, r+1, startcol, k) ];
+    const int x0 = L[ mzd_read_bits_int(M, r+0, startcol, k) ];
+    const int x1 = L[ mzd_read_bits_int(M, r+1, startcol, k) ];
     
     word *m0 = M->rows[r+0] + block;
     word *t0 = T->rows[x0] + block;
@@ -328,7 +328,7 @@ void mzd_process_rows(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol
   }
 
   for( ; r<stoprow; r++) {
-    const int x0 = L[ (int)mzd_read_bits(M, r, startcol, k) ];
+    const int x0 = L[ mzd_read_bits_int(M, r, startcol, k) ];
     word *m0 = M->rows[r] + block;
     word *t0 = T->rows[x0] + block;
 
@@ -359,8 +359,8 @@ void mzd_process_rows2(mzd_t *M, size_t startrow, size_t stoprow, size_t startco
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //MAX((CPU_L1_CACHE>>3)/wide,
 #endif
   for(r=startrow; r<stoprow; r++) {
-    const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
-    const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb)];
+    const int x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
+    const int x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
     if(x0 == 0 && x1 == 0)
       continue;
     word * m0 = M->rows[r] + blocknum;
@@ -397,9 +397,9 @@ void mzd_process_rows3(mzd_t *M, size_t startrow, size_t stoprow, size_t startco
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r=startrow; r<stoprow; r++) {
-    const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
-    const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb)];
-    const int x2 = L2[ (int)mzd_read_bits(M, r, startcol+ka+kb, kc)];
+    const int x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
+    const int x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
+    const int x2 = L2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc)];
     if(x0 == 0 && x1 == 0 && x2 == 0) 
       continue;
 
@@ -440,10 +440,10 @@ void mzd_process_rows4(mzd_t *M, size_t startrow, size_t stoprow, size_t startco
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r=startrow; r<stoprow; r++) {
-    const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
-    const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb)];
-    const int x2 = L2[ (int)mzd_read_bits(M, r, startcol+ka+kb, kc)];
-    const int x3 = L3[ (int)mzd_read_bits(M, r, startcol+ka+kb+kc, kd)];
+    const int x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
+    const int x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
+    const int x2 = L2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc)];
+    const int x3 = L3[ mzd_read_bits_int(M, r, startcol+ka+kb+kc, kd)];
     if(x0 == 0 && x1 == 0 && x2 == 0 && x3 == 0) 
       continue;
 
@@ -487,11 +487,11 @@ void mzd_process_rows5(mzd_t *M, size_t startrow, size_t stoprow, size_t startco
 #endif
   for(r=startrow; r<stoprow; r++) {
     
-    const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
-    const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb)];
-    const int x2 = L2[ (int)mzd_read_bits(M, r, startcol+ka+kb, kc)];
-    const int x3 = L3[ (int)mzd_read_bits(M, r, startcol+ka+kb+kc, kd)];
-    const int x4 = L4[ (int)mzd_read_bits(M, r, startcol+ka+kb+kc+kd, ke)];
+    const int x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
+    const int x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
+    const int x2 = L2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc)];
+    const int x3 = L3[ mzd_read_bits_int(M, r, startcol+ka+kb+kc, kd)];
+    const int x4 = L4[ mzd_read_bits_int(M, r, startcol+ka+kb+kc+kd, ke)];
 
     if(x0 == 0 && x1 == 0 && x2 == 0 && x3 == 0 && x4 == 0) 
       continue;
@@ -538,12 +538,12 @@ void mzd_process_rows6(mzd_t *M, size_t startrow, size_t stoprow, size_t startco
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r=startrow; r<stoprow; r++) {
-    const int x0 = L0[ (int)mzd_read_bits(M, r, startcol, ka)];
-    const int x1 = L1[ (int)mzd_read_bits(M, r, startcol+ka, kb)];
-    const int x2 = L2[ (int)mzd_read_bits(M, r, startcol+ka+kb, kc)];
-    const int x3 = L3[ (int)mzd_read_bits(M, r, startcol+ka+kb+kc, kd)];
-    const int x4 = L4[ (int)mzd_read_bits(M, r, startcol+ka+kb+kc+kd, ke)];
-    const int x5 = L5[ (int)mzd_read_bits(M, r, startcol+ka+kb+kc+kd+ke, kf)];
+    const int x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
+    const int x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
+    const int x2 = L2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc)];
+    const int x3 = L3[ mzd_read_bits_int(M, r, startcol+ka+kb+kc, kd)];
+    const int x4 = L4[ mzd_read_bits_int(M, r, startcol+ka+kb+kc+kd, ke)];
+    const int x5 = L5[ mzd_read_bits_int(M, r, startcol+ka+kb+kc+kd+ke, kf)];
     
     if(x0 == 0 && x1 == 0 && x2 == 0 && x3 == 0 && x4 == 0 && x5 == 0) 
       continue;
@@ -1118,15 +1118,15 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
 
       for(babystep = 0; babystep < blocksize; babystep++) {
         j = giantstep + babystep;
-        x1 = L1[ (int)mzd_read_bits(A, j, i*kk, k) ];
-        x2 = L2[ (int)mzd_read_bits(A, j, i*kk+k, k) ];
-        x3 = L3[ (int)mzd_read_bits(A, j, i*kk+k+k, k) ];
-        x4 = L4[ (int)mzd_read_bits(A, j, i*kk+k+k+k, k) ];
+        x1 = L1[ mzd_read_bits_int(A, j, i*kk, k) ];
+        x2 = L2[ mzd_read_bits_int(A, j, i*kk+k, k) ];
+        x3 = L3[ mzd_read_bits_int(A, j, i*kk+k+k, k) ];
+        x4 = L4[ mzd_read_bits_int(A, j, i*kk+k+k+k, k) ];
 #ifdef M4RM_GRAY8
-        x5 = L5[ (int)mzd_read_bits(A, j, i*kk+k+k+k+k, k) ];
-        x6 = L6[ (int)mzd_read_bits(A, j, i*kk+k+k+k+k+k, k) ];
-        x7 = L7[ (int)mzd_read_bits(A, j, i*kk+k+k+k+k+k+k, k) ];
-        x8 = L8[ (int)mzd_read_bits(A, j, i*kk+k+k+k+k+k+k+k, k) ];
+        x5 = L5[ mzd_read_bits_int(A, j, i*kk+k+k+k+k, k) ];
+        x6 = L6[ mzd_read_bits_int(A, j, i*kk+k+k+k+k+k, k) ];
+        x7 = L7[ mzd_read_bits_int(A, j, i*kk+k+k+k+k+k+k, k) ];
+        x8 = L8[ mzd_read_bits_int(A, j, i*kk+k+k+k+k+k+k+k, k) ];
 #endif
         c = C->rows[j];
         t1 = T1->rows[x1];
@@ -1157,15 +1157,15 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
 #endif
     for(babystep = 0; babystep < a_nr - giantstep; babystep++) {
       j = giantstep + babystep;
-      x1 = L1[ (int)mzd_read_bits(A, j, i*kk, k) ];
-      x2 = L2[ (int)mzd_read_bits(A, j, i*kk+k, k) ];
-      x3 = L3[ (int)mzd_read_bits(A, j, i*kk+k+k, k) ];
-      x4 = L4[ (int)mzd_read_bits(A, j, i*kk+k+k+k, k) ];
+      x1 = L1[ mzd_read_bits_int(A, j, i*kk, k) ];
+      x2 = L2[ mzd_read_bits_int(A, j, i*kk+k, k) ];
+      x3 = L3[ mzd_read_bits_int(A, j, i*kk+k+k, k) ];
+      x4 = L4[ mzd_read_bits_int(A, j, i*kk+k+k+k, k) ];
 #ifdef M4RM_GRAY8
-      x5 = L5[ (int)mzd_read_bits(A, j, i*kk+k+k+k+k, k) ];
-      x6 = L6[ (int)mzd_read_bits(A, j, i*kk+k+k+k+k+k, k) ];
-      x7 = L7[ (int)mzd_read_bits(A, j, i*kk+k+k+k+k+k+k, k) ];
-      x8 = L8[ (int)mzd_read_bits(A, j, i*kk+k+k+k+k+k+k+k, k) ];
+      x5 = L5[ mzd_read_bits_int(A, j, i*kk+k+k+k+k, k) ];
+      x6 = L6[ mzd_read_bits_int(A, j, i*kk+k+k+k+k+k, k) ];
+      x7 = L7[ mzd_read_bits_int(A, j, i*kk+k+k+k+k+k+k, k) ];
+      x8 = L8[ mzd_read_bits_int(A, j, i*kk+k+k+k+k+k+k+k, k) ];
 #endif
       c = C->rows[j];
       t1 = T1->rows[x1];
@@ -1187,7 +1187,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
     for (i=end*kk/k; i < (a_nc)/k; i++) {
       mzd_make_table( B, i*k, 0, k, T1, L1);
       for(j = 0; j<a_nr; j++) {
-        x1 = L1[ (int)mzd_read_bits(A, j, i*k, k) ];
+        x1 = L1[ mzd_read_bits_int(A, j, i*k, k) ];
         c = C->rows[j];
         t1 = T1->rows[x1];
         for(ii=0; ii<wide; ii++) {
@@ -1199,7 +1199,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
     if (a_nc%k) {
       mzd_make_table( B, a_nc/k * k , 0, a_nc%k, T1, L1);
       for(j = 0; j<a_nr; j++) {
-        x1 = L1[ (int)mzd_read_bits(A, j, i*k, a_nc%k) ];
+        x1 = L1[ mzd_read_bits_int(A, j, i*k, a_nc%k) ];
         c = C->rows[j];
         t1 = T1->rows[x1];
         for(ii=0; ii<wide; ii++) {
@@ -1334,15 +1334,15 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, size_t k) {
 
     for(j = 0; j<B->nrows-i-kk; j++) {
 #ifdef M4RM_GRAY8
-      const int x7 = L7[ (int)mzd_read_bits(U, j, B->nrows-i-8*k, k) ];
-      const int x6 = L6[ (int)mzd_read_bits(U, j, B->nrows-i-7*k, k) ];
-      const int x5 = L5[ (int)mzd_read_bits(U, j, B->nrows-i-6*k, k) ];
-      const int x4 = L4[ (int)mzd_read_bits(U, j, B->nrows-i-5*k, k) ];
+      const int x7 = L7[ mzd_read_bits_int(U, j, B->nrows-i-8*k, k) ];
+      const int x6 = L6[ mzd_read_bits_int(U, j, B->nrows-i-7*k, k) ];
+      const int x5 = L5[ mzd_read_bits_int(U, j, B->nrows-i-6*k, k) ];
+      const int x4 = L4[ mzd_read_bits_int(U, j, B->nrows-i-5*k, k) ];
 #endif
-      const int x3 = L3[ (int)mzd_read_bits(U, j, B->nrows-i-4*k, k) ];
-      const int x2 = L2[ (int)mzd_read_bits(U, j, B->nrows-i-3*k, k) ];
-      const int x1 = L1[ (int)mzd_read_bits(U, j, B->nrows-i-2*k, k) ];
-      const int x0 = L0[ (int)mzd_read_bits(U, j, B->nrows-i-1*k, k) ];
+      const int x3 = L3[ mzd_read_bits_int(U, j, B->nrows-i-4*k, k) ];
+      const int x2 = L2[ mzd_read_bits_int(U, j, B->nrows-i-3*k, k) ];
+      const int x1 = L1[ mzd_read_bits_int(U, j, B->nrows-i-2*k, k) ];
+      const int x0 = L0[ mzd_read_bits_int(U, j, B->nrows-i-1*k, k) ];
 
 
       word *b = B->rows[j];
@@ -1378,7 +1378,7 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, size_t k) {
     mzd_make_table(B, B->nrows-i-1*k, 0, k, T0, L0);
 
     for(size_t j = 0; j<B->nrows-i-k; j++) {
-      const int x0 = L0[ (int)mzd_read_bits(U, j, B->nrows-i-1*k, k) ];
+      const int x0 = L0[ mzd_read_bits_int(U, j, B->nrows-i-1*k, k) ];
 
       word *b = B->rows[j];
       word *t0 = T0->rows[x0];

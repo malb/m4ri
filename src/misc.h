@@ -54,6 +54,14 @@
 
 typedef uint64_t word;
 
+/*
+ * Explicit conversion of a word, representing 64 columns, to an integer
+ * to be used as index into an array. This is used for Gray codes.
+ * No error checking is done that the most significant bits in w are zero.
+ */
+
+#define CONVERT_TO_INT(w) ((int)(w))
+
 /**
  * \brief The number of bits in a word.
  */

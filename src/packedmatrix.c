@@ -1147,7 +1147,7 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
     for(j=start_col; j<A->ncols; j+=RADIX) {
       const size_t length = MIN(RADIX, ncols-j);
       for(i=start_row; i<nrows; i++) {
-        const word curr_data = (word)mzd_read_bits(A, i, j, length);
+        const word curr_data = mzd_read_bits(A, i, j, length);
         if (larger_log2(curr_data, data)) {
           row_candidate = i;
           data = curr_data;

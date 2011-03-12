@@ -768,6 +768,19 @@ static inline word mzd_read_bits(const mzd_t *M, const size_t x, const size_t y,
   return temp >> (RADIX - n);
 }
 
+/*
+ * Get n bits starting a position (x,y) from the matrix M.
+ *
+ * This function is in principle the same as mzd_read_bits,
+ * but it explicitely returns an 'int' and is used as
+ * index into an array (Gray code).
+ */ 
+
+static inline int mzd_read_bits_int(const mzd_t *M, const size_t x, const size_t y, const int n)
+{
+  return CONVERT_TO_INT(mzd_read_bits(M, x, y, n));
+}
+
 /**
  * \brief XOR n bits from values to M starting a position (x,y).
  *

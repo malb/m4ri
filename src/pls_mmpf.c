@@ -153,7 +153,7 @@ void mzd_make_table_pls( mzd_t *M, size_t r, size_t c, int k, mzd_t *T, size_t *
 
     /* U is a basis but not the canonical basis, so we need to read what
        element we just created from T*/
-    Le[(int)mzd_read_bits(T,i,c,k)] = i;
+    Le[mzd_read_bits_int(T,i,c,k)] = i;
     Lm[codebook[k]->ord[i]] = i;
     
   }
@@ -187,12 +187,12 @@ void mzd_process_rows2_pls(mzd_t *M, size_t startrow, size_t stoprow, size_t sta
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
 #endif
   for(r=startrow; r<stoprow; r++) {
-    const int x0 = E0[ (int)mzd_read_bits(M, r, startcol, ka) ];
+    const int x0 = E0[ mzd_read_bits_int(M, r, startcol, ka) ];
     word *t0 = T0->rows[x0] + blocknuma;
     word *m0 = M->rows[r+0] + blocknuma;
     m0[0] ^= t0[0];
     m0[1] ^= t0[1];
-    const int x1 = E1[ (int)mzd_read_bits(M, r, startcol+ka, kb) ];
+    const int x1 = E1[ mzd_read_bits_int(M, r, startcol+ka, kb) ];
     word *t1 = T1->rows[x1] + blocknumb;
     for(size_t i=blockoffset; i<2; i++) {
       m0[i] ^= t1[i-blockoffset];
@@ -232,7 +232,7 @@ void mzd_process_rows3_pls(mzd_t *M, size_t startrow, size_t stoprow, size_t sta
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
 #endif
   for(r=startrow; r<stoprow; r++) {
-    const int x0 = E0[ (int)mzd_read_bits(M, r, startcol, ka) ];
+    const int x0 = E0[ mzd_read_bits_int(M, r, startcol, ka) ];
     word *t0 = T0->rows[x0] + blocknuma;
     word *m0 = M->rows[r] + blocknuma;
     m0[0] ^= t0[0];
@@ -241,14 +241,14 @@ void mzd_process_rows3_pls(mzd_t *M, size_t startrow, size_t stoprow, size_t sta
 
     t0+=3;
 
-    const int x1 = E1[ (int)mzd_read_bits(M, r, startcol+ka, kb) ];
+    const int x1 = E1[ mzd_read_bits_int(M, r, startcol+ka, kb) ];
     word *t1 = T1->rows[x1] + blocknumb;
     for(size_t i=blockoffsetb; i<3; i++) {
       m0[i] ^= t1[i-blockoffsetb];
     }
     t1+=3-blockoffsetb;
 
-    const int x2 = E2[ (int)mzd_read_bits(M, r, startcol+ka+kb, kc) ];
+    const int x2 = E2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc) ];
     word *t2 = T2->rows[x2] + blocknumc;
     for(size_t i=blockoffsetc; i<3; i++) {
       m0[i] ^= t2[i-blockoffsetc];
@@ -290,7 +290,7 @@ void mzd_process_rows4_pls(mzd_t *M, size_t startrow, size_t stoprow, size_t sta
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
 #endif
   for(r=startrow; r<stoprow; r++) {
-    const int x0 = E0[ (int)mzd_read_bits(M, r, startcol, ka) ];
+    const int x0 = E0[ mzd_read_bits_int(M, r, startcol, ka) ];
     word *t0 = T0->rows[x0] + blocknuma;
     word *m0 = M->rows[r] + blocknuma;
     m0[0] ^= t0[0];
@@ -300,21 +300,21 @@ void mzd_process_rows4_pls(mzd_t *M, size_t startrow, size_t stoprow, size_t sta
 
     t0+=4;
 
-    const int x1 = E1[ (int)mzd_read_bits(M, r, startcol+ka, kb) ];
+    const int x1 = E1[ mzd_read_bits_int(M, r, startcol+ka, kb) ];
     word *t1 = T1->rows[x1] + blocknumb;
     for(size_t i=blockoffsetb; i<4; i++) {
       m0[i] ^= t1[i-blockoffsetb];
     }
     t1+=4-blockoffsetb;
 
-    const int x2 = E2[ (int)mzd_read_bits(M, r, startcol+ka+kb, kc) ];
+    const int x2 = E2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc) ];
     word *t2 = T2->rows[x2] + blocknumc;
     for(size_t i=blockoffsetc; i<4; i++) {
       m0[i] ^= t2[i-blockoffsetc];
     }
     t2+=4-blockoffsetc;
 
-    const int x3 = E3[ (int)mzd_read_bits(M, r, startcol+ka+kb+kc, kd) ];
+    const int x3 = E3[ mzd_read_bits_int(M, r, startcol+ka+kb+kc, kd) ];
     word *t3 = T3->rows[x3] + blocknumd;
     for(size_t i=blockoffsetd; i<4; i++) {
       m0[i] ^= t3[i-blockoffsetd];
@@ -358,7 +358,7 @@ void _mzd_finish_pls_done_rest1(mzd_t *A, const mzp_t *P, const size_t start_row
   
   for(i=start_row+k0; i<stop_row; i++) {
     wide = A->width - addblock;
-    size_t x0 = M0[(int)mzd_read_bits(A,i,start_col,k0)];
+    size_t x0 = M0[mzd_read_bits_int(A,i,start_col,k0)];
     const word *s0 = T0->rows[x0] + addblock;
     word *t = A->rows[i] + addblock;
     _mzd_combine(t, s0, wide);
@@ -376,8 +376,8 @@ void _mzd_finish_pls_done_rest2(mzd_t *A, const mzp_t *P, const size_t start_row
   
   for(i=start_row+k0+k1; i<stop_row; i++) {
     wide = A->width - addblock;
-    size_t x0 = M0[(int)mzd_read_bits(A,i,start_col,k0)];
-    size_t x1 = M1[(int)mzd_read_bits(A,i,start_col+k0,k1)];
+    size_t x0 = M0[mzd_read_bits_int(A,i,start_col,k0)];
+    size_t x1 = M1[mzd_read_bits_int(A,i,start_col+k0,k1)];
     const word *s0 = T0->rows[x0] + addblock;
     const word *s1 = T1->rows[x1] + addblock;
     word *t = A->rows[i] + addblock;
@@ -398,9 +398,9 @@ void _mzd_finish_pls_done_rest3(mzd_t *A, const mzp_t *P, const size_t start_row
 
   for(i=start_row+k0+k1+k2; i<stop_row; i++) {
     wide = A->width - addblock;
-    size_t x0 = M0[(int)mzd_read_bits(A,i,start_col, k0)];
-    size_t x1 = M1[(int)mzd_read_bits(A,i,start_col+k0, k1)];
-    size_t x2 = M2[(int)mzd_read_bits(A,i,start_col+k0+k1, k2)];
+    size_t x0 = M0[mzd_read_bits_int(A,i,start_col, k0)];
+    size_t x1 = M1[mzd_read_bits_int(A,i,start_col+k0, k1)];
+    size_t x2 = M2[mzd_read_bits_int(A,i,start_col+k0+k1, k2)];
     const word *s0 = T0->rows[x0] + addblock;
     const word *s1 = T1->rows[x1] + addblock;
     const word *s2 = T2->rows[x2] + addblock;
@@ -423,10 +423,10 @@ void _mzd_finish_pls_done_rest4(mzd_t *A, const mzp_t *P, const size_t start_row
 
   for(i=start_row+k0+k1+k2+k3; i<stop_row; i++) {
     wide = A->width - addblock;
-    size_t x0 = M0[(int)mzd_read_bits(A,i,start_col, k0)];
-    size_t x1 = M1[(int)mzd_read_bits(A,i,start_col+k0, k1)];
-    size_t x2 = M2[(int)mzd_read_bits(A,i,start_col+k0+k1, k2)];
-    size_t x3 = M3[(int)mzd_read_bits(A,i,start_col+k0+k1+k2, k3)];
+    size_t x0 = M0[mzd_read_bits_int(A,i,start_col, k0)];
+    size_t x1 = M1[mzd_read_bits_int(A,i,start_col+k0, k1)];
+    size_t x2 = M2[mzd_read_bits_int(A,i,start_col+k0+k1, k2)];
+    size_t x3 = M3[mzd_read_bits_int(A,i,start_col+k0+k1+k2, k3)];
     const word *s0 = T0->rows[x0] + addblock;
     const word *s1 = T1->rows[x1] + addblock;
     const word *s2 = T2->rows[x2] + addblock;
