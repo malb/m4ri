@@ -73,7 +73,7 @@ size_t _mzd_pls_submatrix(mzd_t *A,
         /* clear before but preserve transformation matrix */
         for (l=0; l<curr_pos; l++)
           if(done[l] < i) {
-            if(Arow[os[l]] & bm[l])
+            if((Arow[os[l]] & bm[l]))
               mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
             done[l] = i; /* encode up to which row we added for l already */
           }
@@ -339,7 +339,7 @@ void _mzd_finish_pls_done_pivots(mzd_t *A, const mzp_t *P, const size_t start_ro
     const word tmp = mzd_read_bits(A, start_row + i, start_col, i);
     word *target = A->rows[start_row + i];
     for(j=0; j<i; j++) {
-      if(tmp & ONE<<(i-j-1)) {
+      if((tmp & ONE<<(i-j-1))) {
         const word *source = A->rows[start_row + j];
         for(w=addblock; w<A->width; w+=1) {
           target[w] ^= source[w];
