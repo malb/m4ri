@@ -162,7 +162,7 @@ void mzd_make_table_pls( mzd_t *M, size_t r, size_t c, int k, mzd_t *T, size_t *
      below with [1 0 1] we need to encode that this row is cleared by
      adding the first row only ([1 0 0]).*/
   for(i=1; i < twokay; i++) {
-#ifdef WRAPWORD
+#ifdef M4RI_WRAPWORD
     const word correction(codebook[k]->ord[i], int_to_word_conversion);
 #else
     const word correction = codebook[k]->ord[i];

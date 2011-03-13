@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#ifdef WRAPWORD
+#ifdef M4RI_WRAPWORD
 #include <new>
 #endif
 #include "packedmatrix.h"
@@ -83,7 +83,7 @@ mzd_t *mzd_init(size_t r, size_t c) {
       A->rows[max_rows_per_block*(nblocks-1) + j] = (word*)(A->blocks[nblocks-1].data) + j*A->width;
     }
 
-#ifdef WRAPWORD
+#ifdef M4RI_WRAPWORD
     for (int i = 0; i < A->nrows; ++i) {
       word* row = A->rows[i];
       for (int w = 0; w < A->width; ++w)
@@ -886,8 +886,8 @@ mzd_t *mzd_submatrix(mzd_t *S, const mzd_t *M, const size_t startrow, const size
       /* process remaining bits (lazy)*/
       colword = ncols/RADIX;
       for (y=0; y < (int)(ncols%RADIX); y++) {
-	int tmp = mzd_read_bit(M, x, startcol + colword*RADIX + y);
-	mzd_write_bit(S, i, colword*RADIX + y, (BIT)tmp);
+	BIT tmp = mzd_read_bit(M, x, startcol + colword*RADIX + y);
+	mzd_write_bit(S, i, colword*RADIX + y, tmp);
       }
     }
   }

@@ -55,7 +55,7 @@
 
 typedef int BIT;
 
-#ifndef WRAPWORD
+#ifndef M4RI_WRAPWORD
 /**
  * A word is the typical packed data structure to represent packed
  * bits.
@@ -159,7 +159,7 @@ class word {
 #define CONVERT_TO_UINT64_T(w) ((w).convert_to_uint64_t())
 #define CONVERT_TO_WORD(i) word((uint64_t)(i))
 
-#endif // WRAPWORD
+#endif // M4RI_WRAPWORD
 
 /**
  * \brief The number of bits in a word.

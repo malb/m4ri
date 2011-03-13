@@ -39,7 +39,7 @@ YES
 ], [m4ri_wrapword="yes"], [m4ri_wrapword="no"])
 
 if test "$m4ri_wrapword" = "yes"; then
-  AC_DEFINE([WRAPWORD], [/**/],
+  AC_DEFINE([M4RI_WRAPWORD], [/**/],
       [Defined when compiling with a C++ compiler and word should be a C++ class.])
 else
   dnl We can only run this test when we're using a C compiler.

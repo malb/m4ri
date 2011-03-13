@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#ifdef WRAPWORD
+#ifdef M4RI_WRAPWORD
 #include <new>
 #endif
 #include "permutation.h"
@@ -224,7 +224,7 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, size_t start_row, size_t start_
 
   /* we have a bitmask to encode where to write to */
   word *write_mask = (word*)m4ri_mm_calloc(sizeof(word), width);
-#ifdef WRAPWORD
+#ifdef M4RI_WRAPWORD
   for (int i = 0; i < width; ++i)
     new (&write_mask[i]) word(0UL);
 #endif

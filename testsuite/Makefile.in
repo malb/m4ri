@@ -39,6 +39,8 @@ clean:
 	rm -f $(CPUCYCLES_DIR)/cpucycles.o
 	rm -f $(CPUCYCLES_DIR)/cpucycles.h
 
+distclean: clean
+	rm -f Makefile
 
 cpucycles.h: cpucycles.o
 

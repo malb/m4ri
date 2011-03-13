@@ -27,7 +27,7 @@
 #include "grayflex.h"
 #include "strassen.h"
 #include "parity.h"
-#ifdef WRAPWORD
+#ifdef M4RI_WRAPWORD
 #include <new>
 #endif
 #define CLOSER(a,b,target) (abs((long)a-(long)target)<abs((long)b-(long)target))
@@ -1199,7 +1199,7 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
    
    word parity[64];
    memset(parity, 0, sizeof(parity));
-#ifdef WRAPWORD
+#ifdef M4RI_WRAPWORD
    for (int i = 0; i < 64; ++i)
      new (&parity[i]) word(0UL);
 #endif
