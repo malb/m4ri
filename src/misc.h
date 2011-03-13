@@ -79,6 +79,14 @@ typedef uint64_t word;
 #define CONVERT_TO_BIT(w) ((BIT)(w))
 
 /*
+ * Explicit conversion of a word, representing 64 columns, to an uint64_t.
+ * The latter does not necessarily represent columns anymore and thus
+ * it's bit order is irrelevant.
+ */
+
+#define CONVERT_TO_UINT64_T(w) (w)
+
+/*
  * Explicit conversion of an integer to a word.
  */
 
