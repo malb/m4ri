@@ -376,6 +376,7 @@ void mzd_print_tight(const mzd_t *M);
  */
 
 static inline void mzd_row_add_offset(mzd_t *M, size_t dstrow, size_t srcrow, size_t coloffset) {
+  assert(dstrow < M->nrows && srcrow < M->nrows && coloffset < M->ncols);
   coloffset += M->offset;
   const size_t startblock= coloffset/RADIX;
   size_t wide = M->width - startblock;

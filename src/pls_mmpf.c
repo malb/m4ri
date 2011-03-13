@@ -644,9 +644,10 @@ size_t _mzd_pls_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
         mzd_row_swap(A, curr_row, i);
         const size_t wrd = j/RADIX;
         const word bm = ONE<<(RADIX-(j%RADIX)-1);
-        for(size_t l = curr_row+1; l<nrows; l++)
-          if(A->rows[l][wrd] & bm)
-            mzd_row_add_offset(A, l, curr_row, j + 1);
+	if (j + 1 < A->ncols)
+	  for(size_t l = curr_row+1; l<nrows; l++)
+	    if(A->rows[l][wrd] & bm)
+	      mzd_row_add_offset(A, l, curr_row, j + 1);
         curr_col = j + 1;
         curr_row++;
       } else {
