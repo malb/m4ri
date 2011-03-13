@@ -194,7 +194,7 @@ void mzd_print_tight( const mzd_t *M ) {
     }
     row = row + M->width - 1;
     for (j=0; j< (int)(M->ncols%RADIX); j++) {
-      printf("%d", (int)GET_BIT(*row, j));
+      printf("%d", GET_BIT(*row, j));
     }
     printf("]\n");
   }
@@ -863,8 +863,8 @@ mzd_t *mzd_submatrix(mzd_t *S, const mzd_t *M, const size_t startrow, const size
       /* process remaining bits (lazy)*/
       colword = ncols/RADIX;
       for (y=0; y < (int)(ncols%RADIX); y++) {
-	temp = mzd_read_bit(M, x, startcol + colword*RADIX + y);
-	mzd_write_bit(S, i, colword*RADIX + y, (BIT)temp);
+	BIT bit = mzd_read_bit(M, x, startcol + colword*RADIX + y);
+	mzd_write_bit(S, i, colword*RADIX + y, bit);
       }
     }
   }

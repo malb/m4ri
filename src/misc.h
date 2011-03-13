@@ -48,6 +48,14 @@
  */
 
 /**
+ * \brief Pretty for a boolean int.
+ *
+ * The value of a BIT is either 0 or 1.
+ */
+
+typedef int BIT;
+
+/**
  * A word is the typical packed data structure to represent packed
  * bits.
  */
@@ -61,6 +69,14 @@ typedef uint64_t word;
  */
 
 #define CONVERT_TO_INT(w) ((int)(w))
+
+/*
+ * Explicit conversion of a word, representing 64 columns, to a BIT
+ * to be used as boolean: this is an int with value 0 (false) or 1 (true).
+ * No error checking is done that only the least significant bit is set (if any).
+ */
+
+#define CONVERT_TO_BIT(w) ((BIT)(w))
 
 /**
  * \brief The number of bits in a word.
@@ -133,12 +149,6 @@ typedef uint64_t word;
 #define TWOPOW(i) (ONE<<(i))
 
 /**
- * \brief Pretty for unsigned char.
- */
-
-typedef unsigned char BIT;
-
-/**
 * \brief Create a bit mask with just bit n set.
 *
 * \param n Integer with 0 <= n < RADIX
@@ -172,7 +182,10 @@ typedef unsigned char BIT;
  * \param spot Integer with 0 <= spot < RADIX
  */
 
-#define GET_BIT(w, spot) (((w) >> (RADIX - 1 - (spot))) & ONE)
+static inline BIT GET_BIT(word w, int spot)
+{
+  return CONVERT_TO_BIT(((w) >> (RADIX - 1 - (spot))) & ONE);
+}
 
 /**
  * \brief Write the value to the bit spot in the word w
