@@ -78,6 +78,12 @@ typedef uint64_t word;
 
 #define CONVERT_TO_BIT(w) ((BIT)(w))
 
+/*
+ * Explicit conversion of an integer to a word.
+ */
+
+#define CONVERT_TO_WORD(i) ((word)(i))
+
 /**
  * \brief The number of bits in a word.
  */
@@ -88,14 +94,13 @@ typedef uint64_t word;
  * \brief The number one as a word.
  */
 
-#define ONE ((word)1)
-
+static word const ONE = CONVERT_TO_WORD(1);
 
 /**
- * \brief The number 2^64-1 as a word.
+ * \brief A word with all bits set.
  */
 
-#define FFFF ((word)-1)
+static word const FFFF = CONVERT_TO_WORD(-1);
 
 /**
  * \brief Return the maximal element of x and y
@@ -195,7 +200,7 @@ static inline BIT GET_BIT(word w, int spot)
  * \param value Either 0 or 1.
  */
 
-#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~BITMASK(spot)) | (-(word)value & BITMASK(spot))))
+#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~BITMASK(spot)) | (-CONVERT_TO_WORD(value) & BITMASK(spot))))
 
 /**
  * \brief Flip the spot in the word w

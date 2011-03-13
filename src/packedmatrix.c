@@ -266,7 +266,7 @@ static inline mzd_t *_mzd_transpose_direct_128(mzd_t *DST, const mzd_t *SRC) {
   }
 
   /* now transpose each block A,B,C,D separately, cf. Hacker's Delight */
-  m = 0xFFFFFFFF;
+  m = CONVERT_TO_WORD(0xFFFFFFFF);
   for (j = 32; j != 0; j = j >> 1, m = m ^ (m << j)) {
     for (k = 0; k < 64; k = (k + j + 1) & ~j) {
       t[0] = (DST->rows[k][0] ^ (DST->rows[k+j][0] >> j)) & m;
