@@ -42,9 +42,9 @@
 #include <stdlib.h>
 #include <math.h>
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(M4RI_WRAPWORD) 
 extern "C" {
-#endif //__cplusplus
+#endif
 
 #include "permutation.h"
 #include "packedmatrix.h"
@@ -58,8 +58,8 @@ extern "C" {
 #include "solve.h"
 #include "echelonform.h"
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(M4RI_WRAPWORD) 
 }
-#endif //__cplusplus
+#endif
 
 #endif //M4RI_H

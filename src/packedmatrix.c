@@ -79,6 +79,10 @@ mzd_t *mzd_init(size_t r, size_t c) {
     for(j=0; j<rest; j++) {
       A->rows[max_rows_per_block*(nblocks-1) + j] = (word*)(A->blocks[nblocks-1].data) + j*A->width;
     }
+#ifdef M4RI_WRAPWORD
+    for (int i = 0; i < A->nrows; ++i)
+      word::init_array(A->rows[i], A->width);
+#endif
   } else {
     A->blocks = NULL;
   }

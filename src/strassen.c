@@ -1196,6 +1196,9 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
    
    word parity[64];
    memset(parity, 0, sizeof(parity));
+#ifdef M4RI_WRAPWORD
+   word::init_array(parity, 64);
+#endif
    for (size_t i = 0; i < A->nrows; ++i) {
      word * a = A->rows[i];
      word * c = C->rows[i];
