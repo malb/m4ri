@@ -848,7 +848,7 @@ mzd_t *mzd_submatrix(mzd_t *S, const mzd_t *M, const size_t startrow, const size
   if ((M->offset + startcol)%RADIX == 0) {
     if(ncols/RADIX) {
       for(x = startrow, i=0; i<nrows; i++, x++) {
-        memcpy(S->rows[i], M->rows[x] + startword, 8*(ncols/RADIX));
+        memcpy(S->rows[i], M->rows[x] + startword, sizeof(word) * (ncols / RADIX));
       }
     }
     if (ncols%RADIX) {
