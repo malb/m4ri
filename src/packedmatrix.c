@@ -309,7 +309,7 @@ static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, const mzd_t *A) {
   int const spill = DST->ncols % RADIX;
   int const have_incomplete_word = (spill != 0);			/* 0: all words are full; 1: last word is incomplete */
   int const complete_words = DST->width - have_incomplete_word;
-  size_t const rowdiff = A->rows[1] - A->rows[0];			/* Assume that the distance between every row is the same */
+  //size_t const rowdiff = A->rows[1] - A->rows[0];			/* Assume that the distance between every row is the same */
   for (int i = 0; i < DST->nrows; ++i)
   {
     int const shift = RADIX - 1 - i % RADIX;
@@ -319,22 +319,33 @@ static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, const mzd_t *A) {
     int j = DST->ncols - spill;
     word* ap = &A->rows[j + k][wordi];
     word collect = 0;
-    /* Make k even... */
-    if ((spill & 1))
+    if (spill == 0)
     {
-      collect = ((*ap >> shift) & 1) << (RADIX - 1 - k);
-      ap -= rowdiff;
+      k = RADIX - 1;
+      --dstp;
+      j -= RADIX;
+    }
+    /* Make k even... */
+    else if ((spill & 1))
+    {
+      collect = ((*ap >> shift) & ONE) << (RADIX - 1 - k);
+      //ap -= rowdiff;
       --k;
+      ap = &A->rows[j + k][wordi];
     }
     for (; j >= 0; j -= RADIX)
     {
       /* ...so that we can unroll this loop a factor of two */
-      for (; k >= 0; k -=2)
+      for (; k > 0; k -=2)
       {
-        collect |= ((*ap >> shift) & 1) << (RADIX - 1 - k);
-	ap -= rowdiff;
-        collect |= ((*ap >> shift) & 1) << (RADIX - 1 - (k - 1));
-	ap -= rowdiff;
+        collect |= ((*ap >> shift) & ONE) << (RADIX - 1 - k);
+	//ap -= rowdiff;
+	ap = &A->rows[j + k - 1][wordi];
+        collect |= ((*ap >> shift) & ONE) << (RADIX - 1 - (k - 1));
+	//ap -= rowdiff;
+	//FIXME (this test is too slow, use rowstride)
+	if (j > 0 || k > 1)
+	  ap = &A->rows[j + k - 2][wordi];
       }
       k = RADIX - 1;
       *--dstp = collect;
@@ -991,12 +1002,12 @@ void mzd_col_swap(mzd_t *M, const size_t cola, const size_t colb) {
   size_t i;
   
   if(a_word == b_word) {
-    const word ai = RADIX - a_bit - 1;
-    const word bi = RADIX - b_bit - 1;
+    const size_t ai = RADIX - a_bit - 1;
+    const size_t bi = RADIX - b_bit - 1;
     for (i=0; i<M->nrows; i++) {
       base = (M->rows[i] + a_word);
       register word b = *base;
-      register word x = ((b >> ai) ^ (b >> bi)) & 1; // XOR temporary
+      register word x = ((b >> ai) ^ (b >> bi)) & ONE; // XOR temporary
       *base = b ^ ((x << ai) | (x << bi));
     }
     return;
