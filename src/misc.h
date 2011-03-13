@@ -159,7 +159,7 @@ static word const FFFF = CONVERT_TO_WORD(-1);
  * \param i Integer.
  */ 
 
-#define TWOPOW(i) (ONE<<(i))
+#define TWOPOW(i) ((uint64_t)1 << (i))
 
 /**
 * \brief Create a bit mask with just bit n set.

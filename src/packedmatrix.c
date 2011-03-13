@@ -1248,7 +1248,7 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
 }
 
 
-#define MASK(c)    (((word)(-1)) / (TWOPOW(TWOPOW(c)) + ONE))
+#define MASK(c)    (((uint64_t)(-1)) / (TWOPOW(TWOPOW(c)) + 1))
 #define COUNT(x,c) ((x) & MASK(c)) + (((x) >> (TWOPOW(c))) & MASK(c))
 
 static inline int m4ri_bitcount(word w)  {
