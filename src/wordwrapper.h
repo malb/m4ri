@@ -40,15 +40,6 @@ static inline uint64_t reverse(uint64_t v)
   return v;
 }
 
-class FIXME64 {
-  private:
-    uint64_t M_value;
-    friend class word;
-
-  public:
-    explicit FIXME64(uint64_t value) : M_value(value) { }
-};
-
 class word
 {
   private:
@@ -61,10 +52,7 @@ class word
     // Construct a zeroed word from the int 0.
     word(int value) : M_initialized(true), M_word(0) { assert(value == 0); }
     // Construct a word from a given uint64_t integer value.
-  private:
     explicit word(uint64_t value) : M_initialized(true), M_word(value) { }
-  public:
-    explicit word(FIXME64 value) : M_initialized(true), M_word(value.M_value) { }
 
     // Copy constructor.
     word(word const& w) : M_initialized(w.M_initialized), M_word(w.M_word) { assert(M_initialized); }
@@ -152,7 +140,7 @@ class word
 
     // NOT operator. Returns true if all bits are zero.
     bool operator!(void) const { return !M_word; }
-    // Automatic converstion to boolean.
+    // Automatic conversion to boolean.
     operator bool(void) const { assert(M_initialized); return M_word != 0; }
 
   private:
@@ -163,5 +151,5 @@ class word
 #define CONVERT_TO_BIT(w) ((w).convert_to_BIT())
 #define CONVERT_TO_INT(w) ((w).convert_to_int())
 #define CONVERT_TO_UINT64_T(w) ((w).convert_to_uint64_t())
-#define CONVERT_TO_WORD(i) word(FIXME64((uint64_t)(i))).reverse()
+#define CONVERT_TO_WORD(i) word((uint64_t)(i))
 

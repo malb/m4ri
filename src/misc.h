@@ -111,7 +111,7 @@ typedef uint64_t word;
  * \brief The number one as a word.
  */
 
-static word const ONE = CONVERT_TO_WORD(1);
+static word const ONE = CONVERT_TO_WORD(0x8000000000000000ULL);		// FIXME
 
 /**
  * \brief A word with all bits set.
@@ -217,7 +217,7 @@ static inline BIT GET_BIT(word w, int spot)
  * \param value Either 0 or 1.
  */
 
-#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~BITMASK(spot)) | (-CONVERT_TO_WORD(value) & BITMASK(spot))))
+#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~BITMASK(spot)) | (-CONVERT_TO_WORD(value).reverse() & BITMASK(spot))))
 
 /**
  * \brief Flip the spot in the word w
