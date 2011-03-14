@@ -779,7 +779,7 @@ static inline word mzd_read_bits(const mzd_t *M, const size_t x, const size_t y,
 
 static inline int mzd_read_bits_int(const mzd_t *M, const size_t x, const size_t y, const int n)
 {
-  return CONVERT_TO_INT(mzd_read_bits(M, x, y, n));
+  return CONVERT_TO_INT(mzd_read_bits(M, x, y, n).reverse());		// FIXME
 }
 
 /**

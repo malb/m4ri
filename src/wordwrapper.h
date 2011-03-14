@@ -119,10 +119,9 @@ class word
     }
     int convert_to_int(void) const
     {
-      uint64_t reversed_word = ::reverse(M_word);
       assert(M_initialized);
-      assert(reversed_word <= 0x7fffffffU);			// Make sure the value doesn't exceed the maximum value of an int.
-      return reversed_word;
+      assert(M_word <= 0x7fffffffU);			// Make sure the value doesn't exceed the maximum value of an int.
+      return M_word;
     }
     uint64_t convert_to_uint64_t(void) const { assert(M_initialized); return M_word; }
 
