@@ -206,7 +206,7 @@ static word const FFFF = CONVERT_TO_WORD(-1);
 
 static inline BIT GET_BIT(word w, int spot)
 {
-  return CONVERT_TO_BIT(((w) << (RADIX - 1 - (spot))) & ONE);
+  return CONVERT_TO_BIT((((w) << (RADIX - 1 - (spot))) & ONE) >> (RADIX - 1));
 }
 
 /**

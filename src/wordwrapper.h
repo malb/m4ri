@@ -113,10 +113,9 @@ class word
     // Perform explicit conversions.
     BIT convert_to_BIT(void) const
     {
-      uint64_t reversed_word = ::reverse(M_word);
       assert(M_initialized);
-      assert((reversed_word & ~1UL) == 0);			// May only be 0 or 1.
-      return reversed_word;
+      assert((M_word & ~1UL) == 0);			// May only be 0 or 1.
+      return M_word;
     }
     int convert_to_int(void) const
     {
