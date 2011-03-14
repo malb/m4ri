@@ -618,18 +618,18 @@ int mzd_cmp(const mzd_t *A, const mzd_t *B) {
   assert(A->offset == 0);
   assert(B->offset == 0);
 
-  size_t i,j;
-
   if(A->nrows < B->nrows) return -1;
   if(B->nrows < A->nrows) return 1;
   if(A->ncols < B->ncols) return -1;
   if(B->ncols < A->ncols) return 1;
 
-  for(i=0; i < A->nrows ; i++) {
-    for(j=0 ; j< A->width ; j++) {
-      if ( A->rows[i][j] < B->rows[i][j] )
+  /* Columns with large index are "larger", but rows with small
+     index are more important than with large index. */
+  for(int i = 0; i < A->nrows; ++i) {
+    for(int j = A->width - 1; j >= 0; --j) {
+      if (CONVERT_TO_UINT64_T(A->rows[i][j]) < CONVERT_TO_UINT64_T(B->rows[i][j]))
 	return -1;
-      else if( A->rows[i][j] > B->rows[i][j] )
+      else if (CONVERT_TO_UINT64_T(A->rows[i][j]) > CONVERT_TO_UINT64_T(B->rows[i][j]))
 	return 1;
     }
   }
@@ -1163,7 +1163,7 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
       const size_t length = MIN(RADIX, ncols-j);
       for(i=start_row; i<nrows; i++) {
         const word curr_data = mzd_read_bits(A, i, j, length);
-        if (larger_log2(curr_data, data)) {
+        if (lesser_LSB(curr_data, data)) {
           row_candidate = i;
           data = curr_data;
           if(GET_BIT(data,RADIX-length-1))
@@ -1191,7 +1191,7 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
     const word mask_begin = RIGHT_BITMASK(RADIX-bit_offset);
     for(i=start_row; i<nrows; i++) {
       const word curr_data = A->rows[i][word_offset] & mask_begin;
-      if (larger_log2(curr_data, data)) {
+      if (lesser_LSB(curr_data, data)) {
         row_candidate = i;
         data = curr_data;
         if(GET_BIT(data,bit_offset)) {
@@ -1215,7 +1215,7 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
     for(j=word_offset + 1; j<A->width - 1; j++) {
       for(i=start_row; i<nrows; i++) {
         const word curr_data = A->rows[i][j];
-        if (larger_log2(curr_data, data)) {
+        if (lesser_LSB(curr_data, data)) {
           row_candidate = i;
           data = curr_data;
           if(GET_BIT(data, 0))
@@ -1240,7 +1240,7 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
     j = A->width-1;
     for(i=start_row; i<nrows; i++) {
       const word curr_data = A->rows[i][j] & mask_end;
-      if (larger_log2(curr_data, data)) {
+      if (lesser_LSB(curr_data, data)) {
         row_candidate = i;
         data = curr_data;
         if(GET_BIT(data,0))

@@ -85,8 +85,10 @@ typedef uint64_t word;
 
 /*
  * Explicit conversion of a word, representing 64 columns, to an uint64_t.
- * The latter does not necessarily represent columns anymore and thus
- * it's bit order is irrelevant.
+ *
+ * The returned value is the underlaying integer representation of these 64 columns,
+ * meaning in particular that if val is an uint64_t then
+ * CONVERT_TO_UINT64_T(CONVERT_TO_WORD(val)) == val.
  */
 
 #define CONVERT_TO_UINT64_T(w) (w)
@@ -305,21 +307,25 @@ static inline BIT GET_BIT(word w, int spot)
 #define ALIGNMENT(addr, n) (((unsigned long)(addr))%(n))
 
 /**
- * Return true if a's most significant bit is larger than b's most significant bit.
+ * Return true if a's least significant bit is smaller than b's least significant bit.
  *
- * If a is zero return false, otherwise
- * if b is zero return true iff a > 0, otherwise
- * return true if (int)log2(a) > (int)log2(b).
+ * return true if LSBI(a) < LSBI(b),
+ * where LSBI(w) is the index of the least significant bit that is set in w, or 64 if w is zero.
  *
  * \param a Word
  * \param b Word
  */
 
-static inline int larger_log2(word a, word b)
+static inline int lesser_LSB(word a, word b)
 {
-  return a > b && (a ^ b) > b;
+  uint64_t const ia = CONVERT_TO_UINT64_T(a);
+  uint64_t const ib = CONVERT_TO_UINT64_T(b);
+  /*
+   * If a is zero then we should always return false, otherwise
+   * if b is zero we should return true iff a has at least one bit set.
+   */
+  return !(ib ? ((ia - 1) ^ ia) & ib : !ia);
 }
-
 
 
 /**** Error Handling *****/
