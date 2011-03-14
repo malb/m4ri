@@ -79,7 +79,7 @@ void m4ri_word_to_str( char *destination, word data, int colon) {
   }
 }
 
-#define RAND_SHORT ((word)(rand()&((1<<16)-1)))
+#define RAND_SHORT CONVERT_TO_WORD(rand() & ((1 << 16) - 1))
 
 word m4ri_random_word() {
   return RAND_SHORT ^ RAND_SHORT<<16 ^ RAND_SHORT<<32 ^ RAND_SHORT<<48;

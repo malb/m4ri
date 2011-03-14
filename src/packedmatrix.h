@@ -294,8 +294,8 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, const size_t cola, const size_
     {
       word* vp = (M->rows[i] + a_word);
       word v = *vp;
-      word x = ((v << coldiff) ^ v) & b_bm;	/* Move column a on top of column b, and calcuate XOR. */
-      x |= x >> coldiff;			/* Duplicate this bit at both column positions. */
+      word x = ((v >> coldiff) ^ v) & b_bm;	/* Move column a on top of column b, and calcuate XOR. */
+      x |= x << coldiff;			/* Duplicate this bit at both column positions. */
       *vp = v ^ x;				/* Swap column bits and store result. */
     }
     return;
@@ -307,9 +307,9 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, const size_t cola, const size_
     word a = *(base + a_word);
     word b = *(base + b_word);
 
-    word x = ((a << coldiff) ^ b) & b_bm;	/* Move column a on top of column b, and calculate XOR (in place of column b). */
+    word x = ((a >> coldiff) ^ b) & b_bm;	/* Move column a on top of column b, and calculate XOR (in place of column b). */
     b ^= x;					/* Assign bit from column a to b */
-    a ^= x >> coldiff;				/* Move the XOR bit to the place of column a and assign bit from column b to a */
+    a ^= x << coldiff;				/* Move the XOR bit to the place of column a and assign bit from column b to a */
 
     *(base + a_word) = a;
     *(base + b_word) = b;
@@ -762,11 +762,11 @@ void mzd_combine(mzd_t * DST, const size_t row3, const size_t startblock3,
 static inline word mzd_read_bits(const mzd_t *M, const size_t x, const size_t y, const int n) {
   int const spot = (y + M->offset) % RADIX;
   size_t const block = (y + M->offset) / RADIX;
-  word temp = M->rows[x][block] << spot;
+  word temp = M->rows[x][block] >> spot;
   int const space = RADIX - spot;
   if (n > space)
-    temp |= M->rows[x][block + 1] >> space;
-  return temp >> (RADIX - n);
+    temp |= M->rows[x][block + 1] << space;
+  return temp << (RADIX - n);
 }
 
 /*
@@ -794,14 +794,14 @@ static inline int mzd_read_bits_int(const mzd_t *M, const size_t x, const size_t
 
 static inline void mzd_xor_bits(const mzd_t *M, const size_t x, const size_t y, const int n, word values) {
   /* This is the best way, since this will drop out once we inverse the bits in values: */
-  values <<= (RADIX - n);	/* Move the bits to the lowest columns */
+  values >>= (RADIX - n);	/* Move the bits to the lowest columns */
 
   int const spot = (y + M->offset) % RADIX;
   size_t const block = (y + M->offset) / RADIX;
-  M->rows[x][block] ^= values >> spot;
+  M->rows[x][block] ^= values << spot;
   int const space = RADIX - spot;
   if (n > space)
-    M->rows[x][block + 1] ^= values << space;
+    M->rows[x][block + 1] ^= values >> space;
 }
 
 /**
@@ -816,14 +816,14 @@ static inline void mzd_xor_bits(const mzd_t *M, const size_t x, const size_t y, 
 
 static inline void mzd_and_bits(const mzd_t *M, const size_t x, const size_t y, const int n, word values) {
   /* This is the best way, since this will drop out once we inverse the bits in values: */
-  values <<= (RADIX - n);	/* Move the bits to the lowest columns */
+  values >>= (RADIX - n);	/* Move the bits to the lowest columns */
 
   int const spot = (y + M->offset) % RADIX;
   size_t const block = (y + M->offset) / RADIX;
-  M->rows[x][block] &= values >> spot;
+  M->rows[x][block] &= values << spot;
   int const space = RADIX - spot;
   if (n > space)
-    M->rows[x][block + 1] &= values << space;
+    M->rows[x][block + 1] &= values >> space;
 }
 
 /**
@@ -836,13 +836,13 @@ static inline void mzd_and_bits(const mzd_t *M, const size_t x, const size_t y, 
  */
 
 static inline void mzd_clear_bits(const mzd_t *M, const size_t x, const size_t y, const int n) {
-  word values = FFFF << (RADIX - n);
+  word values = FFFF >> (RADIX - n);
   int const spot = (y + M->offset) % RADIX;
   size_t const block = (y + M->offset) / RADIX;
-  M->rows[x][block] &= ~(values >> spot);
+  M->rows[x][block] &= ~(values << spot);
   int const space = RADIX - spot;
   if (n > space)
-    M->rows[x][block + 1] &= ~(values << space);
+    M->rows[x][block + 1] &= ~(values >> space);
 }
 
 /**

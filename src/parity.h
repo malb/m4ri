@@ -34,39 +34,39 @@
  * \brief Step for mixing two 64-bit words to compute their parity.
  */
 
-#define MIX32(a, b) (((((a) << 32) ^ (a)) >> 32) | \
-                     ((((b) >> 32) ^ (b)) << 32))
+#define MIX32(a, b) (((((a) >> 32) ^ (a)) << 32) | \
+                     ((((b) << 32) ^ (b)) >> 32))
 
 /**
  * \brief Step for mixing two 64-bit words to compute their parity.
  */
 
-#define MIX16(a, b) (((((a) >> 16) ^ (a)) & CONVERT_TO_WORD(0xFFFF0000FFFF0000ull)) | \
-                     ((((b) << 16) ^ (b)) & CONVERT_TO_WORD(0x0000FFFF0000FFFFull)));
+#define MIX16(a, b) (((((a) << 16) ^ (a)) & CONVERT_TO_WORD(0xFFFF0000FFFF0000ull)) | \
+                     ((((b) >> 16) ^ (b)) & CONVERT_TO_WORD(0x0000FFFF0000FFFFull)));
 /**
  * \brief Step for mixing two 64-bit words to compute their parity.
  */
 
-#define MIX8(a, b) (((((a) >> 8) ^ (a)) & CONVERT_TO_WORD(0xFF00FF00FF00FF00ull)) | \
-                    ((((b) << 8) ^ (b)) & CONVERT_TO_WORD(0x00FF00FF00FF00FFull)));
+#define MIX8(a, b) (((((a) << 8) ^ (a)) & CONVERT_TO_WORD(0xFF00FF00FF00FF00ull)) | \
+                    ((((b) >> 8) ^ (b)) & CONVERT_TO_WORD(0x00FF00FF00FF00FFull)));
 /**
  * \brief Step for mixing two 64-bit words to compute their parity.
  */
 
-#define MIX4(a, b) (((((a) >> 4) ^ (a)) & CONVERT_TO_WORD(0xF0F0F0F0F0F0F0F0ull)) | \
-                    ((((b) << 4) ^ (b)) & CONVERT_TO_WORD(0x0F0F0F0F0F0F0F0Full)));
+#define MIX4(a, b) (((((a) << 4) ^ (a)) & CONVERT_TO_WORD(0xF0F0F0F0F0F0F0F0ull)) | \
+                    ((((b) >> 4) ^ (b)) & CONVERT_TO_WORD(0x0F0F0F0F0F0F0F0Full)));
 /**
  * \brief Step for mixing two 64-bit words to compute their parity.
  */
 
-#define MIX2(a, b) (((((a) >> 2) ^ (a)) & CONVERT_TO_WORD(0xCCCCCCCCCCCCCCCCull)) | \
-                    ((((b) << 2) ^ (b)) & CONVERT_TO_WORD(0x3333333333333333ull)));
+#define MIX2(a, b) (((((a) << 2) ^ (a)) & CONVERT_TO_WORD(0xCCCCCCCCCCCCCCCCull)) | \
+                    ((((b) >> 2) ^ (b)) & CONVERT_TO_WORD(0x3333333333333333ull)));
 /**
  * \brief Step for mixing two 64-bit words to compute their parity.
  */
 
-#define MIX1(a, b) (((((a) >> 1) ^ (a)) & CONVERT_TO_WORD(0xAAAAAAAAAAAAAAAAull)) | \
-                    ((((b) << 1) ^ (b)) & CONVERT_TO_WORD(0x5555555555555555ull)));
+#define MIX1(a, b) (((((a) << 1) ^ (a)) & CONVERT_TO_WORD(0xAAAAAAAAAAAAAAAAull)) | \
+                    ((((b) >> 1) ^ (b)) & CONVERT_TO_WORD(0x5555555555555555ull)));
 
 
 /**

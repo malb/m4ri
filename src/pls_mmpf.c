@@ -63,7 +63,7 @@ size_t _mzd_pls_submatrix(mzd_t *A,
 
   for(curr_pos=0; curr_pos < (size_t)k; curr_pos++) {
     os[curr_pos] = (start_col+curr_pos)/RADIX;
-    bm[curr_pos] = ONE<<(RADIX-(start_col+curr_pos)%RADIX-1);
+    bm[curr_pos] = ONE>>(RADIX-(start_col+curr_pos)%RADIX-1);
     found = 0;
     /* search for some pivot */
     for(i = start_row + curr_pos; i < stop_row; i++) {
@@ -339,7 +339,7 @@ void _mzd_finish_pls_done_pivots(mzd_t *A, const mzp_t *P, const size_t start_ro
     const word tmp = mzd_read_bits(A, start_row + i, start_col, i);
     word *target = A->rows[start_row + i];
     for(j=0; j<i; j++) {
-      if((tmp & ONE<<(i-j-1))) {
+      if((tmp & ONE>>(i-j-1))) {
         const word *source = A->rows[start_row + j];
         for(w=addblock; w<A->width; w+=1) {
           target[w] ^= source[w];
@@ -643,7 +643,7 @@ size_t _mzd_pls_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k) {
         Q->values[curr_row] = j;
         mzd_row_swap(A, curr_row, i);
         const size_t wrd = j/RADIX;
-        const word bm = ONE<<(RADIX-(j%RADIX)-1);
+        const word bm = ONE>>(RADIX-(j%RADIX)-1);
 	if (j + 1 < A->ncols)
 	  for(size_t l = curr_row+1; l<nrows; l++)
 	    if(A->rows[l][wrd] & bm)

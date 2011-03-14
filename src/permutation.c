@@ -99,7 +99,7 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t *B, size_t *perm
         const size_t colb = permutation[i+k] + B->offset;
         words[k] = colb/RADIX;
         bits[k] = colb%RADIX;
-        bitmasks[k] = (ONE<<(RADIX - (bits[k]) - 1));
+        bitmasks[k] = (ONE>>(RADIX - (bits[k]) - 1));
     }
 
     for (size_t r=start_row; r<stop_row; r++) {
@@ -109,70 +109,70 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t *B, size_t *perm
 
       /* we gather the bits in a register word */
       switch(todo-1) {
-      case 63: value |= ((Brow[words[63]] & bitmasks[63]) << bits[63]) >> 63;
-      case 62: value |= ((Brow[words[62]] & bitmasks[62]) << bits[62]) >> 62;
-      case 61: value |= ((Brow[words[61]] & bitmasks[61]) << bits[61]) >> 61;
-      case 60: value |= ((Brow[words[60]] & bitmasks[60]) << bits[60]) >> 60;
-      case 59: value |= ((Brow[words[59]] & bitmasks[59]) << bits[59]) >> 59;
-      case 58: value |= ((Brow[words[58]] & bitmasks[58]) << bits[58]) >> 58;
-      case 57: value |= ((Brow[words[57]] & bitmasks[57]) << bits[57]) >> 57;
-      case 56: value |= ((Brow[words[56]] & bitmasks[56]) << bits[56]) >> 56;
-      case 55: value |= ((Brow[words[55]] & bitmasks[55]) << bits[55]) >> 55;
-      case 54: value |= ((Brow[words[54]] & bitmasks[54]) << bits[54]) >> 54;
-      case 53: value |= ((Brow[words[53]] & bitmasks[53]) << bits[53]) >> 53;
-      case 52: value |= ((Brow[words[52]] & bitmasks[52]) << bits[52]) >> 52;
-      case 51: value |= ((Brow[words[51]] & bitmasks[51]) << bits[51]) >> 51;
-      case 50: value |= ((Brow[words[50]] & bitmasks[50]) << bits[50]) >> 50;
-      case 49: value |= ((Brow[words[49]] & bitmasks[49]) << bits[49]) >> 49;
-      case 48: value |= ((Brow[words[48]] & bitmasks[48]) << bits[48]) >> 48;
-      case 47: value |= ((Brow[words[47]] & bitmasks[47]) << bits[47]) >> 47;
-      case 46: value |= ((Brow[words[46]] & bitmasks[46]) << bits[46]) >> 46;
-      case 45: value |= ((Brow[words[45]] & bitmasks[45]) << bits[45]) >> 45;
-      case 44: value |= ((Brow[words[44]] & bitmasks[44]) << bits[44]) >> 44;
-      case 43: value |= ((Brow[words[43]] & bitmasks[43]) << bits[43]) >> 43;
-      case 42: value |= ((Brow[words[42]] & bitmasks[42]) << bits[42]) >> 42;
-      case 41: value |= ((Brow[words[41]] & bitmasks[41]) << bits[41]) >> 41;
-      case 40: value |= ((Brow[words[40]] & bitmasks[40]) << bits[40]) >> 40;
-      case 39: value |= ((Brow[words[39]] & bitmasks[39]) << bits[39]) >> 39;
-      case 38: value |= ((Brow[words[38]] & bitmasks[38]) << bits[38]) >> 38;
-      case 37: value |= ((Brow[words[37]] & bitmasks[37]) << bits[37]) >> 37;
-      case 36: value |= ((Brow[words[36]] & bitmasks[36]) << bits[36]) >> 36;
-      case 35: value |= ((Brow[words[35]] & bitmasks[35]) << bits[35]) >> 35;
-      case 34: value |= ((Brow[words[34]] & bitmasks[34]) << bits[34]) >> 34;
-      case 33: value |= ((Brow[words[33]] & bitmasks[33]) << bits[33]) >> 33;
-      case 32: value |= ((Brow[words[32]] & bitmasks[32]) << bits[32]) >> 32;
-      case 31: value |= ((Brow[words[31]] & bitmasks[31]) << bits[31]) >> 31;
-      case 30: value |= ((Brow[words[30]] & bitmasks[30]) << bits[30]) >> 30;
-      case 29: value |= ((Brow[words[29]] & bitmasks[29]) << bits[29]) >> 29;
-      case 28: value |= ((Brow[words[28]] & bitmasks[28]) << bits[28]) >> 28;
-      case 27: value |= ((Brow[words[27]] & bitmasks[27]) << bits[27]) >> 27;
-      case 26: value |= ((Brow[words[26]] & bitmasks[26]) << bits[26]) >> 26;
-      case 25: value |= ((Brow[words[25]] & bitmasks[25]) << bits[25]) >> 25;
-      case 24: value |= ((Brow[words[24]] & bitmasks[24]) << bits[24]) >> 24;
-      case 23: value |= ((Brow[words[23]] & bitmasks[23]) << bits[23]) >> 23;
-      case 22: value |= ((Brow[words[22]] & bitmasks[22]) << bits[22]) >> 22;
-      case 21: value |= ((Brow[words[21]] & bitmasks[21]) << bits[21]) >> 21;
-      case 20: value |= ((Brow[words[20]] & bitmasks[20]) << bits[20]) >> 20;
-      case 19: value |= ((Brow[words[19]] & bitmasks[19]) << bits[19]) >> 19;
-      case 18: value |= ((Brow[words[18]] & bitmasks[18]) << bits[18]) >> 18;
-      case 17: value |= ((Brow[words[17]] & bitmasks[17]) << bits[17]) >> 17;
-      case 16: value |= ((Brow[words[16]] & bitmasks[16]) << bits[16]) >> 16;
-      case 15: value |= ((Brow[words[15]] & bitmasks[15]) << bits[15]) >> 15;
-      case 14: value |= ((Brow[words[14]] & bitmasks[14]) << bits[14]) >> 14;
-      case 13: value |= ((Brow[words[13]] & bitmasks[13]) << bits[13]) >> 13;
-      case 12: value |= ((Brow[words[12]] & bitmasks[12]) << bits[12]) >> 12;
-      case 11: value |= ((Brow[words[11]] & bitmasks[11]) << bits[11]) >> 11;
-      case 10: value |= ((Brow[words[10]] & bitmasks[10]) << bits[10]) >> 10;
-      case  9: value |= ((Brow[words[ 9]] & bitmasks[ 9]) << bits[ 9]) >>  9;
-      case  8: value |= ((Brow[words[ 8]] & bitmasks[ 8]) << bits[ 8]) >>  8;
-      case  7: value |= ((Brow[words[ 7]] & bitmasks[ 7]) << bits[ 7]) >>  7;
-      case  6: value |= ((Brow[words[ 6]] & bitmasks[ 6]) << bits[ 6]) >>  6;
-      case  5: value |= ((Brow[words[ 5]] & bitmasks[ 5]) << bits[ 5]) >>  5;
-      case  4: value |= ((Brow[words[ 4]] & bitmasks[ 4]) << bits[ 4]) >>  4;
-      case  3: value |= ((Brow[words[ 3]] & bitmasks[ 3]) << bits[ 3]) >>  3;
-      case  2: value |= ((Brow[words[ 2]] & bitmasks[ 2]) << bits[ 2]) >>  2;
-      case  1: value |= ((Brow[words[ 1]] & bitmasks[ 1]) << bits[ 1]) >>  1;
-      case  0: value |= ((Brow[words[ 0]] & bitmasks[ 0]) << bits[ 0]) >>  0;
+      case 63: value |= ((Brow[words[63]] & bitmasks[63]) >> bits[63]) << 63;
+      case 62: value |= ((Brow[words[62]] & bitmasks[62]) >> bits[62]) << 62;
+      case 61: value |= ((Brow[words[61]] & bitmasks[61]) >> bits[61]) << 61;
+      case 60: value |= ((Brow[words[60]] & bitmasks[60]) >> bits[60]) << 60;
+      case 59: value |= ((Brow[words[59]] & bitmasks[59]) >> bits[59]) << 59;
+      case 58: value |= ((Brow[words[58]] & bitmasks[58]) >> bits[58]) << 58;
+      case 57: value |= ((Brow[words[57]] & bitmasks[57]) >> bits[57]) << 57;
+      case 56: value |= ((Brow[words[56]] & bitmasks[56]) >> bits[56]) << 56;
+      case 55: value |= ((Brow[words[55]] & bitmasks[55]) >> bits[55]) << 55;
+      case 54: value |= ((Brow[words[54]] & bitmasks[54]) >> bits[54]) << 54;
+      case 53: value |= ((Brow[words[53]] & bitmasks[53]) >> bits[53]) << 53;
+      case 52: value |= ((Brow[words[52]] & bitmasks[52]) >> bits[52]) << 52;
+      case 51: value |= ((Brow[words[51]] & bitmasks[51]) >> bits[51]) << 51;
+      case 50: value |= ((Brow[words[50]] & bitmasks[50]) >> bits[50]) << 50;
+      case 49: value |= ((Brow[words[49]] & bitmasks[49]) >> bits[49]) << 49;
+      case 48: value |= ((Brow[words[48]] & bitmasks[48]) >> bits[48]) << 48;
+      case 47: value |= ((Brow[words[47]] & bitmasks[47]) >> bits[47]) << 47;
+      case 46: value |= ((Brow[words[46]] & bitmasks[46]) >> bits[46]) << 46;
+      case 45: value |= ((Brow[words[45]] & bitmasks[45]) >> bits[45]) << 45;
+      case 44: value |= ((Brow[words[44]] & bitmasks[44]) >> bits[44]) << 44;
+      case 43: value |= ((Brow[words[43]] & bitmasks[43]) >> bits[43]) << 43;
+      case 42: value |= ((Brow[words[42]] & bitmasks[42]) >> bits[42]) << 42;
+      case 41: value |= ((Brow[words[41]] & bitmasks[41]) >> bits[41]) << 41;
+      case 40: value |= ((Brow[words[40]] & bitmasks[40]) >> bits[40]) << 40;
+      case 39: value |= ((Brow[words[39]] & bitmasks[39]) >> bits[39]) << 39;
+      case 38: value |= ((Brow[words[38]] & bitmasks[38]) >> bits[38]) << 38;
+      case 37: value |= ((Brow[words[37]] & bitmasks[37]) >> bits[37]) << 37;
+      case 36: value |= ((Brow[words[36]] & bitmasks[36]) >> bits[36]) << 36;
+      case 35: value |= ((Brow[words[35]] & bitmasks[35]) >> bits[35]) << 35;
+      case 34: value |= ((Brow[words[34]] & bitmasks[34]) >> bits[34]) << 34;
+      case 33: value |= ((Brow[words[33]] & bitmasks[33]) >> bits[33]) << 33;
+      case 32: value |= ((Brow[words[32]] & bitmasks[32]) >> bits[32]) << 32;
+      case 31: value |= ((Brow[words[31]] & bitmasks[31]) >> bits[31]) << 31;
+      case 30: value |= ((Brow[words[30]] & bitmasks[30]) >> bits[30]) << 30;
+      case 29: value |= ((Brow[words[29]] & bitmasks[29]) >> bits[29]) << 29;
+      case 28: value |= ((Brow[words[28]] & bitmasks[28]) >> bits[28]) << 28;
+      case 27: value |= ((Brow[words[27]] & bitmasks[27]) >> bits[27]) << 27;
+      case 26: value |= ((Brow[words[26]] & bitmasks[26]) >> bits[26]) << 26;
+      case 25: value |= ((Brow[words[25]] & bitmasks[25]) >> bits[25]) << 25;
+      case 24: value |= ((Brow[words[24]] & bitmasks[24]) >> bits[24]) << 24;
+      case 23: value |= ((Brow[words[23]] & bitmasks[23]) >> bits[23]) << 23;
+      case 22: value |= ((Brow[words[22]] & bitmasks[22]) >> bits[22]) << 22;
+      case 21: value |= ((Brow[words[21]] & bitmasks[21]) >> bits[21]) << 21;
+      case 20: value |= ((Brow[words[20]] & bitmasks[20]) >> bits[20]) << 20;
+      case 19: value |= ((Brow[words[19]] & bitmasks[19]) >> bits[19]) << 19;
+      case 18: value |= ((Brow[words[18]] & bitmasks[18]) >> bits[18]) << 18;
+      case 17: value |= ((Brow[words[17]] & bitmasks[17]) >> bits[17]) << 17;
+      case 16: value |= ((Brow[words[16]] & bitmasks[16]) >> bits[16]) << 16;
+      case 15: value |= ((Brow[words[15]] & bitmasks[15]) >> bits[15]) << 15;
+      case 14: value |= ((Brow[words[14]] & bitmasks[14]) >> bits[14]) << 14;
+      case 13: value |= ((Brow[words[13]] & bitmasks[13]) >> bits[13]) << 13;
+      case 12: value |= ((Brow[words[12]] & bitmasks[12]) >> bits[12]) << 12;
+      case 11: value |= ((Brow[words[11]] & bitmasks[11]) >> bits[11]) << 11;
+      case 10: value |= ((Brow[words[10]] & bitmasks[10]) >> bits[10]) << 10;
+      case  9: value |= ((Brow[words[ 9]] & bitmasks[ 9]) >> bits[ 9]) <<  9;
+      case  8: value |= ((Brow[words[ 8]] & bitmasks[ 8]) >> bits[ 8]) <<  8;
+      case  7: value |= ((Brow[words[ 7]] & bitmasks[ 7]) >> bits[ 7]) <<  7;
+      case  6: value |= ((Brow[words[ 6]] & bitmasks[ 6]) >> bits[ 6]) <<  6;
+      case  5: value |= ((Brow[words[ 5]] & bitmasks[ 5]) >> bits[ 5]) <<  5;
+      case  4: value |= ((Brow[words[ 4]] & bitmasks[ 4]) >> bits[ 4]) <<  4;
+      case  3: value |= ((Brow[words[ 3]] & bitmasks[ 3]) >> bits[ 3]) <<  3;
+      case  2: value |= ((Brow[words[ 2]] & bitmasks[ 2]) >> bits[ 2]) <<  2;
+      case  1: value |= ((Brow[words[ 1]] & bitmasks[ 1]) >> bits[ 1]) <<  1;
+      case  0: value |= ((Brow[words[ 0]] & bitmasks[ 0]) >> bits[ 0]) <<  0;
       default:
         break;
       }
@@ -228,7 +228,7 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, size_t start_row, size_t start_
     const size_t todo = MIN(RADIX,A->ncols-i);
     for(size_t k=0; k<todo; k++) {
       if(permutation[i+k] == i+k) {
-        write_mask[i/RADIX] |= ONE<<(RADIX - k - 1);
+        write_mask[i/RADIX] |= ONE>>(RADIX - k - 1);
       }
     }
   }
@@ -427,7 +427,7 @@ void _mzd_compress_l(mzd_t *A, size_t r1, size_t n1, size_t r2) {
       }
     } else {
       for(; j+RADIX<=r1+r2; j+=RADIX, block++) {
-        tmp = (A->rows[i][block] << rest) | ( A->rows[i][block + 1] >> (RADIX - rest)); 
+        tmp = (A->rows[i][block] >> rest) | ( A->rows[i][block + 1] << (RADIX - rest)); 
         A->rows[i][j/RADIX] = tmp;
       }
     }
@@ -438,7 +438,7 @@ void _mzd_compress_l(mzd_t *A, size_t r1, size_t n1, size_t r2) {
 
     if (j<r1+r2) {
       tmp = mzd_read_bits(A, i, n1+j-r1, r1+r2-j);
-      A->rows[i][j/RADIX] = tmp<<(RADIX-(r1+r2+j));
+      A->rows[i][j/RADIX] = tmp>>(RADIX-(r1+r2+j));
     }
 
     /* now clear the rest of L2 */

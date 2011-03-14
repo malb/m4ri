@@ -1157,7 +1157,7 @@ mzd_t *_mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
 mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
   mzd_t * tmp = mzd_init (A->nrows, MIN(RADIX- A->offset, A->ncols));
   for (size_t i=0; i < A->nrows; ++i){
-    tmp->rows[i][0] = (A->rows[i][0] << A->offset);
+    tmp->rows[i][0] = (A->rows[i][0] >> A->offset);
   }
   _mzd_addmul_even (C, tmp, B, cutoff);
   mzd_free(tmp);
@@ -1170,7 +1170,7 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
    size_t cncols = C->ncols;
    C->offset=0;
    C->ncols = RADIX;
-   word mask = ((ONE << B->ncols) - 1) << (RADIX-B->offset - B->ncols);
+   word mask = ((ONE >> B->ncols) - 1) >> (RADIX-B->offset - B->ncols);
    for (size_t i=0; i < B->nrows; ++i)
      tmp->rows[i][0] = B->rows[i][0] & mask;
    _mzd_addmul_even (C, A, tmp, cutoff);
@@ -1190,7 +1190,7 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
      for (size_t k = 0; k < B->nrows; k++) {
        // This can be done faster.
        word bit = CONVERT_TO_WORD(mzd_read_bit (B, k, i)).reverse();		// FIXME
-       *temp |= bit << (RADIX-1-k-A->offset);
+       *temp |= bit >> (RADIX-1-k-A->offset);
      }
    }
    

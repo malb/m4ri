@@ -177,7 +177,7 @@ static word const FFFF = CONVERT_TO_WORD(-1);
 *
 */
 
-#define BITMASK(n) (ONE << (RADIX - 1 - (n)))
+#define BITMASK(n) (ONE >> (RADIX - 1 - (n)))
 
 /**
  * \brief Clear the bit spot (counting from the left) in the word w
@@ -206,7 +206,7 @@ static word const FFFF = CONVERT_TO_WORD(-1);
 
 static inline BIT GET_BIT(word w, int spot)
 {
-  return CONVERT_TO_BIT(((w) >> (RADIX - 1 - (spot))) & ONE);
+  return CONVERT_TO_BIT(((w) << (RADIX - 1 - (spot))) & ONE);
 }
 
 /**
@@ -252,7 +252,7 @@ static inline BIT GET_BIT(word w, int spot)
 * \param n Integer with 0 <= n < RADIX
 */
 
-#define LEFT_BITMASK(n) (~((ONE << (RADIX - (n)) % RADIX) - 1))
+#define LEFT_BITMASK(n) (~((ONE >> (RADIX - (n)) % RADIX) - 1))
 
 /**
 * \brief create a bit mask to zero out all but the n rightmost bits.
@@ -277,7 +277,7 @@ static inline BIT GET_BIT(word w, int spot)
 * \param n Integer with 0 < n <= RADIX
 */
 
-#define RIGHT_BITMASK(n) (FFFF >> (RADIX - (n)))
+#define RIGHT_BITMASK(n) (FFFF << (RADIX - (n)))
 
 /**
 * \brief create a bit mask that is the combination of LEFT_BITMASK and RIGHT_BITMASK.
@@ -294,7 +294,7 @@ static inline BIT GET_BIT(word w, int spot)
 * \param offset Column offset, with 0 <= offset < RADIX
 */
 
-#define MIDDLE_BITMASK(n, offset) (LEFT_BITMASK(n) >> (offset))
+#define MIDDLE_BITMASK(n, offset) (LEFT_BITMASK(n) << (offset))
 
 /**
  * \brief Return alignment of addr w.r.t. n. For example the address

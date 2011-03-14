@@ -271,24 +271,24 @@ static inline mzd_t *_mzd_transpose_direct_128(mzd_t *DST, const mzd_t *SRC) {
 
   /* now transpose each block A,B,C,D separately, cf. Hacker's Delight */
   m = CONVERT_TO_WORD(0xFFFFFFFF00000000ULL);					// FIXME: Unlogical value.
-  for (j = 32; j != 0; j = j >> 1, m = m ^ (m << j)) {
+  for (j = 32; j != 0; j = j >> 1, m = m ^ (m >> j)) {
     for (k = 0; k < 64; k = (k + j + 1) & ~j) {
-      t[0] = (DST->rows[k][0] ^ (DST->rows[k+j][0] >> j)) & m;
-      t[1] = (DST->rows[k][1] ^ (DST->rows[k+j][1] >> j)) & m;
-      t[2] = (DST->rows[64+k][0] ^ (DST->rows[64+k+j][0] >> j)) & m;
-      t[3] = (DST->rows[64+k][1] ^ (DST->rows[64+k+j][1] >> j)) & m;
+      t[0] = (DST->rows[k][0] ^ (DST->rows[k+j][0] << j)) & m;
+      t[1] = (DST->rows[k][1] ^ (DST->rows[k+j][1] << j)) & m;
+      t[2] = (DST->rows[64+k][0] ^ (DST->rows[64+k+j][0] << j)) & m;
+      t[3] = (DST->rows[64+k][1] ^ (DST->rows[64+k+j][1] << j)) & m;
 
       DST->rows[k][0] = DST->rows[k][0] ^ t[0];
       DST->rows[k][1] = DST->rows[k][1] ^ t[1];
 
-      DST->rows[k+j][0] = DST->rows[k+j][0] ^ (t[0] << j);
-      DST->rows[k+j][1] = DST->rows[k+j][1] ^ (t[1] << j);
+      DST->rows[k+j][0] = DST->rows[k+j][0] ^ (t[0] >> j);
+      DST->rows[k+j][1] = DST->rows[k+j][1] ^ (t[1] >> j);
 
       DST->rows[64+k][0] = DST->rows[64+k][0] ^ t[2];
       DST->rows[64+k][1] = DST->rows[64+k][1] ^ t[3];
 
-      DST->rows[64+k+j][0] = DST->rows[64+k+j][0] ^ (t[2] << j);
-      DST->rows[64+k+j][1] = DST->rows[64+k+j][1] ^ (t[3] << j);
+      DST->rows[64+k+j][0] = DST->rows[64+k+j][0] ^ (t[2] >> j);
+      DST->rows[64+k+j][1] = DST->rows[64+k+j][1] ^ (t[3] >> j);
     }
   }
   return DST;
@@ -332,7 +332,7 @@ static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, const mzd_t *A) {
     /* Make k even... */
     else if ((spill & 1))
     {
-      collect = ((*ap >> shift) & ONE) << (RADIX - 1 - k);
+      collect = ((*ap << shift) & ONE) >> (RADIX - 1 - k);
       //ap -= rowdiff;
       --k;
       ap = &A->rows[j + k][wordi];
@@ -342,10 +342,10 @@ static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, const mzd_t *A) {
       /* ...so that we can unroll this loop a factor of two */
       for (; k > 0; k -=2)
       {
-        collect |= ((*ap >> shift) & ONE) << (RADIX - 1 - k);
+        collect |= ((*ap << shift) & ONE) >> (RADIX - 1 - k);
 	//ap -= rowdiff;
 	ap = &A->rows[j + k - 1][wordi];
-        collect |= ((*ap >> shift) & ONE) << (RADIX - 1 - (k - 1));
+        collect |= ((*ap << shift) & ONE) >> (RADIX - 1 - (k - 1));
 	//ap -= rowdiff;
 	//FIXME (this test is too slow, use rowstride)
 	if (j > 0 || k > 1)
@@ -872,7 +872,7 @@ mzd_t *mzd_submatrix(mzd_t *S, const mzd_t *M, const size_t startrow, const size
       /* process full words first */
       for(colword=0; colword<(ncols/RADIX); colword++) {
 	block = colword + startword;
-	temp = (truerow[block] << (spot)) | (truerow[block + 1] >> (RADIX-spot) ); 
+	temp = (truerow[block] >> (spot)) | (truerow[block + 1] << (RADIX-spot) ); 
 	S->rows[i][colword] = temp;
       }
       /* process remaining bits (lazy)*/
@@ -1011,14 +1011,14 @@ void mzd_col_swap(mzd_t *M, const size_t cola, const size_t colb) {
     for (i=0; i<M->nrows; i++) {
       base = (M->rows[i] + a_word);
       register word b = *base;
-      register word x = ((b >> ai) ^ (b >> bi)) & ONE; // XOR temporary
-      *base = b ^ ((x << ai) | (x << bi));
+      register word x = ((b << ai) ^ (b << bi)) & ONE; // XOR temporary
+      *base = b ^ ((x >> ai) | (x >> bi));
     }
     return;
   }
 
-  const word a_bm = (ONE<<(RADIX - (a_bit) - 1));
-  const word b_bm = (ONE<<(RADIX - (b_bit) - 1));
+  const word a_bm = (ONE>>(RADIX - (a_bit) - 1));
+  const word b_bm = (ONE>>(RADIX - (b_bit) - 1));
 
   if(a_bit > b_bit) {
     const size_t offset = a_bit - b_bit;
@@ -1028,9 +1028,9 @@ void mzd_col_swap(mzd_t *M, const size_t cola, const size_t colb) {
       a = *(base + a_word);
       b = *(base + b_word);
 
-      a ^= (b & b_bm) >> offset;
-      b ^= (a & a_bm) << offset;
-      a ^= (b & b_bm) >> offset;
+      a ^= (b & b_bm) << offset;
+      b ^= (a & a_bm) >> offset;
+      a ^= (b & b_bm) << offset;
 
       *(base + a_word) = a;
       *(base + b_word) = b;
@@ -1043,9 +1043,9 @@ void mzd_col_swap(mzd_t *M, const size_t cola, const size_t colb) {
       a = *(base + a_word);
       b = *(base + b_word);
 
-      a ^= (b & b_bm) << offset;
-      b ^= (a & a_bm) >> offset;
-      a ^= (b & b_bm) << offset;
+      a ^= (b & b_bm) >> offset;
+      b ^= (a & a_bm) << offset;
+      a ^= (b & b_bm) >> offset;
       *(base + a_word) = a;
       *(base + b_word) = b;
     }
@@ -1102,7 +1102,7 @@ void mzd_copy_row_weird_to_even(mzd_t* B, size_t i, const mzd_t* A, size_t j) {
   if (rest) {
     const word temp = mzd_read_bits(A, i, c, rest);
     b[c/RADIX] &= LEFT_BITMASK(RADIX-rest);
-    b[c/RADIX] |= temp<<(RADIX-rest);
+    b[c/RADIX] |= temp>>(RADIX-rest);
   }
 }
 
@@ -1172,7 +1172,7 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
       }
       if(data) {
         i = row_candidate;
-        data <<=(RADIX-length);
+        data >>=(RADIX-length);
         for(size_t l=0; l<length; l++) {
           if(GET_BIT(data, l)) {
             j+=l;
@@ -1201,7 +1201,7 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
     }
     if(data) {
       i = row_candidate;
-      data <<=bit_offset;
+      data >>=bit_offset;
       for(size_t l=0; l<(RADIX-bit_offset); l++) {
         if(GET_BIT(data, l)) {
           j+=l;

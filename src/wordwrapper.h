@@ -106,12 +106,12 @@ class word
     }
 
     // Shift operators.
-    friend word operator<<(word const& w, size_t shift) { assert(w.M_initialized); return word(w.M_word >> shift); }
-    friend word operator<<(word const& w, int shift) { assert(w.M_initialized); return word(w.M_word >> shift); }
-    friend word operator>>(word const& w, size_t shift) { assert(w.M_initialized); return word(w.M_word << shift); }
-    friend word operator>>(word const& w, int shift) { assert(w.M_initialized); return word(w.M_word << shift); }
-    word& operator<<=(int shift) { assert(M_initialized); M_word >>= shift; return *this; }
-    word& operator>>=(int shift) { assert(M_initialized); M_word <<= shift; return *this; }
+    friend word operator<<(word const& w, size_t shift) { assert(w.M_initialized); return word(w.M_word << shift); }
+    friend word operator<<(word const& w, int shift) { assert(w.M_initialized); return word(w.M_word << shift); }
+    friend word operator>>(word const& w, size_t shift) { assert(w.M_initialized); return word(w.M_word >> shift); }
+    friend word operator>>(word const& w, int shift) { assert(w.M_initialized); return word(w.M_word >> shift); }
+    word& operator<<=(int shift) { assert(M_initialized); M_word <<= shift; return *this; }
+    word& operator>>=(int shift) { assert(M_initialized); M_word >>= shift; return *this; }
 
     // Initialize an array of words with zero.
     static void init_array(word* a, size_t size)
