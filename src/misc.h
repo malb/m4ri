@@ -217,7 +217,7 @@ static inline BIT GET_BIT(word w, int spot)
  * \param value Either 0 or 1.
  */
 
-#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~BITMASK(spot)) | (-CONVERT_TO_WORD(value).reverse() & BITMASK(spot))))
+#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~BITMASK(spot)) | (-CONVERT_TO_WORD(value) & BITMASK(spot))))
 
 /**
  * \brief Flip the spot in the word w

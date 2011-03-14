@@ -83,9 +83,8 @@ class word
     // Convert word as boolean to a mask with all zeroes (false) or all ones (true), by negating it.
     word operator-(void) const
     {
-      uint64_t reversed_word = ::reverse(M_word);
-      assert((reversed_word & ~1UL) == 0);
-      return word(-reversed_word);
+      assert((M_word & ~1UL) == 0);
+      return word(-M_word);
     }
 
     // Bit-wise binary operators.
