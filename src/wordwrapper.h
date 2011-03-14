@@ -95,16 +95,6 @@ class word
     word& operator&=(word const& w) { assert(M_initialized && w.M_initialized); M_word &= w.M_word; return *this; }
     word& operator|=(word const& w) { assert(M_initialized && w.M_initialized); M_word |= w.M_word; return *this; }
 
-    // Allow conversion of a word that has the integer value 2^n into a mask with n bits set, by substracting 1.
-    friend word operator-(word const& w, int value)
-    {
-      uint64_t reversed_word = ::reverse(w.M_word);
-      assert(w.M_initialized);
-      assert((reversed_word & (reversed_word - 1)) == 0);	// Must be a power of 2.
-      assert(value == 1);					// May only substract 1.
-      return word(::reverse(reversed_word - 1));
-    }
-
     // Shift operators.
     friend word operator<<(word const& w, size_t shift) { assert(w.M_initialized); return word(w.M_word << shift); }
     friend word operator<<(word const& w, int shift) { assert(w.M_initialized); return word(w.M_word << shift); }

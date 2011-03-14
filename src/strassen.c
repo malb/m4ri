@@ -1170,7 +1170,7 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
    size_t cncols = C->ncols;
    C->offset=0;
    C->ncols = RADIX;
-   word mask = ((ONE >> B->ncols) - 1) >> (RADIX-B->offset - B->ncols);
+   word const mask = MIDDLE_BITMASK(B->ncols, B->offset);
    for (size_t i=0; i < B->nrows; ++i)
      tmp->rows[i][0] = B->rows[i][0] & mask;
    _mzd_addmul_even (C, A, tmp, cutoff);
