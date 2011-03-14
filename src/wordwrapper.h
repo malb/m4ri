@@ -96,10 +96,10 @@ class word
     word& operator|=(word const& w) { assert(M_initialized && w.M_initialized); M_word |= w.M_word; return *this; }
 
     // Shift operators.
-    friend word operator<<(word const& w, size_t shift) { assert(w.M_initialized); return word(w.M_word << shift); }
-    friend word operator<<(word const& w, int shift) { assert(w.M_initialized); return word(w.M_word << shift); }
-    friend word operator>>(word const& w, size_t shift) { assert(w.M_initialized); return word(w.M_word >> shift); }
-    friend word operator>>(word const& w, int shift) { assert(w.M_initialized); return word(w.M_word >> shift); }
+    friend word operator<<(word const& w, size_t shift) { assert(w.M_initialized); assert(shift < 64); return word(w.M_word << shift); }
+    friend word operator<<(word const& w, int shift) { assert(w.M_initialized); assert(shift >= 0 && shift < 64); return word(w.M_word << shift); }
+    friend word operator>>(word const& w, size_t shift) { assert(w.M_initialized); assert(shift < 64); return word(w.M_word >> shift); }
+    friend word operator>>(word const& w, int shift) { assert(w.M_initialized); assert(shift >= 0 && shift < 64); return word(w.M_word >> shift); }
     word& operator<<=(int shift) { assert(M_initialized); M_word <<= shift; return *this; }
     word& operator>>=(int shift) { assert(M_initialized); M_word >>= shift; return *this; }
 
