@@ -228,7 +228,7 @@ void mzd_process_rows(mzd_t *M, size_t startrow, size_t stoprow, size_t startcol
   size_t wide = M->width - block;
 
   if(k==1) {
-    word bm = ONE >> ((RADIX - startcol - 1) % RADIX);
+    word bm = ONE << (startcol % RADIX);
 
     for (r=startrow; r+2<=stoprow; r+=2) {
       word *t  = T->rows[1] + block;

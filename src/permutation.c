@@ -99,7 +99,7 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t *B, size_t *perm
         const size_t colb = permutation[i+k] + B->offset;
         words[k] = colb/RADIX;
         bits[k] = colb%RADIX;
-        bitmasks[k] = (ONE>>(RADIX - (bits[k]) - 1));
+        bitmasks[k] = ONE << bits[k];
     }
 
     for (size_t r=start_row; r<stop_row; r++) {
@@ -228,7 +228,7 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, size_t start_row, size_t start_
     const size_t todo = MIN(RADIX,A->ncols-i);
     for(size_t k=0; k<todo; k++) {
       if(permutation[i+k] == i+k) {
-        write_mask[i/RADIX] |= ONE>>(RADIX - k - 1);
+        write_mask[i/RADIX] |= ONE << k;
       }
     }
   }
