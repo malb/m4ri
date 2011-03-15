@@ -249,7 +249,7 @@ int mzd_echelonize_naive(mzd_t *m, int full) {
 }
 
 /**
- * Transpose the 128 x 128-bit matrix inp and write the result in DST.
+ * Transpose the 128 x 128-bit matrix SRC and write the result in DST.
  */
 
 static inline mzd_t *_mzd_transpose_direct_128(mzd_t *DST, const mzd_t *SRC) {
@@ -262,33 +262,33 @@ static inline mzd_t *_mzd_transpose_direct_128(mzd_t *DST, const mzd_t *SRC) {
    * [AB] -> [AC]
    * [CD]    [BD]
    */
-  for(j=0; j<64; j++)  {
-    DST->rows[   j][0] = SRC->rows[   j][0]; //A
-    DST->rows[64+j][0] = SRC->rows[   j][1]; //B
-    DST->rows[   j][1] = SRC->rows[64+j][0]; //C
-    DST->rows[64+j][1] = SRC->rows[64+j][1]; //D
+  for(k=0; k<64; k++)  {
+    DST->rows[   k][0] = SRC->rows[   k][0]; //A
+    DST->rows[64+k][0] = SRC->rows[   k][1]; //B
+    DST->rows[   k][1] = SRC->rows[64+k][0]; //C
+    DST->rows[64+k][1] = SRC->rows[64+k][1]; //D
   }
 
   /* now transpose each block A,B,C,D separately, cf. Hacker's Delight */
-  m = CONVERT_TO_WORD(0xFFFFFFFF00000000ULL);					// FIXME: Unlogical value.
-  for (j = 32; j != 0; j = j >> 1, m = m ^ (m >> j)) {
+  m = CONVERT_TO_WORD(0xFFFFFFFF);
+  for (j = 32; j != 0; j = j >> 1, m = m ^ (m << j)) {
     for (k = 0; k < 64; k = (k + j + 1) & ~j) {
-      t[0] = (DST->rows[k][0] ^ (DST->rows[k+j][0] << j)) & m;
-      t[1] = (DST->rows[k][1] ^ (DST->rows[k+j][1] << j)) & m;
-      t[2] = (DST->rows[64+k][0] ^ (DST->rows[64+k+j][0] << j)) & m;
-      t[3] = (DST->rows[64+k][1] ^ (DST->rows[64+k+j][1] << j)) & m;
+      t[0] = ((DST->rows[k][0] >> j) ^ DST->rows[k+j][0]) & m;
+      t[1] = ((DST->rows[k][1] >> j) ^ DST->rows[k+j][1]) & m;
+      t[2] = ((DST->rows[64+k][0] >> j) ^ DST->rows[64+k+j][0]) & m;
+      t[3] = ((DST->rows[64+k][1] >> j) ^ DST->rows[64+k+j][1]) & m;
 
-      DST->rows[k][0] = DST->rows[k][0] ^ t[0];
-      DST->rows[k][1] = DST->rows[k][1] ^ t[1];
+      DST->rows[k][0] ^= t[0] << j;			// A
+      DST->rows[k][1] ^= t[1] << j;			// C
 
-      DST->rows[k+j][0] = DST->rows[k+j][0] ^ (t[0] >> j);
-      DST->rows[k+j][1] = DST->rows[k+j][1] ^ (t[1] >> j);
+      DST->rows[k+j][0] ^= t[0];			// A
+      DST->rows[k+j][1] ^= t[1];			// C
 
-      DST->rows[64+k][0] = DST->rows[64+k][0] ^ t[2];
-      DST->rows[64+k][1] = DST->rows[64+k][1] ^ t[3];
+      DST->rows[64+k][0] ^= t[2] << j;			// B
+      DST->rows[64+k][1] ^= t[3] << j;			// D
 
-      DST->rows[64+k+j][0] = DST->rows[64+k+j][0] ^ (t[2] >> j);
-      DST->rows[64+k+j][1] = DST->rows[64+k+j][1] ^ (t[3] >> j);
+      DST->rows[64+k+j][0] ^= t[2];			// B
+      DST->rows[64+k+j][1] ^= t[3];			// D
     }
   }
   return DST;
