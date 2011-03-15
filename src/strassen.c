@@ -1181,16 +1181,24 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
 }
 
  mzd_t* _mzd_addmul_weird_weird (mzd_t* C, mzd_t* A, mzd_t *B, int cutoff){
-   mzd_t *BT;
-   word* temp;
-   BT = mzd_init( B->ncols, B->nrows );
+   mzd_t* BT = mzd_init( B->ncols, B->nrows );
    
-   for (size_t i = 0; i < B->ncols; ++i) {
-     temp = BT->rows[i];
-     for (size_t k = 0; k < B->nrows; k++) {
-       // FIXME: This can be done faster.
-       word bit = CONVERT_TO_WORD(mzd_read_bit(B, k, i));
-       *temp |= bit << (k+A->offset);
+   for (int i = 0; i < B->ncols; ++i) {
+     word* dstp = BT->rows[i];
+     int const ii = (i + B->offset) / RADIX;
+     int const is = (i + B->offset) % RADIX;
+     word const mask = ONE << is;
+     int const ke = (is - A->offset < 0) ? -1 : is - A->offset;
+     int k = B->nrows - 1;
+     while (k > ke)
+     {
+       *dstp |= (B->rows[k][ii] & mask) << (k - ke);
+       --k;
+     }
+     while (k >= 0)
+     {
+       *dstp |= (B->rows[k][ii] & mask) >> (ke - k);
+       --k;
      }
    }
    
