@@ -1188,9 +1188,9 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
    for (size_t i = 0; i < B->ncols; ++i) {
      temp = BT->rows[i];
      for (size_t k = 0; k < B->nrows; k++) {
-       // This can be done faster.
-       word bit = CONVERT_TO_WORD(mzd_read_bit (B, k, i)).reverse();		// FIXME
-       *temp |= bit >> (RADIX-1-k-A->offset);
+       // FIXME: This can be done faster.
+       word bit = CONVERT_TO_WORD(mzd_read_bit(B, k, i));
+       *temp |= bit << (k+A->offset);
      }
    }
    

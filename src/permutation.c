@@ -438,7 +438,7 @@ void _mzd_compress_l(mzd_t *A, size_t r1, size_t n1, size_t r2) {
 
     if (j<r1+r2) {
       tmp = mzd_read_bits(A, i, n1+j-r1, r1+r2-j);
-      A->rows[i][j/RADIX] = tmp>>(RADIX-(r1+r2+j));
+      A->rows[i][j/RADIX] = tmp;
     }
 
     /* now clear the rest of L2 */

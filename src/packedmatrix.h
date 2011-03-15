@@ -761,12 +761,10 @@ void mzd_combine(mzd_t * DST, const size_t row3, const size_t startblock3,
 
 static inline word mzd_read_bits(const mzd_t *M, const size_t x, const size_t y, const int n) {
   int const spot = (y + M->offset) % RADIX;
-  size_t const block = (y + M->offset) / RADIX;
-  word temp = M->rows[x][block] >> spot;
-  int const space = RADIX - spot;
-  if (n > space)
-    temp |= M->rows[x][block + 1] << space;
-  return temp << (RADIX - n);
+  int const block = (y + M->offset) / RADIX;
+  int const spill = spot + n - RADIX;
+  word temp = (spill <= 0) ? M->rows[x][block] << -spill : (M->rows[x][block + 1] << (RADIX - spill)) | (M->rows[x][block] >> spill);
+  return temp >> (RADIX - n);
 }
 
 /*
@@ -779,7 +777,7 @@ static inline word mzd_read_bits(const mzd_t *M, const size_t x, const size_t y,
 
 static inline int mzd_read_bits_int(const mzd_t *M, const size_t x, const size_t y, const int n)
 {
-  return CONVERT_TO_INT(mzd_read_bits(M, x, y, n).reverse());		// FIXME
+  return CONVERT_TO_INT(mzd_read_bits(M, x, y, n));
 }
 
 /**
@@ -793,9 +791,6 @@ static inline int mzd_read_bits_int(const mzd_t *M, const size_t x, const size_t
  */
 
 static inline void mzd_xor_bits(const mzd_t *M, const size_t x, const size_t y, const int n, word values) {
-  /* This is the best way, since this will drop out once we inverse the bits in values: */
-  values >>= (RADIX - n);	/* Move the bits to the lowest columns */
-
   int const spot = (y + M->offset) % RADIX;
   size_t const block = (y + M->offset) / RADIX;
   M->rows[x][block] ^= values << spot;

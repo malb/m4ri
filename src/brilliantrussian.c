@@ -56,10 +56,9 @@ static inline int _mzd_gauss_submatrix_full(mzd_t *A, size_t r, size_t c, size_t
     for (i=start_row; i< end_row; i++) {
       /* first we need to clear the first columns */
       const word tmp = mzd_read_bits(A,i,c,j-c+1);
-      const size_t offset = RADIX-(j-c+1);
       if(tmp) {
         for (l=0; l<j-c; l++)
-          if (GET_BIT(tmp, offset+l))
+          if (GET_BIT(tmp, l))
             mzd_row_add_offset(A, i, r+l, c+l);
       
         /* pivot? */

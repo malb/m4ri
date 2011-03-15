@@ -29,17 +29,6 @@
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
 
-static inline uint64_t reverse(uint64_t v)
-{
-  v = ((v >>  1) & 0x5555555555555555ULL) | ((v & 0x5555555555555555ULL) << 1);
-  v = ((v >>  2) & 0x3333333333333333ULL) | ((v & 0x3333333333333333ULL) << 2);
-  v = ((v >>  4) & 0x0F0F0F0F0F0F0F0FULL) | ((v & 0x0F0F0F0F0F0F0F0FULL) << 4);
-  v = ((v >>  8) & 0x00FF00FF00FF00FFULL) | ((v & 0x00FF00FF00FF00FFULL) << 8);
-  v = ((v >> 16) & 0x0000FFFF0000FFFFULL) | ((v & 0x0000FFFF0000FFFFULL) << 16);
-  v =  (v >> 32)                          |  (v                          << 32);
-  return v;
-}
-
 class word
 {
   private:
@@ -69,9 +58,6 @@ class word
       M_word = 0;
       return *this;
     }
-
-    // Reverse the bits of this word.
-    word& reverse(void) { M_word = ::reverse(M_word); return *this; }
 
     // Compare two words.
     friend bool operator==(word const& w1, word const& w2) { assert(w1.M_initialized && w2.M_initialized); return w1.M_word == w2.M_word; }

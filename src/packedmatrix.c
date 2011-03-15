@@ -1102,7 +1102,7 @@ void mzd_copy_row_weird_to_even(mzd_t* B, size_t i, const mzd_t* A, size_t j) {
   if (rest) {
     const word temp = mzd_read_bits(A, i, c, rest);
     b[c/RADIX] &= LEFT_BITMASK(RADIX-rest);
-    b[c/RADIX] |= temp>>(RADIX-rest);
+    b[c/RADIX] |= temp;
   }
 }
 
@@ -1166,13 +1166,10 @@ int mzd_find_pivot(mzd_t *A, size_t start_row, size_t start_col, size_t *r, size
         if (lesser_LSB(curr_data, data)) {
           row_candidate = i;
           data = curr_data;
-          if(GET_BIT(data,RADIX-length-1))
-            break;
         }
       }
       if(data) {
         i = row_candidate;
-        data >>=(RADIX-length);
         for(size_t l=0; l<length; l++) {
           if(GET_BIT(data, l)) {
             j+=l;

@@ -162,7 +162,7 @@ void mzd_make_table_pls( mzd_t *M, size_t r, size_t c, int k, mzd_t *T, size_t *
      below with [1 0 1] we need to encode that this row is cleared by
      adding the first row only ([1 0 0]).*/
   for(i=1; i < twokay; i++) {
-    word const correction = CONVERT_TO_WORD(codebook[k]->ord[i]).reverse();	// FIXME
+    word const correction = CONVERT_TO_WORD(codebook[k]->ord[i]);
     mzd_xor_bits(T, i,c, k, correction);
   }
 }
@@ -339,7 +339,7 @@ void _mzd_finish_pls_done_pivots(mzd_t *A, const mzp_t *P, const size_t start_ro
     const word tmp = mzd_read_bits(A, start_row + i, start_col, i);
     word *target = A->rows[start_row + i];
     for(j=0; j<i; j++) {
-      if((tmp & ONE>>(i-j-1))) {
+      if((tmp & ONE>>(RADIX-1-j))) {
         const word *source = A->rows[start_row + j];
         for(w=addblock; w<A->width; w+=1) {
           target[w] ^= source[w];

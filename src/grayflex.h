@@ -81,20 +81,10 @@ typedef struct {
 
 extern code **codebook;
 
-
-/**
- * Swaps l bits in v.
- *
- * \warning Uppper bits of return value may contain garbage after
- * operation.
- */
-
-int m4ri_swap_bits(int v,int l);
-
 /**
  * Returns the i-th gray code entry for a gray code of length \f$2^l\f$.
  * 
- * \param i The ndex in the Gray code table.
+ * \param i The index in the Gray code table.
  * \param l Length of the Gray code.
  *
  * \return i-th Gray code entry.
