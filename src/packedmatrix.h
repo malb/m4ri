@@ -285,7 +285,7 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, const size_t cola, const size_
   size_t const a_word = swap_a_b ? _colb / RADIX : _cola / RADIX;
   size_t const b_word = swap_a_b ? _cola / RADIX : _colb / RADIX;
 
-  word const b_bm = BITMASK(b_spill);
+  word const b_bm = ONE << b_spill;
   size_t const coldiff = a_spill - b_spill;
 
   if (a_word == b_word)

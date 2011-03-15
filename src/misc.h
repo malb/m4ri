@@ -105,7 +105,7 @@ typedef uint64_t word;
  * \brief The number of bits in a word.
  */
 
-#define RADIX 64
+static int const RADIX = 64;
 
 /**
  * \brief The number one as a word.
@@ -171,22 +171,13 @@ static word const FFFF = CONVERT_TO_WORD(-1);
 #define TWOPOW(i) ((uint64_t)1 << (i))
 
 /**
-* \brief Create a bit mask with just bit n set.
-*
-* \param n Integer with 0 <= n < RADIX
-*
-*/
-
-#define BITMASK(n) (ONE << (n))
-
-/**
  * \brief Clear the bit spot (counting from the left) in the word w
  * 
  * \param w Word
  * \param spot Integer with 0 <= spot < RADIX
  */
 
-#define CLR_BIT(w, spot) ((w) &= ~BITMASK(spot))
+#define CLR_BIT(w, spot) ((w) &= ~(ONE << (spot))
 
 /**
  * \brief Set the bit spot (counting from the left) in the word w
@@ -195,7 +186,7 @@ static word const FFFF = CONVERT_TO_WORD(-1);
  * \param spot Integer with 0 <= spot < RADIX
  */
 
-#define SET_BIT(w, spot) ((w) |= BITMASK(spot))
+#define SET_BIT(w, spot) ((w) |= (ONE << (spot)))
 
 /**
  * \brief Get the bit spot (counting from the left) in the word w
@@ -204,10 +195,7 @@ static word const FFFF = CONVERT_TO_WORD(-1);
  * \param spot Integer with 0 <= spot < RADIX
  */
 
-static inline BIT GET_BIT(word w, int spot)
-{
-  return CONVERT_TO_BIT(((w) >> (spot)) & ONE);
-}
+#define GET_BIT(w, spot) CONVERT_TO_BIT(((w) >> (spot)) & ONE)
 
 /**
  * \brief Write the value to the bit spot in the word w
@@ -217,7 +205,7 @@ static inline BIT GET_BIT(word w, int spot)
  * \param value Either 0 or 1.
  */
 
-#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~BITMASK(spot)) | (-CONVERT_TO_WORD(value) & BITMASK(spot))))
+#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~(ONE << (spot))) | (-CONVERT_TO_WORD(value) & (ONE << (spot)))))
 
 /**
  * \brief Flip the spot in the word w
@@ -226,7 +214,7 @@ static inline BIT GET_BIT(word w, int spot)
  * \param spot Integer with 0 <= spot < RADIX.
  */
 
-#define FLIP_BIT(w, spot) ((w) ^= BITMASK(spot))
+#define FLIP_BIT(w, spot) ((w) ^= (ONE << (spot)))
 
 /**
 * \brief create a bit mask to zero out all but the (n - 1) % RADIX + 1 leftmost bits.
