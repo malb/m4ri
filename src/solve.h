@@ -70,7 +70,7 @@ int mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency
  *        found, -1 otherwise
  * \return 0 if a solution was found, -1 otherwise
  */
-int mzd_pluq_solve_left (mzd_t *A, size_t rank, 
+int mzd_pluq_solve_left (mzd_t *A, rci_t rank, 
                          mzp_t *P, mzp_t *Q, 
                          mzd_t *B, const int cutoff, const int inconsistency_check);
 
@@ -98,7 +98,7 @@ int mzd_pluq_solve_left (mzd_t *A, size_t rank,
  *        found, -1 otherwise
  * \return 0 if a solution was found, -1 otherwise
  */
-int _mzd_pluq_solve_left(mzd_t *A, size_t rank, 
+int _mzd_pluq_solve_left(mzd_t *A, rci_t rank, 
                          mzp_t *P, mzp_t *Q, 
                          mzd_t *B, const int cutoff, const int inconsistency_check);
 

@@ -27,34 +27,33 @@
 #include "pls.h"
 #include "trsm.h"
 
-size_t mzd_echelonize(mzd_t *A, int full) {
+rci_t mzd_echelonize(mzd_t *A, int full) {
   return _mzd_echelonize_m4ri(A, full, 0, 1, ECHELONFORM_CROSSOVER_DENSITY);
 }
 
-size_t mzd_echelonize_m4ri(mzd_t *A, int full, int k) {
+rci_t mzd_echelonize_m4ri(mzd_t *A, int full, int k) {
   return _mzd_echelonize_m4ri(A, full, k, 0, 1.0);
 }
 
-size_t mzd_echelonize_pluq(mzd_t *A, int full) {
+rci_t mzd_echelonize_pluq(mzd_t *A, int full) {
   mzp_t *P = mzp_init(A->nrows);
   mzp_t *Q = mzp_init(A->ncols);
 
-  size_t r;
-
+  rci_t r;
   if(full) {
     r = mzd_pluq(A, P, Q, 0);
     mzd_t *U = mzd_init_window(A, 0, 0, r, r);
     mzd_t *B = mzd_init_window(A, 0, r, r, A->ncols);
     if(r!=A->ncols) 
       mzd_trsm_upper_left(U, B, 0);
-    if(r!=0) 
+    if(r) 
       mzd_set_ui(U, 0);
-    for(size_t i=0; i<r; i++)
+    for(rci_t i = 0; i < r; ++i)
       mzd_write_bit(A, i, i, 1);
     mzd_free_window(U);
     mzd_free_window(B);
 
-    if(r!=0) {
+    if(r) {
       mzd_t *A0 = mzd_init_window(A, 0, 0, r, A->ncols);
       mzd_apply_p_right(A0, Q);
       mzd_free_window(A0);
@@ -64,16 +63,16 @@ size_t mzd_echelonize_pluq(mzd_t *A, int full) {
 
   } else {
     r = mzd_pls(A, P, Q, 0);
-    for(size_t i=0; i<r; i++) {
-      for(size_t j=0; j<=i; j+=RADIX) {
-        const size_t length = MIN(RADIX, i-j+1);
+    for(rci_t i = 0; i < r; ++i) {
+      for(rci_t j = 0; j <= i; j += RADIX) {
+        int const length = MIN(RADIX.val(), (i-j+1).val());
         mzd_clear_bits(A, i, j, length);
       }
-      mzd_write_bit(A, i, Q->values[i], 1);
+      mzd_write_bit(A, i, Q->values[i.val()], 1);
     }
   }
 
-  if(r!=A->nrows) {
+  if(r != A->nrows) {
     mzd_t *R = mzd_init_window(A, r, 0, A->nrows, A->ncols);
     mzd_set_ui(R, 0);
     mzd_free_window(R);

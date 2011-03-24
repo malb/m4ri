@@ -29,29 +29,29 @@
 #include "strassen.h"
 #include "pls.h"
 
-size_t mzd_pls (mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
+rci_t mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
   if (P->length != A->nrows)
-    m4ri_die("mzd_pls: Permutation P length (%d) must match A nrows (%d)\n",P->length, A->nrows);
+    m4ri_die("mzd_pls: Permutation P length (%d) must match A nrows (%d)\n", P->length.val(), A->nrows.val());
   if (Q->length != A->ncols)
-    m4ri_die("mzd_pls: Permutation Q length (%d) must match A ncols (%d)\n",Q->length, A->ncols);
+    m4ri_die("mzd_pls: Permutation Q length (%d) must match A ncols (%d)\n", Q->length.val(), A->ncols.val());
   return _mzd_pls(A, P, Q, cutoff);
 }
 
 
-size_t mzd_pluq (mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
+rci_t mzd_pluq (mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
   if (P->length != A->nrows)
-    m4ri_die("mzd_pluq: Permutation P length (%d) must match A nrows (%d)\n",P->length, A->nrows);
+    m4ri_die("mzd_pluq: Permutation P length (%d) must match A nrows (%d)\n", P->length.val(), A->nrows.val());
   if (Q->length != A->ncols)
-    m4ri_die("mzd_pluq: Permutation Q length (%d) must match A ncols (%d)\n",Q->length, A->ncols);
-  size_t r = _mzd_pluq(A, P, Q, cutoff);
+    m4ri_die("mzd_pluq: Permutation Q length (%d) must match A ncols (%d)\n", Q->length.val(), A->ncols.val());
+  rci_t r = _mzd_pluq(A, P, Q, cutoff);
   return r;
 }
 
 
-size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
-  size_t r  = _mzd_pls(A,P,Q,cutoff);
-  if(r && r<A->nrows) {
-    mzd_t *A0 = mzd_init_window(A,0,0,r,A->ncols);
+rci_t _mzd_pluq(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
+  rci_t r = _mzd_pls(A, P, Q, cutoff);
+  if(r && r < A->nrows) {
+    mzd_t *A0 = mzd_init_window(A, 0, 0, r, A->ncols);
     mzd_apply_p_right_trans_tri(A0, Q);
     mzd_free_window(A0);
   } else {
@@ -60,29 +60,29 @@ size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
   return r;
 }
 
-size_t _mzd_pls(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
+rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
   assert(A->offset == 0);
-  size_t ncols = A->ncols;
+  rci_t ncols = A->ncols;
 
 #if 1
-  size_t nrows = mzd_first_zero_row(A);
-  for(size_t i=nrows; i<A->nrows; i++)
-    P->values[i] = i;
-  for(size_t i=0; i<A->ncols; i++)
-    Q->values[i] = i;
+  rci_t nrows = mzd_first_zero_row(A);
+  for(rci_t i = nrows; i < A->nrows; ++i)
+    P->values[i.val()] = i;
+  for(rci_t i = 0; i < A->ncols; ++i)
+    Q->values[i.val()] = i;
   if(!nrows) {
     return 0;
   }
 #else
-  size_t nrows = A->nrows;
+  rci_t nrows = A->nrows;
 #endif
 
-  if (ncols <= RADIX || A->width*A->nrows <= PLS_CUTOFF) {
+  if (ncols <= RADIX || A->width * A->nrows <= PLS_CUTOFF) {
 /*   if(ncols <= PLUQ_CUTOFF) { */
     /* this improves data locality and runtime considerably */
     mzd_t *Abar = mzd_copy(NULL, A);
-    size_t r = _mzd_pls_mmpf(Abar, P, Q, 0);
-    //size_t r = _mzd_pls_naive(Abar, P, Q);
+    rci_t r = _mzd_pls_mmpf(Abar, P, Q, 0);
+    //rci_t r = _mzd_pls_naive(Abar, P, Q);
     mzd_copy(A, Abar);
     mzd_free(Abar);
     return r;
@@ -100,18 +100,16 @@ size_t _mzd_pls(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
      *   ------------------------------------------
      */
 
-    size_t i, j;
-    size_t n1 = (((ncols - 1) / RADIX + 1) >> 1) * RADIX;
+    rci_t n1 = (((ncols - 1) / RADIX + 1U) >> 1) * RADIX;
 
     mzd_t *A0  = mzd_init_window(A,  0,  0, nrows,    n1);
     mzd_t *A1  = mzd_init_window(A,  0, n1, nrows, ncols);
 
-    size_t r1, r2;
     /* First recursive call */
 
     mzp_t *P1 = mzp_init_window(P, 0, nrows);
     mzp_t *Q1 = mzp_init_window(Q, 0, A0->ncols);
-    r1 = _mzd_pls(A0, P1, Q1, cutoff);
+    rci_t r1 = _mzd_pls(A0, P1, Q1, cutoff);
 
     /*           r1           n1
      *   ------------------------------------------
@@ -143,7 +141,7 @@ size_t _mzd_pls(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
     mzp_t *P2 = mzp_init_window(P, r1, nrows);
     mzp_t *Q2 = mzp_init_window(Q, n1, ncols);
 
-    r2 = _mzd_pls(A11, P2, Q2, cutoff);
+    rci_t r2 = _mzd_pls(A11, P2, Q2, cutoff);
 
     /*           n
      *   -------------------
@@ -159,15 +157,15 @@ size_t _mzd_pls(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
     mzd_apply_p_left(A10, P2);
 
     /* Update P */
-    for (i = 0; i < nrows - r1; ++i)
-      P2->values[i] += r1;
+    for (rci_t i = 0; i < nrows - r1; ++i)
+      P2->values[i.val()] += r1;
     
     // Update the A0b block (permutation + rotation)
-    for(i=0, j=n1; j<ncols; i++, j++) 
-      Q2->values[i] += n1;
+    for(rci_t i = 0, j = n1; j < ncols; ++i, ++j)
+      Q2->values[i.val()] += n1;
     
-    for(i=n1, j=r1; i<n1+r2; i++, j++)
-      Q->values[j] = Q->values[i];
+    for(rci_t i = n1, j = r1; i < n1 + r2; ++i, ++j)
+      Q->values[j.val()] = Q->values[i.val()];
 
     /* Compressing L */
 
@@ -188,17 +186,14 @@ size_t _mzd_pls(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff) {
 }
 
 
-size_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
-  size_t i, j, l, curr_pos;
-  int found;
-
-  curr_pos = 0;
-
+rci_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
+  rci_t curr_pos = 0;
   for (curr_pos = 0; curr_pos < A->ncols; ) {
-    found = 0;
+    int found = 0;
     /* search for some pivot */
-    for (j = curr_pos; j < A->ncols; j++) {
-      for (i = curr_pos; i< A->nrows; i++ ) {
+    rci_t i, j;
+    for (j = curr_pos; j < A->ncols; ++j) {
+      for (i = curr_pos; i< A->nrows; ++i ) {
 	if (mzd_read_bit(A, i, j)) {
           found = 1;
           break;
@@ -209,42 +204,40 @@ size_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
     }
     
     if(found) {
-      P->values[curr_pos] = i;
-      Q->values[curr_pos] = j;
+      P->values[curr_pos.val()] = i;
+      Q->values[curr_pos.val()] = j;
       mzd_row_swap(A, curr_pos, i);
       mzd_col_swap(A, curr_pos, j);
           
       /* clear below but preserve transformation matrix */
       if (curr_pos +1 < A->ncols){
-	for(l=curr_pos+1; l<A->nrows; l++) {
+	for(rci_t l = curr_pos + 1; l < A->nrows; ++l) {
 	  if (mzd_read_bit(A, l, curr_pos)) {
-	    mzd_row_add_offset(A, l, curr_pos, curr_pos+1);
+	    mzd_row_add_offset(A, l, curr_pos, curr_pos + 1);
 	  }
 	}
       }
-      curr_pos++;
+      ++curr_pos;
     } else {
       break;
     }
   }
-  for (i=curr_pos; i<A->nrows; ++i)
-    P->values[i]=i;
-  for (i=curr_pos; i<A->ncols; ++i)
-    Q->values[i]=i;
+  for (rci_t i = curr_pos; i < A->nrows; ++i)
+    P->values[i.val()] = i;
+  for (rci_t i = curr_pos; i < A->ncols; ++i)
+    Q->values[i.val()] = i;
   return curr_pos;
 }
  
-size_t _mzd_pls_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
-  size_t i, j, l, col_pos, row_pos;
-  int found;
-  col_pos = 0;
-  row_pos = 0;
-
-    /* search for some pivot */
-  for (; row_pos<A->nrows && col_pos < A->ncols; ) {
-    found = 0;
-    for (j = col_pos; j < A->ncols; j++) {
-      for (i = row_pos; i< A->nrows; i++ ) {
+rci_t _mzd_pls_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
+  rci_t col_pos = 0;
+  rci_t row_pos = 0;
+  /* search for some pivot */
+  while (row_pos < A->nrows && col_pos < A->ncols) {
+    int found = 0;
+    rci_t i, j;
+    for (j = col_pos; j < A->ncols; ++j) {
+      for (i = row_pos; i < A->nrows; ++i) {
 	if (mzd_read_bit(A, i, j)) {
           found = 1;
           break;
@@ -254,35 +247,35 @@ size_t _mzd_pls_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
         break;
     }
     if(found) {
-      P->values[row_pos] = i;
-      Q->values[row_pos] = j;
+      P->values[row_pos.val()] = i;
+      Q->values[row_pos.val()] = j;
       mzd_row_swap(A, row_pos, i);
       //mzd_col_swap(A, curr_pos, j);
           
       /* clear below but preserve transformation matrix */
-      if (j+1 < A->ncols){
-	for(l=row_pos+1; l<A->nrows; l++) {
+      if (j + 1 < A->ncols){
+	for(rci_t l = row_pos + 1; l < A->nrows; ++l) {
 	  if (mzd_read_bit(A, l, j)) {
-	    mzd_row_add_offset(A, l, row_pos, j+1);
+	    mzd_row_add_offset(A, l, row_pos, j + 1);
 	  }
 	}
       }
-      row_pos++;
-      col_pos=j+1;
+      ++row_pos;
+      col_pos = j + 1;
     } else {
       break;
     }
   }
-  for (i=row_pos; i<A->nrows; ++i)
-    P->values[i]=i;
-  for (i=row_pos; i<A->ncols; ++i)
-    Q->values[i]=i;
+  for (rci_t i = row_pos; i < A->nrows; ++i)
+    P->values[i.val()] = i;
+  for (rci_t i = row_pos; i < A->ncols; ++i)
+    Q->values[i.val()] = i;
 
-  /* Now compressing L*/
-  for (j = 0; j<row_pos; ++j){
-    if (Q->values[j]>j){
+  /* Now compressing L */
+  for (rci_t j = 0; j < row_pos; ++j){
+    if (Q->values[j.val()] > j) {
       // To be optimized by a copy_row function
-      mzd_col_swap_in_rows (A,Q->values[j], j, j, A->nrows);
+      mzd_col_swap_in_rows (A,Q->values[j.val()], j, j, A->nrows);
     }
   }
 

@@ -73,7 +73,7 @@
  * \brief See parity64.
  */
 
-static inline word _parity64_helper(word* buf)
+static inline word _parity64_helper(word *buf)
 {
    word a0, a1, b0, b1, c0, c1;
 
@@ -108,7 +108,7 @@ static inline word _parity64_helper(word* buf)
  *
  * \param buf buffer of words of length 64
  */
-static inline word parity64(word* buf)
+static inline word parity64(word *buf)
 {
    word d0, d1, e0, e1;
 

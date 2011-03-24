@@ -4,22 +4,21 @@
 
 //#define RANDOMIZE
 
-int test_trsm_upper_right (int m, int n, int offset, const char* description){
-  printf("upper_right: %s  m: %4d n: %4d offset: %4d ... ",description, m, n, offset);
+int test_trsm_upper_right (rci_t m, rci_t n, int offset, const char* description){
+  printf("upper_right: %s  m: %4d n: %4d offset: %4d ... ", description, m.val(), n.val(), offset);
 
-  mzd_t* Ubase = mzd_init (2048,2048);
-  mzd_t* Bbase = mzd_init (2048,2048);
+  mzd_t* Ubase = mzd_init (2048U, 2048U);
+  mzd_t* Bbase = mzd_init (2048U, 2048U);
   mzd_randomize (Ubase);
   mzd_randomize (Bbase);
   mzd_t* Bbasecopy = mzd_copy (NULL, Bbase);
 
-  mzd_t* U = mzd_init_window (Ubase, 0, offset, n, offset + n);
-  mzd_t* B = mzd_init_window (Bbase, 0, offset, m, offset + n);
+  mzd_t* U = mzd_init_window (Ubase, 0, rci_t(0) + offset, n, n + offset);
+  mzd_t* B = mzd_init_window (Bbase, 0, rci_t(0) + offset, m, n + offset);
   mzd_t* W = mzd_copy (NULL, B);
 
-  size_t i,j;
-  for (i=0; i<n; ++i){
-    for (j=0; j<i;++j)
+  for (rci_t i = 0; i < n; ++i){
+    for (rci_t j = 0; j < i; ++j)
       mzd_write_bit(U,i,j, 0);
     mzd_write_bit(U,i,i, 1);
   }
@@ -28,8 +27,8 @@ int test_trsm_upper_right (int m, int n, int offset, const char* description){
   mzd_addmul(W, B, U, 2048);
 
   int status = 0;
-  for ( i=0; i<m; ++i)
-    for ( j=0; j<n; ++j){
+  for (rci_t i = 0; i < m; ++i)
+    for (rci_t j = 0; j < n; ++j){
       if (mzd_read_bit (W,i,j)){
 	status = 1;
       }
@@ -39,8 +38,8 @@ int test_trsm_upper_right (int m, int n, int offset, const char* description){
   mzd_addmul(W, B, U, 2048);
   mzd_copy (B, W);
 
-  for ( i=0; i<2048; ++i)
-    for ( j=0; j<2048/RADIX; ++j){
+  for (rci_t i = 0; i < 2048; ++i)
+    for (wi_t j = 0U; j < rci_t(2048U) / RADIX; ++j){
       if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
 	status = 1;
       }
@@ -59,21 +58,20 @@ int test_trsm_upper_right (int m, int n, int offset, const char* description){
   return status;
 }
 
-int test_trsm_lower_right (int m, int n, int offset, const char *description){
-  printf("lower_right: %s  m: %4d n: %4d offset: %4d ... ",description, m, n, offset);
-  mzd_t* Lbase = mzd_init (2048,2048);
-  mzd_t* Bbase = mzd_init (2048,2048);
+int test_trsm_lower_right (rci_t m, rci_t n, int offset, const char *description){
+  printf("lower_right: %s  m: %4d n: %4d offset: %4d ... ", description, m.val(), n.val(), offset);
+  mzd_t* Lbase = mzd_init (2048U, 2048U);
+  mzd_t* Bbase = mzd_init (2048U, 2048U);
   mzd_randomize (Lbase);
   mzd_randomize (Bbase);
   mzd_t* Bbasecopy = mzd_copy (NULL, Bbase);
 
-  mzd_t* L = mzd_init_window (Lbase, 0, offset, n, offset + n);
-  mzd_t* B = mzd_init_window (Bbase, 0, offset, m, offset + n);
+  mzd_t* L = mzd_init_window (Lbase, 0, rci_t(0) + offset, n, n + offset);
+  mzd_t* B = mzd_init_window (Bbase, 0, rci_t(0) + offset, m, n + offset);
   mzd_t* W = mzd_copy (NULL, B);
 
-  size_t i,j;
-  for (i=0; i<n; ++i){
-    for (j=i+1; j<n;++j)
+  for (rci_t i = 0; i < n; ++i){
+    for (rci_t j = i + 1; j < n; ++j)
       mzd_write_bit(L,i,j, 0);
     mzd_write_bit(L,i,i, 1);
   }
@@ -82,8 +80,8 @@ int test_trsm_lower_right (int m, int n, int offset, const char *description){
   mzd_addmul(W, B, L, 2048);
 
   int status = 0;
-  for ( i=0; i<m; ++i)
-    for ( j=0; j<n; ++j){
+  for (rci_t i = 0; i < m; ++i)
+    for (rci_t j = 0; j < n; ++j){
       if (mzd_read_bit (W,i,j)){
 	status = 1;
       }
@@ -93,8 +91,8 @@ int test_trsm_lower_right (int m, int n, int offset, const char *description){
   mzd_addmul(W, B, L, 2048);
   mzd_copy (B, W);
 
-  for ( i=0; i<2048; ++i)
-    for ( j=0; j<2048/RADIX; ++j){
+  for (rci_t i = 0; i < 2048; ++i)
+    for (wi_t j = 0U; j < rci_t(2048U) / RADIX; ++j){
       if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
 	status = 1;
       }
@@ -114,21 +112,20 @@ int test_trsm_lower_right (int m, int n, int offset, const char *description){
 }
 
 
-int test_trsm_lower_left (int m, int n, int offsetL, int offsetB, const char *description){
-  printf("lower_left: %s  m: %4d n: %4d offset L: %4d offset B: %4d ... ",description, m, n, offsetL, offsetB);
-  mzd_t* Lbase = mzd_init (2048,2048);
-  mzd_t* Bbase = mzd_init (2048,2048);
+int test_trsm_lower_left (rci_t m, rci_t n, int offsetL, int offsetB, const char *description){
+  printf("lower_left: %s  m: %4d n: %4d offset L: %4d offset B: %4d ... ", description, m.val(), n.val(), offsetL, offsetB);
+  mzd_t* Lbase = mzd_init (2048U, 2048U);
+  mzd_t* Bbase = mzd_init (2048U, 2048U);
   mzd_randomize (Lbase);
   mzd_randomize (Bbase);
   mzd_t* Bbasecopy = mzd_copy (NULL, Bbase);
 
-  mzd_t* L = mzd_init_window (Lbase, 0, offsetL, m, offsetL + m);
-  mzd_t* B = mzd_init_window (Bbase, 0, offsetB, m, offsetB + n);
+  mzd_t* L = mzd_init_window (Lbase, 0, rci_t(0) + offsetL, m, m + offsetL);
+  mzd_t* B = mzd_init_window (Bbase, 0, rci_t(0) + offsetB, m, n + offsetB);
   mzd_t* W = mzd_copy (NULL, B);
 
-  size_t i,j;
-  for (i=0; i<m; ++i){
-    for (j=i+1; j<m;++j)
+  for (rci_t i = 0; i < m; ++i){
+    for (rci_t j = i + 1; j < m; ++j)
       mzd_write_bit(L,i,j, 0);
     mzd_write_bit(L,i,i, 1);
   }
@@ -137,8 +134,8 @@ int test_trsm_lower_left (int m, int n, int offsetL, int offsetB, const char *de
   mzd_addmul(W, L, B, 2048);
 
   int status = 0;
-  for ( i=0; i<m; ++i)
-    for ( j=0; j<n; ++j){
+  for (rci_t i = 0; i < m; ++i)
+    for (rci_t j = 0; j < n; ++j){
       if (mzd_read_bit (W,i,j)){
 	status = 1;
       }
@@ -149,8 +146,8 @@ int test_trsm_lower_left (int m, int n, int offsetL, int offsetB, const char *de
 
   mzd_copy (B, W);
 
-  for ( i=0; i<2048; ++i)
-    for ( j=0; j<2048/RADIX; ++j){
+  for (rci_t i = 0; i < 2048; ++i)
+    for (wi_t j = 0U; j < rci_t(2048U) / RADIX; ++j){
       if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
 	status = 1;
       }
@@ -171,21 +168,20 @@ int test_trsm_lower_left (int m, int n, int offsetL, int offsetB, const char *de
 
 
 
-int test_trsm_upper_left (int m, int n, int offsetU, int offsetB, const char *description) {
-  printf("upper_left: %s  m: %4d n: %4d offset U: %4d offset B: %4d ... ",description, m, n, offsetU, offsetB);
-  mzd_t* Ubase = mzd_init (2048,2048);
-  mzd_t* Bbase = mzd_init (2048,2048);
+int test_trsm_upper_left (rci_t m, rci_t n, int offsetU, int offsetB, const char *description) {
+  printf("upper_left: %s  m: %4d n: %4d offset U: %4d offset B: %4d ... ", description, m.val(), n.val(), offsetU, offsetB);
+  mzd_t* Ubase = mzd_init (2048U, 2048U);
+  mzd_t* Bbase = mzd_init (2048U, 2048U);
   mzd_randomize (Ubase);
   mzd_randomize (Bbase);
   mzd_t* Bbasecopy = mzd_copy (NULL, Bbase);
 
-  mzd_t* U = mzd_init_window (Ubase, 0, offsetU, m, offsetU + m);
-  mzd_t* B = mzd_init_window (Bbase, 0, offsetB, m, offsetB + n);
+  mzd_t* U = mzd_init_window (Ubase, 0, rci_t(0) + offsetU, m, m + offsetU);
+  mzd_t* B = mzd_init_window (Bbase, 0, rci_t(0) + offsetB, m, n + offsetB);
   mzd_t* W = mzd_copy (NULL, B);
 
-  size_t i,j;
-  for (i=0; i<m; ++i){
-    for (j=0; j<i;++j)
+  for (rci_t i = 0; i < m; ++i){
+    for (rci_t j = 0; j < i; ++j)
       mzd_write_bit(U,i,j, 0);
     mzd_write_bit(U,i,i, 1);
   }    
@@ -194,8 +190,8 @@ int test_trsm_upper_left (int m, int n, int offsetU, int offsetB, const char *de
   mzd_addmul(W, U, B, 2048);
 
   int status = 0;
-  for ( i=0; i<m; ++i)
-    for ( j=0; j<n; ++j){
+  for (rci_t i = 0; i < m; ++i)
+    for (rci_t j = 0; j < n; ++j){
       if (mzd_read_bit (W,i,j)){
 	status = 1;
       }
@@ -205,8 +201,8 @@ int test_trsm_upper_left (int m, int n, int offsetU, int offsetB, const char *de
 
   mzd_copy (B, W);
 
-  for ( i=0; i<2048; ++i)
-    for ( j=n; j<2048/RADIX; ++j){
+  for (rci_t i = 0; i < 2048; ++i)
+    for (wi_t j = 0U; j < rci_t(2048U) / RADIX; ++j){
       if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
 	status = 1;
       }
@@ -228,18 +224,18 @@ int test_trsm_upper_left (int m, int n, int offsetU, int offsetB, const char *de
 int main(int argc, char **argv) {
   int status = 0;
 
-  status += test_trsm_upper_right(  63,   63,   0, "  word boundaries, even");
-  status += test_trsm_upper_right(  64,   64,   0, "  word boundaries, even");
-  status += test_trsm_upper_right(  65,   65,   0, "  word boundaries, even");
-  status += test_trsm_upper_right(  53,   53,  10, "word boundaries, offset");
-  status += test_trsm_upper_right(  54,   54,  10, "word boundaries, offset");
-  status += test_trsm_upper_right(  55,   55,  10, "word boundaries, offset");
-  status += test_trsm_upper_right(  57,   10,   0, "     small, even placed");
-  status += test_trsm_upper_right(  57,  150,   0, "     large, even placed");
-  status += test_trsm_upper_right(  57,    3,   4, "      small, odd placed");
-  status += test_trsm_upper_right(  57,    4,  62, "     medium, odd placed");
-  status += test_trsm_upper_right(  57,   80,  60, "      large, odd placed");
-  status += test_trsm_upper_right(1577, 1802, 189, "     larger, odd placed");
+  status += test_trsm_upper_right(  63U,   63U,   0, "  word boundaries, even");
+  status += test_trsm_upper_right(  64U,   64U,   0, "  word boundaries, even");
+  status += test_trsm_upper_right(  65U,   65U,   0, "  word boundaries, even");
+  status += test_trsm_upper_right(  53U,   53U,  10, "word boundaries, offset");
+  status += test_trsm_upper_right(  54U,   54U,  10, "word boundaries, offset");
+  status += test_trsm_upper_right(  55U,   55U,  10, "word boundaries, offset");
+  status += test_trsm_upper_right(  57U,   10U,   0, "     small, even placed");
+  status += test_trsm_upper_right(  57U,  150U,   0, "     large, even placed");
+  status += test_trsm_upper_right(  57U,    3U,   4, "      small, odd placed");
+  status += test_trsm_upper_right(  57U,    4U,  62, "     medium, odd placed");
+  status += test_trsm_upper_right(  57U,   80U,  60, "      large, odd placed");
+  status += test_trsm_upper_right(1577U, 1802U, 189, "     larger, odd placed");
 
 #ifdef RANDOMIZE
   for(size_t i=0; i<256; i++) {
@@ -249,18 +245,18 @@ int main(int argc, char **argv) {
 
   printf("\n");
 
-  status += test_trsm_lower_right(  63,   63,  0,"  word boundaries, even");
-  status += test_trsm_lower_right(  64,   64,  0,"  word boundaries, even");
-  status += test_trsm_lower_right(  65,   65,  0,"  word boundaries, even");
-  status += test_trsm_lower_right(  53,   53, 10,"word boundaries, offset");
-  status += test_trsm_lower_right(  54,   54, 10,"word boundaries, offset");
-  status += test_trsm_lower_right(  55,   55, 10,"word boundaries, offset");
-  status += test_trsm_lower_right(  57,   10,  0,"     small, even placed");
-  status += test_trsm_lower_right(  57,  150,  0,"     large, even placed");
-  status += test_trsm_lower_right(  57,    3,  4,"      small, odd placed");
-  status += test_trsm_lower_right(  57,    4, 62,"     medium, odd placed");
-  status += test_trsm_lower_right(  57,   80, 60,"      large, odd placed");
-  status += test_trsm_lower_right(1577, 1802,189,"     larger, odd placed");
+  status += test_trsm_lower_right(  63U,   63U,  0,"  word boundaries, even");
+  status += test_trsm_lower_right(  64U,   64U,  0,"  word boundaries, even");
+  status += test_trsm_lower_right(  65U,   65U,  0,"  word boundaries, even");
+  status += test_trsm_lower_right(  53U,   53U, 10,"word boundaries, offset");
+  status += test_trsm_lower_right(  54U,   54U, 10,"word boundaries, offset");
+  status += test_trsm_lower_right(  55U,   55U, 10,"word boundaries, offset");
+  status += test_trsm_lower_right(  57U,   10U,  0,"     small, even placed");
+  status += test_trsm_lower_right(  57U,  150U,  0,"     large, even placed");
+  status += test_trsm_lower_right(  57U,    3U,  4,"      small, odd placed");
+  status += test_trsm_lower_right(  57U,    4U, 62,"     medium, odd placed");
+  status += test_trsm_lower_right(  57U,   80U, 60,"      large, odd placed");
+  status += test_trsm_lower_right(1577U, 1802U,189,"     larger, odd placed");
 
 #ifdef RANDOMIZE
   for(size_t i=0; i<256; i++) {
@@ -270,30 +266,30 @@ int main(int argc, char **argv) {
 
   printf("\n");
 
-  status += test_trsm_lower_left(  63,   63,   0,   0, "      word boundaries, even");
-  status += test_trsm_lower_left(  64,   64,   0,   0, "      word boundaries, even");
-  status += test_trsm_lower_left(  65,   65,   0,   0, "      word boundaries, even");
-  status += test_trsm_lower_left(  53,   53,  10,  10, "    word boundaries, offset");
-  status += test_trsm_lower_left(  54,   54,  10,  10, "    word boundaries, offset");
-  status += test_trsm_lower_left(  55,   55,  10,  10, "    word boundaries, offset");
-  status += test_trsm_lower_left(  10,   20,   0,   0, " small L even, small B even");
-  status += test_trsm_lower_left(  10,   80,   0,   0, " small L even, large B even");
-  status += test_trsm_lower_left(  10,   20,   0,  15, "  small L even, small B odd");
-  status += test_trsm_lower_left(  10,   80,   0,  15, "  small L even, large B odd");
-  status += test_trsm_lower_left(  10,   20,  15,   0, "  small L odd, small B even");
-  status += test_trsm_lower_left(  10,   80,  15,   0, "  small L odd, large B even");
-  status += test_trsm_lower_left(  10,   20,  15,  20, "   small L odd, small B odd");
-  status += test_trsm_lower_left(  10,   80,  15,  20, "   small L odd, large B odd");
-  status += test_trsm_lower_left(  70,   20,   0,   0, " large L even, small B even");
-  status += test_trsm_lower_left(  70,   80,   0,   0, " large L even, large B even");
-  status += test_trsm_lower_left(  70,   10,   0,  15, "  large L even, large B odd");
-  status += test_trsm_lower_left(  70,   80,   0,  15, "  large L even, large B odd");
-  status += test_trsm_lower_left(  70,   20,  15,   0, "  large L odd, small B even");
-  status += test_trsm_lower_left(  70,   80,  15,   0, "  large L odd, large B even");
-  status += test_trsm_lower_left(  70,   20,  15,  20, "   large L odd, small B odd");
-  status += test_trsm_lower_left(  70,   80,  15,  20, "   large L odd, large B odd");
-  status += test_trsm_lower_left( 770, 1600,  75,  89, " larger L odd, larger B odd");
-  status += test_trsm_lower_left(1764, 1345, 198, 123, " larger L odd, larger B odd");
+  status += test_trsm_lower_left(  63U,   63U,   0,   0, "      word boundaries, even");
+  status += test_trsm_lower_left(  64U,   64U,   0,   0, "      word boundaries, even");
+  status += test_trsm_lower_left(  65U,   65U,   0,   0, "      word boundaries, even");
+  status += test_trsm_lower_left(  53U,   53U,  10,  10, "    word boundaries, offset");
+  status += test_trsm_lower_left(  54U,   54U,  10,  10, "    word boundaries, offset");
+  status += test_trsm_lower_left(  55U,   55U,  10,  10, "    word boundaries, offset");
+  status += test_trsm_lower_left(  10U,   20U,   0,   0, " small L even, small B even");
+  status += test_trsm_lower_left(  10U,   80U,   0,   0, " small L even, large B even");
+  status += test_trsm_lower_left(  10U,   20U,   0,  15, "  small L even, small B odd");
+  status += test_trsm_lower_left(  10U,   80U,   0,  15, "  small L even, large B odd");
+  status += test_trsm_lower_left(  10U,   20U,  15,   0, "  small L odd, small B even");
+  status += test_trsm_lower_left(  10U,   80U,  15,   0, "  small L odd, large B even");
+  status += test_trsm_lower_left(  10U,   20U,  15,  20, "   small L odd, small B odd");
+  status += test_trsm_lower_left(  10U,   80U,  15,  20, "   small L odd, large B odd");
+  status += test_trsm_lower_left(  70U,   20U,   0,   0, " large L even, small B even");
+  status += test_trsm_lower_left(  70U,   80U,   0,   0, " large L even, large B even");
+  status += test_trsm_lower_left(  70U,   10U,   0,  15, "  large L even, large B odd");
+  status += test_trsm_lower_left(  70U,   80U,   0,  15, "  large L even, large B odd");
+  status += test_trsm_lower_left(  70U,   20U,  15,   0, "  large L odd, small B even");
+  status += test_trsm_lower_left(  70U,   80U,  15,   0, "  large L odd, large B even");
+  status += test_trsm_lower_left(  70U,   20U,  15,  20, "   large L odd, small B odd");
+  status += test_trsm_lower_left(  70U,   80U,  15,  20, "   large L odd, large B odd");
+  status += test_trsm_lower_left( 770U, 1600U,  75,  89, " larger L odd, larger B odd");
+  status += test_trsm_lower_left(1764U, 1345U, 198, 123, " larger L odd, larger B odd");
 
 #ifdef RANDOMIZE
   for(size_t i=0; i<256; i++) {
@@ -304,31 +300,31 @@ int main(int argc, char **argv) {
 
   printf("\n");
 
-  status += test_trsm_upper_left(  63,  63,  0,  0,"     word boundaries, even");
-  status += test_trsm_upper_left(  64,  64,  0,  0,"     word boundaries, even");
-  status += test_trsm_upper_left(  65,  65,  0,  0,"     word boundaries, even");
-  status += test_trsm_upper_left(  53,  53, 10, 10,"   word boundaries, offset");
-  status += test_trsm_upper_left(  54,  54, 10, 10,"   word boundaries, offset");
-  status += test_trsm_upper_left(  55,  55, 10, 10,"   word boundaries, offset");
-  status += test_trsm_upper_left(  10,  20,  0,  0,"small U even, small B even");
-  status += test_trsm_upper_left(  10,  80,  0,  0,"small U even, large B even");
-  status += test_trsm_upper_left(  10,  20,  0, 15," small U even, small B odd");
-  status += test_trsm_upper_left(  10,  80,  0, 15," small U even, large B odd");
-  status += test_trsm_upper_left(  10,  20, 15,  0," small U odd, small B even");
-  status += test_trsm_upper_left(  10,  80, 15,  0," small U odd, large B even");
-  status += test_trsm_upper_left(  10,  20, 15, 20,"  small U odd, small B odd");
-  status += test_trsm_upper_left(  10,  80, 15, 20,"  small U odd, large B odd");
-  status += test_trsm_upper_left(  70,  20,  0,  0,"large U even, small B even");
-  status += test_trsm_upper_left(  63,   1,  0,  0,"                          ");
-  status += test_trsm_upper_left(  70,  80,  0,  0,"large U even, large B even");
-  status += test_trsm_upper_left(  70,  10,  0, 15," large U even, small B odd");
-  status += test_trsm_upper_left(  70,  80,  0, 15," large U even, large B odd");
-  status += test_trsm_upper_left(  70,  20, 15,  0," large U odd, small B even");
-  status += test_trsm_upper_left(  70,  80, 15,  0," large U odd, large B even");
-  status += test_trsm_upper_left(  70,  20, 15, 20,"  large U odd, small B odd");
-  status += test_trsm_upper_left(  70,  80, 15, 20,"  large U odd, large B odd");
-  status += test_trsm_upper_left( 770,1600, 75, 89,"larger U odd, larger B odd");
-  status += test_trsm_upper_left(1764,1345,198,123,"larger U odd, larger B odd");
+  status += test_trsm_upper_left(  63U,  63U,  0,  0,"     word boundaries, even");
+  status += test_trsm_upper_left(  64U,  64U,  0,  0,"     word boundaries, even");
+  status += test_trsm_upper_left(  65U,  65U,  0,  0,"     word boundaries, even");
+  status += test_trsm_upper_left(  53U,  53U, 10, 10,"   word boundaries, offset");
+  status += test_trsm_upper_left(  54U,  54U, 10, 10,"   word boundaries, offset");
+  status += test_trsm_upper_left(  55U,  55U, 10, 10,"   word boundaries, offset");
+  status += test_trsm_upper_left(  10U,  20U,  0,  0,"small U even, small B even");
+  status += test_trsm_upper_left(  10U,  80U,  0,  0,"small U even, large B even");
+  status += test_trsm_upper_left(  10U,  20U,  0, 15," small U even, small B odd");
+  status += test_trsm_upper_left(  10U,  80U,  0, 15," small U even, large B odd");
+  status += test_trsm_upper_left(  10U,  20U, 15,  0," small U odd, small B even");
+  status += test_trsm_upper_left(  10U,  80U, 15,  0," small U odd, large B even");
+  status += test_trsm_upper_left(  10U,  20U, 15, 20,"  small U odd, small B odd");
+  status += test_trsm_upper_left(  10U,  80U, 15, 20,"  small U odd, large B odd");
+  status += test_trsm_upper_left(  70U,  20U,  0,  0,"large U even, small B even");
+  status += test_trsm_upper_left(  63U,   1U,  0,  0,"                          ");
+  status += test_trsm_upper_left(  70U,  80U,  0,  0,"large U even, large B even");
+  status += test_trsm_upper_left(  70U,  10U,  0, 15," large U even, small B odd");
+  status += test_trsm_upper_left(  70U,  80U,  0, 15," large U even, large B odd");
+  status += test_trsm_upper_left(  70U,  20U, 15,  0," large U odd, small B even");
+  status += test_trsm_upper_left(  70U,  80U, 15,  0," large U odd, large B even");
+  status += test_trsm_upper_left(  70U,  20U, 15, 20,"  large U odd, small B odd");
+  status += test_trsm_upper_left(  70U,  80U, 15, 20,"  large U odd, large B odd");
+  status += test_trsm_upper_left( 770U,1600U, 75, 89,"larger U odd, larger B odd");
+  status += test_trsm_upper_left(1764U,1345U,198,123,"larger U odd, larger B odd");
 
 #ifdef RANDOMIZE
   for(size_t i=0; i<256; i++) {

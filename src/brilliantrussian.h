@@ -55,7 +55,7 @@
  * \wordoffset
  */
 
-void mzd_make_table( mzd_t *M, size_t r, size_t c, int k, mzd_t *T, size_t *L);
+void mzd_make_table(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L);
 
 /**
  * \brief The function looks up k bits from position i,startcol in
@@ -75,7 +75,7 @@ void mzd_make_table( mzd_t *M, size_t r, size_t c, int k, mzd_t *T, size_t *L);
  * \wordoffset
  */
 
-void mzd_process_rows(mzd_t *M, size_t startrow, size_t endrow, size_t startcol, int k, mzd_t *T, size_t *L);
+void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k, mzd_t *T, rci_t *L);
 
 /**
  * \brief Same as mzd_process_rows but works with two Gray code tables
@@ -94,7 +94,7 @@ void mzd_process_rows(mzd_t *M, size_t startrow, size_t endrow, size_t startcol,
  * \wordoffset
  */
 
-void mzd_process_rows2(mzd_t *M, size_t startrow, size_t endrow, size_t startcol, int k, mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1);
+void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k, mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1);
 
 /**
  * \brief Same as mzd_process_rows but works with three Gray code tables
@@ -115,9 +115,9 @@ void mzd_process_rows2(mzd_t *M, size_t startrow, size_t endrow, size_t startcol
  * \wordoffset
  */
 
-void mzd_process_rows3(mzd_t *M, size_t startrow, size_t endrow, size_t startcol, int k, 
-                       mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1,
-                       mzd_t *T2, size_t *L2);
+void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k, 
+                       mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1,
+                       mzd_t *T2, rci_t *L2);
 
 /**
  * \brief Same as mzd_process_rows but works with four Gray code tables
@@ -140,9 +140,9 @@ void mzd_process_rows3(mzd_t *M, size_t startrow, size_t endrow, size_t startcol
  * \wordoffset
  */
 
-void mzd_process_rows4(mzd_t *M, size_t startrow, size_t endrow, size_t startcol, int k,
-                       mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1,
-                       mzd_t *T2, size_t *L2, mzd_t *T3, size_t *L3);
+void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k,
+                       mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1,
+                       mzd_t *T2, rci_t *L2, mzd_t *T3, rci_t *L3);
 
 
 /**
@@ -168,10 +168,10 @@ void mzd_process_rows4(mzd_t *M, size_t startrow, size_t endrow, size_t startcol
  * \wordoffset
  */
 
-void mzd_process_rows5(mzd_t *M, size_t startrow, size_t endrow, size_t startcol, int k,
-                       mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1,
-                       mzd_t *T2, size_t *L2, mzd_t *T3, size_t *L3,
-                       mzd_t* T4, size_t *L4);
+void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k,
+                       mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1,
+                       mzd_t *T2, rci_t *L2, mzd_t *T3, rci_t *L3,
+                       mzd_t *T4, rci_t *L4);
 
 /**
  * \brief Same as mzd_process_rows but works with six Gray code tables
@@ -198,10 +198,10 @@ void mzd_process_rows5(mzd_t *M, size_t startrow, size_t endrow, size_t startcol
  * \wordoffset
  */
 
-void mzd_process_rows6(mzd_t *M, size_t startrow, size_t endrow, size_t startcol, int k,
-                       mzd_t *T0, size_t *L0, mzd_t *T1, size_t *L1,
-                       mzd_t *T2, size_t *L2, mzd_t *T3, size_t *L3,
-                       mzd_t* T4, size_t *L4, mzd_t *T5, size_t *L5);
+void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k,
+                       mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1,
+                       mzd_t *T2, rci_t *L2, mzd_t *T3, rci_t *L3,
+                       mzd_t *T4, rci_t *L4, mzd_t *T5, rci_t *L5);
 
 /**
  * \brief Matrix elimination using the 'Method of the Four Russians'
@@ -227,7 +227,7 @@ void mzd_process_rows6(mzd_t *M, size_t startrow, size_t endrow, size_t startcol
  * \return Rank of A.
  */
 
-size_t _mzd_echelonize_m4ri(mzd_t *A, const int full, int k, int heuristic, const double threshold);
+rci_t _mzd_echelonize_m4ri(mzd_t *A, const int full, int k, int heuristic, const double threshold);
 
 /**
  * \brief Given a matrix in upper triangular form compute the reduced row
@@ -257,7 +257,7 @@ void mzd_top_echelonize_m4ri(mzd_t *M, int k);
  *
  */
 
-size_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, size_t r, size_t c, size_t max_r);
+rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r);
 
 /**
  * \brief Invert the matrix M using Konrod's method. 
@@ -350,6 +350,6 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear);
 
 #define M4RM_GRAY8
 
-void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, size_t k);
+void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, int k);
 
 #endif //BRILLIANTRUSSIAN_H

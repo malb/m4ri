@@ -48,30 +48,28 @@ void m4ri_die(const char *errormessage, ...) {
 
 /* Warning: I assume *destination has RADIX+1 bytes available */
 void m4ri_word_to_str( char *destination, word data, int colon) {
-  int i;
-  int j = 0;
-
   if (colon == 0) {
 
-    for (i=0; i<RADIX; i++) {
+    for (int i = 0; i < RADIX; ++i) {
       if (GET_BIT(data,i))
 	destination[i]='1';
       else 
 	destination[i]=' ';
     }
-    destination[RADIX]='\0';
+    destination[RADIX.val()] = '\0';
 
   } else {
 
-    for (i=0; i<RADIX; i++) {
+    int j = 0;
+    for (int i = 0; i < RADIX; ++i) {
       if (GET_BIT(data,i))
-	destination[j]='1';
+	destination[j] = '1';
       else 
-	destination[j]=' ';
-      j++;
-      if (((i % 4)==3) && (i!=RADIX-1)) {
-	destination[j]=':';
-	j++;
+	destination[j] = ' ';
+      ++j;
+      if (((i % 4) == 3) && (i != RADIX - 1)) {
+	destination[j] = ':';
+	++j;
       }
     }
 
@@ -115,7 +113,7 @@ BOOL WINAPI DllMain(
     { 
     case DLL_PROCESS_ATTACH:
       m4ri_build_all_codes();
-       break;
+      break;
       
     case DLL_THREAD_ATTACH:
       // Do thread-specific initialization.

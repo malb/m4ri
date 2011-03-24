@@ -52,7 +52,7 @@
  * \return Rank of A.
  */
 
-size_t _mzd_pls_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
+rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k);
 
 /**
  * \brief PLUQ matrix decomposition of A using Gray codes.
@@ -71,7 +71,7 @@ size_t _mzd_pls_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
  * \return Rank of A.
  */
 
-size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
+rci_t _mzd_pluq_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k);
 
 
 /**
@@ -95,10 +95,10 @@ size_t _mzd_pluq_mmpf(mzd_t *A, mzp_t * P, mzp_t * Q, int k);
  * \retval kbar Maximum k for which a pivot could be found.
  */
 
-size_t _mzd_pls_submatrix(mzd_t *A, 
-                          const size_t start_row, const size_t stop_row, 
-                          const size_t start_col, const int k, 
-                          mzp_t *P, mzp_t *Q, size_t *done, size_t *done_row,
-                          const size_t splitblock);
+int _mzd_pls_submatrix(mzd_t *A, 
+                          rci_t const start_row, rci_t const stop_row, 
+                          rci_t const start_col, int const k, 
+                          mzp_t *P, mzp_t *Q, rci_t *done, rci_t *done_row,
+                          wi_t const splitblock);
 
 #endif //LQUP_MMPF_H

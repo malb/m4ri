@@ -68,7 +68,7 @@
  * \return Rank of A.
  */
 
-size_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t * Q, const int cutoff);
+rci_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t *Q, const int cutoff);
 
 
 /**
@@ -104,7 +104,7 @@ size_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t * Q, const int cutoff);
  * \return Rank of A.
  */
 
-size_t mzd_pls(mzd_t *A, mzp_t *P, mzp_t * Q, const int cutoff);
+rci_t mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, const int cutoff);
 
 /**
  * \brief PLUQ matrix decomposition.
@@ -122,7 +122,7 @@ size_t mzd_pls(mzd_t *A, mzp_t *P, mzp_t * Q, const int cutoff);
  * \return Rank of A.
  */
 
-size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff);
+rci_t _mzd_pluq(mzd_t *A, mzp_t *P, mzp_t *Q, const int cutoff);
 
 /**
  * \brief PLS matrix decomposition.
@@ -140,7 +140,7 @@ size_t _mzd_pluq(mzd_t *A, mzp_t * P, mzp_t * Q, const int cutoff);
  * \return Rank of A.
  */
 
-size_t _mzd_pls(mzd_t *A, mzp_t * P, mzp_t * Qt, const int cutoff);
+rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Qt, const int cutoff);
 
 /**
  * \brief PLUQ matrix decomposition (naive base case).
@@ -157,7 +157,7 @@ size_t _mzd_pls(mzd_t *A, mzp_t * P, mzp_t * Qt, const int cutoff);
  * \return Rank of A.
  */
 
-size_t _mzd_pluq_naive(mzd_t *A, mzp_t * P, mzp_t * Q);
+rci_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q);
 
 /**
  * \brief PLS matrix decomposition (naive base case).
@@ -174,6 +174,6 @@ size_t _mzd_pluq_naive(mzd_t *A, mzp_t * P, mzp_t * Q);
  * \return Rank of A.
  */
 
-size_t _mzd_pls_naive(mzd_t *A, mzp_t *P, mzp_t *Qt);
+rci_t _mzd_pls_naive(mzd_t *A, mzp_t *P, mzp_t *Qt);
 
 #endif

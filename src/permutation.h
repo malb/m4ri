@@ -37,13 +37,13 @@ typedef struct {
   /**
    * The swap operations in LAPACK format.
    */
-  size_t *values;
+  rci_t *values;
 
   /**
    * The length of the swap array.
    */
 
-  size_t length;
+  rci_t length;
 
 } mzp_t; // note that this is NOT mpz_t
 
@@ -53,7 +53,7 @@ typedef struct {
  * \param length Length of the permutation.
  */
 
-mzp_t *mzp_init(size_t length);
+mzp_t *mzp_init(rci_t length);
 
 /**
  * Free a mzp_t.
@@ -69,13 +69,13 @@ void mzp_free(mzp_t *P);
  *
  * Use mzp_free_mzp_t_window() to free the window.
  *
- * \param P Permutaiton matrix
+ * \param P Permutation matrix
  * \param begin Starting index (inclusive)
  * \param end   Ending index   (exclusive)
  *
  */
 
-mzp_t *mzp_init_window(mzp_t* P, size_t begin, size_t end);
+mzp_t *mzp_init_window(mzp_t *P, rci_t begin, rci_t end);
 
 /**
  * \brief Free a permutation window created with
@@ -84,7 +84,7 @@ mzp_t *mzp_init_window(mzp_t* P, size_t begin, size_t end);
  * \param condemned Permutation Matrix
  */
 
-void mzp_free_window(mzp_t* condemned);
+void mzp_free_window(mzp_t *condemned);
 
 /**
  * \brief Set the permutation P to the identity permutation. The only
@@ -98,7 +98,6 @@ void mzp_free_window(mzp_t* condemned);
  */
 
 void mzp_set_ui(mzp_t *P, unsigned int value);
-
 
 /**
  * Apply the permutation P to A from the left.
@@ -158,7 +157,7 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
  * \wordoffset
  */
 
-void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t *P, size_t start_row, size_t start_col);
+void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t *P, rci_t start_row, rci_t start_col);
 
 /**
  * Apply the permutation P^T to A from the right starting at start_row.
@@ -173,7 +172,7 @@ void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t *P, size_t start_row, size_t 
  * \wordoffset
  */
 
-void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t *P, size_t start_row, size_t start_col);
+void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t *P, rci_t start_row, rci_t start_col);
 
 /**
  * Apply the mzp_t P to A from the right but transpose P before.
@@ -196,7 +195,7 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
  * \param A Matrix.
  * \param Q Permutation.
  */
-void  mzd_apply_p_right_trans_tri(mzd_t * A, mzp_t * Q);
+void  mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t *Q);
 
 /**
  * Print the mzp_t P
@@ -216,6 +215,6 @@ void mzp_print(mzp_t *P);
  * \param r2 Rank of right matrix.
  */
 
-void _mzd_compress_l(mzd_t *A, size_t r1, size_t n1, size_t r2);
+void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2);
 
 #endif //PERMUTATION_H

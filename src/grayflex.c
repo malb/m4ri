@@ -31,12 +31,11 @@ code **codebook = NULL;
 int m4ri_gray_code(int number, int length) {
   int lastbit = 0;
   int res = 0;
-  int i,bit;
-  for(i=length-1; i>=0;  i--) {
-    bit = number & (1<<i);
-    res |= ((lastbit>>1) ^ bit); 
+  for(int i = length - 1; i >= 0; --i) {
+    int bit = number & (1 << i);
+    res |= (lastbit >> 1) ^ bit;
     lastbit = bit;
-  };
+  }
   return res;
 }
 
@@ -56,23 +55,21 @@ void m4ri_build_all_codes() {
   if (codebook) {
     return;
   }
-  int k;
-  codebook=(code**)m4ri_mm_calloc(MAXKAY+1, sizeof(code *));
+  codebook=(code**)m4ri_mm_calloc(MAXKAY+1, sizeof(code*));
   
-  for(k=1 ; k<MAXKAY+1; k++) {
-    codebook[k] = (code *)m4ri_mm_calloc(sizeof(code),1);
-    codebook[k]->ord =(int *)m4ri_mm_calloc(TWOPOW(k),sizeof(int));
-    codebook[k]->inc =(int *)m4ri_mm_calloc(TWOPOW(k),sizeof(int));
+  for(int k = 1; k < MAXKAY + 1; ++k) {
+    codebook[k] = (code*)m4ri_mm_calloc(sizeof(code), 1);
+    codebook[k]->ord =(int*)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
+    codebook[k]->inc =(int*)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
     m4ri_build_code(codebook[k]->ord, codebook[k]->inc, k);
   }
 }
 
 void m4ri_destroy_all_codes() {
-  int i;
   if (!codebook) {
     return;
   }
-  for(i=1; i<MAXKAY+1; i++) {
+  for(int i = 1; i < MAXKAY + 1; ++i) {
     m4ri_mm_free(codebook[i]->inc);
     m4ri_mm_free(codebook[i]->ord);
     m4ri_mm_free(codebook[i]);
@@ -84,7 +81,7 @@ void m4ri_destroy_all_codes() {
 static int log2_floor(int v) {
   static unsigned const int b[] = { 0x2, 0xC, 0xF0, 0xFF00, 0xFFFF0000 };
   static unsigned const int S[] = { 1, 2, 4, 8, 16 };
-  register unsigned int r = 0;
+  unsigned int r = 0;
   for (int i = 4; i >= 0; --i)
   {
     if ((v & b[i]))
@@ -96,8 +93,8 @@ static int log2_floor(int v) {
   return r;
 }
 
-int m4ri_opt_k(int a,int b,int c) {
-  int n = MIN(a,b);
-  int res = MIN( MAXKAY, MAX(1, (int)(0.75*(1 + log2_floor(n)))) );
+int m4ri_opt_k(int a, int b, int c) {
+  int n = MIN(a, b);
+  int res = MIN(MAXKAY, MAX(1, (int)(0.75 * (1 + log2_floor(n)))) );
   return res;
 }

@@ -49,7 +49,7 @@
  * \return Rank of A.
  */
 
-size_t mzd_echelonize(mzd_t *A, int full);
+rci_t mzd_echelonize(mzd_t *A, int full);
 
 /**
  * \brief (Reduced) row echelon form using PLUQ factorisation.
@@ -64,7 +64,7 @@ size_t mzd_echelonize(mzd_t *A, int full);
  * \return Rank of A.
  */
 
-size_t mzd_echelonize_pluq(mzd_t *A, int full);
+rci_t mzd_echelonize_pluq(mzd_t *A, int full);
 
 /**
  * \brief Matrix elimination using the 'Method of the Four Russians' (M4RI).
@@ -82,6 +82,6 @@ size_t mzd_echelonize_pluq(mzd_t *A, int full);
  * \return Rank of A.
  */
 
-size_t mzd_echelonize_m4ri(mzd_t *A, int full, int k);
+rci_t mzd_echelonize_m4ri(mzd_t *A, int full, int k);
 
 #endif //ECHELONFORM_H

@@ -105,7 +105,8 @@ typedef uint64_t word;
  * \brief The number of bits in a word.
  */
 
-static int const RADIX = 64;
+//static int const RADIX = 64;
+static Radix_t const RADIX(64U);
 
 /**
  * \brief The number one as a word.
@@ -148,7 +149,7 @@ static word const FFFF = CONVERT_TO_WORD(-1);
  * \param y Block size
  */
 
-#define DIV_CEIL(x,y) (((x)%(y))?(x)/(y)+1:(x)/(y))
+#define DIV_CEIL(x,y) (((x)%(y))?(x)/(y)+1U:(x)/(y))
 
 /**
  *\brief Pretty for 1.
@@ -433,8 +434,7 @@ void m4ri_fini(void);
  * \todo Allow user to register calloc function.
  */
 
-/* void *m4ri_mm_calloc( int count, int size ); */
-static inline void *m4ri_mm_calloc( int count, int size ) {
+static inline void *m4ri_mm_calloc(size_t count, size_t size) {
   void *newthing;
 #ifdef HAVE_OPENMP
 #pragma omp critical
@@ -442,7 +442,7 @@ static inline void *m4ri_mm_calloc( int count, int size ) {
 #endif
 
 #ifdef HAVE_MM_MALLOC
-  newthing = _mm_malloc(count*size, 16);
+  newthing = _mm_malloc(count * size, 16);
 #else
   newthing = calloc(count, size);
 #endif
@@ -457,7 +457,7 @@ static inline void *m4ri_mm_calloc( int count, int size ) {
   }
 #ifdef HAVE_MM_MALLOC
   char *b = (char*)newthing;
-  memset(b, 0, count*size);
+  memset(b, 0, count * size);
 #endif
   return newthing;
 }
@@ -470,8 +470,7 @@ static inline void *m4ri_mm_calloc( int count, int size ) {
  * \todo Allow user to register malloc function.
  */
 
-/* void *m4ri_mm_malloc( int size ); */
-static inline void *m4ri_mm_malloc( int size ) {
+static inline void *m4ri_mm_malloc(size_t size) {
   void *newthing;
 #ifdef HAVE_OPENMP
 #pragma omp critical
@@ -513,6 +512,8 @@ static inline void m4ri_mm_free(void *condemned, ...) {
 
 /**
  * \brief Maximum number of bytes allocated in one malloc() call.
+ *
+ * This value must fit in an int, even though it's type is size_t.
  */
 
 #define MM_MAX_MALLOC (((size_t)1)<<30)
@@ -589,8 +590,7 @@ static inline void *m4ri_mmc_malloc(size_t size) {
 #ifdef ENABLE_MMC
   mmb_t *mm = m4ri_mmc_handle();
   if (size <= M4RI_MMC_THRESHOLD) {
-    size_t i;
-    for (i=0; i<M4RI_MMC_NBLOCKS; i++) {
+    for (int i = 0; i < M4RI_MMC_NBLOCKS; ++i) {
       if(mm[i].size == size) {
         ret = mm[i].data;
         mm[i].data = NULL;
@@ -625,8 +625,8 @@ static inline void *m4ri_mmc_malloc(size_t size) {
  */
 
 static inline void *m4ri_mmc_calloc(size_t size, size_t count) {
-  void *ret = m4ri_mmc_malloc(size*count);
-  memset((char*)ret, 0, count*size);
+  void *ret = m4ri_mmc_malloc(size * count);
+  memset((char*)ret, 0, count * size);
   return ret;
 }
 
@@ -645,23 +645,20 @@ static inline void m4ri_mmc_free(void *condemned, size_t size) {
 {
 #endif
 #ifdef ENABLE_MMC  
-  static size_t j = 0;
+  static int j = 0;
   mmb_t *mm = m4ri_mmc_handle();
   if (size < M4RI_MMC_THRESHOLD) {
-    size_t i;
-    for(i=0; i<M4RI_MMC_NBLOCKS; i++) {
+    for(int i = 0; i < M4RI_MMC_NBLOCKS; ++i) {
       if(mm[i].size == 0) {
         mm[i].size = size;
         mm[i].data = condemned;
-        break;
+        return;
       }
     }
-    if (i == M4RI_MMC_NBLOCKS) {
-      m4ri_mm_free(mm[j].data);
-      mm[j].size = size;
-      mm[j].data = condemned;
-      j = (j+1) % M4RI_MMC_NBLOCKS;
-    }
+    m4ri_mm_free(mm[j].data);
+    mm[j].size = size;
+    mm[j].data = condemned;
+    j = (j+1) % M4RI_MMC_NBLOCKS;
   } else {
     m4ri_mm_free(condemned);
   }
@@ -688,8 +685,7 @@ static inline void m4ri_mmc_cleanup(void) {
 {
 #endif
   mmb_t *mm = m4ri_mmc_handle();
-  size_t i;
-  for(i=0; i < M4RI_MMC_NBLOCKS; i++) {
+  for(int i = 0; i < M4RI_MMC_NBLOCKS; ++i) {
     if (mm[i].size)
       m4ri_mm_free(mm[i].data);
     mm[i].size = 0;

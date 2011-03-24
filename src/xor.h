@@ -43,9 +43,8 @@
  * from mzd_process_rows8
  */
 
-static inline void _mzd_combine8(word *c, const word *t1, const word *t2, const word *t3, const word *t4, 
-                                 const word *t5, const word *t6, const word *t7, const word *t8, size_t wide) {
-  size_t i;
+static inline void _mzd_combine8(wordPtr c, wordConstPtr t1, wordConstPtr t2, wordConstPtr t3, wordConstPtr t4,
+                                 wordConstPtr t5, wordConstPtr t6, wordConstPtr t7, wordConstPtr t8, wi_t wide) {
 #ifdef HAVE_SSE2
   /* assuming t1 ... t8 are aligned, but c might not be */
   if (ALIGNMENT(c,16)==0) {
@@ -81,10 +80,10 @@ static inline void _mzd_combine8(word *c, const word *t1, const word *t2, const 
     t6 = (word*)__t6;
     t7 = (word*)__t7;
     t8 = (word*)__t8;
-    wide = ((sizeof(word)*wide)%16)/sizeof(word);
+    wide = ((sizeof(word) * wide) % 16) / sizeof(word);
   }
 #endif
-  for(i=0; i<wide; i++) {
+  for(wi_t i = 0U; i < wide; ++i) {
     c[i] ^= t1[i] ^ t2[i] ^ t3[i] ^ t4[i] ^ t5[i] ^ t6[i] ^ t7[i] ^ t8[i];
   }
 }
@@ -94,7 +93,7 @@ static inline void _mzd_combine8(word *c, const word *t1, const word *t2, const 
  *
  */
 
-static inline void _mzd_combine4(word *c, const word *t1, const word *t2, const word *t3, const word *t4, size_t wide) {
+static inline void _mzd_combine4(wordPtr c, wordConstPtr t1, wordConstPtr t2, wordConstPtr t3, wordConstPtr t4, wi_t wide) {
 #ifdef HAVE_SSE2
   /* assuming t1 ... t4 are aligned, but c might not be */
   if (ALIGNMENT(c,16)==0) {
@@ -118,13 +117,13 @@ static inline void _mzd_combine4(word *c, const word *t1, const word *t2, const 
     t2 = (word*)__t2;
     t3 = (word*)__t3;
     t4 = (word*)__t4;
-    wide = ((sizeof(word)*wide)%16)/sizeof(word);
+    wide = ((sizeof(word) * wide) % 16) / sizeof(word);
   }
   if(!wide)
     return;
 #endif //HAVE_SSE2
-  register int n = (wide + 7) / 8;
-  switch (wide % 8) {
+  wi_t n = (wide + 7U) / 8U;
+  switch (wide % 8U) {
   case 0: do { *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
     case 7:    *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
     case 6:    *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
@@ -142,7 +141,7 @@ static inline void _mzd_combine4(word *c, const word *t1, const word *t2, const 
  *
  */
 
-static inline void _mzd_combine3(word *c, const word *t1, const word *t2, const word *t3, size_t wide) {
+static inline void _mzd_combine3(wordPtr c, wordConstPtr t1, wordConstPtr t2, wordConstPtr t3, wi_t wide) {
 #ifdef HAVE_SSE2
   /* assuming t1 ... t3 are aligned, but c might not be */
   if (ALIGNMENT(c,16)==0) {
@@ -163,13 +162,13 @@ static inline void _mzd_combine3(word *c, const word *t1, const word *t2, const 
     t1 = (word*)__t1;
     t2 = (word*)__t2;
     t3 = (word*)__t3;
-    wide = ((sizeof(word)*wide)%16)/sizeof(word);
+    wide = ((sizeof(word) * wide) % 16) / sizeof(word);
   }
   if(!wide)
     return;
 #endif //HAVE_SSE2
-  register int n = (wide + 7) / 8;
-  switch (wide % 8) {
+  wi_t n = (wide + 7U) / 8U;
+  switch (wide % 8U) {
   case 0: do { *c++ ^= *t1++ ^ *t2++ ^ *t3++;
     case 7:    *c++ ^= *t1++ ^ *t2++ ^ *t3++;
     case 6:    *c++ ^= *t1++ ^ *t2++ ^ *t3++;
@@ -188,7 +187,7 @@ static inline void _mzd_combine3(word *c, const word *t1, const word *t2, const 
  *
  */
 
-static inline void _mzd_combine2(word *c, const word *t1, const word *t2, size_t wide) {
+static inline void _mzd_combine2(wordPtr c, wordConstPtr t1, wordConstPtr t2, wi_t wide) {
 #ifdef HAVE_SSE2
   /* assuming t1 ... t2 are aligned, but c might not be */
   if (ALIGNMENT(c,16)==0) {
@@ -206,13 +205,13 @@ static inline void _mzd_combine2(word *c, const word *t1, const word *t2, size_t
     c  = (word*)__c;
     t1 = (word*)__t1;
     t2 = (word*)__t2;
-    wide = ((sizeof(word)*wide)%16)/sizeof(word);
+    wide = ((sizeof(word) * wide) % 16) / sizeof(word);
   }
   if(!wide)
     return;
 #endif //HAVE_SSE2
-  register int n = (wide + 7) / 8;
-  switch (wide % 8) {
+  wi_t n = (wide + 7U) / 8U;
+  switch (wide % 8U) {
   case 0: do { *c++ ^= *t1++ ^ *t2++;
     case 7:    *c++ ^= *t1++ ^ *t2++;
     case 6:    *c++ ^= *t1++ ^ *t2++;
@@ -230,7 +229,7 @@ static inline void _mzd_combine2(word *c, const word *t1, const word *t2, size_t
  *
  */
 
-static inline void _mzd_combine(word *c, const word *t1, size_t wide) {
+static inline void _mzd_combine(wordPtr c, wordConstPtr t1, wi_t wide) {
 #ifdef HAVE_SSE2
   /* assuming c, t1 are alligned the same way */
 
@@ -259,14 +258,14 @@ static inline void _mzd_combine(word *c, const word *t1, size_t wide) {
   
   c  = (word*)__c;
   t1 = (word*)__t1;
-  wide = ((sizeof(word)*wide)%16)/sizeof(word);
+  wide = ((sizeof(word) * wide) % 16) / sizeof(word);
 
   if(!wide)
     return;
 #endif //HAVE_SSE2
 
-  register int n = (wide + 7) / 8;
-  switch (wide % 8) {
+  wi_t n = (wide + 7U) / 8U;
+  switch (wide % 8U) {
   case 0: do { *c++ ^= *t1++;
     case 7:    *c++ ^= *t1++;
     case 6:    *c++ ^= *t1++;

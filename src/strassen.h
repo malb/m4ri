@@ -161,7 +161,7 @@ mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
  */
 
 #ifndef STRASSEN_MUL_CUTOFF
-#define STRASSEN_MUL_CUTOFF MIN(((int)sqrt((double)(4*CPU_L2_CACHE))),4096)
+#define STRASSEN_MUL_CUTOFF MIN(((int)sqrt((double)(4 * CPU_L2_CACHE))), 4096)
 #endif// STRASSEN_MUL_CUTOFF
 
 #endif //STRASSEN_H

@@ -6,17 +6,12 @@
 #include "walltime.h"
 
 int main(int argc, char **argv) {
-  size_t m, n, r;
-  long density = ~0;
-  const char *algorithm;
-  unsigned long long t;
-  double wt;
-  double clockZero = 0.0;
-  int full = 1;
-
   if (argc < 3) {
     m4ri_die("Parameters m,n, (alg,r) expected.\n");
   }
+
+  char const *algorithm;
+  long density = ~0;
   if (argc >= 4)
     algorithm = argv[3];
   else
@@ -24,34 +19,37 @@ int main(int argc, char **argv) {
   if (argc >= 5)
     density = RAND_MAX * atof(argv[4]);
 
+  int full = 1;
   if(argc >= 6)
     full = atoi(argv[5]);
 
-  m = atoi(argv[1]);
-  n = atoi(argv[2]);
+  rci_t m = (unsigned int)atoi(argv[1]);
+  rci_t n = (unsigned int)atoi(argv[2]);
   mzd_t *A = mzd_init(m, n);
 
-
-  for(size_t i=0; i<m; i++) {
-    for(size_t j=0; j<n; j++) {
+  for(rci_t i = 0; i < m; ++i) {
+    for(rci_t j = 0; j < n; ++j) {
       if(random() <= density) {
         mzd_write_bit(A, i, j, 1);
       }
     }
   }
 
-
-  wt = walltime(&clockZero);
-  t = cpucycles();
-  if(strcmp(algorithm,"m4ri")==0)
+  double clockZero = 0.0;
+  double wt = walltime(&clockZero);
+  unsigned long long t = cpucycles();
+  rci_t r;
+  if(strcmp(algorithm,"m4ri") == 0)
     r = mzd_echelonize_m4ri(A, full, 0);
-  else if(strcmp(algorithm,"cross")==0)
+  else if(strcmp(algorithm,"cross") == 0)
     r = mzd_echelonize(A, full);
-  else if(strcmp(algorithm,"pluq")==0)
+  else if(strcmp(algorithm,"pluq") == 0)
     r = mzd_echelonize_pluq(A, full);
-  else if(strcmp(algorithm,"naive")==0)
+  else if(strcmp(algorithm,"naive") == 0)
     r = mzd_echelonize_naive(A, full);
-  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %10llu wall time: %lf\n",m, n, r, cpucycles() - t, walltime(&wt));
+  else
+    m4ri_die("Unknown algorithm (%s); should be one of: m4ri, cross, pluq, naive\n", algorithm);
+  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %10llu wall time: %lf\n", m.val(), n.val(), r.val(), cpucycles() - t, walltime(&wt));
 
   mzd_free(A);
 }
