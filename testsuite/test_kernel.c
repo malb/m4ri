@@ -60,6 +60,8 @@ int test_kernel_left_pluq(rci_t m, rci_t n) {
 int main() {
   int status = 0;
 
+  srandom(17);
+
   status += test_kernel_left_pluq(  2,   4);
   status += test_kernel_left_pluq(  4,   1);
   status += test_kernel_left_pluq( 10,  20);

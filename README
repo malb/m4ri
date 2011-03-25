@@ -6,7 +6,7 @@ name M4RI comes from the first implemented algorithm: The "Method of
 the Four Russian"” inversion algorithm published by Gregory Bard. This
 algorithm in turn is named after the "Method of the Four Russians"
 multiplication algorithm which is probably better referred to as
-Kronrod's method. 
+Kronrod's method.
 
 M4RI is available at http://m4ri.sagemath.org
 
@@ -22,11 +22,11 @@ FEATURES
  * fast row echelon form computation and matrix inversion via the "Method
    of the Four Russians" (M4RI, O(n^3/log(n)));
 
- * asymptotically fast PLUQ factorisation; 
+ * asymptotically fast PLUQ factorisation;
 
  * support for the x86/x86_64 SSE2 instruction set where available;
 
- * preliminary support for parallisation on shared memory systems via
+ * preliminary support for parallelisation on shared memory systems via
    OpenMP;
 
  * and support for Linux and OS X (GCC), support for Solaris (Sun
@@ -37,9 +37,9 @@ OPENMP SUPPORT
 OpenMP support for parallel multiplication and elimination is enabled
 with the
 
-  --enable-openmp 
+  --enable-openmp
 
-configure switch. If GCC is used to compile the library it is avised
+configure switch. If GCC is used to compile the library it is advised
 to use at least GCC 4.3 since earlier versions have problems with
 OpenMP in shared libraries. OpenMP support was introduced in GCC
 4.2. Both MSVC and SunCC support OpenMP but we have no experience with
@@ -52,6 +52,36 @@ utilised in the single-core implementation.
 
 Overall, the speed-up is considerably but sublinear. See
 
-  http://m4ri.sagemath.org/performance.html 
+  http://m4ri.sagemath.org/performance.html
 
 for details.
+
+INSTALL
+=======
+
+If you downloaded M4RI as a compressed tarball from its website,
+installation instructions are contained in the file INSTALL. If you
+downloaded M4RI by cloning the mainline tree at
+
+https://bitbucket.org/malb/m4ri
+
+you need to first run the following command:
+
+$ autoreconf --install
+
+Then follow the instructions in the file INSTALL.
+
+DOCUMENTATION
+=============
+
+To build the reference manual, ensure that you have Doxygen installed.
+The HTML version of the reference manual can be built as follows:
+
+$ cd src/
+$ doxygen
+
+The built documentation is contained under the doc subdirectory of m4ri/.
+Once the HTML version is built, you can build the PDF version as follows:
+
+$ cd doc/latex/
+$ make

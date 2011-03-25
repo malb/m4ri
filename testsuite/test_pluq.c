@@ -258,6 +258,8 @@ int test_pluq_random(rci_t m, rci_t n) {
 int main() {
   int status = 0;
 
+  srandom(17);
+
   status += test_pluq_structured(37, 37);
   status += test_pluq_structured(63, 63);
   status += test_pluq_structured(64, 64);

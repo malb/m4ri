@@ -9,6 +9,9 @@ int main(int argc, char **argv) {
   if (argc != 3) {
     m4ri_die("Parameters m, n expected.\n");
   }
+
+  srandom(17);
+
   rci_t m = atoi(argv[1]);
   rci_t n = atoi(argv[2]);
   mzd_t *A = mzd_init(m, n);
@@ -22,26 +25,25 @@ int main(int argc, char **argv) {
     mzd_randomize(U);
     mzd_randomize(L);
 #if 0
-    size_t i,j;
-    for (i=0; i<m; ++i){
-      for (j=i+1; j<m;++j)
+    for (rci_t i = 0; i < m; ++i) {
+      for (rci_t j = i + 1; j < m; ++j)
         mzd_write_bit(L,i,j, 0);
       mzd_write_bit(L,i,i, 1);
     }
-    for(i=0; i<MIN(m,n); ++i) {
-      for (j=0; j<i;++j)
+    for(rci_t i = 0; i < MIN(m, n); ++i) {
+      for (rci_t j = 0; j < i; ++j)
         mzd_write_bit(U,i,j, 0);
       mzd_write_bit(U,i,i, 1);
     }
 #endif
-    for(rci_t i = 0; i < m; ++i){
+    for(rci_t i = 0; i < m; ++i) {
       mzd_write_bit(U,i,i, 1);
       for(rci_t j = 0; j < i; ++j)
 	mzd_write_bit(U,i,j, 0);
       if ((i % 2))
 	for(rci_t j = i; j < n; ++j)
 	  mzd_write_bit(U,i,j, 0);
-      for(rci_t j = i + 1; j < m;++j)
+      for(rci_t j = i + 1; j < m; ++j)
 	mzd_write_bit(L,i,j, 0);
       mzd_write_bit(L,i,i, 1);
     }
@@ -52,14 +54,13 @@ int main(int argc, char **argv) {
     mzd_randomize(A);
   }
 
-  mzp_t* P = mzp_init(m);
-  mzp_t* Q = mzp_init(n);
+  mzp_t *P = mzp_init(m);
+  mzp_t *Q = mzp_init(n);
 
-  double clockZero = 0.0;
-  double wt = walltime(&clockZero);
+  double wt = walltime(0.0);
   unsigned long long t = cpucycles();
   rci_t r = mzd_pluq(A, P, Q, 0);
-  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %12llu, wall time: %6.3lf\n", m, n, r, cpucycles() - t, walltime(&wt));
+  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %12llu, wall time: %6.3lf\n", m, n, r, cpucycles() - t, walltime(wt));
 
   mzd_free(A);
   mzp_free(P);

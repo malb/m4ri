@@ -69,6 +69,8 @@ int test_pluq_solve_left(rci_t m, rci_t n, int offsetA, int offsetB){
 int main() {
   int status = 0;
 
+  srandom(17);
+
   for(size_t i=0; i<100; i++) {
     size_t m = random() & 511;
     size_t n = random() & 1023;

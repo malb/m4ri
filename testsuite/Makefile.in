@@ -25,7 +25,7 @@ CPUCYCLES_DIR=./cpucycles-20060326
 
 all: $(TEST_PRGS) $(BENCH_PRGS)
 
-bench_%: cpucycles.o bench_%.c Makefile
+bench_%: benchmarketing.h cpucycles.o bench_%.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o $(LDFLAGS) -o $@
 
 test_%: test_%.c Makefile

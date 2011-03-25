@@ -233,7 +233,9 @@ int addsqr_test_equality(rci_t m, int k, int cutoff) {
 
 int main() {
   int status = 0;
- 
+  
+  srandom(17);
+
   status += mul_test_equality(1, 1, 1, 0, 1024);
   status += mul_test_equality(1, 128, 128, 0, 0);
   status += mul_test_equality(3, 131, 257, 0, 0);
