@@ -70,9 +70,9 @@ mzd_t *_mzd_mul_even_orig(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   }
 
   /* adjust cutting numbers to work on words */
-  Radix_t /*rci_t*/ mult = RADIX;
+  rci_t mult = RADIX;
   rci_t width = MIN(MIN(a,b),c);
-  while (width.val() > 2 * cutoff) {
+  while (width > 2 * cutoff) {
     width /= 2;
     mult *= 2;
   }
@@ -225,9 +225,9 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
 
   /* adjust cutting numbers to work on words */
   {
-    Radix_t /*rci_t*/ mult = RADIX;
+    rci_t mult = RADIX;
     rci_t width = MIN(MIN(m, n), k) / 2;
-    while (width.val() > cutoff) {
+    while (width > cutoff) {
       width /= 2;
       mult *= 2;
     }
@@ -377,9 +377,9 @@ mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t *A, int cutoff) {
   /* adjust cutting numbers to work on words */
   rci_t mmm;
   {
-    Radix_t /*rci_t*/ mult = RADIX;
+    rci_t mult = RADIX;
     rci_t width = m / 2;
-    while (width.val() > cutoff) {
+    while (width > cutoff) {
       width /= 2;
       mult *= 2;
     }
@@ -507,9 +507,9 @@ mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
 
   /* adjust cutting numbers to work on words */
   {
-    Radix_t /*rci_t*/ mult = 2 * RADIX;
+    rci_t mult = 2 * RADIX;
 /*    rci_t width = a; */
-/*    while (width.val() > 2 * cutoff) { */
+/*    while (width > 2 * cutoff) { */
 /*      width /= 2; */
 /*      mult *= 2; */
 /*    } */
@@ -605,7 +605,7 @@ mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
 
 mzd_t *mzd_mul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   if(A->ncols != B->nrows)
-    m4ri_die("mzd_mul: A ncols (%d) need to match B nrows (%d).\n", A->ncols.val(), B->nrows.val());
+    m4ri_die("mzd_mul: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
   
   if (cutoff < 0)
     m4ri_die("mzd_mul: cutoff must be >= 0.\n");
@@ -614,16 +614,16 @@ mzd_t *mzd_mul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
     cutoff = STRASSEN_MUL_CUTOFF;
   }
 
-  cutoff = cutoff/RADIX.val() * RADIX.val();
+  cutoff = cutoff / RADIX * RADIX;
   if (cutoff < RADIX) {
-    cutoff = RADIX.val();
+    cutoff = RADIX;
   };
 
   if (C == NULL) {
     C = mzd_init(A->nrows, B->ncols);
   } else if (C->nrows != A->nrows || C->ncols != B->ncols){
     m4ri_die("mzd_mul: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
-	     C->nrows.val(), C->ncols.val(), A->nrows.val(), B->ncols.val());
+	     C->nrows, C->ncols, A->nrows, B->ncols);
   }
 
   if(A->offset || B->offset || C->offset) {
@@ -660,9 +660,9 @@ mzd_t *_mzd_addmul_even_orig(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
 
   /* adjust cutting numbers to work on words */
   {
-    Radix_t /*rci_t*/ mult = RADIX;
+    rci_t mult = RADIX;
     rci_t width = MIN(MIN(a,b),c);
-    while (width.val() > 2 * cutoff) {
+    while (width > 2 * cutoff) {
       width /= 2;
       mult *= 2;
     }
@@ -807,9 +807,9 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   /* adjust cutting numbers to work on words */
   rci_t mmm, kkk, nnn;
   {
-    Radix_t /*rci_t*/ mult = RADIX;
+    rci_t mult = RADIX;
     rci_t width = MIN(MIN(m, n), k) / 2;
-    while (width.val() > cutoff) {
+    while (width > cutoff) {
       width /= 2;
       mult *= 2;
     }
@@ -953,9 +953,9 @@ mzd_t *_mzd_addsqr_even(mzd_t *C, mzd_t *A, int cutoff) {
   /* adjust cutting numbers to work on words */
   rci_t mmm;
   {
-    Radix_t /*rci_t*/ mult = RADIX;
+    rci_t mult = RADIX;
     rci_t width = m / 2;
-    while (width.val() > cutoff) {
+    while (width > cutoff) {
       width /= 2;
       mult *= 2;
     }
@@ -1059,7 +1059,7 @@ mzd_t *_mzd_addsqr_even(mzd_t *C, mzd_t *A, int cutoff) {
   return C;
 }
 
-mzd_t *_mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
+mzd_t *_mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   /**
    * Assumes that B and C are aligned in the same manner (as in a Schur complement)
    */
@@ -1072,10 +1072,10 @@ mzd_t *_mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
       if (B->ncols <= bnc){
 	_mzd_addmul_even_weird  (C,  A, B, cutoff);
       } else {
-	mzd_t *B0 = mzd_init_window (B, 0, 0, B->nrows, (unsigned int)bnc);
-	mzd_t *C0 = mzd_init_window (C, 0, 0, C->nrows, (unsigned int)bnc);
-	mzd_t *B1 = mzd_init_window (B, 0, (unsigned int)bnc, B->nrows, B->ncols);
-	mzd_t *C1 = mzd_init_window (C, 0, (unsigned int)bnc, C->nrows, C->ncols);
+	mzd_t *B0 = mzd_init_window (B, 0, 0, B->nrows, bnc);
+	mzd_t *C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
+	mzd_t *B1 = mzd_init_window (B, 0, bnc, B->nrows, B->ncols);
+	mzd_t *C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
 	_mzd_addmul_even_weird  (C0,  A, B0, cutoff);
 	_mzd_addmul_even(C1, A, B1, cutoff);
 	mzd_free_window (B0); mzd_free_window (B1);
@@ -1089,33 +1089,33 @@ mzd_t *_mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
       if (A->ncols <= anc)
 	_mzd_addmul_weird_weird (C, A, B, cutoff);
       else {
-	mzd_t *A0  = mzd_init_window (A, 0, 0, A->nrows, (unsigned int)anc);	// FIXME: remove cast
-	mzd_t *A1  = mzd_init_window (A, 0, (unsigned int)anc, A->nrows, A->ncols);
-	mzd_t *B0  = mzd_init_window (B, 0, 0, (unsigned int)anc, B->ncols);
-	mzd_t *B1  = mzd_init_window (B, (unsigned int)anc, 0, B->nrows, B->ncols);
+	mzd_t *A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
+	mzd_t *A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
+	mzd_t *B0  = mzd_init_window (B, 0, 0, anc, B->ncols);
+	mzd_t *B1  = mzd_init_window (B, anc, 0, B->nrows, B->ncols);
 	_mzd_addmul_weird_weird (C, A0, B0, cutoff);
 	_mzd_addmul_even_weird  (C, A1, B1, cutoff);
 	mzd_free_window (A0);  mzd_free_window (A1);
 	mzd_free_window (B0);  mzd_free_window (B1);
       }
     } else if (A->ncols <= anc) {
-      mzd_t *B0 = mzd_init_window (B, 0, 0, B->nrows, (unsigned int)bnc);
-      mzd_t *B1 = mzd_init_window (B, 0, (unsigned int)bnc, B->nrows, B->ncols);
-      mzd_t *C0 = mzd_init_window (C, 0, 0, C->nrows, (unsigned int)bnc);
-      mzd_t *C1 = mzd_init_window (C, 0, (unsigned int)bnc, C->nrows, C->ncols);
+      mzd_t *B0 = mzd_init_window (B, 0, 0, B->nrows, bnc);
+      mzd_t *B1 = mzd_init_window (B, 0, bnc, B->nrows, B->ncols);
+      mzd_t *C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
+      mzd_t *C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
       _mzd_addmul_weird_weird (C0, A, B0, cutoff);
       _mzd_addmul_weird_even  (C1, A, B1, cutoff);
       mzd_free_window (B0); mzd_free_window (B1);
       mzd_free_window (C0); mzd_free_window (C1);
     } else {
-      mzd_t *A0  = mzd_init_window (A, 0, 0, A->nrows, (unsigned int)anc);
-      mzd_t *A1  = mzd_init_window (A, 0, (unsigned int)anc, A->nrows, A->ncols);
-      mzd_t *B00 = mzd_init_window (B, 0, 0, (unsigned int)anc, (unsigned int)bnc);
-      mzd_t *B01 = mzd_init_window (B, 0, (unsigned int)bnc, (unsigned int)anc, B->ncols);
-      mzd_t *B10 = mzd_init_window (B, (unsigned int)anc, 0, B->nrows, (unsigned int)bnc);
-      mzd_t *B11 = mzd_init_window (B, (unsigned int)anc, (unsigned int)bnc, B->nrows, B->ncols);
-      mzd_t *C0 = mzd_init_window (C, 0, 0, C->nrows, (unsigned int)bnc);
-      mzd_t *C1 = mzd_init_window (C, 0, (unsigned int)bnc, C->nrows, C->ncols);
+      mzd_t *A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
+      mzd_t *A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
+      mzd_t *B00 = mzd_init_window (B, 0, 0, anc, bnc);
+      mzd_t *B01 = mzd_init_window (B, 0, bnc, anc, B->ncols);
+      mzd_t *B10 = mzd_init_window (B, anc, 0, B->nrows, bnc);
+      mzd_t *B11 = mzd_init_window (B, anc, bnc, B->nrows, B->ncols);
+      mzd_t *C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
+      mzd_t *C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
       
       _mzd_addmul_weird_weird (C0, A0, B00, cutoff);
       _mzd_addmul_even_weird  (C0,  A1, B10, cutoff);
@@ -1132,10 +1132,10 @@ mzd_t *_mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
     if (A->ncols <= anc){
       _mzd_addmul_weird_even  (C,  A, B, cutoff);
     } else {
-      mzd_t *A0  = mzd_init_window (A, 0, 0, A->nrows, (unsigned int)anc);
-      mzd_t *A1  = mzd_init_window (A, 0, (unsigned int)anc, A->nrows, A->ncols);
-      mzd_t *B0  = mzd_init_window (B, 0, 0, (unsigned int)anc, B->ncols);
-      mzd_t *B1  = mzd_init_window (B, (unsigned int)anc, 0, B->nrows, B->ncols);
+      mzd_t *A0  = mzd_init_window (A, 0, 0, A->nrows, anc);
+      mzd_t *A1  = mzd_init_window (A, 0, anc, A->nrows, A->ncols);
+      mzd_t *B0  = mzd_init_window (B, 0, 0, anc, B->ncols);
+      mzd_t *B1  = mzd_init_window (B, anc, 0, B->nrows, B->ncols);
       _mzd_addmul_weird_even (C, A0, B0, cutoff);
       _mzd_addmul_even  (C, A1, B1, cutoff);
       mzd_free_window (A0); mzd_free_window (A1);
@@ -1145,25 +1145,25 @@ mzd_t *_mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
   return C;
 }
 
-mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
+mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   mzd_t *tmp = mzd_init(A->nrows, MIN((rci_t)RADIX - A->offset, A->ncols));
   for (rci_t i = 0; i < A->nrows; ++i){
-    tmp->rows[i][0U] = (A->rows[i][0U] >> A->offset);
+    tmp->rows[i][0] = (A->rows[i][0] >> A->offset);
   }
   _mzd_addmul_even (C, tmp, B, cutoff);
   mzd_free(tmp);
   return C;
 }
 
- mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
-   mzd_t *tmp = mzd_init (B->nrows, (rci_t)RADIX + 0);
+ mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
+   mzd_t *tmp = mzd_init (B->nrows, (rci_t)RADIX);
    int const offset = C->offset;
    rci_t const cncols = C->ncols;
    C->offset = 0;
    C->ncols = RADIX;
    word const mask = MIDDLE_BITMASK(B->ncols, B->offset);
    for (rci_t i = 0; i < B->nrows; ++i)
-     tmp->rows[i][0U] = B->rows[i][0U] & mask;
+     tmp->rows[i][0] = B->rows[i][0] & mask;
    _mzd_addmul_even (C, A, tmp, cutoff);
    C->offset = offset;
    C->ncols = cncols;
@@ -1171,50 +1171,50 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
    return C;
 }
 
- mzd_t *_mzd_addmul_weird_weird (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff){
-   mzd_t *BT = mzd_init( B->ncols, B->nrows );
+mzd_t *_mzd_addmul_weird_weird (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {	// FIXME: cutoff isn't used?!
+  mzd_t *BT = mzd_init( B->ncols, B->nrows );
    
-   for (rci_t i = 0; i < B->ncols; ++i) {
-     wordPtr dstp = BT->rows[i];
-     wi_t const ii = (i + B->offset) / RADIX;
-     int const is = (i + B->offset) % RADIX;
-     word const mask = ONE << is;
-     int const ke = (is - A->offset < 0) ? -1 : is - A->offset;
-     rci_t k = B->nrows - 1;
-     while (k.val() > ke)
-     {
-       *dstp |= (B->rows[k][ii] & mask) << (k.val() - ke);
-       --k;
-     }
-     while (k >= 0)
-     {
-       *dstp |= (B->rows[k][ii] & mask) >> (ke - k.val());
-       --k;
-     }
-   }
-   
-   word parity[64];
-   memset(parity, 0, sizeof(parity));
+  for (rci_t i = 0; i < B->ncols; ++i) {
+    word *dstp = BT->rows[i];
+    wi_t const ii = (i + B->offset) / RADIX;
+    int const is = (i + B->offset) % RADIX;
+    word const mask = ONE << is;
+    int const ke = (is - A->offset < 0) ? -1 : is - A->offset;
+    rci_t k = B->nrows - 1;
+    while (k > ke)
+    {
+      *dstp |= (B->rows[k][ii] & mask) << (k - ke);
+      --k;
+    }
+    while (k >= 0)
+    {
+      *dstp |= (B->rows[k][ii] & mask) >> (ke - k);
+      --k;
+    }
+  }
+  
+  word parity[64];
+  memset(parity, 0, sizeof(parity));
 #ifdef M4RI_WRAPWORD
-   word::init_array(parity, 64U);
+  word::init_array(parity, 64);
 #endif
-   for (rci_t i = 0; i < A->nrows; ++i) {
-     wordPtr a = A->rows[i];
-     wordPtr c = C->rows[i];
-     for (rci_t k = 0; k < C->ncols; ++k) {
-       wordPtr b = BT->rows[k];
-       parity[(k + C->offset).val()] = (*a) & (*b);	// FIXME: Why is C->ncols always less than 64 - C->offset?
-     }
-     word par = parity64(parity);
-     *c ^= par;//parity64(parity);
-   }
-   mzd_free (BT);
-   return C;
- }
+  for (rci_t i = 0; i < A->nrows; ++i) {
+    word *a = A->rows[i];
+    word *c = C->rows[i];
+    for (rci_t k = 0; k < C->ncols; ++k) {
+      word *b = BT->rows[k];
+      parity[(k + C->offset)] = (*a) & (*b);	// FIXME: Why is C->ncols always less than 64 - C->offset?
+    }
+    word par = parity64(parity);
+    *c ^= par;//parity64(parity);
+  }
+  mzd_free (BT);
+  return C;
+}
 
 mzd_t *mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   if(A->ncols != B->nrows)
-    m4ri_die("mzd_addmul: A ncols (%d) need to match B nrows (%d).\n", A->ncols.val(), B->nrows.val());
+    m4ri_die("mzd_addmul: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
   
   if (cutoff < 0)
     m4ri_die("mzd_addmul: cutoff must be >= 0.\n");
@@ -1223,16 +1223,16 @@ mzd_t *mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
     cutoff = STRASSEN_MUL_CUTOFF;
   }
   
-  cutoff = cutoff/RADIX.val() * RADIX.val();
+  cutoff = cutoff / RADIX * RADIX;
   if (cutoff < RADIX) {
-    cutoff = RADIX.val();
+    cutoff = RADIX;
   };
 
   if (C == NULL) {
     C = mzd_init(A->nrows, B->ncols);
   } else if (C->nrows != A->nrows || C->ncols != B->ncols){
     m4ri_die("mzd_addmul: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
-	     C->nrows.val(), C->ncols.val(), A->nrows.val(), B->ncols.val());
+	     C->nrows, C->ncols, A->nrows, B->ncols);
   }
   if(A->nrows == 0 || A->ncols == 0 || B->ncols == 0)
     return C;

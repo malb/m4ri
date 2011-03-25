@@ -10,8 +10,8 @@ int main(int argc, char **argv) {
     m4ri_die("Parameters m,n (alg,r) expected.\n");
   }
 
-  rci_t m = (unsigned int)atoi(argv[1]);
-  rci_t n = (unsigned int)atoi(argv[2]);
+  rci_t m = atoi(argv[1]);
+  rci_t n = atoi(argv[2]);
 
   rci_t r;
   char const *algorithm;
@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
   else
     algorithm = "m4ri";
   if (argc == 5)
-    r = (unsigned int)atoi(argv[4]);
+    r = atoi(argv[4]);
   else
     r = m;
 
@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
     r = _mzd_pluq_mmpf(A, mzp_init(A->nrows), mzp_init(A->ncols), 0);
   else if(strcmp(algorithm,"naive") == 0)
     r = mzd_echelonize_naive(A, 1);
-  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %10llu wall time: %lf\n", m.val(), n.val(), r.val(), cpucycles() - t, walltime(&wt));
+  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %10llu wall time: %lf\n", m, n, r, cpucycles() - t, walltime(&wt));
 
   mzd_free(A);
 }

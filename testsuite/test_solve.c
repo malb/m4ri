@@ -6,13 +6,13 @@
 #include "m4ri.h"
 
 int test_pluq_solve_left(rci_t m, rci_t n, int offsetA, int offsetB){
-  mzd_t* Abase = mzd_init(2048U, 2048U);
-  mzd_t* Bbase = mzd_init(2048U, 2048U);
+  mzd_t* Abase = mzd_init(2048, 2048);
+  mzd_t* Bbase = mzd_init(2048, 2048);
   mzd_randomize(Abase);
   mzd_randomize(Bbase);
 
-  mzd_t* A = mzd_init_window(Abase, 0, rci_t(0) + offsetA, m, m + offsetA);
-  mzd_t* B = mzd_init_window(Bbase, 0, rci_t(0) + offsetB, m, n + offsetB);
+  mzd_t* A = mzd_init_window(Abase, 0, offsetA, m, m + offsetA);
+  mzd_t* B = mzd_init_window(Bbase, 0, offsetB, m, n + offsetB);
   
   // copy B
   mzd_t* Bcopy = mzd_init(B->nrows, B->ncols);
@@ -26,7 +26,7 @@ int test_pluq_solve_left(rci_t m, rci_t n, int offsetA, int offsetB){
 
   mzd_t *Acopy = mzd_copy(NULL, A);
   rci_t r = mzd_echelonize(Acopy,1);
-  printf("solve_left m: %4zu, n: %4zu, r: %4zu da: %4zu db: %4zu ", m.val(), n.val(), r.val(), offsetA, offsetB);
+  printf("solve_left m: %4d, n: %4d, r: %4d da: %4d db: %4d ", m, n, r, offsetA, offsetB);
   mzd_free(Acopy);
   Acopy = mzd_copy(NULL, A);
     
@@ -66,7 +66,7 @@ int test_pluq_solve_left(rci_t m, rci_t n, int offsetA, int offsetB){
   return status;
 }
 
-int main(int argc, char **argv) {
+int main() {
   int status = 0;
 
   for(size_t i=0; i<100; i++) {

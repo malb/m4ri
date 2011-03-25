@@ -29,7 +29,7 @@
 
 int mzd_solve_left(mzd_t *A, mzd_t *B, int const cutoff, int const inconsistency_check) {    
   if(A->ncols > B->nrows)
-    m4ri_die("mzd_solve_left: A ncols (%d) must be smaller than B nrows (%d).\n", A->ncols.val(), B->nrows.val());
+    m4ri_die("mzd_solve_left: A ncols (%d) must be smaller than B nrows (%d).\n", A->ncols, B->nrows);
 
   return _mzd_solve_left(A, B, cutoff, inconsistency_check);
 }
@@ -38,11 +38,11 @@ int mzd_pluq_solve_left (mzd_t *A, rci_t rank,
                          mzp_t *P, mzp_t *Q, 
                          mzd_t *B, int const cutoff, int const inconsistency_check) {
   if(A->ncols > B->nrows)
-    m4ri_die("mzd_pluq_solve_left: A ncols (%d) need to be lower than B nrows (%d).\n", A->ncols.val(), B->nrows.val());
+    m4ri_die("mzd_pluq_solve_left: A ncols (%d) need to be lower than B nrows (%d).\n", A->ncols, B->nrows);
   if(P->length != A->nrows)
-      m4ri_die("mzd_pluq_solve_left: A nrows (%d) need to match P size (%d).\n", A->nrows.val(), P->length.val());
+      m4ri_die("mzd_pluq_solve_left: A nrows (%d) need to match P size (%d).\n", A->nrows, P->length);
   if(Q->length != A->ncols)
-      m4ri_die("mzd_pluq_solve_left: A ncols (%d) need to match Q size (%d).\n", A->ncols.val(), P->length.val());
+      m4ri_die("mzd_pluq_solve_left: A ncols (%d) need to match Q size (%d).\n", A->ncols, P->length);
 
   return _mzd_pluq_solve_left (A, rank, P, Q, B, cutoff, inconsistency_check);
 }
@@ -104,7 +104,7 @@ int _mzd_pluq_solve_left(mzd_t *A, rci_t rank,
      */
     for(rci_t i = rank; i < B->nrows; ++i) {
       for(rci_t j = 0; j < B->ncols; j += RADIX) {
-        mzd_clear_bits(B, i, j, MIN(RADIX.val(), (B->ncols - j).val()));
+        mzd_clear_bits(B, i, j, MIN(RADIX, B->ncols - j));
       }
     }
   }

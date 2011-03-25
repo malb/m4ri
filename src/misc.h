@@ -55,6 +55,22 @@
 
 typedef int BIT;
 
+/**
+ * \brief Type of row and column indexes.
+ *
+ * This type is used for integer values that hold row/colum sized values.
+ */
+
+typedef int rci_t;
+
+/**
+ * \brief Type of word indexes.
+ *
+ * This type is used for the array of words that make up a row.
+ */
+
+typedef int wi_t;
+
 #ifdef M4RI_WRAPWORD
 // C++ wrapper class around an uint64_t, exclusively interesting for the developer(s) of M4RI.
 #include "wordwrapper.h"
@@ -105,8 +121,7 @@ typedef uint64_t word;
  * \brief The number of bits in a word.
  */
 
-//static int const RADIX = 64;
-static Radix_t const RADIX(64U);
+static int const RADIX = 64;
 
 /**
  * \brief The number one as a word.
@@ -149,7 +164,7 @@ static word const FFFF = CONVERT_TO_WORD(-1);
  * \param y Block size
  */
 
-#define DIV_CEIL(x,y) (((x)%(y))?(x)/(y)+1U:(x)/(y))
+#define DIV_CEIL(x,y) (((x) % (y)) ? (x) / (y) + 1 : (x) / (y))
 
 /**
  *\brief Pretty for 1.

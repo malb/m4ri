@@ -56,7 +56,7 @@ void m4ri_word_to_str( char *destination, word data, int colon) {
       else 
 	destination[i]=' ';
     }
-    destination[RADIX.val()] = '\0';
+    destination[RADIX] = '\0';
 
   } else {
 

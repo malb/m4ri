@@ -68,13 +68,13 @@ int _mzd_pls_submatrix(mzd_t *A,
     for(i = start_row + curr_pos; i < stop_row; ++i) {
       word const tmp = mzd_read_bits(A, i, start_col, curr_pos + 1);
       if(tmp) {
-        wordPtr Arow = A->rows[i];
+        word *Arow = A->rows[i];
         /* clear before but preserve transformation matrix */
         for (rci_t l = 0; l < curr_pos; ++l)
-          if(done[l.val()] < i) {
-            if((Arow[os[l.val()]] & bm[l.val()]))
+          if(done[l] < i) {
+            if((Arow[os[l]] & bm[l]))
               mzd_row_add_offset(A, i, start_row + l, start_col + l + 1);
-            done[l.val()] = i; /* encode up to which row we added for l already */
+            done[l] = i; /* encode up to which row we added for l already */
           }
         if(mzd_read_bit(A, i, start_col + curr_pos)) {
           found = 1;
@@ -86,17 +86,17 @@ int _mzd_pls_submatrix(mzd_t *A,
       break;
     }
 
-    P->values[(start_row + curr_pos).val()] = i;
+    P->values[(start_row + curr_pos)] = i;
     mzd_row_swap(A, i, start_row + curr_pos);
 
-    Q->values[(start_row + curr_pos).val()] = start_col + curr_pos;
+    Q->values[(start_row + curr_pos)] = start_col + curr_pos;
     done[curr_pos] = i;
   }
   
   /* finish submatrix */
   *done_row = _max_value(done, curr_pos);
   for(rci_t c2 = 0; c2 < curr_pos && start_col + c2 < A->ncols -1; ++c2)
-    for(rci_t r2 = done[c2.val()] + 1; r2 <= *done_row; ++r2)
+    for(rci_t r2 = done[c2] + 1; r2 <= *done_row; ++r2)
       if(mzd_read_bit(A, r2, start_col + c2))
         mzd_row_add_offset(A, r2, start_row + c2, start_col + c2 + 1);
 
@@ -113,10 +113,10 @@ void mzd_make_table_pls(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *Le, 
   wi_t const blockoffset= c / RADIX;
   int const twokay= TWOPOW(k);
   wi_t const wide = T->width - blockoffset;
-  wi_t const count = (wide + 7U) / 8U;
-  int const entry_point = wide % 8U;
+  wi_t const count = (wide + 7) / 8;
+  int const entry_point = wide % 8;
 
-  wordPtr ti, ti1, m;
+  word *ti, *ti1, *m;
 
   ti1 = T->rows[0] + blockoffset;
   ti = ti1 + T->width;
@@ -128,7 +128,7 @@ void mzd_make_table_pls(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *Le, 
 
   Le[0] = 0;
   Lm[0] = 0;
-  for (unsigned int i = 1; i < twokay; ++i) {		// FIXME: make int again
+  for (int i = 1; i < twokay; ++i) {
     rci_t rowneeded = r + codebook[k]->inc[i - 1];
     m = M->rows[rowneeded] + blockoffset;
 
@@ -161,7 +161,7 @@ void mzd_make_table_pls(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *Le, 
      correctly; e.g. if the first row has [1 0 1] and we clear a row
      below with [1 0 1] we need to encode that this row is cleared by
      adding the first row only ([1 0 0]). */
-  for(unsigned int i = 1; i < twokay; ++i) {	// FIXME: make int again
+  for(int i = 1; i < twokay; ++i) {
     word const correction = CONVERT_TO_WORD(codebook[k]->ord[i]);
     mzd_xor_bits(T, i,c, k, correction);
   }
@@ -181,25 +181,25 @@ void mzd_process_rows2_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
     return;
   }
 
-  wide -= 2U;
+  wide -= 2;
 #ifdef HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
 #endif
   for(rci_t r = startrow; r < stoprow; ++r) {
     rci_t const x0 = E0[ mzd_read_bits_int(M, r, startcol, ka) ];
-    wordPtr t0 = T0->rows[x0] + blocknuma;
-    wordPtr m0 = M->rows[r+0] + blocknuma;
-    m0[0U] ^= t0[0U];
-    m0[1U] ^= t0[1U];
+    word *t0 = T0->rows[x0] + blocknuma;
+    word *m0 = M->rows[r+0] + blocknuma;
+    m0[0] ^= t0[0];
+    m0[1] ^= t0[1];
     rci_t const x1 = E1[ mzd_read_bits_int(M, r, startcol+ka, kb) ];
-    wordPtr t1 = T1->rows[x1] + blocknumb;
+    word *t1 = T1->rows[x1] + blocknumb;
     for(wi_t i = blockoffset; i < 2; ++i) {
       m0[i] ^= t1[i - blockoffset];
     }
 
-    t0 += 2U;
-    t1 += 2U - blockoffset;
-    m0 += 2U;
+    t0 += 2;
+    t1 += 2 - blockoffset;
+    m0 += 2;
 
     _mzd_combine2(m0,t0,t1,wide);
   }
@@ -224,35 +224,35 @@ void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
     return;
   }
 
-  wide -= 3U;
+  wide -= 3;
 #ifdef HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
 #endif
   for(rci_t r = startrow; r < stoprow; ++r) {
     rci_t const x0 = E0[ mzd_read_bits_int(M, r, startcol, ka) ];
-    wordPtr t0 = T0->rows[x0] + blocknuma;
-    wordPtr m0 = M->rows[r] + blocknuma;
-    m0[0U] ^= t0[0U];
-    m0[1U] ^= t0[1U];
-    m0[2U] ^= t0[2U];
+    word *t0 = T0->rows[x0] + blocknuma;
+    word *m0 = M->rows[r] + blocknuma;
+    m0[0] ^= t0[0];
+    m0[1] ^= t0[1];
+    m0[2] ^= t0[2];
 
-    t0 += 3U;
+    t0 += 3;
 
     rci_t const x1 = E1[ mzd_read_bits_int(M, r, startcol+ka, kb) ];
-    wordPtr t1 = T1->rows[x1] + blocknumb;
+    word *t1 = T1->rows[x1] + blocknumb;
     for(wi_t i = blockoffsetb; i < 3; ++i) {
       m0[i] ^= t1[i-blockoffsetb];
     }
-    t1 += 3U - blockoffsetb;
+    t1 += 3 - blockoffsetb;
 
     rci_t const x2 = E2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc) ];
-    wordPtr t2 = T2->rows[x2] + blocknumc;
+    word *t2 = T2->rows[x2] + blocknumc;
     for(wi_t i = blockoffsetc; i < 3; ++i) {
       m0[i] ^= t2[i-blockoffsetc];
     }
-    t2 += 3U - blockoffsetc;
+    t2 += 3 - blockoffsetc;
 
-    m0 += 3U;
+    m0 += 3;
 
     _mzd_combine3(m0,t0,t1,t2,wide);
   }
@@ -280,43 +280,43 @@ void mzd_process_rows4_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
     mzd_process_rows(M, startrow, stoprow, startcol + ka + kb + kc, kd, T3, E3);
     return;
   }
-  wide -= 4U;
+  wide -= 4;
 #ifdef HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
 #endif
   for(rci_t r = startrow; r < stoprow; ++r) {
     rci_t const x0 = E0[mzd_read_bits_int(M, r, startcol, ka)];
-    wordPtr t0 = T0->rows[x0] + blocknuma;
-    wordPtr m0 = M->rows[r] + blocknuma;
-    m0[0U] ^= t0[0U];
-    m0[1U] ^= t0[1U];
-    m0[2U] ^= t0[2U];
-    m0[3U] ^= t0[3U];
+    word *t0 = T0->rows[x0] + blocknuma;
+    word *m0 = M->rows[r] + blocknuma;
+    m0[0] ^= t0[0];
+    m0[1] ^= t0[1];
+    m0[2] ^= t0[2];
+    m0[3] ^= t0[3];
 
-    t0 += 4U;
+    t0 += 4;
 
     rci_t const x1 = E1[ mzd_read_bits_int(M, r, startcol+ka, kb) ];
-    wordPtr t1 = T1->rows[x1] + blocknumb;
+    word *t1 = T1->rows[x1] + blocknumb;
     for(wi_t i = blockoffsetb; i < 4; ++i) {
       m0[i] ^= t1[i - blockoffsetb];
     }
-    t1 += 4U - blockoffsetb;
+    t1 += 4 - blockoffsetb;
 
     rci_t const x2 = E2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc) ];
-    wordPtr t2 = T2->rows[x2] + blocknumc;
+    word *t2 = T2->rows[x2] + blocknumc;
     for(wi_t i = blockoffsetc; i < 4; ++i) {
       m0[i] ^= t2[i - blockoffsetc];
     }
-    t2 += 4U - blockoffsetc;
+    t2 += 4 - blockoffsetc;
 
     rci_t const x3 = E3[ mzd_read_bits_int(M, r, startcol+ka+kb+kc, kd) ];
-    wordPtr t3 = T3->rows[x3] + blocknumd;
+    word *t3 = T3->rows[x3] + blocknumd;
     for(wi_t i = blockoffsetd; i < 4; ++i) {
       m0[i] ^= t3[i - blockoffsetd];
     }
-    t3 += 4U - blockoffsetd;
+    t3 += 4 - blockoffsetd;
 
-    m0 += 4U;
+    m0 += 4;
 
     _mzd_combine4(m0, t0, t1, t2, t3, wide);
   }
@@ -325,15 +325,15 @@ void mzd_process_rows4_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
 void _mzd_finish_pls_done_pivots(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const start_col, wi_t const addblock, int const k) {
   /* perform needed row swaps */
   for(rci_t i = start_row; i < start_row + k; ++i) {
-    _mzd_row_swap(A, i, P->values[i.val()], addblock);
+    _mzd_row_swap(A, i, P->values[i], addblock);
   }
 
   for(int i = 1; i < k; ++i) {
     word const tmp = mzd_read_bits(A, start_row + i, start_col, i);
-    wordPtr target = A->rows[start_row + i];
+    word *target = A->rows[start_row + i];
     for(int j = 0; j < i; ++j) {
       if((tmp & ONE << j)) {
-        wordConstPtr source = A->rows[start_row + j];
+        word const *source = A->rows[start_row + j];
         for(wi_t w = addblock; w < A->width; ++w) {
           target[w] ^= source[w];
         }
@@ -342,8 +342,8 @@ void _mzd_finish_pls_done_pivots(mzd_t *A, mzp_t const *P, rci_t const start_row
   }
 }
 
-void _mzd_finish_pls_done_rest1(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
-                                int k0, mzd_t *T0, rci_t const *M0) {
+void _mzd_finish_pls_done_rest1(mzd_t *A, mzp_t const *P,	// FIXME: P isn't used?!
+    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, int k0, mzd_t *T0, rci_t const *M0) {
 
   wi_t const wide = A->width - addblock;
   if (wide <= 0)
@@ -351,16 +351,16 @@ void _mzd_finish_pls_done_rest1(mzd_t *A, mzp_t const *P, rci_t const start_row,
   
   for(rci_t i = start_row + k0; i < stop_row; ++i) {
     rci_t x0 = M0[mzd_read_bits_int(A,i,start_col,k0)];
-    wordConstPtr s0 = T0->rows[x0] + addblock;
-    wordPtr t = A->rows[i] + addblock;
+    word const *s0 = T0->rows[x0] + addblock;
+    word *t = A->rows[i] + addblock;
     _mzd_combine(t, s0, wide);
   }
 }
 
 
-void _mzd_finish_pls_done_rest2(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
-                                int k0, mzd_t *T0, rci_t const *M0,
-                                int k1, mzd_t *T1, rci_t const *M1) {
+void _mzd_finish_pls_done_rest2(mzd_t *A, mzp_t const *P,	// FIXME: P isn't used?!
+    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
+    int k0, mzd_t *T0, rci_t const *M0, int k1, mzd_t *T1, rci_t const *M1) {
 
   wi_t const wide = A->width - addblock;
   if (wide <= 0)
@@ -369,19 +369,17 @@ void _mzd_finish_pls_done_rest2(mzd_t *A, mzp_t const *P, rci_t const start_row,
   for(rci_t i = start_row + k0 + k1; i < stop_row; ++i) {
     rci_t x0 = M0[mzd_read_bits_int(A,i,start_col,k0)];
     rci_t x1 = M1[mzd_read_bits_int(A,i,start_col+k0,k1)];
-    wordConstPtr s0 = T0->rows[x0] + addblock;
-    wordConstPtr s1 = T1->rows[x1] + addblock;
-    wordPtr t = A->rows[i] + addblock;
+    word const *s0 = T0->rows[x0] + addblock;
+    word const *s1 = T1->rows[x1] + addblock;
+    word *t = A->rows[i] + addblock;
     _mzd_combine2(t, s0, s1, wide);
   }
 }
 
 
-void _mzd_finish_pls_done_rest3(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
-                                int k0, mzd_t *T0, rci_t const *M0,
-                                int k1, mzd_t *T1, rci_t const *M1,
-                                int k2, mzd_t *T2, rci_t const *M2) {
-
+void _mzd_finish_pls_done_rest3(mzd_t *A, mzp_t const *P,	// FIXME: P isn't used?!
+    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
+    int k0, mzd_t *T0, rci_t const *M0, int k1, mzd_t *T1, rci_t const *M1, int k2, mzd_t *T2, rci_t const *M2) { 
   wi_t const wide = A->width - addblock;
   if (wide <= 0)
     return;
@@ -390,20 +388,19 @@ void _mzd_finish_pls_done_rest3(mzd_t *A, mzp_t const *P, rci_t const start_row,
     rci_t x0 = M0[mzd_read_bits_int(A,i,start_col, k0)];
     rci_t x1 = M1[mzd_read_bits_int(A,i,start_col+k0, k1)];
     rci_t x2 = M2[mzd_read_bits_int(A,i,start_col+k0+k1, k2)];
-    wordConstPtr s0 = T0->rows[x0] + addblock;
-    wordConstPtr s1 = T1->rows[x1] + addblock;
-    wordConstPtr s2 = T2->rows[x2] + addblock;
-    wordPtr t = A->rows[i] + addblock;
+    word const *s0 = T0->rows[x0] + addblock;
+    word const *s1 = T1->rows[x1] + addblock;
+    word const *s2 = T2->rows[x2] + addblock;
+    word *t = A->rows[i] + addblock;
     _mzd_combine3(t, s0, s1, s2, wide);
   }
 }
 
 
-void _mzd_finish_pls_done_rest4(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
-                                int k0, mzd_t *T0, rci_t const *M0,
-                                int k1, mzd_t *T1, rci_t const *M1,
-                                int k2, mzd_t *T2, rci_t const *M2,
-                                int k3, mzd_t *T3, rci_t const *M3) {
+void _mzd_finish_pls_done_rest4(mzd_t *A, mzp_t const *P,	// FIXME: P isn't used?!
+    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
+    int k0, mzd_t *T0, rci_t const *M0, int k1, mzd_t *T1, rci_t const *M1,
+    int k2, mzd_t *T2, rci_t const *M2, int k3, mzd_t *T3, rci_t const *M3) {
 
   wi_t const wide = A->width - addblock;
   if(wide <= 0)
@@ -414,16 +411,14 @@ void _mzd_finish_pls_done_rest4(mzd_t *A, mzp_t const *P, rci_t const start_row,
     rci_t x1 = M1[mzd_read_bits_int(A,i,start_col+k0, k1)];
     rci_t x2 = M2[mzd_read_bits_int(A,i,start_col+k0+k1, k2)];
     rci_t x3 = M3[mzd_read_bits_int(A,i,start_col+k0+k1+k2, k3)];
-    wordConstPtr s0 = T0->rows[x0] + addblock;
-    wordConstPtr s1 = T1->rows[x1] + addblock;
-    wordConstPtr s2 = T2->rows[x2] + addblock;
-    wordConstPtr s3 = T3->rows[x3] + addblock;
-    wordPtr t = A->rows[i] + addblock;
+    word const *s0 = T0->rows[x0] + addblock;
+    word const *s1 = T1->rows[x1] + addblock;
+    word const *s2 = T2->rows[x2] + addblock;
+    word const *s3 = T3->rows[x3] + addblock;
+    word *t = A->rows[i] + addblock;
     _mzd_combine4(t, s0, s1, s2, s3, wide);
   }
 }
-
-
 
 /* extract U from A for table creation */
 mzd_t *_mzd_pls_to_u(mzd_t *U, mzd_t *A, rci_t r, rci_t c, int k) {
@@ -461,16 +456,16 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
   int kk = 4 * k;
 
   for(rci_t i = 0; i < ncols; ++i) 
-    Q->values[i.val()] = i;
+    Q->values[i] = i;
 
   for(rci_t i = 0; i < A->nrows; ++i)
-    P->values[i.val()] = i;
+    P->values[i] = i;
 
   mzd_t *T0 = mzd_init(TWOPOW(k), ncols);
   mzd_t *T1 = mzd_init(TWOPOW(k), ncols);
   mzd_t *T2 = mzd_init(TWOPOW(k), ncols);
   mzd_t *T3 = mzd_init(TWOPOW(k), ncols);
-  mzd_t *U = mzd_init((unsigned int)kk, ncols);	// FIXME
+  mzd_t *U = mzd_init(kk, ncols);
 
   /* these are the elimination lookups */
   rci_t *E0 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
@@ -492,7 +487,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
 
   while(curr_col < ncols && curr_row < nrows) {
     if(curr_col + kk > ncols)
-      kk = (ncols - curr_col).val();
+      kk = ncols - curr_col;
 
     /**
      * 1. compute PLS factorisation for the kbar x kbar submatrix A00
@@ -514,7 +509,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
 --------------------------------------
 \endverbatim
      */
-    wi_t splitblock = (curr_col + kk) / RADIX + 1U;
+    wi_t splitblock = (curr_col + kk) / RADIX + 1;
 
     kbar = _mzd_pls_submatrix(A, curr_row, nrows, curr_col, kk, P, Q, done, &done_row, splitblock);
 
@@ -628,8 +623,8 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
       rci_t j = curr_col;
       int found = mzd_find_pivot(A, curr_row, curr_col, &i, &j);
       if(found) {
-        P->values[curr_row.val()] = i;
-        Q->values[curr_row.val()] = j;
+        P->values[curr_row] = i;
+        Q->values[curr_row] = j;
         mzd_row_swap(A, curr_row, i);
         wi_t const wrd = j / RADIX;
         word const bm = ONE << (j % RADIX);
@@ -656,8 +651,8 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
 
   /* Now compressing L */
   for (rci_t j = 0; j < curr_row; ++j){
-    if (Q->values[j.val()]>j) {
-      mzd_col_swap_in_rows(A, Q->values[j.val()], j, j, curr_row);
+    if (Q->values[j] > j) {
+      mzd_col_swap_in_rows(A, Q->values[j], j, j, curr_row);
     }
   }
   mzp_t *Qbar = mzp_init_window(Q, 0, curr_row);

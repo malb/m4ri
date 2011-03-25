@@ -5,7 +5,7 @@
 int elim_test_equality(rci_t nr, rci_t nc) {
   int ret = 0; 
 
-  printf("elim: m: %4d, n: %4d ", nr.val(), nc.val());
+  printf("elim: m: %4d, n: %4d ", nr, nc);
 
   mzd_t *A = mzd_init(nr, nc);
   mzd_randomize(A);
@@ -92,34 +92,34 @@ int elim_test_equality(rci_t nr, rci_t nc) {
   return ret;
 }
 
-int main(int argc, char **argv) {
+int main() {
   int status = 0;
 
-  status += elim_test_equality(4U, 67U);
-  status += elim_test_equality(17U, 121U);
-  status += elim_test_equality(65U, 17U);
-  status += elim_test_equality(128U, 128U);
-  status += elim_test_equality(1024U, 1024U);
-  status += elim_test_equality(2047U, 2047U);
-  status += elim_test_equality(65U, 65U);
+  status += elim_test_equality(4, 67);
+  status += elim_test_equality(17, 121);
+  status += elim_test_equality(65, 17);
+  status += elim_test_equality(128, 128);
+  status += elim_test_equality(1024, 1024);
+  status += elim_test_equality(2047, 2047);
+  status += elim_test_equality(65, 65);
 
-  status += elim_test_equality(100U, 100U);
-  status += elim_test_equality(21U, 171U);
-  status += elim_test_equality(31U, 121U);
-  status += elim_test_equality(193U, 65U);
-  status += elim_test_equality(1025U, 1025U);
-  status += elim_test_equality(2048U, 2048U);
-  status += elim_test_equality(64U, 64U);
-  status += elim_test_equality(128U, 128U);
-  status += elim_test_equality(4096U, 3528U);
-  status += elim_test_equality(1024U, 1025U);
-  status += elim_test_equality(1000U,1000U);
-  status += elim_test_equality(1000U,10U);
-  status += elim_test_equality(1710U,1290U);
-  status += elim_test_equality(1290U, 1710U);
-  status += elim_test_equality(1290U, 1710U);
-  status += elim_test_equality(1290U, 1290U);
-  status += elim_test_equality(1000U, 210U);
+  status += elim_test_equality(100, 100);
+  status += elim_test_equality(21, 171);
+  status += elim_test_equality(31, 121);
+  status += elim_test_equality(193, 65);
+  status += elim_test_equality(1025, 1025);
+  status += elim_test_equality(2048, 2048);
+  status += elim_test_equality(64, 64);
+  status += elim_test_equality(128, 128);
+  status += elim_test_equality(4096, 3528);
+  status += elim_test_equality(1024, 1025);
+  status += elim_test_equality(1000, 1000);
+  status += elim_test_equality(1000, 10);
+  status += elim_test_equality(1710, 1290);
+  status += elim_test_equality(1290, 1710);
+  status += elim_test_equality(1290, 1710);
+  status += elim_test_equality(1290, 1290);
+  status += elim_test_equality(1000, 210);
 
   if (status == 0) {
     printf("All tests passed.\n");

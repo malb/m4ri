@@ -29,7 +29,7 @@ int test_kernel_left_pluq(rci_t m, rci_t n) {
   mzd_t *Acopy = mzd_copy(NULL, A);
 
   rci_t r = mzd_echelonize_m4ri(A, 0, 0);
-  printf("kernel_left m: %4zu, n: %4zu, r: %4zu ", m.val(), n.val(), r.val());
+  printf("kernel_left m: %4d, n: %4d, r: %4d ", m, n, r);
   mzd_free(Acopy);
   Acopy = mzd_copy(NULL, A);
     
@@ -57,41 +57,41 @@ int test_kernel_left_pluq(rci_t m, rci_t n) {
   return status;
 }
 
-int main(int argc, char **argv) {
+int main() {
   int status = 0;
 
-  status += test_kernel_left_pluq(  2U,   4U);
-  status += test_kernel_left_pluq(  4U,   1U);
-  status += test_kernel_left_pluq( 10U,  20U);
-  status += test_kernel_left_pluq( 20U,   1U);
-  status += test_kernel_left_pluq( 20U,  20U);
-  status += test_kernel_left_pluq( 30U,   1U);
-  status += test_kernel_left_pluq( 30U,  30U);
-  status += test_kernel_left_pluq( 80U,   1U);
-  status += test_kernel_left_pluq( 80U,  20U);
-  status += test_kernel_left_pluq( 80U,  80U);
+  status += test_kernel_left_pluq(  2,   4);
+  status += test_kernel_left_pluq(  4,   1);
+  status += test_kernel_left_pluq( 10,  20);
+  status += test_kernel_left_pluq( 20,   1);
+  status += test_kernel_left_pluq( 20,  20);
+  status += test_kernel_left_pluq( 30,   1);
+  status += test_kernel_left_pluq( 30,  30);
+  status += test_kernel_left_pluq( 80,   1);
+  status += test_kernel_left_pluq( 80,  20);
+  status += test_kernel_left_pluq( 80,  80);
 
-  status += test_kernel_left_pluq( 4U,  2U);
-  status += test_kernel_left_pluq( 1U,  4U);
-  status += test_kernel_left_pluq(20U, 10U);
-  status += test_kernel_left_pluq( 1U, 20U);
-  status += test_kernel_left_pluq(20U, 20U);
-  status += test_kernel_left_pluq( 1U, 30U);
-  status += test_kernel_left_pluq(30U, 30U);
-  status += test_kernel_left_pluq( 1U, 80U);
-  status += test_kernel_left_pluq(20U, 80U);
-  status += test_kernel_left_pluq(80U, 80U);
+  status += test_kernel_left_pluq( 4,  2);
+  status += test_kernel_left_pluq( 1,  4);
+  status += test_kernel_left_pluq(20, 10);
+  status += test_kernel_left_pluq( 1, 20);
+  status += test_kernel_left_pluq(20, 20);
+  status += test_kernel_left_pluq( 1, 30);
+  status += test_kernel_left_pluq(30, 30);
+  status += test_kernel_left_pluq( 1, 80);
+  status += test_kernel_left_pluq(20, 80);
+  status += test_kernel_left_pluq(80, 80);
 
-  status += test_kernel_left_pluq(10U, 20U);
-  status += test_kernel_left_pluq(10U, 80U);
-  status += test_kernel_left_pluq(10U, 20U);
-  status += test_kernel_left_pluq(10U, 80U);
-  status += test_kernel_left_pluq(70U, 20U);
-  status += test_kernel_left_pluq(70U, 80U);
-  status += test_kernel_left_pluq(70U, 20U);
-  status += test_kernel_left_pluq(70U, 80U);
-  status += test_kernel_left_pluq(770U, 1600U);
-  status += test_kernel_left_pluq(1764U, 1345U);
+  status += test_kernel_left_pluq(10, 20);
+  status += test_kernel_left_pluq(10, 80);
+  status += test_kernel_left_pluq(10, 20);
+  status += test_kernel_left_pluq(10, 80);
+  status += test_kernel_left_pluq(70, 20);
+  status += test_kernel_left_pluq(70, 80);
+  status += test_kernel_left_pluq(70, 20);
+  status += test_kernel_left_pluq(70, 80);
+  status += test_kernel_left_pluq(770, 1600);
+  status += test_kernel_left_pluq(1764, 1345);
 
   if (!status) {
     printf("All tests passed.\n");

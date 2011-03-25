@@ -40,12 +40,12 @@ int m4ri_gray_code(int number, int length) {
 }
 
 void m4ri_build_code(int *ord, int *inc, int l) {
-  for(unsigned int i = 0 ; i < TWOPOW(l); ++i) {
+  for(int i = 0 ; i < (int)TWOPOW(l); ++i) {
     ord[i] = m4ri_gray_code(i, l);
   }
 
   for(int i = l; i > 0; --i) {
-    for(unsigned int j = 1; j < TWOPOW(i) + 1; ++j) {
+    for(int j = 1; j < (int)TWOPOW(i) + 1; ++j) {
       inc[j * TWOPOW(l - i) - 1] = l - i;
     }
   }

@@ -31,18 +31,18 @@
 
 rci_t mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
   if (P->length != A->nrows)
-    m4ri_die("mzd_pls: Permutation P length (%d) must match A nrows (%d)\n", P->length.val(), A->nrows.val());
+    m4ri_die("mzd_pls: Permutation P length (%d) must match A nrows (%d)\n", P->length, A->nrows);
   if (Q->length != A->ncols)
-    m4ri_die("mzd_pls: Permutation Q length (%d) must match A ncols (%d)\n", Q->length.val(), A->ncols.val());
+    m4ri_die("mzd_pls: Permutation Q length (%d) must match A ncols (%d)\n", Q->length, A->ncols);
   return _mzd_pls(A, P, Q, cutoff);
 }
 
 
 rci_t mzd_pluq (mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
   if (P->length != A->nrows)
-    m4ri_die("mzd_pluq: Permutation P length (%d) must match A nrows (%d)\n", P->length.val(), A->nrows.val());
+    m4ri_die("mzd_pluq: Permutation P length (%d) must match A nrows (%d)\n", P->length, A->nrows);
   if (Q->length != A->ncols)
-    m4ri_die("mzd_pluq: Permutation Q length (%d) must match A ncols (%d)\n", Q->length.val(), A->ncols.val());
+    m4ri_die("mzd_pluq: Permutation Q length (%d) must match A ncols (%d)\n", Q->length, A->ncols);
   rci_t r = _mzd_pluq(A, P, Q, cutoff);
   return r;
 }
@@ -67,9 +67,9 @@ rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
 #if 1
   rci_t nrows = mzd_first_zero_row(A);
   for(rci_t i = nrows; i < A->nrows; ++i)
-    P->values[i.val()] = i;
+    P->values[i] = i;
   for(rci_t i = 0; i < A->ncols; ++i)
-    Q->values[i.val()] = i;
+    Q->values[i] = i;
   if(!nrows) {
     return 0;
   }
@@ -100,7 +100,7 @@ rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
      *   ------------------------------------------
      */
 
-    rci_t n1 = (((ncols - 1) / RADIX + 1U) >> 1) * RADIX;
+    rci_t n1 = (((ncols - 1) / RADIX + 1) >> 1) * RADIX;
 
     mzd_t *A0  = mzd_init_window(A,  0,  0, nrows,    n1);
     mzd_t *A1  = mzd_init_window(A,  0, n1, nrows, ncols);
@@ -158,14 +158,14 @@ rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
 
     /* Update P */
     for (rci_t i = 0; i < nrows - r1; ++i)
-      P2->values[i.val()] += r1;
+      P2->values[i] += r1;
     
     // Update the A0b block (permutation + rotation)
     for(rci_t i = 0, j = n1; j < ncols; ++i, ++j)
-      Q2->values[i.val()] += n1;
+      Q2->values[i] += n1;
     
     for(rci_t i = n1, j = r1; i < n1 + r2; ++i, ++j)
-      Q->values[j.val()] = Q->values[i.val()];
+      Q->values[j] = Q->values[i];
 
     /* Compressing L */
 
@@ -204,8 +204,8 @@ rci_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
     }
     
     if(found) {
-      P->values[curr_pos.val()] = i;
-      Q->values[curr_pos.val()] = j;
+      P->values[curr_pos] = i;
+      Q->values[curr_pos] = j;
       mzd_row_swap(A, curr_pos, i);
       mzd_col_swap(A, curr_pos, j);
           
@@ -223,9 +223,9 @@ rci_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
     }
   }
   for (rci_t i = curr_pos; i < A->nrows; ++i)
-    P->values[i.val()] = i;
+    P->values[i] = i;
   for (rci_t i = curr_pos; i < A->ncols; ++i)
-    Q->values[i.val()] = i;
+    Q->values[i] = i;
   return curr_pos;
 }
  
@@ -247,8 +247,8 @@ rci_t _mzd_pls_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
         break;
     }
     if(found) {
-      P->values[row_pos.val()] = i;
-      Q->values[row_pos.val()] = j;
+      P->values[row_pos] = i;
+      Q->values[row_pos] = j;
       mzd_row_swap(A, row_pos, i);
       //mzd_col_swap(A, curr_pos, j);
           
@@ -267,15 +267,15 @@ rci_t _mzd_pls_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
     }
   }
   for (rci_t i = row_pos; i < A->nrows; ++i)
-    P->values[i.val()] = i;
+    P->values[i] = i;
   for (rci_t i = row_pos; i < A->ncols; ++i)
-    Q->values[i.val()] = i;
+    Q->values[i] = i;
 
   /* Now compressing L */
   for (rci_t j = 0; j < row_pos; ++j){
-    if (Q->values[j.val()] > j) {
+    if (Q->values[j] > j) {
       // To be optimized by a copy_row function
-      mzd_col_swap_in_rows (A,Q->values[j.val()], j, j, A->nrows);
+      mzd_col_swap_in_rows (A,Q->values[j], j, j, A->nrows);
     }
   }
 

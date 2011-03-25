@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
   if (argc != 3) {
     m4ri_die("Parameters n and cutoff expected.\n");
   }
-  rci_t n = (unsigned int)atoi(argv[1]);
+  rci_t n = atoi(argv[1]);
   if (n <= 0) {
     m4ri_die("Parameter n must be > 0\n");
   }
@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
   double wt = walltime(&clockZero);
   unsigned long long t = cpucycles();
   mzd_t *C = mzd_mul(NULL, A, B, cutoff);
-  printf("n: %5d, cutoff: %5d, cpu cycles: %llu wall time: %lf\n", n.val(), cutoff, cpucycles() - t, walltime(&wt));
+  printf("n: %5d, cutoff: %5d, cpu cycles: %llu wall time: %lf\n", n, cutoff, cpucycles() - t, walltime(&wt));
 
   mzd_free(A);
   mzd_free(B);

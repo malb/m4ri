@@ -9,8 +9,8 @@ int main(int argc, char **argv) {
   if (argc != 3) {
     m4ri_die("Parameters m, n expected.\n");
   }
-  rci_t m = (unsigned int)atoi(argv[1]);
-  rci_t n = (unsigned int)atoi(argv[2]);
+  rci_t m = atoi(argv[1]);
+  rci_t n = atoi(argv[2]);
   mzd_t *B = mzd_init(m, n);
   mzd_t *U = mzd_init(m, m);
   mzd_randomize(B);
@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
   double wt = walltime(&clockZero);
   unsigned long long t = cpucycles();
   mzd_trsm_upper_left(U, B, 0);
-  printf("m: %5d, n: %5d, cpu cycles: %llu wall time: %lf\n", m.val(), n.val(), cpucycles() - t, walltime(&wt));
+  printf("m: %5d, n: %5d, cpu cycles: %llu wall time: %lf\n", m, n, cpucycles() - t, walltime(&wt));
 
   mzd_free(B);
   mzd_free(U);

@@ -3,7 +3,7 @@
 #include "m4ri.h"
 
 int test_pluq_full_rank (rci_t m, rci_t n){
-  printf("pluq: testing full rank m: %5zu, n: %5zu", m.val(), n.val());
+  printf("pluq: testing full rank m: %5d, n: %5d", m, n);
 
   mzd_t* U = mzd_init (m,n);
   mzd_t* L = mzd_init (m,m);
@@ -66,7 +66,7 @@ int test_pluq_full_rank (rci_t m, rci_t n){
 }
 
 int test_pluq_half_rank(rci_t m, rci_t n) {
-  printf("pluq: testing half rank m: %5zd, n: %5zd", m.val(), n.val());
+  printf("pluq: testing half rank m: %5d, n: %5d", m, n);
 
   mzd_t* U = mzd_init(m, n);
   mzd_t* L = mzd_init(m, m);
@@ -141,7 +141,7 @@ int test_pluq_half_rank(rci_t m, rci_t n) {
 
 int test_pluq_structured(rci_t m, rci_t n) {
 
-  printf("pluq: testing structured m: %5zd, n: %5zd", m.val(), n.val());
+  printf("pluq: testing structured m: %5d, n: %5d", m, n);
 
   mzd_t* A = mzd_init(m, n);
   mzd_t* L = mzd_init(m, m);
@@ -156,7 +156,7 @@ int test_pluq_structured(rci_t m, rci_t n) {
   mzp_t* P = mzp_init(m);
   mzp_t* Q = mzp_init(n);
   rci_t r = mzd_pluq(A, P, Q, 0);
-  printf(", rank: %5d ",r.val());
+  printf(", rank: %5d ",r);
 
   for (rci_t i = 0; i < r; ++i){
     for (rci_t j = 0; j < i; ++j)
@@ -200,7 +200,7 @@ int test_pluq_structured(rci_t m, rci_t n) {
 }
 
 int test_pluq_random(rci_t m, rci_t n) {
-  printf("pluq: testing random m: %5zd, n: %5zd", m.val(), n.val());
+  printf("pluq: testing random m: %5d, n: %5d", m, n);
 
   mzd_t* U = mzd_init(m, n);
   mzd_t* L = mzd_init(m, m);
@@ -212,7 +212,7 @@ int test_pluq_random(rci_t m, rci_t n) {
   mzp_t* P = mzp_init(m);
   mzp_t* Q = mzp_init(n);
   rci_t r = mzd_pluq(A, P, Q, 0);
-  printf(", rank: %5d ", r.val());
+  printf(", rank: %5d ", r);
 
   for (rci_t i = 0; i < r; ++i){
     for (rci_t j = 0; j < i; ++j)
@@ -255,75 +255,75 @@ int test_pluq_random(rci_t m, rci_t n) {
 }
 
 
-int main(int argc, char **argv) {
+int main() {
   int status = 0;
 
-  status += test_pluq_structured(37U, 37U);
-  status += test_pluq_structured(63U, 63U);
-  status += test_pluq_structured(64U, 64U);
-  status += test_pluq_structured(65U, 65U);
-  status += test_pluq_structured(128U, 128U);
+  status += test_pluq_structured(37, 37);
+  status += test_pluq_structured(63, 63);
+  status += test_pluq_structured(64, 64);
+  status += test_pluq_structured(65, 65);
+  status += test_pluq_structured(128, 128);
 
-  status += test_pluq_structured(37U, 137U);
-  status += test_pluq_structured(65U, 5U);
-  status += test_pluq_structured(128U, 18U);
+  status += test_pluq_structured(37, 137);
+  status += test_pluq_structured(65, 5);
+  status += test_pluq_structured(128, 18);
 
-  status += test_pluq_full_rank(13U,13U);
-  status += test_pluq_full_rank(37U,37U);
-  status += test_pluq_full_rank(63U,63U);
-  status += test_pluq_full_rank(64U,64U);
-  status += test_pluq_full_rank(65U,65U);
-  status += test_pluq_full_rank(97U,97U); 
-  status += test_pluq_full_rank(128U,128U);
-  status += test_pluq_full_rank(150U,150U);
-  status += test_pluq_full_rank(256U,256U);
-  status += test_pluq_full_rank(1024U,1024U);
+  status += test_pluq_full_rank(13, 13);
+  status += test_pluq_full_rank(37, 37);
+  status += test_pluq_full_rank(63, 63);
+  status += test_pluq_full_rank(64, 64);
+  status += test_pluq_full_rank(65, 65);
+  status += test_pluq_full_rank(97, 97); 
+  status += test_pluq_full_rank(128, 128);
+  status += test_pluq_full_rank(150, 150);
+  status += test_pluq_full_rank(256, 256);
+  status += test_pluq_full_rank(1024, 1024);
 
-  status += test_pluq_full_rank(13U,11U);
-  status += test_pluq_full_rank(37U,39U);
-  status += test_pluq_full_rank(64U,164U);
-  status += test_pluq_full_rank(97U,92U);
-  status += test_pluq_full_rank(128U,121U);
-  status += test_pluq_full_rank(150U,153U);
-  status += test_pluq_full_rank(256U,258U);
-  status += test_pluq_full_rank(1024U,1023U);
+  status += test_pluq_full_rank(13, 11);
+  status += test_pluq_full_rank(37, 39);
+  status += test_pluq_full_rank(64, 164);
+  status += test_pluq_full_rank(97, 92);
+  status += test_pluq_full_rank(128, 121);
+  status += test_pluq_full_rank(150, 153);
+  status += test_pluq_full_rank(256, 258);
+  status += test_pluq_full_rank(1024, 1023);
 
-  status += test_pluq_half_rank(64U,64U);
-  status += test_pluq_half_rank(65U,65U);
-  status += test_pluq_half_rank(66U,66U);
-  status += test_pluq_half_rank(127U,127U);
-  status += test_pluq_half_rank(129U,129U);
-  status += test_pluq_half_rank(148U,148U);
-  status += test_pluq_half_rank(132U,132U);
-  status += test_pluq_half_rank(256U,256U);
-  status += test_pluq_half_rank(1024U,1024U);
+  status += test_pluq_half_rank(64, 64);
+  status += test_pluq_half_rank(65, 65);
+  status += test_pluq_half_rank(66, 66);
+  status += test_pluq_half_rank(127, 127);
+  status += test_pluq_half_rank(129, 129);
+  status += test_pluq_half_rank(148, 148);
+  status += test_pluq_half_rank(132, 132);
+  status += test_pluq_half_rank(256, 256);
+  status += test_pluq_half_rank(1024, 1024);
 
-  status += test_pluq_half_rank(129U,127U);
-  status += test_pluq_half_rank(132U,136U);
-  status += test_pluq_half_rank(256U,251U);
-  status += test_pluq_half_rank(1024U,2100U);
+  status += test_pluq_half_rank(129, 127);
+  status += test_pluq_half_rank(132, 136);
+  status += test_pluq_half_rank(256, 251);
+  status += test_pluq_half_rank(1024, 2100);
 
-  status += test_pluq_random(63U,63U);
-  status += test_pluq_random(64U,64U);
-  status += test_pluq_random(65U,65U);
+  status += test_pluq_random(63, 63);
+  status += test_pluq_random(64, 64);
+  status += test_pluq_random(65, 65);
 
-  status += test_pluq_random(128U,128U);
-  status += test_pluq_random(128U, 131U);
-  status += test_pluq_random(132U, 731U);
-  status += test_pluq_random(150U,150U);
-  status += test_pluq_random(252U, 24U);
-  status += test_pluq_random(256U,256U);
-  status += test_pluq_random(1024U,1022U);
-  status += test_pluq_random(1024U,1024U);
+  status += test_pluq_random(128, 128);
+  status += test_pluq_random(128, 131);
+  status += test_pluq_random(132, 731);
+  status += test_pluq_random(150, 150);
+  status += test_pluq_random(252, 24);
+  status += test_pluq_random(256, 256);
+  status += test_pluq_random(1024, 1022);
+  status += test_pluq_random(1024, 1024);
 
-  status += test_pluq_random(128U,1280U);
-  status += test_pluq_random(128U, 130U);
-  status += test_pluq_random(132U, 132U);
-  status += test_pluq_random(150U,151U);
-  status += test_pluq_random(252U, 2U);
-  status += test_pluq_random(256U,251U);
-  status += test_pluq_random(1024U,1025U);
-  status += test_pluq_random(1024U,1021U);
+  status += test_pluq_random(128, 1280);
+  status += test_pluq_random(128, 130);
+  status += test_pluq_random(132, 132);
+  status += test_pluq_random(150, 151);
+  status += test_pluq_random(252, 2);
+  status += test_pluq_random(256, 251);
+  status += test_pluq_random(1024, 1025);
+  status += test_pluq_random(1024, 1021);
 
   if (!status) {
     printf("All tests passed.\n");

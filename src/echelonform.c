@@ -65,10 +65,10 @@ rci_t mzd_echelonize_pluq(mzd_t *A, int full) {
     r = mzd_pls(A, P, Q, 0);
     for(rci_t i = 0; i < r; ++i) {
       for(rci_t j = 0; j <= i; j += RADIX) {
-        int const length = MIN(RADIX.val(), (i-j+1).val());
+        int const length = MIN(RADIX, i - j + 1);
         mzd_clear_bits(A, i, j, length);
       }
-      mzd_write_bit(A, i, Q->values[i.val()], 1);
+      mzd_write_bit(A, i, Q->values[i], 1);
     }
   }
 

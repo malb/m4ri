@@ -23,8 +23,8 @@ int main(int argc, char **argv) {
   if(argc >= 6)
     full = atoi(argv[5]);
 
-  rci_t m = (unsigned int)atoi(argv[1]);
-  rci_t n = (unsigned int)atoi(argv[2]);
+  rci_t m = atoi(argv[1]);
+  rci_t n = atoi(argv[2]);
   mzd_t *A = mzd_init(m, n);
 
   for(rci_t i = 0; i < m; ++i) {
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
   double clockZero = 0.0;
   double wt = walltime(&clockZero);
   unsigned long long t = cpucycles();
-  rci_t r;
+  rci_t r = 0;
   if(strcmp(algorithm,"m4ri") == 0)
     r = mzd_echelonize_m4ri(A, full, 0);
   else if(strcmp(algorithm,"cross") == 0)
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     r = mzd_echelonize_naive(A, full);
   else
     m4ri_die("Unknown algorithm (%s); should be one of: m4ri, cross, pluq, naive\n", algorithm);
-  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %10llu wall time: %lf\n", m.val(), n.val(), r.val(), cpucycles() - t, walltime(&wt));
+  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %10llu wall time: %lf\n", m, n, r, cpucycles() - t, walltime(&wt));
 
   mzd_free(A);
 }

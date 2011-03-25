@@ -9,8 +9,8 @@ int main(int argc, char **argv) {
   if (argc != 3) {
     m4ri_die("Parameters m, n expected.\n");
   }
-  rci_t m = (unsigned int)atoi(argv[1]);
-  rci_t n = (unsigned int)atoi(argv[2]);
+  rci_t m = atoi(argv[1]);
+  rci_t n = atoi(argv[2]);
   mzd_t *A = mzd_init(m, n);
   mzd_t *U;
   mzd_t *L;
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
   double wt = walltime(&clockZero);
   unsigned long long t = cpucycles();
   rci_t r = mzd_pluq(A, P, Q, 0);
-  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %12llu, wall time: %6.3lf\n", m.val(), n.val(), r.val(), cpucycles() - t, walltime(&wt));
+  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %12llu, wall time: %6.3lf\n", m, n, r, cpucycles() - t, walltime(&wt));
 
   mzd_free(A);
   mzp_free(P);

@@ -60,28 +60,6 @@
 
 #define MZD_MUL_BLOCKSIZE MIN(((int)sqrt((double)(4 * CPU_L2_CACHE))) / 2, 2048)
 
-#ifndef M4RI_WRAPWORD
-/**
- * \brief The type of row and column indexes and distances.
- *
- */
-
-typedef int rci_t;
-
-/**
- * \brief The type of the index of the rows[rci_t][wi_t] array, and distances.
- *
- */
-
-typedef int wi_t;
-
-/**
- * \brief Dense matrices over GF(2). 
- * 
- * The most fundamental data type in this library.
- */
-#endif
-
 typedef struct {
   /**
    * Contains pointers to the actual blocks of memory containing the
@@ -119,11 +97,7 @@ typedef struct {
    * is m->rows[i]
    */
 
-#ifndef M4RI_WRAPWORD
   word **rows;
-#else
-  wordPtrPtr rows;
-#endif
 
 } mzd_t;
 
@@ -197,14 +171,14 @@ static inline void _mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb, w
    * to take a mask_begin into account. */
   assert(M->offset == 0);
 
-  wi_t width = M->width - startblock - 1U;
-  wordPtr a = M->rows[rowa] + startblock;
-  wordPtr b = M->rows[rowb] + startblock;
+  wi_t width = M->width - startblock - 1;
+  word *a = M->rows[rowa] + startblock;
+  word *b = M->rows[rowb] + startblock;
   word tmp; 
   word const mask_end = LEFT_BITMASK((M->ncols + M->offset) % RADIX);
 
   if (width != 0) {
-    for(wi_t i = 0U; i < width; ++i) {
+    for(wi_t i = 0; i < width; ++i) {
       tmp = a[i];
       a[i] = b[i];
       b[i] = tmp;
@@ -228,18 +202,18 @@ static inline void mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb) {
   if(rowa == rowb)
     return;
 
-  wi_t width = M->width - 1U;
-  wordPtr a = M->rows[rowa];
-  wordPtr b = M->rows[rowb];
+  wi_t width = M->width - 1;
+  word *a = M->rows[rowa];
+  word *b = M->rows[rowb];
   word const mask_begin = RIGHT_BITMASK(RADIX - M->offset);
   word const mask_end = LEFT_BITMASK((M->ncols + M->offset) % RADIX);
 
-  word tmp = (a[0U] ^ b[0U]) & mask_begin;
+  word tmp = (a[0] ^ b[0]) & mask_begin;
   if (width != 0) {
-    a[0U] ^= tmp;
-    b[0U] ^= tmp;
+    a[0] ^= tmp;
+    b[0] ^= tmp;
     
-    for(wi_t i = 1U; i < width; ++i) {
+    for(wi_t i = 1; i < width; ++i) {
       tmp = a[i];
       a[i] = b[i];
       b[i] = tmp;
@@ -250,8 +224,8 @@ static inline void mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb) {
     
   } else {
     tmp &= mask_end;
-    a[0U] ^= tmp;
-    b[0U] ^= tmp;
+    a[0] ^= tmp;
+    b[0] ^= tmp;
   }
 }
 
@@ -310,7 +284,7 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
   {
     for (rci_t i = start_row; i < stop_row; ++i)
     {
-      wordPtr vp = (M->rows[i] + a_word);
+      word *vp = (M->rows[i] + a_word);
       word v = *vp;
       word x = ((v >> coldiff) ^ v) & b_bm;	/* Move column a on top of column b, and calcuate XOR. */
       x |= x << coldiff;			/* Duplicate this bit at both column positions. */
@@ -321,7 +295,7 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
 
   for (rci_t i = start_row; i < stop_row; ++i)
   {
-    wordPtr base = M->rows[i];
+    word *base = M->rows[i];
     word a = *(base + a_word);
     word b = *(base + b_word);
 
@@ -398,8 +372,8 @@ static inline void mzd_row_add_offset(mzd_t *M, rci_t dstrow, rci_t srcrow, rci_
   coloffset += M->offset;
   wi_t const startblock= coloffset/RADIX;
   wi_t wide = M->width - startblock;
-  wordPtr src = M->rows[srcrow] + startblock;
-  wordPtr dst = M->rows[dstrow] + startblock;
+  word *src = M->rows[srcrow] + startblock;
+  word *dst = M->rows[dstrow] + startblock;
   word const mask_begin = RIGHT_BITMASK(RADIX - coloffset % RADIX);
   word const mask_end = LEFT_BITMASK((M->ncols + M->offset) % RADIX);
 
@@ -407,7 +381,7 @@ static inline void mzd_row_add_offset(mzd_t *M, rci_t dstrow, rci_t srcrow, rci_
   --wide;
 
 #ifdef HAVE_SSE2 
-  unsigned int not_aligned = ALIGNMENT(src,16) != 0;	/* 0: Aligned, 1: Not aligned */
+  int not_aligned = ALIGNMENT(src,16) != 0;		/* 0: Aligned, 1: Not aligned */
   if (wide > not_aligned + 1)				/* Speed up for small matrices */
   {
     if (not_aligned) {
@@ -429,7 +403,7 @@ static inline void mzd_row_add_offset(mzd_t *M, rci_t dstrow, rci_t srcrow, rci_
     wide = ((sizeof(word)*wide)%16)/sizeof(word);
   }
 #endif
-  wi_t i = (unsigned int)-1;	// FIXME: remove cast.
+  wi_t i = -1;
   while(++i < wide)
     dst[i] ^= src[i];
   /* 
@@ -439,7 +413,7 @@ static inline void mzd_row_add_offset(mzd_t *M, rci_t dstrow, rci_t srcrow, rci_
    * We use i - 1 here to let the compiler know these are the same addresses
    * that we last accessed, in the previous loop.
    */
-  dst[i - 1U] ^= src[i - 1U] & ~mask_end;
+  dst[i - 1] ^= src[i - 1] & ~mask_end;
 }
 
 /**
@@ -781,7 +755,7 @@ static inline word mzd_read_bits(mzd_t const *M, rci_t const x, rci_t const y, i
   int const spot = (y + M->offset) % RADIX;
   wi_t const block = (y + M->offset) / RADIX;
   int const spill = spot + n - RADIX;
-  word temp = (spill <= 0) ? M->rows[x][block] << -spill : (M->rows[x][block + 1U] << (RADIX - spill)) | (M->rows[x][block] >> spill);
+  word temp = (spill <= 0) ? M->rows[x][block] << -spill : (M->rows[x][block + 1] << (RADIX - spill)) | (M->rows[x][block] >> spill);
   return temp >> (RADIX - n);
 }
 
@@ -814,7 +788,7 @@ static inline void mzd_xor_bits(mzd_t const *M, rci_t const x, rci_t const y, in
   M->rows[x][block] ^= values << spot;
   int const space = RADIX - spot;
   if (n > space)
-    M->rows[x][block + 1U] ^= values >> space;
+    M->rows[x][block + 1] ^= values >> space;
 }
 
 /**
@@ -836,7 +810,7 @@ static inline void mzd_and_bits(mzd_t const *M, rci_t const x, rci_t const y, in
   M->rows[x][block] &= values << spot;
   int const space = RADIX - spot;
   if (n > space)
-    M->rows[x][block + 1U] &= values >> space;
+    M->rows[x][block + 1] &= values >> space;
 }
 
 /**
@@ -855,7 +829,7 @@ static inline void mzd_clear_bits(mzd_t const *M, rci_t const x, rci_t const y, 
   M->rows[x][block] &= ~(values << spot);
   int const space = RADIX - spot;
   if (n > space)
-    M->rows[x][block + 1U] &= ~(values >> space);
+    M->rows[x][block + 1] &= ~(values >> space);
 }
 
 /**
@@ -907,7 +881,7 @@ int mzd_find_pivot(mzd_t *M, rci_t start_row, rci_t start_col, rci_t *r, rci_t *
  * \param res Resolution of sampling (in words)
  */
 
-double mzd_density(mzd_t *A, int res);
+double mzd_density(mzd_t *A, wi_t res);
 
 /**
  * \brief Return the number of nonzero entries divided by nrows *
