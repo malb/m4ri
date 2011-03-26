@@ -25,8 +25,8 @@ CPUCYCLES_DIR=./cpucycles-20060326
 
 all: $(TEST_PRGS) $(BENCH_PRGS)
 
-bench_%: benchmarketing.h cpucycles.o bench_%.c Makefile
-	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o $(LDFLAGS) -o $@
+bench_%: cpucycles.o benchmarketing.o bench_%.c Makefile
+	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o benchmarketing.o $(LDFLAGS) -o $@
 
 test_%: test_%.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) $@.c $(LDFLAGS) -o $@
@@ -48,6 +48,9 @@ cpucycles.h: cpucycles.o
 
 cpucycles.o:
 	(cd $(CPUCYCLES_DIR); sh do; cp cpucycles.o ..; cp cpucycles.h ..; cd ..)
+
+benchmarketing.o: benchmarketing.c benchmarketing.h
+	$(CC) $(DEBUG) $(CFLAGS) -c benchmarketing.c $(LDFLAGS) -o $@
 
 Makefile: Makefile.in ../config.status
 	(cd .. && /bin/sh ./config.status testsuite/Makefile)

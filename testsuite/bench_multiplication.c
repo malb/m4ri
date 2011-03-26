@@ -2,7 +2,6 @@
 
 #include "config.h"
 #include "cpucycles.h"
-#include "walltime.h"
 #include "m4ri.h"
 #include "benchmarketing.h"
 
@@ -32,6 +31,8 @@ int run(void *_p, double *wt, unsigned long long *cycles) {
 }
 
 int main(int argc, char **argv) {
+  global_options(&argc, &argv);
+
   if (argc != 3) {
     m4ri_die("Parameters n and cutoff expected.\n");
   }
