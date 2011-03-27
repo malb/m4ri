@@ -208,7 +208,7 @@ void vector_resize(vector v, size_t s)
     v->size = v->alloc_size;
 }
 
-inline size_t vector_size(vector v)
+static inline size_t vector_size(vector v)
 {
   return v->size;
 }
@@ -220,7 +220,7 @@ void vector_pushback(vector v, double d)
   v->data[v->size - 1] = d;
 }
 
-inline double vector_get(vector v, int index)
+static inline double vector_get(vector v, int index)
 {
   return v->data[index];
 }
@@ -418,7 +418,10 @@ void run_bench(
       m4ri_die("benchmark function failed with exit code: %d\n", res);
 
     if (bench_dump)
+    {
       printf("%f\n", wt);
+      fflush(stdout);
+    }
 
     cc_sum += cc;
 
@@ -452,5 +455,75 @@ void run_bench(
   }
 
   vector_destruct(wt_data);
+}
+
+/*
+ * Random number generator
+ */
+
+static uint64_t bench_random_M;
+static uint64_t bench_random_modulo;
+
+uint64_t bench_random_init(uint64_t modulo)
+{
+  // Set bench_random_M to the largest multiple of modulo, minus one, that fits in an uint64_t.
+  // A modulo of zero is interpreted as 2^64, and thus returns 0xffffffffffffffff.
+  bench_random_M = modulo ? -modulo / modulo * modulo - 1 : -1;
+  bench_random_M += modulo;
+  bench_random_modulo = modulo;
+}
+
+// Returns a uniformly distributed random number in the range [0, bench_random_modulo>.
+uint64_t bench_random()
+{
+  for(;;)
+  {
+    if (sizeof(long) == sizeof(uint64_t))
+    {
+      union { uint64_t R; long L; } x;
+      x.L = random();
+      if (x.R <= bench_random_M)
+	return x.R % bench_random_modulo;
+    }
+    else
+    {
+      union { uint64_t R; long L1; long L2; } x;
+      x.L1 = random();
+      x.L2 = random();
+      if (x.R <= bench_random_M)
+	return x.R % bench_random_modulo;
+    }
+  }
+}
+
+// The same as m4ri_random_word. Duplicated here because it's
+// not available in older revisions that we want to benchmark against.
+word bench_random_word() {
+  if (sizeof(long) == sizeof(word)) {
+    return random();
+  }
+  else if (2 * sizeof(long) == sizeof(word)) {
+    union { word result; long L1; long L2; } u;
+    u.L1 = random();
+    u.L2 = random();
+    return u.result;
+  }
+  assert(FALSE);        // Unsupported.
+}
+
+// Needed for mzd_t.
+#include "packedmatrix.h"
+
+// The same as m4ri_randomize. Duplicated here because it's
+// not available in older revisions that we want to benchmark against.
+void bench_randomize(mzd_t *A) {
+  assert(A->offset == 0);
+  word const mask_end = LEFT_BITMASK(A->ncols % RADIX);
+  for (rci_t i = 0; i < A->nrows; ++i) {
+    for (wi_t j = 0; j < A->width; ++j) {
+      A->rows[i][j] = bench_random_word();
+    }
+    A->rows[i][A->width - 1] &= mask_end;
+  }
 }
 

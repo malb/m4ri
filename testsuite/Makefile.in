@@ -1,16 +1,36 @@
-CFLAGS=-I../m4ri -D_XOPEN_SOURCE=600 @CFLAGS@
+# The use PWD allows to compile this testsuite for a clone (and different revision)
+# of this repository. If TOPSRCDIR is the top source directory of the clone,
+# compile this testsuite as:
+#
+# if grep rci_t $TOPSRCDIR/src/misc.h >/dev/null; then
+#   PWD="$TOPSRCDIR/testsuite" make bench_elimination bench_multiplication CFLAGS="-I$TOPSRCDIR/m4ri -D_XOPEN_SOURCE=600 -O2 -Dmzd_randomize=bench_randomize"
+# else
+#   PWD="$TOPSRCDIR/testsuite" make bench_elimination bench_multiplication CFLAGS="-I$TOPSRCDIR/m4ri -D_XOPEN_SOURCE=600 -O2 -Dmzd_randomize=bench_randomize -Drci_t=size_t -Dwi_t=size_t"
+# fi
+#
+# Note that if (once) the revision of TOPSRCDIR is new enough and contains the
+# current fast mzd_randomize (or when you don't care that it's slow) then you
+# can completely leave out CFLAGS and just compile as:
+#
+# PWD="$TOPSRCDIR/testsuite" make
+#
+# Finally, if you also leave out PWD and just run 'make' then the testsuite
+# is compiled against the current source tree.
+
 CC = @CC@
+CFLAGS = -I$(PWD)/../m4ri -D_XOPEN_SOURCE=600 @CFLAGS@
+STAGEDIR := $(PWD)/../.libs
+LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri
+DEBUG = -ggdb
 
-STAGEDIR:=$(PWD)/../.libs
-LDFLAGS=-L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri
-DEBUG=-ggdb
-
-TEST_PRGS=test_elimination \
+TEST_PRGS = \
+	test_elimination \
 	test_multiplication \
 	test_trsm test_pluq \
 	test_solve test_kernel
 
-BENCH_PRGS=bench_elimination \
+BENCH_PRGS = \
+	bench_elimination \
 	bench_multiplication \
 	bench_pluq \
 	bench_trsm_lowerleft \
@@ -19,14 +39,14 @@ BENCH_PRGS=bench_elimination \
 	bench_trsm_upperright \
 	bench_elimination_sparse
 
-CPUCYCLES_DIR=./cpucycles-20060326
+CPUCYCLES_DIR = ./cpucycles-20060326
 
 .PHONY: all clean dist-clean
 
 all: $(TEST_PRGS) $(BENCH_PRGS)
 
 bench_%: cpucycles.o benchmarketing.o bench_%.c Makefile
-	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o benchmarketing.o $(LDFLAGS) -o $@
+	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o benchmarketing.o $(LDFLAGS) -lm -o $@
 
 test_%: test_%.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) $@.c $(LDFLAGS) -o $@
@@ -42,15 +62,15 @@ clean:
 	rm -f $(CPUCYCLES_DIR)/cpucycles.h
 
 distclean: clean
-	rm -f Makefile
+	@MAINTAINER_MODE_TRUE@ rm -f Makefile
 
 cpucycles.h: cpucycles.o
 
 cpucycles.o:
-	(cd $(CPUCYCLES_DIR); sh do; cp cpucycles.o ..; cp cpucycles.h ..; cd ..)
+	(cd $(CPUCYCLES_DIR); sh do; cp cpucycles.o ..; cp cpucycles.h ..)
 
 benchmarketing.o: benchmarketing.c benchmarketing.h
 	$(CC) $(DEBUG) $(CFLAGS) -c benchmarketing.c $(LDFLAGS) -o $@
 
-Makefile: Makefile.in ../config.status
+Makefile: @MAINTAINER_MODE_TRUE@ Makefile.in ../config.status
 	(cd .. && /bin/sh ./config.status testsuite/Makefile)

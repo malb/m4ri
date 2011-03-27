@@ -77,12 +77,18 @@ void m4ri_word_to_str( char *destination, word data, int colon) {
   }
 }
 
-#define RAND_SHORT CONVERT_TO_WORD(rand() & ((1 << 16) - 1))
-
 word m4ri_random_word() {
-  return RAND_SHORT ^ RAND_SHORT<<16 ^ RAND_SHORT<<32 ^ RAND_SHORT<<48;
+  if (sizeof(long) == sizeof(word)) {
+    return random();
+  }
+  else if (2 * sizeof(long) == sizeof(word)) {
+    union { word result; long L1; long L2; } u;
+    u.L1 = random();
+    u.L2 = random();
+    return u.result;
+  }
+  assert(FALSE);	// Unsupported.
 }
-
 
 #ifdef __GNUC__
 void __attribute__ ((constructor)) m4ri_init()

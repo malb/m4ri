@@ -540,11 +540,12 @@ mzd_t *_mzd_mul_va(mzd_t *C, mzd_t const *v, mzd_t const *A, int const clear) {
 
 void mzd_randomize(mzd_t *A) {
   assert(A->offset == 0);
-
+  word const mask_end = LEFT_BITMASK(A->ncols % RADIX);
   for (rci_t i = 0; i < A->nrows; ++i) {
-    for (rci_t j = 0; j < A->ncols; ++j) {
-      mzd_write_bit(A, i, j, m4ri_coin_flip());
+    for (wi_t j = 0; j < A->width; ++j) {
+      A->rows[i][j] = m4ri_random_word();
     }
+    A->rows[i][A->width - 1] &= mask_end;
   }
 }
 

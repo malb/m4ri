@@ -369,7 +369,6 @@ void m4ri_word_to_str( char *destination, word data, int colon);
  * \todo Allow user to provide her own random() function.
  */
 
-//BIT m4ri_coin_flip(void);
 static inline BIT m4ri_coin_flip() {
   if (rand() < RAND_MAX/2) {
     return 0;

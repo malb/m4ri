@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
   }
 
   struct elim_sparse_params p;
-  p.density = ~0;
+  p.density = RAND_MAX / 10;		// Use a density of 0.1 by default.
   p.full = 1;
 
   if (argc >= 4)
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
   else
     p.algorithm = "m4ri";
   if (argc >= 5)
-    p.density = RAND_MAX * atof(argv[4]);
+    p.density = RAND_MAX * strtod(argv[4], NULL);
   if(argc >= 6)
     p.full = atoi(argv[5]);
 
@@ -74,5 +74,5 @@ int main(int argc, char **argv) {
   double wt;
   run_bench(run,(void*)&p, &wt, &t);
 
-  printf("m: %5d, n: %5d, last r: %5d, density: %7.5f, cpu cycles: %10llu, wall time: %lf\n", p.m, p.n, p.r, atof(argv[4]), t, wt);
+  printf("m: %5d, n: %5d, last r: %5d, density: %7.5f, cpu cycles: %10llu, wall time: %lf\n", p.m, p.n, p.r, (double)p.density / RAND_MAX, t, wt);
 }
