@@ -1,25 +1,30 @@
-# The use PWD allows to compile this testsuite for a clone (and different revision)
-# of this repository. If TOPSRCDIR is the top source directory of the clone,
-# compile this testsuite as:
+# The use TOPSRCDIR allows to compile this testsuite for a clone (and different revision)
+# of this repository. If the environment variable topsrcdir is the top source directory
+# of the clone, compile this testsuite as:
 #
-# if grep rci_t $TOPSRCDIR/src/misc.h >/dev/null; then
-#   PWD="$TOPSRCDIR/testsuite" make bench_elimination bench_multiplication CFLAGS="-I$TOPSRCDIR/m4ri -D_XOPEN_SOURCE=600 -O2 -Dmzd_randomize=bench_randomize"
-# else
-#   PWD="$TOPSRCDIR/testsuite" make bench_elimination bench_multiplication CFLAGS="-I$TOPSRCDIR/m4ri -D_XOPEN_SOURCE=600 -O2 -Dmzd_randomize=bench_randomize -Drci_t=size_t -Dwi_t=size_t"
+# defines="-Dmzd_randomize=bench_randomize"
+# if ! grep lesser_LSB $topsrcdir/src/misc.h >/dev/null; then
+#   defines="$defines -DBENCH_RANDOM_REVERSE"
 # fi
+# if ! grep rci_t $topsrcdir/src/misc.h >/dev/null; then
+#   defines="$defines -Drci_t=size_t -Dwi_t=size_t"
+# fi
+# make bench_elimination bench_multiplication TOPSRCDIR="$topsrcdir" DEFINES="$defines"
 #
 # Note that if (once) the revision of TOPSRCDIR is new enough and contains the
 # current fast mzd_randomize (or when you don't care that it's slow) then you
-# can completely leave out CFLAGS and just compile as:
+# can completely leave out DEFINES and just compile as:
 #
-# PWD="$TOPSRCDIR/testsuite" make
+# make TOPSRCDIR="$topsrcdir"
 #
-# Finally, if you also leave out PWD and just run 'make' then the testsuite
+# Finally, if you also leave out TOPSRCDIR and just run 'make' then the testsuite
 # is compiled against the current source tree.
 
 CC = @CC@
-CFLAGS = -I$(PWD)/../m4ri -D_XOPEN_SOURCE=600 @CFLAGS@
-STAGEDIR := $(PWD)/../.libs
+DEFINES =
+TOPSRCDIR = ..
+CFLAGS = -I$(TOPSRCDIR)/m4ri -D_XOPEN_SOURCE=600 @CFLAGS@ $(DEFINES)
+STAGEDIR := $(realpath -s $(TOPSRCDIR)/.libs)
 LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri
 DEBUG = -ggdb
 

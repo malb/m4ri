@@ -499,16 +499,27 @@ uint64_t bench_random()
 // The same as m4ri_random_word. Duplicated here because it's
 // not available in older revisions that we want to benchmark against.
 word bench_random_word() {
+  word v;
   if (sizeof(long) == sizeof(word)) {
-    return random();
+    v = random();
   }
   else if (2 * sizeof(long) == sizeof(word)) {
     union { word result; long L1; long L2; } u;
     u.L1 = random();
     u.L2 = random();
-    return u.result;
+    v = u.result;
   }
-  assert(FALSE);        // Unsupported.
+  else
+    assert(FALSE);        // Unsupported.
+#ifdef BENCH_RANDOM_REVERSE
+  v = ((v >>  1) & 0x5555555555555555ULL) | ((v & 0x5555555555555555ULL) << 1);
+  v = ((v >>  2) & 0x3333333333333333ULL) | ((v & 0x3333333333333333ULL) << 2);
+  v = ((v >>  4) & 0x0F0F0F0F0F0F0F0FULL) | ((v & 0x0F0F0F0F0F0F0F0FULL) << 4);
+  v = ((v >>  8) & 0x00FF00FF00FF00FFULL) | ((v & 0x00FF00FF00FF00FFULL) << 8);
+  v = ((v >> 16) & 0x0000FFFF0000FFFFULL) | ((v & 0x0000FFFF0000FFFFULL) << 16);
+  v =  (v >> 32)                          |  (v                          << 32);
+#endif
+  return v;
 }
 
 // Needed for mzd_t.
