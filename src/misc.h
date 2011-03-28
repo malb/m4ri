@@ -301,6 +301,22 @@ static word const FFFF = CONVERT_TO_WORD(-1);
 #define MIDDLE_BITMASK(n, offset) (LEFT_BITMASK(n) << (offset))
 
 /**
+ * \brief swap bits in the word v
+ *
+ * \param n
+ */
+
+static inline word swap_bits(word v) {
+  v = ((v >>  1) & 0x5555555555555555ULL) | ((v & 0x5555555555555555ULL) << 1);
+  v = ((v >>  2) & 0x3333333333333333ULL) | ((v & 0x3333333333333333ULL) << 2);
+  v = ((v >>  4) & 0x0F0F0F0F0F0F0F0FULL) | ((v & 0x0F0F0F0F0F0F0F0FULL) << 4);
+  v = ((v >>  8) & 0x00FF00FF00FF00FFULL) | ((v & 0x00FF00FF00FF00FFULL) << 8);
+  v = ((v >> 16) & 0x0000FFFF0000FFFFULL) | ((v & 0x0000FFFF0000FFFFULL) << 16);
+  v =  (v >> 32)                          |  (v                          << 32);
+  return v;
+}
+
+/**
  * \brief Return alignment of addr w.r.t. n. For example the address
  * 17 would be 1 aligned w.r.t. 16.
  *
