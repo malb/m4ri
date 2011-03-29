@@ -499,18 +499,11 @@ uint64_t bench_random()
 // The same as m4ri_random_word. Duplicated here because it's
 // not available in older revisions that we want to benchmark against.
 word bench_random_word() {
-  word v;
-  if (sizeof(long) == sizeof(word)) {
-    v = random();
-  }
-  else if (2 * sizeof(long) == sizeof(word)) {
-    union { word result; long L1; long L2; } u;
-    u.L1 = random();
-    u.L2 = random();
-    v = u.result;
-  }
-  else
-    assert(FALSE);        // Unsupported.
+  // random() only returns 31 bits, so we need three calls.
+  word a0 = random();
+  word a1 = random();
+  word a2 = random();
+  word v = a0 ^ (a1 << 24) ^ a2 << 48;
 #ifdef BENCH_RANDOM_REVERSE
   v = ((v >>  1) & 0x5555555555555555ULL) | ((v & 0x5555555555555555ULL) << 1);
   v = ((v >>  2) & 0x3333333333333333ULL) | ((v & 0x3333333333333333ULL) << 2);
@@ -528,13 +521,40 @@ word bench_random_word() {
 // The same as m4ri_randomize. Duplicated here because it's
 // not available in older revisions that we want to benchmark against.
 void bench_randomize(mzd_t *A) {
-  assert(A->offset == 0);
-  word const mask_end = LEFT_BITMASK(A->ncols % RADIX);
-  for (rci_t i = 0; i < A->nrows; ++i) {
-    for (wi_t j = 0; j < A->width; ++j) {
-      A->rows[i][j] = bench_random_word();
+  wi_t const width = A->width - 1;
+  int const offset = A->offset;
+  if(offset) {
+    if(width == 0) {
+      word const mask = MIDDLE_BITMASK(A->ncols, offset);
+      for(rci_t i = 0; i < A->nrows; ++i)
+	A->rows[i][0] ^= (A->rows[i][0] ^ (bench_random_word() << offset)) & mask;
+    } else {
+      word const mask_begin = RIGHT_BITMASK(RADIX - offset);
+      word const mask_end = LEFT_BITMASK((A->ncols + offset) % RADIX);
+      int const need_last_bits = ((ONE << offset) & mask_end) != 0;
+      for(rci_t i = 0; i < A->nrows; ++i) {
+	word prev_random_word;
+	word random_word = bench_random_word();
+	A->rows[i][0] ^= (A->rows[i][0] ^ (random_word << offset)) & mask_begin;
+	for(wi_t j = 1; j < width; ++j) {
+	  prev_random_word = random_word;
+	  random_word = bench_random_word();
+	  A->rows[i][j] = (random_word << offset) | (prev_random_word >> (RADIX - offset));
+	}
+	prev_random_word = random_word;
+	random_word = 0;
+	if (need_last_bits)
+	  random_word = bench_random_word();
+	A->rows[i][width] ^= (A->rows[i][width] ^ ((random_word << offset) | (prev_random_word >> (RADIX - offset)))) & mask_end;
+      }
     }
-    A->rows[i][A->width - 1] &= mask_end;
+  } else {
+    word const mask_end = LEFT_BITMASK(A->ncols % RADIX);
+    for(rci_t i = 0; i < A->nrows; ++i) {
+      for(wi_t j = 0; j < width; ++j)
+	A->rows[i][j] = bench_random_word();
+      A->rows[i][width] ^= (A->rows[i][width] ^ bench_random_word()) & mask_end;
+    }
   }
 }
 
