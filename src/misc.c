@@ -46,48 +46,26 @@ void m4ri_die(const char *errormessage, ...) {
   abort();
 }
 
-/* Warning: I assume *destination has RADIX+1 bytes available */
-void m4ri_word_to_str( char *destination, word data, int colon) {
-  if (colon == 0) {
-
-    for (int i = 0; i < RADIX; ++i) {
-      if (GET_BIT(data,i))
-	destination[i]='1';
-      else 
-	destination[i]=' ';
-    }
-    destination[RADIX] = '\0';
-
-  } else {
-
-    int j = 0;
-    for (int i = 0; i < RADIX; ++i) {
-      if (GET_BIT(data,i))
-	destination[j] = '1';
-      else 
-	destination[j] = ' ';
-      ++j;
-      if (((i % 4) == 3) && (i != RADIX - 1)) {
-	destination[j] = ':';
-	++j;
-      }
-    }
-
-    destination[j]='\0';
+/* Warning: If colon, destination must have RADIX + (RADIX - 1) / 4 + 1 bytes available. */
+void m4ri_word_to_str(char *destination, word data, int colon) {
+  int j = 0;
+  for (int i = 0; i < RADIX; ++i) {
+    if (colon && (i % 4) == 0 && i != 0)
+      destination[j++] = ':';
+    if (GET_BIT(data, i))
+      destination[j++] = '1';
+    else 
+      destination[j++] = ' ';
   }
+  destination[j] = '\0';
 }
 
 word m4ri_random_word() {
-  if (sizeof(long) == sizeof(word)) {
-    return random();
-  }
-  else if (2 * sizeof(long) == sizeof(word)) {
-    union { word result; long L1; long L2; } u;
-    u.L1 = random();
-    u.L2 = random();
-    return u.result;
-  }
-  assert(FALSE);	// Unsupported.
+  // random() only returns 31 bits, so we need three calls.
+  word a0 = random();
+  word a1 = random();
+  word a2 = random();
+  return a0 ^ (a1 << 24) ^ a2 << 48;
 }
 
 #ifdef __GNUC__

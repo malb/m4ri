@@ -572,7 +572,7 @@ rci_t mzd_echelonize_naive(mzd_t *M, int const full);
  * \wordoffset
  */
 
-BIT mzd_equal(mzd_t const *A, mzd_t const *B);
+int mzd_equal(mzd_t const *A, mzd_t const *B);
 
 /**
  * \brief Return -1,0,1 if if A < B, A == B or A > B respectively.

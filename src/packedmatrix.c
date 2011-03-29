@@ -27,7 +27,7 @@
 #include "packedmatrix.h"
 #include "parity.h"
 
-#define SAFECHAR (RADIX + RADIX / 3)
+#define SAFECHAR (RADIX + RADIX / 4 + 1)
 
 void mzd_copy_row_weird_to_even(mzd_t *B, rci_t i, mzd_t const *A, rci_t j);
 
@@ -152,26 +152,26 @@ void mzd_print( mzd_t const *M ) {
     if(M->offset == 0) {
       for (wi_t j = 0; j < M->width - 1; ++j) {
         m4ri_word_to_str(temp, row[j], 1);
-        printf("%s ", temp);
+        printf("%s|", temp);
       }
       row = row + M->width - 1;
       int const wide = (M->ncols % RADIX) ? M->ncols % RADIX : RADIX;
       for (int j = 0; j < wide; ++j) {
+        if(j != 0 && (j % 4) == 0)
+          printf(":");
         if (GET_BIT(*row, j)) 
           printf("1");
         else
           printf(" ");
-        if (((j % 4) == 3) && (j != RADIX - 1))
-          printf(":");
       }
     } else {
       for (rci_t j = 0; j < M->ncols; ++j) {
+        if(j != 0 && (j % 4) == 0)
+          printf(((j % RADIX) == 0) ? "|" : ":");
         if(mzd_read_bit(M, i, j))
           printf("1");
         else
           printf(" ");
-        if (((j % 4) == 3) && (j != RADIX - 1))
-          printf(":");
       }
     }
     printf("]\n");
@@ -542,13 +542,40 @@ mzd_t *_mzd_mul_va(mzd_t *C, mzd_t const *v, mzd_t const *A, int const clear) {
 }
 
 void mzd_randomize(mzd_t *A) {
-  assert(A->offset == 0);
-  word const mask_end = LEFT_BITMASK(A->ncols % RADIX);
-  for (rci_t i = 0; i < A->nrows; ++i) {
-    for (wi_t j = 0; j < A->width; ++j) {
-      A->rows[i][j] = m4ri_random_word();
+  wi_t const width = A->width - 1;
+  int const offset = A->offset;
+  if(offset) {
+    if(width == 0) {
+      word const mask = MIDDLE_BITMASK(A->ncols, offset);
+      for(rci_t i = 0; i < A->nrows; ++i)
+	A->rows[i][0] ^= (A->rows[i][0] ^ (m4ri_random_word() << offset)) & mask;
+    } else {
+      word const mask_begin = RIGHT_BITMASK(RADIX - offset);
+      word const mask_end = LEFT_BITMASK((A->ncols + offset) % RADIX);
+      int const need_last_bits = ((ONE << offset) & mask_end) != 0;
+      for(rci_t i = 0; i < A->nrows; ++i) {
+	word prev_random_word;
+	word random_word = m4ri_random_word();
+	A->rows[i][0] ^= (A->rows[i][0] ^ (random_word << offset)) & mask_begin;
+	for(wi_t j = 1; j < width; ++j) {
+	  prev_random_word = random_word;
+	  random_word = m4ri_random_word();
+	  A->rows[i][j] = (random_word << offset) | (prev_random_word >> (RADIX - offset));
+	}
+	prev_random_word = random_word;
+	random_word = 0;
+	if (need_last_bits)
+	  random_word = m4ri_random_word();
+	A->rows[i][width] ^= (A->rows[i][width] ^ ((random_word << offset) | (prev_random_word >> (RADIX - offset)))) & mask_end;
+      }
     }
-    A->rows[i][A->width - 1] &= mask_end;
+  } else {
+    word const mask_end = LEFT_BITMASK(A->ncols % RADIX);
+    for(rci_t i = 0; i < A->nrows; ++i) {
+      for(wi_t j = 0; j < width; ++j)
+	A->rows[i][j] = m4ri_random_word();
+      A->rows[i][width] ^= (A->rows[i][width] ^ m4ri_random_word()) & mask_end;
+    }
   }
 }
 
@@ -580,17 +607,91 @@ void mzd_set_ui( mzd_t *A, unsigned int value) {
   }
 }
 
-BIT mzd_equal(mzd_t const *A, mzd_t const *B) {
-  assert(A->offset == 0);
-  assert(B->offset == 0);
-
+int mzd_equal(mzd_t const *A, mzd_t const *B) {
   if (A->nrows != B->nrows) return FALSE;
   if (A->ncols != B->ncols) return FALSE;
+  if (A == B) return TRUE;
 
-  for (rci_t i = 0; i < A->nrows; ++i) {
-    for (wi_t j = 0; j < A->width; ++j) {
-      if (A->rows[i][j] != B->rows[i][j])
+  wi_t const width = A->width - 1;
+
+  if (A->offset == B->offset) {
+    int const non_zero_offset = (A->offset != 0);
+    if (non_zero_offset < width) {
+      for (rci_t i = 0; i < A->nrows; ++i) {
+	for (wi_t j = non_zero_offset; j < width; ++j) {
+	  if (A->rows[i][j] != B->rows[i][j])
+	    return FALSE;
+	}
+      }
+    }
+    word const mask_end = LEFT_BITMASK(A->ncols % RADIX);
+    if (non_zero_offset) {
+      word mask_begin = RIGHT_BITMASK(RADIX - A->offset);
+      if (!width)
+	mask_begin &= mask_end;
+      for (rci_t i = 0; i < A->nrows; ++i) {
+	if (((A->rows[i][0] ^ B->rows[i][0]) & mask_begin))
+	  return FALSE;
+      }
+      if (!width)
+	return TRUE;
+    }
+    for (rci_t i = 0; i < A->nrows; ++i) {
+      if (((A->rows[i][width] ^ B->rows[i][width]) & mask_end))
 	return FALSE;
+    }
+  } else {
+    int shift = B->offset - A->offset;
+    if (shift < 0) {
+      mzd_t const *tmp = A;
+      A = B;
+      B = tmp;
+      shift = -shift;
+    }
+    int const non_zero_offset = (A->offset != 0);
+    if (non_zero_offset < width) {
+      for (rci_t i = 0; i < A->nrows; ++i) {
+	for (wi_t j = non_zero_offset; j < width; ++j) {
+	  word Bval = (B->rows[i][j] >> shift) | (B->rows[i][j + 1] << (RADIX - shift));
+	  if (A->rows[i][j] != Bval)
+	    return FALSE;
+	}
+      }
+    }
+    word const mask_end = LEFT_BITMASK(A->ncols % RADIX);
+    if (non_zero_offset) {
+      word mask_begin = RIGHT_BITMASK(RADIX - A->offset);
+      if (!width)
+	mask_begin &= mask_end;
+      if (1 < B->width) {
+	for (rci_t i = 0; i < A->nrows; ++i) {
+	  word Bval = (B->rows[i][0] >> shift) | (B->rows[i][1] << (RADIX - shift));
+	  if (((A->rows[i][0] ^ Bval) & mask_begin))
+	    return FALSE;
+	}
+      } else {
+	for (rci_t i = 0; i < A->nrows; ++i) {
+	  word Bval = B->rows[i][0] >> shift;
+	  if (((A->rows[i][0] ^ Bval) & mask_begin))
+	    return FALSE;
+	}
+      }
+      if (!width)
+	return TRUE;
+    }
+    if (width + 1 < B->width)
+    {
+      for (rci_t i = 0; i < A->nrows; ++i) {
+	word Bval = (B->rows[i][width] >> shift) | (B->rows[i][width + 1] << (RADIX - shift));
+	if (((A->rows[i][width] ^ Bval) & mask_end))
+	  return FALSE;
+      }
+    } else {
+      for (rci_t i = 0; i < A->nrows; ++i) {
+	word Bval = B->rows[i][width] >> shift;
+	if (((A->rows[i][width] ^ Bval) & mask_end))
+	  return FALSE;
+      }
     }
   }
   return TRUE;
