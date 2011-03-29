@@ -32,7 +32,8 @@ TEST_PRGS = \
 	test_elimination \
 	test_multiplication \
 	test_trsm test_pluq \
-	test_solve test_kernel
+	test_solve test_kernel \
+	test_random
 
 BENCH_PRGS = \
 	bench_elimination \
