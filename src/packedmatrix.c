@@ -4,6 +4,7 @@
 *
 *    Copyright (C) 2007 Gregory Bard <gregory.bard@ieee.org> 
 *    Copyright (C) 2009,2010 Martin Albrecht <martinralbrecht@googlemail.com>
+*    Copyright (C) 2011 Carlo Wood <carlo@alinoe.com>
 *
 *  Distributed under the terms of the GNU General Public License (GPL)
 *  version 2 or higher.

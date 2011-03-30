@@ -1,22 +1,26 @@
-/*******************************************************************
-*
-*                M4RI: Linear Algebra over GF(2)
-*
-*    Copyright (C) 2009 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
-*
-*  Distributed under the terms of the GNU General Public License (GPL)
-*  version 2 or higher.
-*
-*    This code is distributed in the hope that it will be useful,
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*    General Public License for more details.
-*
-*  The full text of the GPL is available at:
-*
-*                  http://www.gnu.org/licenses/
-*
-********************************************************************/
+/*
+ * test_random.c
+ *
+ * Application to test functionality of mzd_randomize (and mzd_equal).
+ * In particular if these function correctly for windowed matrices.
+ *
+ * Copyright (C) 2011  Carlo Wood  <carlo@alinoe.com>
+ * RSA-1024 0x624ACAD5 1997-01-26                    Sign & Encrypt
+ * Fingerprint16 = 32 EC A7 B6 AC DB 65 A6  F6 F6 55 DD 1C DC FF 61
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "config.h"
 #include <stdio.h>
