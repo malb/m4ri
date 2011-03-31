@@ -33,7 +33,8 @@ TEST_PRGS = \
 	test_multiplication \
 	test_trsm test_pluq \
 	test_solve test_kernel \
-	test_random
+	test_random \
+	test_smallops
 
 BENCH_PRGS = \
 	bench_elimination \
@@ -43,7 +44,8 @@ BENCH_PRGS = \
 	bench_trsm_upperleft \
 	bench_trsm_lowerright \
 	bench_trsm_upperright \
-	bench_elimination_sparse
+	bench_elimination_sparse \
+	bench_smallops
 
 CPUCYCLES_DIR = ./cpucycles-20060326
 
@@ -54,8 +56,8 @@ all: $(TEST_PRGS) $(BENCH_PRGS)
 bench_%: cpucycles.o benchmarketing.o bench_%.c Makefile
 	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o benchmarketing.o $(LDFLAGS) -lm -o $@
 
-test_%: test_%.c Makefile
-	$(CC) $(DEBUG) $(CFLAGS) $@.c $(LDFLAGS) -o $@
+test_%: test_%.c testing.o Makefile
+	$(CC) $(DEBUG) $(CFLAGS) $@.c $(LDFLAGS) testing.o -o $@
 
 matops: matops.c Makefile
 	$(CC) $(DEBUG) -I.. $(CFLAGS) matops.c $(LDFLAGS) -o $@
@@ -74,6 +76,9 @@ cpucycles.h: cpucycles.o
 
 cpucycles.o:
 	(cd $(CPUCYCLES_DIR); sh do; cp cpucycles.o ..; cp cpucycles.h ..)
+
+testing.o: testing.c testing.h
+	$(CC) $(DEBUG) $(CFLAGS) -c testing.c $(LDFLAGS) -o $@
 
 benchmarketing.o: benchmarketing.c benchmarketing.h
 	$(CC) $(DEBUG) $(CFLAGS) -c benchmarketing.c $(LDFLAGS) -o $@

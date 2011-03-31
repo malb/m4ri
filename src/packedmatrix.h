@@ -47,7 +47,7 @@
  * used.
  */
 
-#define SSE2_CUTOFF 20
+#define SSE2_CUTOFF 10
 #endif
 
 /**
@@ -337,6 +337,67 @@ static inline BIT mzd_read_bit(mzd_t const *M, rci_t const row, rci_t const col 
 
 static inline void mzd_write_bit(mzd_t *M, rci_t const row, rci_t const col, BIT const value) {
   WRITE_BIT(M->rows[row][(col + M->offset) / RADIX], (col + M->offset) % RADIX, value);
+}
+
+
+/**
+ * \brief XOR n bits from values to M starting a position (x,y).
+ *
+ * \param M Source matrix.
+ * \param x Starting row.
+ * \param y Starting column.
+ * \param n Number of bits (<= RADIX);
+ * \param values Word with values;
+ */
+
+static inline void mzd_xor_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n, word values) {
+  int const spot = (y + M->offset) % RADIX;
+  wi_t const block = (y + M->offset) / RADIX;
+  M->rows[x][block] ^= values << spot;
+  int const space = RADIX - spot;
+  if (n > space)
+    M->rows[x][block + 1] ^= values >> space;
+}
+
+/**
+ * \brief AND n bits from values to M starting a position (x,y).
+ *
+ * \param M Source matrix.
+ * \param x Starting row.
+ * \param y Starting column.
+ * \param n Number of bits (<= RADIX);
+ * \param values Word with values;
+ */
+
+static inline void mzd_and_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n, word values) {
+  /* This is the best way, since this will drop out once we inverse the bits in values: */
+  values >>= (RADIX - n);	/* Move the bits to the lowest columns */
+
+  int const spot = (y + M->offset) % RADIX;
+  wi_t const block = (y + M->offset) / RADIX;
+  M->rows[x][block] &= values << spot;
+  int const space = RADIX - spot;
+  if (n > space)
+    M->rows[x][block + 1] &= values >> space;
+}
+
+/**
+ * \brief Clear n bits in M starting a position (x,y).
+ *
+ * \param M Source matrix.
+ * \param x Starting row.
+ * \param y Starting column.
+ * \param n Number of bits (0 < n <= RADIX);
+ */
+
+static inline void mzd_clear_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n) {
+  word values = FFFF >> (RADIX - n);
+  int const spot = (y + M->offset) % RADIX;
+  wi_t const block = (y + M->offset) / RADIX;
+  M->rows[x][block] &= ~(values << spot);
+  int const space = RADIX - spot;
+  if (n > space)
+    M->rows[x][block + 1] &= ~(values >> space);
 }
 
 /**
@@ -719,6 +780,26 @@ mzd_t *_mzd_add(mzd_t *C, mzd_t const *A, mzd_t const *B);
 
 #define _mzd_sub _mzd_add
 
+
+
+/**
+ * Get n bits starting a position (x,y) from the matrix M.
+ *
+ * \param M Source matrix.
+ * \param x Starting row.
+ * \param y Starting column.
+ * \param n Number of bits (<= RADIX);
+ */ 
+
+static inline word mzd_read_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n) {
+  int const spot = (y + M->offset) % RADIX;
+  wi_t const block = (y + M->offset) / RADIX;
+  int const spill = spot + n - RADIX;
+  word temp = (spill <= 0) ? M->rows[x][block] << -spill : (M->rows[x][block + 1] << (RADIX - spill)) | (M->rows[x][block] >> spill);
+  return temp >> (RADIX - n);
+}
+
+
 /**
  * \brief row3[col3:] = row1[col1:] + row2[col2:]
  * 
@@ -742,22 +823,200 @@ void mzd_combine(mzd_t *DST, rci_t const row3, wi_t const startblock3,
 		 mzd_t const *SC1, rci_t const row1, wi_t const startblock1, 
 		 mzd_t const *SC2, rci_t const row2, wi_t const startblock2);
 
-/**
- * Get n bits starting a position (x,y) from the matrix M.
- *
- * \param M Source matrix.
- * \param x Starting row.
- * \param y Starting column.
- * \param n Number of bits (<= RADIX);
- */ 
 
-static inline word mzd_read_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n) {
-  int const spot = (y + M->offset) % RADIX;
-  wi_t const block = (y + M->offset) / RADIX;
-  int const spill = spot + n - RADIX;
-  word temp = (spill <= 0) ? M->rows[x][block] << -spill : (M->rows[x][block + 1] << (RADIX - spill)) | (M->rows[x][block] >> spill);
-  return temp >> (RADIX - n);
+/**
+ * \brief c_row[c_startblock:] = a_row[a_startblock:] + b_row[b_startblock:] for different offsets
+ * 
+ * Adds a_row of A, starting with a_startblock to the end, to
+ * b_row of B, starting with b_startblock to the end. This gets stored
+ * in C, in c_row, starting with c_startblock.
+ *
+ * \param C destination matrix
+ * \param c_row destination row for matrix C
+ * \param c_startblock starting block to work on in matrix C
+ * \param A source matrix
+ * \param a_row source row for matrix A
+ * \param a_startblock starting block to work on in matrix A
+ * \param B source matrix
+ * \param b_row source row for matrix B
+ * \param b_startblock starting block to work on in matrix B
+ *
+ */
+
+void static inline mzd_combine_weird(mzd_t *C,       rci_t const c_row, wi_t const c_startblock,
+                                     mzd_t const *A, rci_t const a_row, wi_t const a_startblock, 
+                                     mzd_t const *B, rci_t const b_row, wi_t const b_startblock) {
+  word tmp;
+  rci_t i = 0;
+
+
+  for(; i + RADIX <= A->ncols; i += RADIX) {
+    tmp = mzd_read_bits(A, a_row, i, RADIX) ^ mzd_read_bits(B, b_row, i, RADIX);
+    mzd_clear_bits(C, c_row, i, RADIX);
+    mzd_xor_bits(C, c_row, i, RADIX, tmp);
+  }
+  if(A->ncols - i) {
+    tmp = mzd_read_bits(A, a_row, i, (A->ncols - i)) ^ mzd_read_bits(B, b_row, i, (B->ncols - i));
+    mzd_clear_bits(C, c_row, i, (C->ncols - i));
+    mzd_xor_bits(C, c_row, i, (C->ncols - i), tmp);
+  }
+  return;
 }
+
+/**
+ * \brief a_row[a_startblock:] += b_row[b_startblock:] for offset 0
+ * 
+ * Adds a_row of A, starting with a_startblock to the end, to
+ * b_row of B, starting with b_startblock to the end. This gets stored
+ * in A, in a_row, starting with a_startblock.
+ *
+ * \param A destination matrix
+ * \param a_row destination row for matrix C
+ * \param a_startblock starting block to work on in matrix C
+ * \param B source matrix
+ * \param b_row source row for matrix B
+ * \param b_startblock starting block to work on in matrix B
+ *
+ */
+
+void static inline mzd_combine_even_in_place(mzd_t *A,       rci_t const a_row, wi_t const a_startblock,
+                                             mzd_t const *B, rci_t const b_row, wi_t const b_startblock) {
+
+  wi_t wide = A->width - a_startblock - 1;
+
+  word *a = A->rows[a_row] + a_startblock;
+  word *b = B->rows[b_row] + b_startblock;
+  
+#ifdef HAVE_SSE2
+  if(wide > SSE2_CUTOFF) {
+    /** check alignments **/
+    if (ALIGNMENT(a,16)) {
+      *a++ ^= *b++;
+      wide--;
+    }
+    
+    if (ALIGNMENT(a, 16) == 0 && ALIGNMENT(b, 16) == 0) {
+      __m128i *a128 = (__m128i*)a;
+      __m128i *b128 = (__m128i*)b;
+      const __m128i *eof = (__m128i*)((unsigned long)(a + wide) & ~0xFUL);
+      
+      do {
+        *a128 = _mm_xor_si128(*a128, *b128);
+        ++b128;
+        ++a128;
+      } while(a128 < eof);
+      
+      a = (word*)a128;
+      b = (word*)b128;
+      wide = ((sizeof(word) * wide) % 16) / sizeof(word);
+    }
+  }
+#endif //HAVE_SSE2
+
+  if (wide > 0) {
+    wi_t n = (wide + 7) / 8;
+    switch (wide % 8) {
+    case 0: do { *(a++) ^= *(b++);
+    case 7:      *(a++) ^= *(b++);
+    case 6:      *(a++) ^= *(b++);
+    case 5:      *(a++) ^= *(b++);
+    case 4:      *(a++) ^= *(b++);
+    case 3:      *(a++) ^= *(b++);
+    case 2:      *(a++) ^= *(b++);
+    case 1:      *(a++) ^= *(b++);
+    } while (--n > 0);
+    }
+  }
+
+  *a ^= *b & LEFT_BITMASK(A->ncols%RADIX);
+  return;
+}
+
+
+/**
+ * \brief c_row[c_startblock:] = a_row[a_startblock:] + b_row[b_startblock:] for offset 0
+ * 
+ * Adds a_row of A, starting with a_startblock to the end, to
+ * b_row of B, starting with b_startblock to the end. This gets stored
+ * in C, in c_row, starting with c_startblock.
+ *
+ * \param C destination matrix
+ * \param c_row destination row for matrix C
+ * \param c_startblock starting block to work on in matrix C
+ * \param A source matrix
+ * \param a_row source row for matrix A
+ * \param a_startblock starting block to work on in matrix A
+ * \param B source matrix
+ * \param b_row source row for matrix B
+ * \param b_startblock starting block to work on in matrix B
+ *
+ */
+
+void static inline mzd_combine_even(mzd_t *C,       rci_t const c_row, wi_t const c_startblock,
+                                    mzd_t const *A, rci_t const a_row, wi_t const a_startblock, 
+                                    mzd_t const *B, rci_t const b_row, wi_t const b_startblock) {
+
+  wi_t wide = A->width - a_startblock - 1;
+  word *a = A->rows[a_row] + a_startblock;
+  word *b = B->rows[b_row] + b_startblock;
+  word *c = C->rows[c_row] + c_startblock;
+  
+  /* /\* this is a corner case triggered by Strassen multiplication */
+  /*  * which assumes certain (virtual) matrix sizes  */
+  /*  * 2011/03/07: I don't think this was ever correct *\/ */
+  /* if (a_row >= A->nrows) { */
+  /*   assert(a_row < A->nrows); */
+  /*   for(wi_t i = 0; i < wide; ++i) { */
+  /*     c[i] = b[i]; */
+  /*   } */
+  /* } else { */
+#ifdef HAVE_SSE2
+  if(wide > SSE2_CUTOFF) {
+    /** check alignments **/
+    if (ALIGNMENT(a,16)) {
+      *c++ = *b++ ^ *a++;
+      wide--;
+    }
+      
+    if ( (ALIGNMENT(b, 16) | ALIGNMENT(c, 16)) == 0) {
+      __m128i *a128 = (__m128i*)a;
+      __m128i *b128 = (__m128i*)b;
+      __m128i *c128 = (__m128i*)c;
+      const __m128i *eof = (__m128i*)((unsigned long)(a + wide) & ~0xFUL);
+      
+      do {
+        *c128 = _mm_xor_si128(*a128, *b128);
+        ++c128;
+        ++b128;
+        ++a128;
+      } while(a128 < eof);
+      
+      a = (word*)a128;
+      b = (word*)b128;
+      c = (word*)c128;
+      wide = ((sizeof(word) * wide) % 16) / sizeof(word);
+    }
+  }
+#endif //HAVE_SSE2
+
+  if (wide > 0) {
+    wi_t n = (wide + 7) / 8;
+    switch (wide % 8) {
+    case 0: do { *(c++) = *(a++) ^ *(b++);
+    case 7:      *(c++) = *(a++) ^ *(b++);
+    case 6:      *(c++) = *(a++) ^ *(b++);
+    case 5:      *(c++) = *(a++) ^ *(b++);
+    case 4:      *(c++) = *(a++) ^ *(b++);
+    case 3:      *(c++) = *(a++) ^ *(b++);
+    case 2:      *(c++) = *(a++) ^ *(b++);
+    case 1:      *(c++) = *(a++) ^ *(b++);
+    } while (--n > 0);
+    }
+  }
+  *c ^= ((*a ^ *b ^ *c) & LEFT_BITMASK(C->ncols%RADIX));
+  return;
+}
+
 
 /*
  * Get n bits starting a position (x,y) from the matrix M.
@@ -772,65 +1031,6 @@ static inline int mzd_read_bits_int(mzd_t const *M, rci_t const x, rci_t const y
   return CONVERT_TO_INT(mzd_read_bits(M, x, y, n));
 }
 
-/**
- * \brief XOR n bits from values to M starting a position (x,y).
- *
- * \param M Source matrix.
- * \param x Starting row.
- * \param y Starting column.
- * \param n Number of bits (<= RADIX);
- * \param values Word with values;
- */
-
-static inline void mzd_xor_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n, word values) {
-  int const spot = (y + M->offset) % RADIX;
-  wi_t const block = (y + M->offset) / RADIX;
-  M->rows[x][block] ^= values << spot;
-  int const space = RADIX - spot;
-  if (n > space)
-    M->rows[x][block + 1] ^= values >> space;
-}
-
-/**
- * \brief AND n bits from values to M starting a position (x,y).
- *
- * \param M Source matrix.
- * \param x Starting row.
- * \param y Starting column.
- * \param n Number of bits (<= RADIX);
- * \param values Word with values;
- */
-
-static inline void mzd_and_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n, word values) {
-  /* This is the best way, since this will drop out once we inverse the bits in values: */
-  values >>= (RADIX - n);	/* Move the bits to the lowest columns */
-
-  int const spot = (y + M->offset) % RADIX;
-  wi_t const block = (y + M->offset) / RADIX;
-  M->rows[x][block] &= values << spot;
-  int const space = RADIX - spot;
-  if (n > space)
-    M->rows[x][block + 1] &= values >> space;
-}
-
-/**
- * \brief Clear n bits in M starting a position (x,y).
- *
- * \param M Source matrix.
- * \param x Starting row.
- * \param y Starting column.
- * \param n Number of bits (0 < n <= RADIX);
- */
-
-static inline void mzd_clear_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n) {
-  word values = FFFF >> (RADIX - n);
-  int const spot = (y + M->offset) % RADIX;
-  wi_t const block = (y + M->offset) / RADIX;
-  M->rows[x][block] &= ~(values << spot);
-  int const space = RADIX - spot;
-  if (n > space)
-    M->rows[x][block + 1] &= ~(values >> space);
-}
 
 /**
  * \brief Zero test for matrix.
