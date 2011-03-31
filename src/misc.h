@@ -5,6 +5,7 @@
  *
  * \author Gregory Bard <bard@fordham.edu>
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
+ * \author Carlo Wood <carlo@alinoe.com>
  */
 
 #ifndef MISC_H
@@ -15,6 +16,7 @@
 *
 *    Copyright (C) 2007, 2008 Gregory Bard <bard@fordham.edu>
 *    Copyright (C) 2008 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
+*    Copyright (C) 2011 Carlo Wood <carlo@alinoe.com>
 *
 *  Distributed under the terms of the GNU General Public License (GPL)
 *  version 2 or higher.
