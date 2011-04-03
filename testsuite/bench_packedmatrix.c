@@ -518,12 +518,10 @@ int run_mzd_combine(void *_p, double *wt, unsigned long long *cycles)
   rci_t row1 = p->row[0];
   rci_t row2 = p->row[1];
   rci_t row3 = p->row[2];
-  wi_t startblock1 = p->wrd[0];
-  wi_t startblock2 = p->wrd[1];
-  wi_t startblock3 = p->wrd[2];
+  wi_t startblock = p->wrd[0];
   uint64_t const count = p->count;
 
-  TIME(mzd_combine, (C, row3, startblock3, A, row1, startblock1, B, row2, startblock2), count);
+  TIME(mzd_combine, (C, row3, startblock, A, row1, startblock, B, row2, startblock), count);
 
   mzd_free(A);
   mzd_free(B);
@@ -744,8 +742,6 @@ double complexity1(struct test_params *p, char code)
     case 'C':
       assert(p->col[0] < p->n);
       return p->n - p->col[0];		// Linear with the number of columns of column col and beyond.
-    case 'S':
-      return p->n + p->m;		// Linear with the sum of n + m.
   }
 }
 
@@ -769,8 +765,6 @@ char const* complexity1_human(struct test_params *p, char code)
       return "cols";
     case 'C':
       return "cols";
-    case 'S':
-      return "(n+m)";
   }
 }
 
@@ -792,17 +786,17 @@ void print_complexity_human(struct test_params *p, char const* cp)
   int power = 0;
   while (*cp)
   {
-    ++power;
     if (*cp != last_cp)
     {
       if (power > 1)
 	printf("^%d", power);
-      last_cp = *cp;
-      power = 1;
       if (!first && isupper(*cp))
 	printf("*");
       printf("%s", complexity1_human(p, *cp));
+      power = 0;
+      last_cp = *cp;
     }
+    ++power;
     ++cp;
   }
   if (power > 1)
@@ -830,9 +824,9 @@ static function_st function_mapper[] = {
   { "mzd_row_add_offset",   run_mzd_row_add_offset,   "Rmn,ri,ri,ci",    "C",  100000000 },
   { "mzd_row_add",          run_mzd_row_add,          "Rmn,ri,ri",       "n",  100000000 },
   { "mzd_transpose",        run_mzd_transpose,        "Omm,Rmm",         "mm", 10000000 },
-  { "mzd_mul_naive",        run_mzd_mul_naive,        "Omn,Rml,Rln",     "lS", 10000000 },
-  { "mzd_addmul_naive",     run_mzd_addmul_naive,     "Omn,Rml,Rln",     "lS", 10000000 },
-  { "_mzd_mul_naive",       run__mzd_mul_naive,       "Omn,Rml,Rnl,b",   "lS", 10000000 },
+  { "mzd_mul_naive",        run_mzd_mul_naive,        "Omn,Rml,Rln",     "mnl",10000000 },
+  { "mzd_addmul_naive",     run_mzd_addmul_naive,     "Omn,Rml,Rln",     "mnl",10000000 },
+  { "_mzd_mul_naive",       run__mzd_mul_naive,       "Omn,Rml,Rnl,b",   "mnl",10000000 },
   { "_mzd_mul_va",          run__mzd_mul_va,          "O1n,V1m,Amn,b",   "mn", 1000000000 },
   { "mzd_gauss_delayed",    run_mzd_gauss_delayed,    "Rmn,ci,b",        "mC", 10000000 },
   { "mzd_echelonize_naive", run_mzd_echelonize_naive, "Rmn,b",           "mn", 10000000 },
@@ -845,7 +839,7 @@ static function_st function_mapper[] = {
   { "mzd_invert_naive",     run_mzd_invert_naive,     "Omm,Rmm,Imm",     "mmm",10000000 },
   { "mzd_add",              run_mzd_add,              "Omn,Rmn,Rmn",     "mn", 10000000 },
   { "_mzd_add",             run__mzd_add,             "Omn,Rmn,Rmn",     "mn", 10000000 },
-  { "mzd_combine",          run_mzd_combine,"Omn,ri,wi,R,ri,wi,R,ri,wi", "",   10000000 },
+  { "mzd_combine",          run_mzd_combine,      "Omn,ri,wi,R,ri,R,ri", "W",  10000000 },
   { "mzd_read_bits",        run_mzd_read_bits,        "Rmn,ri,ci,n",     "",   10000000 },
   { "mzd_read_bits",        run_mzd_read_bits_int,    "Rmn,ri,ci,n",     "",   10000000 },
   { "mzd_xor_bits",         run_mzd_xor_bits,         "Rmn,ri,ci,n,w",   "",   10000000 },
