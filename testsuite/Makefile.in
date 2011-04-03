@@ -43,7 +43,8 @@ BENCH_PRGS = \
 	bench_trsm_upperleft \
 	bench_trsm_lowerright \
 	bench_trsm_upperright \
-	bench_elimination_sparse
+	bench_elimination_sparse \
+	bench_packedmatrix
 
 CPUCYCLES_DIR = ./cpucycles-20060326
 

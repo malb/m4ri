@@ -96,13 +96,20 @@ double bench_accuracy = 0.01;		// The +/- range (where 1.0 is 100%) within that 
 int bench_confidence_index = C99;	// The confidence that the real mean is within the given (or found) range.
 char const* progname;			// Set to argv[0].
 
-void global_options(int* argcp, char*** argvp)
+/*
+ * Command line option used by bench_packedmatrix.c
+ */
+
+uint64_t bench_count = 0;		// Can be set by -x <count>, otherwise a reasonable default is being used.
+
+int global_options(int* argcp, char*** argvp)
 {
+  int result = 0;
   progname = (*argvp)[0];
   while((*argcp) > 1)
   {
     if ((*argvp)[1][0] != '-' || (*argvp)[1][1] == '\0' || (*argvp)[1][2] != '\0')
-      return;
+      return result;
     switch((*argvp)[1][1])
     {
       case 'd':		// Dump
@@ -159,12 +166,31 @@ void global_options(int* argcp, char*** argvp)
 	}
 	break;
       }
+      case 'x':
+	++*argvp;
+	--*argcp;
+	bench_count = atoll((*argvp)[1]);
+	break;
       default:
-	return;
+	return -1;
     }
+    ++result;
     ++*argvp;
     --*argcp;
   }
+}
+
+void bench_print_global_options(FILE* out)
+{
+  fprintf(out, "OPTIONS:\n");
+  fprintf(out, "  -d                Dump measurements.\n");
+  fprintf(out, "  -q                Quiet, suppress printing.\n");
+  fprintf(out, "  -m <minimum>      Do at least <minimum> number of measurements. Default 2.\n");
+  fprintf(out, "  -n <maximum>      Do at most <maximum> number of measurements. Default 1000.\n");
+  fprintf(out, "  -t <max-time>     Stop after <max-time> seconds. Default 60.0 seconds.\n");
+  fprintf(out, "  -a <accuracy>     Stop after <accuracy> has been reached. Default 0.01 (= 1%)\n");
+  fprintf(out, "  -c <confidence>   Stop when accuracy has been reached with this confidence. Default 99 (%)\n");
+  fprintf(out, "  -x <loop-count>   Loop exactly <loop-count> times each measurement.\n");
 }
 
 /*
@@ -386,6 +412,66 @@ double walltime( double t0 )
 }
 
 /*
+ * Printing doubles.
+ */
+
+int bench_precision(double sigma)
+{
+  if (sigma < 1E-10)
+    return 12;
+  int log_sigma = log10(sigma);
+  if (log_sigma >= 2)
+    return 0;
+  return 2 - log_sigma;
+}
+
+void print_double(double d, int precision)
+{
+  switch(precision)
+  {
+    case 0:
+      printf("%.0f", d);
+      break;
+    case 1:
+      printf("%.1f", d);
+      break;
+    case 2:
+      printf("%.2f", d);
+      break;
+    case 3:
+      printf("%.3f", d);
+      break;
+    case 4:
+      printf("%.4f", d);
+      break;
+    case 5:
+      printf("%.5f", d);
+      break;
+    case 6:
+      printf("%.6f", d);
+      break;
+    case 7:
+      printf("%.7f", d);
+      break;
+    case 8:
+      printf("%.8f", d);
+      break;
+    case 9:
+      printf("%.9f", d);
+      break;
+    case 10:
+      printf("%.10f", d);
+      break;
+    case 11:
+      printf("%.11f", d);
+      break;
+    case 12:
+      printf("%.12f", d);
+      break;
+  }
+}
+
+/*
  * run_bench
  *
  * Benchmark main loop.
@@ -419,7 +505,7 @@ void run_bench(
 
     if (bench_dump)
     {
-      printf("%f\n", wt);
+      printf("%.9f\n", wt);
       fflush(stdout);
     }
 
@@ -446,55 +532,31 @@ void run_bench(
   {
     if (!bench_quiet && !bench_dump)
       printf("\n");
-    printf("Total running time: %6.3lf seconds.\n", walltime(start_walltime));
-    printf("Sample size: %d; mean: %f; standard deviation: %f\n", stats.size, stats.mean, stats.sigma);
+    printf("Total running time: %6.3f seconds.\n", walltime(start_walltime));
+    int precision = bench_precision(stats.sigma);
+    printf("Sample size: %d; mean: ", stats.size);
+    print_double(stats.mean, precision);
+    printf("; standard deviation: ");
+    print_double(stats.sigma, precision);
+    printf("\n");
     double standard_error = stats.sigma / sqrt(stats.size);
     double critical_value = t_table(bench_confidence_index, stats.size - 1);
     double accuracy = standard_error * critical_value;
-    printf("%2.0lf%% confidence interval: +/- %lf (%.1lf%%): [%lf..%lf]\n", (CONFIDENCE * 100), accuracy, accuracy / stats.mean * 100, stats.mean - accuracy, stats.mean + accuracy);
+    printf("%2.0f%% confidence interval: +/- ", CONFIDENCE * 100);
+    print_double(accuracy, precision);
+    printf(" (%.1f%%): [", accuracy / stats.mean * 100);
+    print_double(stats.mean - accuracy, precision);
+    printf("..");
+    print_double(stats.mean + accuracy, precision);
+    printf("]\n");
   }
 
   vector_destruct(wt_data);
 }
 
 /*
- * Random number generator
+ * Randomize
  */
-
-static uint64_t bench_random_M;
-static uint64_t bench_random_modulo;
-
-uint64_t bench_random_init(uint64_t modulo)
-{
-  // Set bench_random_M to the largest multiple of modulo, minus one, that fits in an uint64_t.
-  // A modulo of zero is interpreted as 2^64, and thus returns 0xffffffffffffffff.
-  bench_random_M = modulo ? -modulo / modulo * modulo - 1 : -1;
-  bench_random_M += modulo;
-  bench_random_modulo = modulo;
-}
-
-// Returns a uniformly distributed random number in the range [0, bench_random_modulo>.
-uint64_t bench_random()
-{
-  for(;;)
-  {
-    if (sizeof(long) == sizeof(uint64_t))
-    {
-      union { uint64_t R; long L; } x;
-      x.L = random();
-      if (x.R <= bench_random_M)
-	return x.R % bench_random_modulo;
-    }
-    else
-    {
-      union { uint64_t R; long L1; long L2; } x;
-      x.L1 = random();
-      x.L2 = random();
-      if (x.R <= bench_random_M)
-	return x.R % bench_random_modulo;
-    }
-  }
-}
 
 // The same as m4ri_random_word. Duplicated here because it's
 // not available in older revisions that we want to benchmark against.
@@ -575,6 +637,33 @@ void bench_randomize(mzd_t *A) {
 	A->rows[i][j] = bench_random_word();
       A->rows[i][width] ^= (A->rows[i][width] ^ bench_random_word()) & mask_end;
     }
+  }
+}
+
+/*
+ * Random number generator
+ */
+
+static uint64_t bench_random_M;
+static uint64_t bench_random_modulo;
+
+uint64_t bench_random_init(uint64_t modulo)
+{
+  // Set bench_random_M to the largest multiple of modulo, minus one, that fits in an uint64_t.
+  // A modulo of zero is interpreted as 2^64, and thus returns 0xffffffffffffffff.
+  bench_random_M = modulo ? -modulo / modulo * modulo - 1 : -1;
+  bench_random_M += modulo;
+  bench_random_modulo = modulo;
+}
+
+// Returns a uniformly distributed random number in the range [0, bench_random_modulo>.
+uint64_t bench_random()
+{
+  for(;;)
+  {
+    word R = bench_random_word();
+    if (R <= bench_random_M)
+      return R % bench_random_modulo;
   }
 }
 
