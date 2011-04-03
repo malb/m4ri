@@ -182,7 +182,7 @@ int global_options(int* argcp, char*** argvp)
 
 void bench_print_global_options(FILE* out)
 {
-  fprintf(out, "OPTIONS:\n");
+  fprintf(out, "OPTIONS\n");
   fprintf(out, "  -d                Dump measurements.\n");
   fprintf(out, "  -q                Quiet, suppress printing.\n");
   fprintf(out, "  -m <minimum>      Do at least <minimum> number of measurements. Default 2.\n");
@@ -190,7 +190,7 @@ void bench_print_global_options(FILE* out)
   fprintf(out, "  -t <max-time>     Stop after <max-time> seconds. Default 60.0 seconds.\n");
   fprintf(out, "  -a <accuracy>     Stop after <accuracy> has been reached. Default 0.01 (= 1%)\n");
   fprintf(out, "  -c <confidence>   Stop when accuracy has been reached with this confidence. Default 99 (%)\n");
-  fprintf(out, "  -x <loop-count>   Loop exactly <loop-count> times each measurement.\n");
+  fprintf(out, "  -x <loop-count>   Call function <loop-count> times in the inner most loop (calls per measurement).\n");
 }
 
 /*

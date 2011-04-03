@@ -1009,15 +1009,14 @@ int main(int argc, char** argv)
       fprintf(stderr, "Usage: %s [OPTIONS] <funcname> [ARGS]\n", progname);
       bench_print_global_options(stderr);
     }
-    fprintf(stderr, "Possible function names: \n");
+    fprintf(stderr, "Possible values for <funcname>:\n");
     for (f = 0; f < sizeof(function_mapper) / sizeof(function_mapper[0]); ++f)
     {
-      fprintf(stderr, " %s,", function_mapper[f].funcname);
-      if (f % 4 == 0)
+      if (f != 0 && f % 4 == 0)
 	fprintf(stderr, "\n");
+      fprintf(stderr, "%-22s", function_mapper[f].funcname);
     }
-    if ((sizeof(function_mapper) / sizeof(function_mapper[0])) % 4 != 0)
-      fprintf(stderr, "\n");
+    fprintf(stderr, "\n");
     return 1;
   }
 
