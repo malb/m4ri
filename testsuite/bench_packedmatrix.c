@@ -218,8 +218,8 @@ int run_mzd_transpose(void *_p, double *wt, unsigned long long *cycles)
 {
   struct test_params *p = (struct test_params *)_p;
 
-  mzd_t* const A = mzd_init(p->m, p->m);
-  mzd_t* const B = mzd_init(p->m, p->m);
+  mzd_t* const A = mzd_init(p->m, p->n);
+  mzd_t* const B = mzd_init(p->n, p->m);
   mzd_randomize(A);
   uint64_t const count = p->count;
 
@@ -292,21 +292,25 @@ int run__mzd_mul_va(void *_p, double *wt, unsigned long long *cycles)
 {
   struct test_params *p = (struct test_params *)_p;
 
-  mzd_t* const A = mzd_init(p->m, p->n);
-  mzd_t* const V = mzd_init(1, p->m);
-  mzd_t* const C = mzd_init(1, p->n);
+  mzd_t* const A = mzd_init(p->m, p->l);
+  mzd_t* const B = mzd_init(p->l, p->n);
+  mzd_t* const C = mzd_init(p->m, p->n);
   mzd_randomize(A);
-  mzd_randomize(V);
+  mzd_randomize(B);
   int const clear = p->boolean;
   uint64_t const count = p->count;
 
-  TIME(_mzd_mul_va, (C, V, A, clear), count);
+  TIME(_mzd_mul_va, (C, B, A, clear), count);
 
   mzd_free(A);
-  mzd_free(V);
+  mzd_free(B);
   mzd_free(C);
   return 0;
 }
+
+/** 
+ * TODO modifies A 
+ **/
 
 int run_mzd_gauss_delayed(void *_p, double *wt, unsigned long long *cycles)
 {
@@ -325,6 +329,9 @@ int run_mzd_gauss_delayed(void *_p, double *wt, unsigned long long *cycles)
   return 0;
 }
 
+/** 
+ * TODO modifies A 
+ **/
 int run_mzd_echelonize_naive(void *_p, double *wt, unsigned long long *cycles)
 {
   struct test_params *p = (struct test_params *)_p;
@@ -823,13 +830,13 @@ static function_st function_mapper[] = {
   { "mzd_write_bit",        run_mzd_write_bit,        "Omn,ri,ci",       "",   100000000 },
   { "mzd_row_add_offset",   run_mzd_row_add_offset,   "Rmn,ri,ri,ci",    "C",  100000000 },
   { "mzd_row_add",          run_mzd_row_add,          "Rmn,ri,ri",       "n",  100000000 },
-  { "mzd_transpose",        run_mzd_transpose,        "Omm,Rmm",         "mm", 10000000 },
-  { "mzd_mul_naive",        run_mzd_mul_naive,        "Omn,Rml,Rln",     "mnl",10000000 },
-  { "mzd_addmul_naive",     run_mzd_addmul_naive,     "Omn,Rml,Rln",     "mnl",10000000 },
-  { "_mzd_mul_naive",       run__mzd_mul_naive,       "Omn,Rml,Rnl,b",   "mnl",10000000 },
-  { "_mzd_mul_va",          run__mzd_mul_va,          "O1n,V1m,Amn,b",   "mn", 1000000000 },
-  { "mzd_gauss_delayed",    run_mzd_gauss_delayed,    "Rmn,ci,b",        "mC", 10000000 },
-  { "mzd_echelonize_naive", run_mzd_echelonize_naive, "Rmn,b",           "mn", 10000000 },
+  { "mzd_transpose",        run_mzd_transpose,        "Omn,Rmn",         "mn", 10000000 },
+  { "mzd_mul_naive",        run_mzd_mul_naive,        "Omn,Rml,Rln",     "mln",10000000 },
+  { "mzd_addmul_naive",     run_mzd_addmul_naive,     "Omn,Rml,Rln",     "mln",10000000 },
+  { "_mzd_mul_naive",       run__mzd_mul_naive,       "Omn,Rml,Rnl,b",   "mln",100000000 },
+  { "_mzd_mul_va",          run__mzd_mul_va,          "Omn,Rml,Rln,b",   "mln",10000000 },
+  { "mzd_gauss_delayed",    run_mzd_gauss_delayed,    "Rmn,ci,b",        "mmC",10000000 },
+  { "mzd_echelonize_naive", run_mzd_echelonize_naive, "Rmn,b",           "mmn",10000000 },
   { "mzd_equal",            run_mzd_equal,            "Rmn,Rmn",         "mn", 1000000000 },
   { "mzd_cmp",              run_mzd_cmp,              "Rmn,Rmn",         "mn", 1000000000 },
   { "mzd_copy",             run_mzd_copy,             "Omn,Rmn",         "mn", 10000000 },
@@ -848,9 +855,9 @@ static function_st function_mapper[] = {
   { "mzd_is_zero",          run_mzd_is_zero,          "Rmn",             "mn", 10000000 },
   { "mzd_row_clear_offset", run_mzd_row_clear_offset, "Omn,ri,ci",       "C",  10000000 },
   { "mzd_find_pivot",       run_mzd_find_pivot,       "Rmn,ri,ci",       "",   10000000 },
-  { "mzd_density",          run_mzd_density,          "Rmn,wi",          "",   10000000 },
-  { "_mzd_density",         run__mzd_density,         "Rmn,wi,ri,ci",    "",   10000000 },
-  { "mzd_first_zero_row",   run_mzd_first_zero_row,   "Rmn",             "m",  10000000 }
+  { "mzd_density",          run_mzd_density,          "Rmn,wi",          "mn", 10000000 },
+  { "_mzd_density",         run__mzd_density,         "Rmn,wi,ri,ci",    "mn", 10000000 },
+  { "mzd_first_zero_row",   run_mzd_first_zero_row,   "Rmn",             "mn", 10000000 }
 };
 
 int decode_size(char var, struct test_params* params, int* argcp, char*** argvp)
