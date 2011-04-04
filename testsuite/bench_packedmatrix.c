@@ -705,12 +705,12 @@ int run_mzd_first_zero_row(void *_p, double *wt, unsigned long long *cycles)
 {
   struct test_params *p = (struct test_params *)_p;
 
-  mzd_t* const A = mzd_init(p->m, p->n);
+  mzd_t* const A = mzd_init(p->m, p->m);
   mzd_set_ui(A, 1);
   uint64_t const count = p->count;
   rci_t volatile result;
 
-  TIME(mzd_first_zero_row, (A), count);
+  TIME(result = mzd_first_zero_row, (A), count);
 
   mzd_free(A);
   return 0;
@@ -832,25 +832,25 @@ static function_st function_mapper[] = {
   { "mzd_echelonize_naive", run_mzd_echelonize_naive, "Rmn,b",           "mn", 10000000 },
   { "mzd_equal",            run_mzd_equal,            "Rmn,Rmn",         "mn", 1000000000 },
   { "mzd_cmp",              run_mzd_cmp,              "Rmn,Rmn",         "mn", 1000000000 },
-  { "mzd_copy",             run_mzd_copy,             "Omn,Rmn",         "mn", 10000000 },
+  { "mzd_copy",             run_mzd_copy,             "Omn,Rmn",         "mn", 1000000000 },
   { "mzd_concat",           run_mzd_concat,           "Omn,Rmk,Rml",     "mn", 10000000 },
-  { "mzd_stack",            run_mzd_stack,            "Omn,Rkn,Rln",     "mn", 10000000 },
+  { "mzd_stack",            run_mzd_stack,            "Omn,Rkn,Rln",     "mn", 1000000000 },
   { "mzd_submatrix",        run_mzd_submatrix,      "O,Rmn,ri,ci,ri,ci", "DE", 10000000 },
   { "mzd_invert_naive",     run_mzd_invert_naive,     "Omm,Rmm,Imm",     "mmm",10000000 },
   { "mzd_add",              run_mzd_add,              "Omn,Rmn,Rmn",     "mn", 10000000 },
   { "_mzd_add",             run__mzd_add,             "Omn,Rmn,Rmn",     "mn", 10000000 },
   { "mzd_combine",          run_mzd_combine,      "Omn,ri,wi,R,ri,R,ri", "W",  10000000 },
   { "mzd_read_bits",        run_mzd_read_bits,        "Rmn,ri,ci,n",     "",   10000000 },
-  { "mzd_read_bits",        run_mzd_read_bits_int,    "Rmn,ri,ci,n",     "",   10000000 },
+  { "mzd_read_bits_int",    run_mzd_read_bits_int,    "Rmn,ri,ci,n",     "",   10000000 },
   { "mzd_xor_bits",         run_mzd_xor_bits,         "Rmn,ri,ci,n,w",   "",   10000000 },
   { "mzd_and_bits",         run_mzd_and_bits,         "Rmn,ri,ci,n,w",   "",   10000000 },
   { "mzd_clear_bits",       run_mzd_clear_bits,       "Rmn,ri,ci,n",     "",   10000000 },
   { "mzd_is_zero",          run_mzd_is_zero,          "Rmn",             "mn", 10000000 },
   { "mzd_row_clear_offset", run_mzd_row_clear_offset, "Omn,ri,ci",       "C",  10000000 },
-  { "mzd_find_pivot",       run_mzd_find_pivot,       "Rmn,ri,ci",       "",   10000000 },
+  { "mzd_find_pivot",       run_mzd_find_pivot,       "Rmn,ri,ci",       "",   1000000 },
   { "mzd_density",          run_mzd_density,          "Rmn,wi",          "",   10000000 },
   { "_mzd_density",         run__mzd_density,         "Rmn,wi,ri,ci",    "",   10000000 },
-  { "mzd_first_zero_row",   run_mzd_first_zero_row,   "Rmn",             "m",  10000000 }
+  { "mzd_first_zero_row",   run_mzd_first_zero_row,   "Rmm",             "m",  10000000000 }
 };
 
 int decode_size(char var, struct test_params* params, int* argcp, char*** argvp)
