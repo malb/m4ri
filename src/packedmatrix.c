@@ -830,7 +830,7 @@ mzd_t *mzd_stack(mzd_t *C, mzd_t const *A, mzd_t const *B) {
   return C;
 }
 
-mzd_t *mzd_invert_naive(mzd_t *INV, mzd_t *A, mzd_t const *I) {
+mzd_t *mzd_invert_naive(mzd_t *INV, mzd_t const *A, mzd_t const *I) {
   assert(A->offset == 0);
   mzd_t *H;
 
@@ -1093,7 +1093,7 @@ void mzd_col_swap(mzd_t *M, rci_t const cola, rci_t const colb) {
 }
 
 
-int mzd_is_zero(mzd_t *A) {
+int mzd_is_zero(mzd_t const *A) {
   /* Could be improved: stopping as the first non zero value is found (status!=0) */
   rci_t const mb = A->nrows;
   rci_t const nb = A->ncols;
@@ -1184,7 +1184,7 @@ void mzd_row_clear_offset(mzd_t *M, rci_t row, rci_t coloffset) {
 }
 
 
-int mzd_find_pivot(mzd_t *A, rci_t start_row, rci_t start_col, rci_t *r, rci_t *c) { 
+int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, rci_t *c) { 
   assert(A->offset == 0);
   rci_t const nrows = A->nrows;
   rci_t const ncols = A->ncols;
@@ -1304,7 +1304,7 @@ static inline int m4ri_bitcount(word w)  {
 }
 
 
-double _mzd_density(mzd_t *A, wi_t res, rci_t r, rci_t c) {
+double _mzd_density(mzd_t const *A, wi_t res, rci_t r, rci_t c) {
   size_t count = 0;
   size_t total = 0;
   
@@ -1341,11 +1341,11 @@ double _mzd_density(mzd_t *A, wi_t res, rci_t r, rci_t c) {
   return (double)count / total;
 }
 
-double mzd_density(mzd_t *A, wi_t res) {
+double mzd_density(mzd_t const *A, wi_t res) {
   return _mzd_density(A, res, 0, 0);
 }
 
-rci_t mzd_first_zero_row(mzd_t *A) {
+rci_t mzd_first_zero_row(mzd_t const *A) {
   word const mask_begin = RIGHT_BITMASK(RADIX - A->offset);
   word const mask_end = LEFT_BITMASK((A->ncols + A->offset) % RADIX);
   wi_t const end = A->width - 1;

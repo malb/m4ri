@@ -731,7 +731,7 @@ mzd_t *mzd_submatrix(mzd_t *S, mzd_t const *M, rci_t const lowr, rci_t const low
  * \wordoffset
  */
 
-mzd_t *mzd_invert_naive(mzd_t *INV, mzd_t *A, mzd_t const *I);
+mzd_t *mzd_invert_naive(mzd_t *INV, mzd_t const *A, mzd_t const *I);
 
 /**
  * \brief Set C = A+B.
@@ -1040,7 +1040,7 @@ static inline int mzd_read_bits_int(mzd_t const *M, rci_t const x, rci_t const y
  * \param A Input matrix.
  *
  */
-int mzd_is_zero(mzd_t *A);
+int mzd_is_zero(mzd_t const *A);
 
 /**
  * \brief Clear the given row, but only begins at the column coloffset.
@@ -1068,7 +1068,7 @@ void mzd_row_clear_offset(mzd_t *M, rci_t const row, rci_t const coloffset);
  * \param c Column index updated if pivot is found
  */
 
-int mzd_find_pivot(mzd_t *M, rci_t start_row, rci_t start_col, rci_t *r, rci_t *c);
+int mzd_find_pivot(mzd_t const *M, rci_t start_row, rci_t start_col, rci_t *r, rci_t *c);
 
 
 /**
@@ -1083,7 +1083,7 @@ int mzd_find_pivot(mzd_t *M, rci_t start_row, rci_t start_col, rci_t *r, rci_t *
  * \param res Resolution of sampling (in words)
  */
 
-double mzd_density(mzd_t *A, wi_t res);
+double mzd_density(mzd_t const *A, wi_t res);
 
 /**
  * \brief Return the number of nonzero entries divided by nrows *
@@ -1099,7 +1099,7 @@ double mzd_density(mzd_t *A, wi_t res);
  * \param c Column to start counting
  */
 
-double _mzd_density(mzd_t *A, wi_t res, rci_t r, rci_t c);
+double _mzd_density(mzd_t const *A, wi_t res, rci_t r, rci_t c);
 
 
 /**
@@ -1110,6 +1110,6 @@ double _mzd_density(mzd_t *A, wi_t res, rci_t r, rci_t c);
  * \param A Matrix
  */
 
-rci_t mzd_first_zero_row(mzd_t *A);
+rci_t mzd_first_zero_row(mzd_t const *A);
 
 #endif //PACKEDMATRIX_H
