@@ -1346,15 +1346,14 @@ double mzd_density(mzd_t *A, wi_t res) {
 }
 
 rci_t mzd_first_zero_row(mzd_t *A) {
-  word mask_begin = RIGHT_BITMASK(RADIX - A->offset);
-  word mask_end = LEFT_BITMASK((A->ncols + A->offset) % RADIX);
+  word const mask_begin = RIGHT_BITMASK(RADIX - A->offset);
+  word const mask_end = LEFT_BITMASK((A->ncols + A->offset) % RADIX);
   wi_t const end = A->width - 1;
   word *row;
 
   for(rci_t i = A->nrows - 1; i >= 0; --i) {
-    word tmp = 0;
     row = A->rows[i];
-    tmp |= row[0] & mask_begin;
+    word tmp = row[0] & mask_begin;
     for (wi_t j = 1; j < end; ++j)
       tmp |= row[j];
     tmp |= row[end] & mask_end;
