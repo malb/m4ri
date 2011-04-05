@@ -329,6 +329,28 @@ static inline word swap_bits(word v) {
 #define ALIGNMENT(addr, n) (((unsigned long)(addr))%(n))
 
 /**
+ * \brief Test for gcc >= maj.min, as per __GNUC_PREREQ in glibc
+ *
+ * \param maj The major version.
+ * \param min The minor version.
+ * \return TRUE iff we are using a GNU compile of at least version maj.min.
+ */
+#if defined(__GNUC__) && defined(__GNUC_MINOR__)
+#define __M4RI_GNUC_PREREQ(maj, min) ((__GNUC__ << 16) + __GNUC_MINOR__ >= ((maj) << 16) + (min))
+#else
+#define __M4RI_GNUC_PREREQ(maj, min) FALSE
+#endif
+
+/* __builtin_expect is in gcc 3.0, and not in 2.95. */
+#if __M4RI_GNUC_PREREQ(3,0)
+#define __M4RI_LIKELY(cond)    __builtin_expect ((cond) != 0, 1)
+#define __M4RI_UNLIKELY(cond)  __builtin_expect ((cond) != 0, 0)
+#else
+#define __M4RI_LIKELY(cond)    (cond)
+#define __M4RI_UNLIKELY(cond)  (cond)
+#endif
+
+/**
  * Return true if a's least significant bit is smaller than b's least significant bit.
  *
  * return true if LSBI(a) < LSBI(b),
