@@ -54,14 +54,14 @@ struct test_params {
 
 typedef int (*run_type)(void*, double*, unsigned long long*);
 
-#define TIME(mzd_func, ARGS, count) do {\
-    *wt = walltime(0.0);		\
-    *cycles = cpucycles();		\
-    for (uint64_t i = 0; i < count; ++i)	\
-      mzd_func ARGS;			\
-    *wt = walltime(*wt);		\
-    *cycles = cpucycles() - *cycles;	\
-  } while(0)
+#define TIME_BEGIN do { *wt = walltime(0.0); *cycles = cpucycles()
+
+#define TIME_END *wt = walltime(*wt); *cycles = cpucycles() - *cycles; } while(0)
+
+#define TIME(mzd_func_with_ARGS)					\
+    TIME_BEGIN;								\
+    for (uint64_t i = 0; i < loop_count; ++i) { mzd_func_with_ARGS; }	\
+    TIME_END
 
 int run__mzd_row_swap(void *_p, double *wt, unsigned long long *cycles)
 {
@@ -72,9 +72,9 @@ int run__mzd_row_swap(void *_p, double *wt, unsigned long long *cycles)
   rci_t const rowa = p->row[0];
   rci_t const rowb = p->row[1];
   wi_t const startblock = p->wrd[0];
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(_mzd_row_swap, (A, rowa, rowb, startblock), count);
+  TIME(_mzd_row_swap(A, rowa, rowb, startblock));
 
   mzd_free(A);
   return 0;
@@ -88,9 +88,9 @@ int run_mzd_row_swap(void *_p, double *wt, unsigned long long *cycles)
   mzd_randomize(A);
   rci_t const rowa = p->row[0];
   rci_t const rowb = p->row[1];
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_row_swap, (A, rowa, rowb), count);
+  TIME(mzd_row_swap(A, rowa, rowb));
 
   mzd_free(A);
   return 0;
@@ -105,9 +105,9 @@ int run_mzd_copy_row(void *_p, double *wt, unsigned long long *cycles)
   mzd_randomize(A);
   rci_t const rowa = p->row[0];
   rci_t const rowb = p->row[1];
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_copy_row, (B, rowb, A, rowa), count);
+  TIME(mzd_copy_row(B, rowb, A, rowa));
 
   mzd_free(A);
   mzd_free(B);
@@ -122,9 +122,9 @@ int run_mzd_col_swap(void *_p, double *wt, unsigned long long *cycles)
   mzd_randomize(A);
   rci_t const cola = p->col[0];
   rci_t const colb = p->col[1];
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_col_swap, (A, cola, colb), count);
+  TIME(mzd_col_swap(A, cola, colb));
 
   mzd_free(A);
   return 0;
@@ -140,9 +140,9 @@ int run_mzd_col_swap_in_rows(void *_p, double *wt, unsigned long long *cycles)
   rci_t const colb = p->col[1];
   rci_t const start_row = p->row[0];
   rci_t const stop_row = p->row[1];
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_col_swap_in_rows, (A, cola, colb, start_row, stop_row), count);
+  TIME(mzd_col_swap_in_rows(A, cola, colb, start_row, stop_row));
 
   mzd_free(A);
   return 0;
@@ -156,10 +156,10 @@ int run_mzd_read_bit(void *_p, double *wt, unsigned long long *cycles)
   mzd_randomize(A);
   rci_t const rowa = p->row[0];
   rci_t const cola = p->col[0];
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
   BIT volatile result;
 
-  TIME(result = mzd_read_bit, (A, rowa, cola), count);
+  TIME(result = mzd_read_bit(A, rowa, cola));
 
   mzd_free(A);
   return 0;
@@ -173,9 +173,9 @@ int run_mzd_write_bit(void *_p, double *wt, unsigned long long *cycles)
   rci_t const rowa = p->row[0];
   rci_t const cola = p->col[0];
   int bit = 0;
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_write_bit, (A, rowa, cola, bit); bit = !bit, count);
+  TIME(mzd_write_bit(A, rowa, cola, bit); bit = !bit);
 
   mzd_free(A);
   return 0;
@@ -190,9 +190,9 @@ int run_mzd_row_add_offset(void *_p, double *wt, unsigned long long *cycles)
   rci_t const rowa = p->row[0];
   rci_t const rowb = p->row[1];
   rci_t const cola = p->col[0];
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_row_add_offset, (A, rowa, rowb, cola), count);
+  TIME(mzd_row_add_offset(A, rowa, rowb, cola));
 
   mzd_free(A);
   return 0;
@@ -206,9 +206,9 @@ int run_mzd_row_add(void *_p, double *wt, unsigned long long *cycles)
   mzd_randomize(A);
   rci_t const rowa = p->row[0];
   rci_t const rowb = p->row[1];
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_row_add, (A, rowa, rowb), count);
+  TIME(mzd_row_add(A, rowa, rowb));
 
   mzd_free(A);
   return 0;
@@ -221,9 +221,9 @@ int run_mzd_transpose(void *_p, double *wt, unsigned long long *cycles)
   mzd_t* const A = mzd_init(p->m, p->m);
   mzd_t* const B = mzd_init(p->m, p->m);
   mzd_randomize(A);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_transpose, (B, A), count);
+  TIME(mzd_transpose(B, A));
 
   mzd_free(A);
   mzd_free(B);
@@ -239,9 +239,9 @@ int run_mzd_mul_naive(void *_p, double *wt, unsigned long long *cycles)
   mzd_t* const C = mzd_init(p->m, p->n);
   mzd_randomize(A);
   mzd_randomize(B);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_mul_naive, (C, A, B), count);
+  TIME(mzd_mul_naive(C, A, B));
 
   mzd_free(A);
   mzd_free(B);
@@ -258,9 +258,9 @@ int run_mzd_addmul_naive(void *_p, double *wt, unsigned long long *cycles)
   mzd_t* const C = mzd_init(p->m, p->n);
   mzd_randomize(A);
   mzd_randomize(B);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_addmul_naive, (C, A, B), count);
+  TIME(mzd_addmul_naive(C, A, B));
 
   mzd_free(A);
   mzd_free(B);
@@ -278,9 +278,9 @@ int run__mzd_mul_naive(void *_p, double *wt, unsigned long long *cycles)
   mzd_randomize(A);
   mzd_randomize(B);
   int const clear = p->boolean;
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(_mzd_mul_naive, (C, A, B, clear), count);
+  TIME(_mzd_mul_naive(C, A, B, clear));
 
   mzd_free(A);
   mzd_free(B);
@@ -298,9 +298,9 @@ int run__mzd_mul_va(void *_p, double *wt, unsigned long long *cycles)
   mzd_randomize(A);
   mzd_randomize(V);
   int const clear = p->boolean;
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(_mzd_mul_va, (C, V, A, clear), count);
+  TIME(_mzd_mul_va(C, V, A, clear));
 
   mzd_free(A);
   mzd_free(V);
@@ -312,16 +312,26 @@ int run_mzd_gauss_delayed(void *_p, double *wt, unsigned long long *cycles)
 {
   struct test_params *p = (struct test_params *)_p;
 
-  mzd_t* const A = mzd_init(p->m, p->n);
-  mzd_randomize(A);
+  mzd_t** A = malloc(sizeof(mzd_t) * p->count);
   rci_t const cola = p->col[0];
   int const full = p->boolean;
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
   rci_t result;
 
-  TIME(result = mzd_gauss_delayed, (A, cola, full), count);
+  for (int i = 0; i < loop_count; ++i) {
+    A[i] = mzd_init(p->m, p->n);
+    mzd_randomize(A[i]);
+  }
 
-  mzd_free(A);
+  TIME_BEGIN;
+  for (int i = 0; i < loop_count; ++i) {
+    result = mzd_gauss_delayed(A[i], cola, full);
+  }
+  TIME_END;
+
+  for (int i = 0; i < loop_count; ++i)
+    mzd_free(A[i]);
+  free(A);
   return 0;
 }
 
@@ -329,15 +339,25 @@ int run_mzd_echelonize_naive(void *_p, double *wt, unsigned long long *cycles)
 {
   struct test_params *p = (struct test_params *)_p;
 
-  mzd_t* const A = mzd_init(p->m, p->n);
-  mzd_randomize(A);
+  mzd_t** A = malloc(sizeof(mzd_t) * p->count);
   int const full = p->boolean;
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
   rci_t result;
 
-  TIME(result = mzd_echelonize_naive, (A, full), count);
+  for (int i = 0; i < loop_count; ++i) {
+    A[i] = mzd_init(p->m, p->n);
+    mzd_randomize(A[i]);
+  }
 
-  mzd_free(A);
+  TIME_BEGIN;
+  for (int i = 0; i < loop_count; ++i) {
+    result = mzd_echelonize_naive(A[i], full);
+  }
+  TIME_END;
+
+  for (int i = 0; i < loop_count; ++i)
+    mzd_free(A[i]);
+  free(A);
   return 0;
 }
 
@@ -348,10 +368,10 @@ int run_mzd_equal(void *_p, double *wt, unsigned long long *cycles)
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   mzd_t* const B = mzd_copy(NULL, A);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
   int volatile result;
 
-  TIME(result = mzd_equal, (A, B), count);
+  TIME(result = mzd_equal(A, B));
 
   mzd_free(A);
   mzd_free(B);
@@ -365,10 +385,10 @@ int run_mzd_cmp(void *_p, double *wt, unsigned long long *cycles)
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   mzd_t* const B = mzd_copy(NULL, A);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
   int volatile result;
 
-  TIME(result = mzd_cmp, (A, B), count);
+  TIME(result = mzd_cmp(A, B));
 
   mzd_free(A);
   mzd_free(B);
@@ -382,9 +402,9 @@ int run_mzd_copy(void *_p, double *wt, unsigned long long *cycles)
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_t* const B = mzd_init(p->m, p->n);
   mzd_randomize(A);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_copy, (B, A), count);
+  TIME(mzd_copy(B, A));
 
   mzd_free(A);
   mzd_free(B);
@@ -400,9 +420,9 @@ int run_mzd_concat(void *_p, double *wt, unsigned long long *cycles)
   mzd_t* const C = mzd_init(p->m, p->k + p->l);
   mzd_randomize(A);
   mzd_randomize(B);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_concat, (C, A, B), count);
+  TIME(mzd_concat(C, A, B));
 
   mzd_free(A);
   mzd_free(B);
@@ -419,9 +439,9 @@ int run_mzd_stack(void *_p, double *wt, unsigned long long *cycles)
   mzd_t* const C = mzd_init(p->k + p->l, p->n);
   mzd_randomize(A);
   mzd_randomize(B);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_stack, (C, A, B), count);
+  TIME(mzd_stack(C, A, B));
 
   mzd_free(A);
   mzd_free(B);
@@ -440,9 +460,9 @@ int run_mzd_submatrix(void *_p, double *wt, unsigned long long *cycles)
   rci_t const rowb = p->row[1];
   rci_t const colb = p->col[1];
   mzd_t* const S = mzd_init(rowb - rowa, colb - cola);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_submatrix, (S, A, rowa, cola, rowb, colb), count);
+  TIME(mzd_submatrix(S, A, rowa, cola, rowb, colb));
 
   mzd_free(A);
   mzd_free(S);
@@ -458,9 +478,9 @@ int run_mzd_invert_naive(void *_p, double *wt, unsigned long long *cycles)
   mzd_t* const C = mzd_init(p->m, p->m);
   mzd_randomize(A);
   mzd_set_ui(I, 1);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_invert_naive, (C, A, I), count);
+  TIME(mzd_invert_naive(C, A, I));
 
   mzd_free(A);
   mzd_free(I);
@@ -477,9 +497,9 @@ int run_mzd_add(void *_p, double *wt, unsigned long long *cycles)
   mzd_t* const C = mzd_init(p->m, p->n);
   mzd_randomize(A);
   mzd_randomize(B);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_add, (C, A, B), count);
+  TIME(mzd_add(C, A, B));
 
   mzd_free(A);
   mzd_free(B);
@@ -496,9 +516,9 @@ int run__mzd_add(void *_p, double *wt, unsigned long long *cycles)
   mzd_t* const C = mzd_init(p->m, p->n);
   mzd_randomize(A);
   mzd_randomize(B);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(_mzd_add, (C, A, B), count);
+  TIME(_mzd_add(C, A, B));
 
   mzd_free(A);
   mzd_free(B);
@@ -519,9 +539,9 @@ int run_mzd_combine(void *_p, double *wt, unsigned long long *cycles)
   rci_t row2 = p->row[1];
   rci_t row3 = p->row[2];
   wi_t startblock = p->wrd[0];
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_combine, (C, row3, startblock, A, row1, startblock, B, row2, startblock), count);
+  TIME(mzd_combine(C, row3, startblock, A, row1, startblock, B, row2, startblock));
 
   mzd_free(A);
   mzd_free(B);
@@ -538,10 +558,10 @@ int run_mzd_read_bits(void *_p, double *wt, unsigned long long *cycles)
   rci_t row = p->row[0];
   rci_t col = p->col[0];
   int n = p->integer;
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
   word volatile result;
 
-  TIME(result = mzd_read_bits, (A, row, col, n), count);
+  TIME(result = mzd_read_bits(A, row, col, n));
 
   mzd_free(A);
   return 0;
@@ -556,10 +576,10 @@ int run_mzd_read_bits_int(void *_p, double *wt, unsigned long long *cycles)
   rci_t row = p->row[0];
   rci_t col = p->col[0];
   int n = p->integer;
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
   int volatile result;
 
-  TIME(result = mzd_read_bits_int, (A, row, col, n), count);
+  TIME(result = mzd_read_bits_int(A, row, col, n));
 
   mzd_free(A);
   return 0;
@@ -575,9 +595,9 @@ int run_mzd_xor_bits(void *_p, double *wt, unsigned long long *cycles)
   rci_t col = p->col[0];
   int n = p->integer;
   word volatile const values = 0xffffffffffffffffULL;
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_xor_bits, (A, row, col, n, values), count);
+  TIME(mzd_xor_bits(A, row, col, n, values));
 
   mzd_free(A);
   return 0;
@@ -593,9 +613,9 @@ int run_mzd_and_bits(void *_p, double *wt, unsigned long long *cycles)
   rci_t col = p->col[0];
   int n = p->integer;
   word volatile const values = 0xffffffffffffffffULL;
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_and_bits, (A, row, col, n, values), count);
+  TIME(mzd_and_bits(A, row, col, n, values));
 
   mzd_free(A);
   return 0;
@@ -610,9 +630,9 @@ int run_mzd_clear_bits(void *_p, double *wt, unsigned long long *cycles)
   rci_t row = p->row[0];
   rci_t col = p->col[0];
   int n = p->integer;
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_clear_bits, (A, row, col, n), count);
+  TIME(mzd_clear_bits(A, row, col, n));
 
   mzd_free(A);
   return 0;
@@ -623,10 +643,10 @@ int run_mzd_is_zero(void *_p, double *wt, unsigned long long *cycles)
   struct test_params *p = (struct test_params *)_p;
 
   mzd_t* const A = mzd_init(p->m, p->n);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
   int volatile result;
 
-  TIME(result = mzd_is_zero, (A), count);
+  TIME(result = mzd_is_zero(A));
 
   mzd_free(A);
   return 0;
@@ -640,9 +660,9 @@ int run_mzd_row_clear_offset(void *_p, double *wt, unsigned long long *cycles)
   mzd_randomize(A);
   rci_t row = p->row[0];
   rci_t col = p->col[0];
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
 
-  TIME(mzd_row_clear_offset, (A, row, col), count);
+  TIME(mzd_row_clear_offset(A, row, col));
 
   mzd_free(A);
   return 0;
@@ -656,12 +676,12 @@ int run_mzd_find_pivot(void *_p, double *wt, unsigned long long *cycles)
   mzd_randomize(A);
   rci_t row = p->row[0];
   rci_t col = p->col[0];
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
   int volatile result;
   rci_t row_out;
   rci_t col_out;
 
-  TIME(result = mzd_find_pivot, (A, row, col, &row_out, &col_out), count);
+  TIME(result = mzd_find_pivot(A, row, col, &row_out, &col_out));
 
   mzd_free(A);
   return 0;
@@ -674,10 +694,10 @@ int run_mzd_density(void *_p, double *wt, unsigned long long *cycles)
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   wi_t res = p->wrd[0];
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
   double volatile result;
 
-  TIME(result = mzd_density, (A, res), count);
+  TIME(result = mzd_density(A, res));
 
   mzd_free(A);
   return 0;
@@ -692,10 +712,10 @@ int run__mzd_density(void *_p, double *wt, unsigned long long *cycles)
   rci_t row = p->row[0];
   rci_t col = p->col[0];
   wi_t res = p->wrd[0];
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
   double volatile result;
 
-  TIME(result = _mzd_density, (A, res, row, col), count);
+  TIME(result = _mzd_density(A, res, row, col));
 
   mzd_free(A);
   return 0;
@@ -707,10 +727,10 @@ int run_mzd_first_zero_row(void *_p, double *wt, unsigned long long *cycles)
 
   mzd_t* const A = mzd_init(p->m, p->m);
   mzd_set_ui(A, 1);
-  uint64_t const count = p->count;
+  uint64_t const loop_count = p->count;
   rci_t volatile result;
 
-  TIME(result = mzd_first_zero_row, (A), count);
+  TIME(result = mzd_first_zero_row(A));
 
   mzd_free(A);
   return 0;
