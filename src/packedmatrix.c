@@ -51,7 +51,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
   A->nrows = r;
   A->offset = 0;
 
-  A->rows = (word**)m4ri_mmc_calloc(sizeof(word*), r + 1); // We're overcomitting here.
+  A->rows = (word**)m4ri_mmc_calloc(r + 1, sizeof(word*)); // We're overcomitting here.
 
   if(r && c) {
     /* we allow more than one malloc call so he have to be a bit clever
@@ -66,7 +66,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
     A->blocks = (mmb_t*)m4ri_mmc_calloc(nblocks + 1, sizeof(mmb_t));
     for(int i = 0; i < nblocks - 1; ++i) {
       A->blocks[i].size = MM_MAX_MALLOC;
-      A->blocks[i].data = m4ri_mmc_calloc(MM_MAX_MALLOC, 1);
+      A->blocks[i].data = m4ri_mmc_calloc(1, MM_MAX_MALLOC);
       for(rci_t j = 0; j < max_rows_per_block; ++j)
       {
 	int offset = A->width * j;				// Offset to start of row j within block.
@@ -120,7 +120,7 @@ mzd_t *mzd_init_window (mzd_t const *m, rci_t lowr, rci_t lowc, rci_t highr, rci
   window->blocks = NULL;
 
   if(nrows)
-    window->rows = (word**)m4ri_mmc_calloc(sizeof(word*), nrows + 1);
+    window->rows = (word**)m4ri_mmc_calloc(nrows + 1, sizeof(word*));
   else
     window->rows = NULL;
 
