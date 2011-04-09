@@ -3,7 +3,7 @@
 #include "config.h"
 #include "m4ri.h"
 #include "cpucycles.h"
-#include "benchmarketing.h"
+#include "benchmarking.h"
 
 struct pluq_params {
   rci_t m;
@@ -11,8 +11,9 @@ struct pluq_params {
   rci_t r;
 };
 
-int run(void *_p, double *wt, unsigned long long *cycles) {
+int run(void *_p, unsigned long long *data, int *data_len) {
   struct pluq_params *p = (struct pluq_params *)_p;
+  *data_len = 2;
 
   mzd_t *A = mzd_init(p->m, p->n);
   mzd_t *U;
@@ -57,11 +58,11 @@ int run(void *_p, double *wt, unsigned long long *cycles) {
   mzp_t *P = mzp_init(p->m);
   mzp_t *Q = mzp_init(p->n);
 
-  *wt = walltime(0.0);
-  *cycles = cpucycles();
+  data[0] = walltime(0);
+  data[1] = cpucycles();
   p->r = mzd_pluq(A, P, Q, 0);
-  *wt = walltime(*wt);
-  *cycles = cpucycles() - *cycles;
+  data[0] = walltime(data[0]);
+  data[1]= cpucycles() - data[1];
 
   mzd_free(A);
   mzp_free(P);
@@ -86,10 +87,9 @@ int main(int argc, char **argv) {
   p.n = atoi(argv[2]);
 
   srandom(17);
-  unsigned long long t;
-  double wt;
-  run_bench(run, (void*)&p, &wt, &t);
+  unsigned long long data[2];
+  run_bench(run, (void*)&p, data, 2);
 
-  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %12llu, wall time: %6.3lf\n", p.m, p.n, p.r, t, wt);
+  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %12llu, wall time: %6.3lf\n", p.m, p.n, p.r, data[1], data[0] / 1000000.0);
 }
 

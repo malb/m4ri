@@ -3,15 +3,16 @@
 #include "config.h"
 #include "cpucycles.h"
 #include "m4ri.h"
-#include "benchmarketing.h"
+#include "benchmarking.h"
 
 struct trsm_params {
   rci_t m;
   rci_t n;
 };
 
-int run(void *_p, double *wt, unsigned long long *cycles) {
+int run(void *_p, unsigned long long *data, int *data_len) {
   struct trsm_params *p = (struct trsm_params *)_p;
+  *data_len = 2;
 
   mzd_t *B = mzd_init(p->m, p->n);
   mzd_t *L = mzd_init(p->n, p->n);
@@ -23,11 +24,11 @@ int run(void *_p, double *wt, unsigned long long *cycles) {
     mzd_write_bit(L,i,i, 1);
   }
 
-  *wt = walltime(0.0);
-  *cycles = cpucycles();
+  data[0] = walltime(0);
+  data[1] = cpucycles();
   mzd_trsm_lower_right(L, B, 2048);
-  *wt = walltime(*wt);
-  *cycles = cpucycles() - *cycles;
+  data[0] = walltime(data[0]);
+  data[1] = cpucycles() - data[1];
 
   mzd_free(B);
   mzd_free(L);
@@ -46,9 +47,8 @@ int main(int argc, char **argv) {
   p.n = atoi(argv[2]);
   
   srandom(17);
-  unsigned long long t;
-  double wt;
-  run_bench(run, (void*)&p, &wt, &t);
+  unsigned long long data[2];
+  run_bench(run, (void*)&p, data, 2);
 
-  printf("m: %5d, n: %5d, cpu cycles: %llu wall time: %lf\n", p.m, p.n, t, wt);
+  printf("m: %5d, n: %5d, cpu cycles: %llu wall time: %lf\n", p.m, p.n, data[1], data[0] / 1000000.0);
 }

@@ -3,26 +3,27 @@
 #include "config.h"
 #include "cpucycles.h"
 #include "m4ri.h"
-#include "benchmarketing.h"
+#include "benchmarking.h"
 
 struct smallops_params {
   rci_t n;
 };
 
-int run_transpose(void *_p, double *wt, unsigned long long *cycles) {
+int run_transpose(void *_p, unsigned long long *data, int *data_len) {
   struct smallops_params *p = (struct smallops_params *)_p;
+  *data_len = 2;
 
   mzd_t *A = mzd_init(p->n, p->n);
   mzd_t *B = mzd_init(p->n, p->n);
   mzd_randomize(A);
 
-  *wt = walltime(0.0);
-  *cycles = cpucycles();
+  data[0] = walltime(0);
+  data[1] = cpucycles();
   for(int i = 0; i < 65536; i++) {
     mzd_transpose(A, B);
   }
-  *wt = walltime(*wt)/65536.0;
-  *cycles = (cpucycles() - *cycles)/65536;
+  data[0] = walltime(data[0]);
+  data[1] = cpucycles() - data[1];
 
   mzd_free(A);
   mzd_free(B);
@@ -30,20 +31,21 @@ int run_transpose(void *_p, double *wt, unsigned long long *cycles) {
 }
 
 
-int run_copy(void *_p, double *wt, unsigned long long *cycles) {
+int run_copy(void *_p, unsigned long long *data, int *data_len) {
   struct smallops_params *p = (struct smallops_params *)_p;
+  *data_len = 2;
 
   mzd_t *A = mzd_init(p->n, p->n);
   mzd_t *B = mzd_init(p->n, p->n);
   mzd_randomize(A);
 
-  *wt = walltime(0.0);
-  *cycles = cpucycles();
+  data[0] = walltime(0);
+  data[1] = cpucycles();
   for(int i = 0; i < 65536; i++) {
     mzd_copy(A, B);
   }
-  *wt = walltime(*wt)/65536.0;
-  *cycles = (cpucycles() - *cycles)/65536;
+  data[0] = walltime(data[0]);
+  data[1] = cpucycles() - data[1];
 
   mzd_free(A);
   mzd_free(B);
@@ -51,8 +53,9 @@ int run_copy(void *_p, double *wt, unsigned long long *cycles) {
 }
 
 
-int run_add(void *_p, double *wt, unsigned long long *cycles) {
+int run_add(void *_p, unsigned long long *data, int *data_len) {
   struct smallops_params *p = (struct smallops_params *)_p;
+  *data_len = 2;
 
   mzd_t *A = mzd_init(p->n, p->n);
   mzd_t *B = mzd_init(p->n, p->n);
@@ -60,13 +63,13 @@ int run_add(void *_p, double *wt, unsigned long long *cycles) {
   mzd_randomize(A);
   mzd_randomize(B);
 
-  *wt = walltime(0.0);
-  *cycles = cpucycles();
+  data[0] = walltime(0);
+  data[1] = cpucycles();
   for(int i = 0; i < 65536; i++) {
     _mzd_add(C, A, B);
   }
-  *wt = walltime(*wt)/65536.0;
-  *cycles = (cpucycles() - *cycles)/65536.0;
+  data[0] = walltime(data[0]);
+  data[1] = cpucycles() - data[1];
 
   mzd_free(A);
   mzd_free(B);
@@ -93,24 +96,24 @@ int main(int argc, char **argv) {
      and over again instead of computing the average of various
      matrices.*/
   srandom(17);
-  unsigned long long t;
-  double wt;
+  bench_count = 65536;
+  unsigned long long data[2];
   if(strcmp(argv[2],"transpose") == 0) {
 
-    run_bench(run_transpose, (void*)&p, &wt, &t);
+    run_bench(run_transpose, (void*)&p, data, 2);
 
   } else if(strcmp(argv[2],"add") == 0) {
 
-    run_bench(run_add, (void*)&p, &wt, &t);
+    run_bench(run_add, (void*)&p, data, 2);
 
   } else if(strcmp(argv[2],"copy") == 0) {
 
-    run_bench(run_copy, (void*)&p, &wt, &t);
+    run_bench(run_copy, (void*)&p, data, 2);
 
   } else {
 
     m4ri_die("parameter not understood");
   }
 
-  printf("what: %s, n: %5d, cpu cycles: %llu, cc/n^2: %lf, wall time: %lf\n", argv[2], p.n, t, t/((double)p.n)/((double)p.n), wt);
+  printf("what: %s, n: %5d, cpu cycles: %llu, cc/n^2: %lf, wall time: %lf\n", argv[2], p.n, data[1], data[1]/((double)p.n)/((double)p.n), data[0] / 1000000.0);
 }

@@ -25,14 +25,22 @@
 #define __STDC_FORMAT_MACROS 1
 #endif
 
+#include "config.h"
+
+#ifdef HAVE_LIBPAPI
+#define _GNU_SOURCE
+#include <sys/types.h>          // papi.h needs caddr_t
+#include <papi.h>
+#include <errno.h>
+#endif
+
 #include <stdlib.h>
 #include <ctype.h>
 #include <inttypes.h>
 
-#include "config.h"
 #include "cpucycles.h"
 #include "m4ri.h"
-#include "benchmarketing.h"
+#include "benchmarking.h"
 
 struct test_params {
   rci_t m;
@@ -52,21 +60,82 @@ struct test_params {
   char const* funcname;
 };
 
-typedef int (*run_type)(void*, double*, unsigned long long*);
+typedef int (*run_type)(void*, unsigned long long*, int*);
 
-#define TIME_BEGIN do { *wt = walltime(0.0); *cycles = cpucycles()
+static unsigned long long loop_calibration[32];
 
-#define TIME_END *wt = walltime(*wt); *cycles = cpucycles() - *cycles; } while(0)
+#ifdef HAVE_LIBPAPI
+
+#define BENCHMARK_PREFIX(mzd_func) \
+  int run_##mzd_func(void *_p, unsigned long long *data, int *data_len) { \
+    *data_len = MIN(papi_array_len + 1, *data_len); \
+    struct test_params *p = (struct test_params *)_p; \
+    int papi_res; \
+    do
+#define TIME_BEGIN(mzd_func_with_ARGS) \
+      do { \
+	int array_len = *data_len - 1; \
+	mzd_func_with_ARGS; \
+	unsigned long long t0 = PAPI_get_virt_usec(); \
+	papi_res = PAPI_start_counters((int*)papi_events, array_len)
+#define TIME_END \
+	PAPI_stop_counters(&data[1], array_len); \
+	t0 = PAPI_get_virt_usec() - t0; \
+	data[0] = t0; \
+	for (int nv = 0; nv <= array_len; ++nv) \
+	{ \
+	  if (data[nv] < loop_calibration[nv]) \
+	    loop_calibration[nv] = data[nv]; \
+	  data[nv] -= loop_calibration[nv]; \
+	} \
+      } while(0)
+#define BENCHMARK_POSTFIX \
+    while(0); \
+    return papi_res; \
+  }
+
+#else // HAVE_LIBPAPI
+
+#define BENCHMARK_PREFIX(mzd_func) \
+  int run_##mzd_func(void *_p, unsigned long long *data, int *data_len) { \
+    *data_len = 2; \
+    struct test_params *p = (struct test_params *)_p; \
+    do
+#define TIME_BEGIN(mzd_func_with_ARGS) \
+    do { \
+      mzd_func_with_ARGS; \
+      data[0] = walltime(0); \
+      data[1] = cpucycles()
+#define TIME_END \
+      data[1] = cpucycles() - data[1]; \
+      data[0] = walltime(data[0]); \
+    } while(0)
+#define BENCHMARK_POSTFIX \
+    while(0); \
+    return 0; \
+  }
+
+#endif // HAVE_LIBPAPI
 
 #define TIME(mzd_func_with_ARGS)					\
-    TIME_BEGIN;								\
+    TIME_BEGIN(mzd_func_with_ARGS);					\
     for (uint64_t i = 0; i < loop_count; ++i) { mzd_func_with_ARGS; }	\
     TIME_END
 
-int run__mzd_row_swap(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(bench_nothing)
 {
-  struct test_params *p = (struct test_params *)_p;
+  mzd_t* const A = mzd_init(64, 64);
+  mzd_randomize(A);
+  uint64_t volatile loop_count = p->count;
 
+  TIME();
+
+  mzd_free(A);
+}
+BENCHMARK_POSTFIX
+
+BENCHMARK_PREFIX(_mzd_row_swap)
+{
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t const rowa = p->row[0];
@@ -77,13 +146,11 @@ int run__mzd_row_swap(void *_p, double *wt, unsigned long long *cycles)
   TIME(_mzd_row_swap(A, rowa, rowb, startblock));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_row_swap(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_row_swap)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t const rowa = p->row[0];
@@ -93,13 +160,11 @@ int run_mzd_row_swap(void *_p, double *wt, unsigned long long *cycles)
   TIME(mzd_row_swap(A, rowa, rowb));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_copy_row(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_copy_row)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_t* const B = mzd_init(p->m, p->n);
   mzd_randomize(A);
@@ -111,13 +176,11 @@ int run_mzd_copy_row(void *_p, double *wt, unsigned long long *cycles)
 
   mzd_free(A);
   mzd_free(B);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_col_swap(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_col_swap)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t const cola = p->col[0];
@@ -127,13 +190,11 @@ int run_mzd_col_swap(void *_p, double *wt, unsigned long long *cycles)
   TIME(mzd_col_swap(A, cola, colb));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_col_swap_in_rows(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_col_swap_in_rows)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t const cola = p->col[0];
@@ -145,13 +206,11 @@ int run_mzd_col_swap_in_rows(void *_p, double *wt, unsigned long long *cycles)
   TIME(mzd_col_swap_in_rows(A, cola, colb, start_row, stop_row));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_read_bit(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_read_bit)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t const rowa = p->row[0];
@@ -162,13 +221,11 @@ int run_mzd_read_bit(void *_p, double *wt, unsigned long long *cycles)
   TIME(result = mzd_read_bit(A, rowa, cola));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_write_bit(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_write_bit)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   rci_t const rowa = p->row[0];
   rci_t const cola = p->col[0];
@@ -178,13 +235,11 @@ int run_mzd_write_bit(void *_p, double *wt, unsigned long long *cycles)
   TIME(mzd_write_bit(A, rowa, cola, bit); bit = !bit);
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_row_add_offset(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_row_add_offset)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t const rowa = p->row[0];
@@ -195,13 +250,11 @@ int run_mzd_row_add_offset(void *_p, double *wt, unsigned long long *cycles)
   TIME(mzd_row_add_offset(A, rowa, rowb, cola));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_row_add(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_row_add)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t const rowa = p->row[0];
@@ -211,13 +264,11 @@ int run_mzd_row_add(void *_p, double *wt, unsigned long long *cycles)
   TIME(mzd_row_add(A, rowa, rowb));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_transpose(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_transpose)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->m);
   mzd_t* const B = mzd_init(p->m, p->m);
   mzd_randomize(A);
@@ -227,13 +278,11 @@ int run_mzd_transpose(void *_p, double *wt, unsigned long long *cycles)
 
   mzd_free(A);
   mzd_free(B);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_mul_naive(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_mul_naive)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->l);
   mzd_t* const B = mzd_init(p->l, p->n);
   mzd_t* const C = mzd_init(p->m, p->n);
@@ -246,13 +295,11 @@ int run_mzd_mul_naive(void *_p, double *wt, unsigned long long *cycles)
   mzd_free(A);
   mzd_free(B);
   mzd_free(C);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_addmul_naive(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_addmul_naive)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->l);
   mzd_t* const B = mzd_init(p->l, p->n);
   mzd_t* const C = mzd_init(p->m, p->n);
@@ -265,13 +312,11 @@ int run_mzd_addmul_naive(void *_p, double *wt, unsigned long long *cycles)
   mzd_free(A);
   mzd_free(B);
   mzd_free(C);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run__mzd_mul_naive(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(_mzd_mul_naive)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->l);
   mzd_t* const B = mzd_init(p->n, p->l);
   mzd_t* const C = mzd_init(p->m, p->n);
@@ -285,13 +330,11 @@ int run__mzd_mul_naive(void *_p, double *wt, unsigned long long *cycles)
   mzd_free(A);
   mzd_free(B);
   mzd_free(C);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run__mzd_mul_va(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(_mzd_mul_va)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_t* const V = mzd_init(1, p->m);
   mzd_t* const C = mzd_init(1, p->n);
@@ -305,66 +348,60 @@ int run__mzd_mul_va(void *_p, double *wt, unsigned long long *cycles)
   mzd_free(A);
   mzd_free(V);
   mzd_free(C);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_gauss_delayed(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_gauss_delayed)
 {
-  struct test_params *p = (struct test_params *)_p;
-
-  mzd_t** A = malloc(sizeof(mzd_t) * p->count);
+  mzd_t** A = malloc(sizeof(mzd_t) * (p->count + 1));
   rci_t const cola = p->col[0];
   int const full = p->boolean;
   uint64_t const loop_count = p->count;
   rci_t result;
 
-  for (int i = 0; i < loop_count; ++i) {
+  for (int i = loop_count; i >= 0; --i) {
     A[i] = mzd_init(p->m, p->n);
     mzd_randomize(A[i]);
   }
 
-  TIME_BEGIN;
-  for (int i = 0; i < loop_count; ++i) {
+  TIME_BEGIN(result = mzd_gauss_delayed(A[0], cola, full));
+  for (int i = loop_count; i > 0; --i) {
     result = mzd_gauss_delayed(A[i], cola, full);
   }
   TIME_END;
 
-  for (int i = 0; i < loop_count; ++i)
+  for (int i = 0; i <= loop_count; ++i)
     mzd_free(A[i]);
   free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_echelonize_naive(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_echelonize_naive)
 {
-  struct test_params *p = (struct test_params *)_p;
-
-  mzd_t** A = malloc(sizeof(mzd_t) * p->count);
+  mzd_t** A = malloc(sizeof(mzd_t) * (p->count + 1));
   int const full = p->boolean;
   uint64_t const loop_count = p->count;
   rci_t result;
 
-  for (int i = 0; i < loop_count; ++i) {
+  for (int i = loop_count; i >= 0; --i) {
     A[i] = mzd_init(p->m, p->n);
     mzd_randomize(A[i]);
   }
 
-  TIME_BEGIN;
-  for (int i = 0; i < loop_count; ++i) {
+  TIME_BEGIN(result = mzd_echelonize_naive(A[0], full));
+  for (int i = loop_count; i > 0; --i) {
     result = mzd_echelonize_naive(A[i], full);
   }
   TIME_END;
 
-  for (int i = 0; i < loop_count; ++i)
+  for (int i = 0; i <= loop_count; ++i)
     mzd_free(A[i]);
   free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_equal(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_equal)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   mzd_t* const B = mzd_copy(NULL, A);
@@ -375,13 +412,11 @@ int run_mzd_equal(void *_p, double *wt, unsigned long long *cycles)
 
   mzd_free(A);
   mzd_free(B);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_cmp(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_cmp)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   mzd_t* const B = mzd_copy(NULL, A);
@@ -392,13 +427,11 @@ int run_mzd_cmp(void *_p, double *wt, unsigned long long *cycles)
 
   mzd_free(A);
   mzd_free(B);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_copy(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_copy)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_t* const B = mzd_init(p->m, p->n);
   mzd_randomize(A);
@@ -408,13 +441,11 @@ int run_mzd_copy(void *_p, double *wt, unsigned long long *cycles)
 
   mzd_free(A);
   mzd_free(B);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_concat(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_concat)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->k);
   mzd_t* const B = mzd_init(p->m, p->l);
   mzd_t* const C = mzd_init(p->m, p->k + p->l);
@@ -427,13 +458,11 @@ int run_mzd_concat(void *_p, double *wt, unsigned long long *cycles)
   mzd_free(A);
   mzd_free(B);
   mzd_free(C);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_stack(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_stack)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->k, p->n);
   mzd_t* const B = mzd_init(p->l, p->n);
   mzd_t* const C = mzd_init(p->k + p->l, p->n);
@@ -446,13 +475,11 @@ int run_mzd_stack(void *_p, double *wt, unsigned long long *cycles)
   mzd_free(A);
   mzd_free(B);
   mzd_free(C);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_submatrix(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_submatrix)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t const rowa = p->row[0];
@@ -466,13 +493,11 @@ int run_mzd_submatrix(void *_p, double *wt, unsigned long long *cycles)
 
   mzd_free(A);
   mzd_free(S);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_invert_naive(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_invert_naive)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->m);
   mzd_t* const I = mzd_init(p->m, p->m);
   mzd_t* const C = mzd_init(p->m, p->m);
@@ -485,13 +510,11 @@ int run_mzd_invert_naive(void *_p, double *wt, unsigned long long *cycles)
   mzd_free(A);
   mzd_free(I);
   mzd_free(C);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_add(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_add)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_t* const B = mzd_init(p->m, p->n);
   mzd_t* const C = mzd_init(p->m, p->n);
@@ -504,13 +527,11 @@ int run_mzd_add(void *_p, double *wt, unsigned long long *cycles)
   mzd_free(A);
   mzd_free(B);
   mzd_free(C);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run__mzd_add(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(_mzd_add)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_t* const B = mzd_init(p->m, p->n);
   mzd_t* const C = mzd_init(p->m, p->n);
@@ -523,13 +544,11 @@ int run__mzd_add(void *_p, double *wt, unsigned long long *cycles)
   mzd_free(A);
   mzd_free(B);
   mzd_free(C);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_combine(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_combine)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_t* const B = mzd_init(p->m, p->n);
   mzd_t* const C = mzd_init(p->m, p->n);
@@ -546,13 +565,11 @@ int run_mzd_combine(void *_p, double *wt, unsigned long long *cycles)
   mzd_free(A);
   mzd_free(B);
   mzd_free(C);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_read_bits(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_read_bits)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t row = p->row[0];
@@ -564,13 +581,11 @@ int run_mzd_read_bits(void *_p, double *wt, unsigned long long *cycles)
   TIME(result = mzd_read_bits(A, row, col, n));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_read_bits_int(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_read_bits_int)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t row = p->row[0];
@@ -582,13 +597,11 @@ int run_mzd_read_bits_int(void *_p, double *wt, unsigned long long *cycles)
   TIME(result = mzd_read_bits_int(A, row, col, n));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_xor_bits(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_xor_bits)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t row = p->row[0];
@@ -600,13 +613,11 @@ int run_mzd_xor_bits(void *_p, double *wt, unsigned long long *cycles)
   TIME(mzd_xor_bits(A, row, col, n, values));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_and_bits(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_and_bits)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t row = p->row[0];
@@ -618,13 +629,11 @@ int run_mzd_and_bits(void *_p, double *wt, unsigned long long *cycles)
   TIME(mzd_and_bits(A, row, col, n, values));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_clear_bits(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_clear_bits)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t row = p->row[0];
@@ -635,13 +644,11 @@ int run_mzd_clear_bits(void *_p, double *wt, unsigned long long *cycles)
   TIME(mzd_clear_bits(A, row, col, n));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_is_zero(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_is_zero)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   uint64_t const loop_count = p->count;
   int volatile result;
@@ -649,13 +656,11 @@ int run_mzd_is_zero(void *_p, double *wt, unsigned long long *cycles)
   TIME(result = mzd_is_zero(A));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_row_clear_offset(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_row_clear_offset)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t row = p->row[0];
@@ -665,13 +670,11 @@ int run_mzd_row_clear_offset(void *_p, double *wt, unsigned long long *cycles)
   TIME(mzd_row_clear_offset(A, row, col));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_find_pivot(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_find_pivot)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t row = p->row[0];
@@ -684,13 +687,11 @@ int run_mzd_find_pivot(void *_p, double *wt, unsigned long long *cycles)
   TIME(result = mzd_find_pivot(A, row, col, &row_out, &col_out));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_density(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_density)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   wi_t res = p->wrd[0];
@@ -700,13 +701,11 @@ int run_mzd_density(void *_p, double *wt, unsigned long long *cycles)
   TIME(result = mzd_density(A, res));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run__mzd_density(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(_mzd_density)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
   rci_t row = p->row[0];
@@ -718,13 +717,11 @@ int run__mzd_density(void *_p, double *wt, unsigned long long *cycles)
   TIME(result = _mzd_density(A, res, row, col));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
-int run_mzd_first_zero_row(void *_p, double *wt, unsigned long long *cycles)
+BENCHMARK_PREFIX(mzd_first_zero_row)
 {
-  struct test_params *p = (struct test_params *)_p;
-
   mzd_t* const A = mzd_init(p->m, p->m);
   mzd_set_ui(A, 1);
   uint64_t const loop_count = p->count;
@@ -733,8 +730,8 @@ int run_mzd_first_zero_row(void *_p, double *wt, unsigned long long *cycles)
   TIME(result = mzd_first_zero_row(A));
 
   mzd_free(A);
-  return 0;
 }
+BENCHMARK_POSTFIX
 
 // Returns a number proportional with the ideal number of
 // mathematical operations for the given code.
@@ -823,6 +820,16 @@ void print_complexity_human(struct test_params *p, char const* cp)
     printf("^%d", power);
 }
 
+void print_wall_time(double seconds)
+{
+  if (seconds >= 0.01)
+    printf("wall time: %f s", seconds);
+  else if (seconds >= 0.00001)
+    printf("wall time: %f ms", 1000.0 * seconds);
+  else
+    printf("wall time: %f us", 1000000.0 * seconds);
+}
+
 struct function_st {
   char const* funcname;
   run_type run_func;
@@ -870,7 +877,8 @@ static function_st function_mapper[] = {
   { "mzd_find_pivot",       run_mzd_find_pivot,       "Rmn,ri,ci",       "",   1000000 },
   { "mzd_density",          run_mzd_density,          "Rmn,wi",          "",   10000000 },
   { "_mzd_density",         run__mzd_density,         "Rmn,wi,ri,ci",    "",   10000000 },
-  { "mzd_first_zero_row",   run_mzd_first_zero_row,   "Rmm",             "m",  10000000000 }
+  { "mzd_first_zero_row",   run_mzd_first_zero_row,   "Rmm",             "m",  10000000000 },
+  { "nothing",              run_bench_nothing,        "",                "",   1 }
 };
 
 int decode_size(char var, struct test_params* params, int* argcp, char*** argvp)
@@ -992,8 +1000,64 @@ int main(int argc, char** argv)
 {
   int opts = global_options(&argc, &argv);
 
-  int f;
   struct test_params params;
+  unsigned long long data[8];
+  int data_len;
+
+#ifdef HAVE_LIBPAPI
+  int papi_counters = PAPI_num_counters();
+  if (papi_counters < papi_array_len)
+  {
+    fprintf(stderr, "%s: Warning: there are only %d hardware counters available!\n", progname, papi_counters);
+    papi_array_len = papi_counters;
+  }
+  int res = PAPI_start_counters((int*)papi_events, papi_array_len);
+  switch(res)
+  {
+    case 0:
+    {
+      long long* tmp = (long long*)malloc(papi_array_len * sizeof(long long));
+      PAPI_stop_counters(tmp, papi_array_len);
+      free(tmp);
+      break;
+    }
+    case PAPI_ECNFLCT:
+    {
+      fprintf(stderr, "%s: %s: Conflicting event: The underlying counter hardware cannot count the specified events simultaneously.\n", progname, papi_event_name(papi_events[papi_array_len - 1]));
+      fprintf(stderr, "Run `papi_event_chooser PRESET");
+      for (int nv = 0; nv < papi_array_len - 1; ++nv)
+	fprintf(stderr, " %s", papi_event_name(papi_events[nv]));
+      fprintf(stderr, "` to get a list of possible events that can be added.\n");
+      break;
+    }
+    case PAPI_ENOEVNT:
+    {
+      for (int nv = 0; nv < papi_array_len; ++nv)
+	if ((res = PAPI_query_event(papi_events[nv])) != PAPI_OK)
+	{
+	  fprintf(stderr, "%s: PAPI_start_counters: %s: %s.\n", progname, papi_event_name(papi_events[nv]), PAPI_strerror(res));
+	  break;
+	}
+      break;
+    }
+    case PAPI_ESYS:
+      fprintf(stderr, "%s: PAPI_start_counters: %s\n", progname, strerror(errno));
+      break;
+    default:
+      fprintf(stderr, "%s: PAPI_start_counters: %s.\n", progname, PAPI_strerror(res));
+      break;
+  }
+  if (res)
+    return 1;
+  for (int nv = 0; nv <= papi_array_len; ++nv)
+    loop_calibration[nv] = 100000000;
+  params.count = 1;
+  data_len = papi_array_len + 1;
+  for (int i = 0; i < 100; ++i)
+    run_bench_nothing((void*)&params, data, &data_len);
+#endif
+
+  int f;
   int found = 0;
 
   params.rows = 0;
@@ -1140,12 +1204,11 @@ int main(int argc, char** argv)
   params.count = bench_count ? bench_count : function_mapper[f].count / cost;
   if (params.count < 1)
     params.count = 1;
+  bench_count = params.count;
 
   srandom(17);
-  unsigned long long t;
-  double wt;
 
-  run_bench(function_mapper[f].run_func, (void*)&params, &wt, &t);
+  data_len = run_bench(function_mapper[f].run_func, (void*)&params, data, sizeof(data) / sizeof(unsigned long long));
 
   printf("function: %s, count: %" PRId64 ", ", params.funcname, params.count);
   if (saw_var[2])
@@ -1167,7 +1230,19 @@ int main(int argc, char** argv)
   }
   if (params.cutoff != -1)
     printf("cutoff: %d, ", params.cutoff);
-  printf("cpu cycles per loop: %llu, wall time: %lf, cc/", t / params.count, wt);
+  print_wall_time(data[0] / 1000000.0 / params.count);
+  printf(", cpu cycles: %llu", (data[1] + params.count / 2) / params.count);
+#ifndef HAVE_LIBPAPI
+  printf(", cc/");
   print_complexity_human(&params, function_mapper[f].complexity_code);
-  printf(": %f\n", t / (params.count * cost));
+  printf(": %f\n", data[1] / (params.count * cost));
+#else
+  printf("\n");
+  for (int n = 1; n < data_len; ++n)
+  {
+    printf("%s (%f) per bit (devided by ", papi_event_name(papi_events[n - 1]), (double)data[n] / params.count);
+    print_complexity_human(&params, function_mapper[f].complexity_code);
+    printf("): %f\n", data[n] / (params.count * cost));
+  }
+#endif
 }

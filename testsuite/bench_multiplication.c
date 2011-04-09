@@ -3,26 +3,27 @@
 #include "config.h"
 #include "cpucycles.h"
 #include "m4ri.h"
-#include "benchmarketing.h"
+#include "benchmarking.h"
 
 struct mul_params {
   rci_t n;
   int cutoff;
 };
 
-int run(void *_p, double *wt, unsigned long long *cycles) {
+int run(void *_p, unsigned long long *data, int *data_len) {
   struct mul_params *p = (struct mul_params *)_p;
+  *data_len = 2;
 
   mzd_t *A = mzd_init(p->n, p->n);
   mzd_t *B = mzd_init(p->n, p->n);
   mzd_randomize(A);
   mzd_randomize(B);
 
-  *wt = walltime(0.0);
-  *cycles = cpucycles();
+  data[0] = walltime(0);
+  data[1] = cpucycles();
   mzd_t *C = mzd_mul(NULL, A, B, p->cutoff);
-  *wt = walltime(*wt);
-  *cycles = cpucycles() - *cycles;
+  data[0] = walltime(data[0]);
+  data[1] = cpucycles() - data[1];
 
   mzd_free(A);
   mzd_free(B);
@@ -49,9 +50,8 @@ int main(int argc, char **argv) {
      and over again instead of computing the average of various
      matrices.*/
   srandom(17);
-  unsigned long long t;
-  double wt;
-  run_bench(run, (void*)&p, &wt, &t);
+  unsigned long long data[2];
+  run_bench(run, (void*)&p, data, 2);
 
-  printf("n: %5d, cutoff: %5d, cpu cycles: %llu, wall time: %lf\n", p.n, p.cutoff, t, wt);
+  printf("n: %5d, cutoff: %5d, cpu cycles: %llu, wall time: %lf\n", p.n, p.cutoff, data[1], data[0] / 1000000.0);
 }

@@ -1,5 +1,5 @@
 /*
- * benchmarketing.c
+ * benchmarking.c
  *
  * Benchmark engine.
  *
@@ -72,13 +72,22 @@
  * The last three lines can be suppressed by passing the option -q (quiet).
  */
 
+#include "config.h"
+
+#ifdef HAVE_LIBPAPI
+#define _GNU_SOURCE
+#include <sys/types.h>          // papi.h needs caddr_t
+#include <papi.h>
+#include <errno.h>
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
-#include "benchmarketing.h"
+#include "benchmarking.h"
 #include "misc.h"
 
 enum { C80, C90, C95, C98, C99 };
@@ -87,20 +96,99 @@ enum { C80, C90, C95, C98, C99 };
  * Command line option decoding
  */
 
-int bench_quiet = 0;			// Set if -q is used.
-int bench_dump = 0;			// Set if -d is used.
-int bench_minimum = 2;			// Minimum number of measurements. Set with -m <minimum>.
-int bench_maximum = 1000;		// Maximum number of measurements. Set with -n <maximum>.
-double bench_maxtime = 60.0;		// Maximum number of seconds to run. Set with -t <maxtime>
-double bench_accuracy = 0.01;		// The +/- range (where 1.0 is 100%) within that we want the real population mean to be with the given confidence. Set with -a <bench_accuracy>
-int bench_confidence_index = C99;	// The confidence that the real mean is within the given (or found) range.
-char const* progname;			// Set to argv[0].
+int bench_quiet = 0;				// Set if -q is used.
+int bench_dump = 0;				// Set if -d is used.
+int bench_minimum = 2;				// Minimum number of measurements. Set with -m <minimum>.
+int bench_maximum = 1000;			// Maximum number of measurements. Set with -n <maximum>.
+unsigned long long bench_maxtime = 60000000;	// Maximum number of microseconds to run. Set with -t <maxtime>, in seconds (floating point).
+double bench_accuracy = 0.01;			// The +/- range (where 1.0 is 100%) within that we want the real population mean to be with the given confidence. Set with -a <bench_accuracy>
+int bench_confidence_index = C99;		// The confidence that the real mean is within the given (or found) range.
+int bench_stats = 1;				// The counter used for statistics (0 = realtime, 1 = cpuclocks). Set with -s <counter>.
+char const* progname;				// Set to argv[0].
 
 /*
  * Command line option used by bench_packedmatrix.c
  */
 
-uint64_t bench_count = 0;		// Can be set by -x <count>, otherwise a reasonable default is being used.
+uint64_t bench_count = 0;			// Can be set by -x <count>, otherwise a reasonable default is being used.
+
+#ifdef HAVE_LIBPAPI
+
+int bench_disregard_L2_misses = 0;		// Set if -2 is used.
+
+/*
+ * PAPI events being counted.
+ */
+
+int papi_events[32] = {
+  PAPI_TOT_CYC,				/* Total cycles. This must always be the first entry. */
+};
+
+int papi_array_len = 1;
+int bench_PAPI_L2_TCM_index;
+
+char* papi_event_name(int event)
+{
+  static char buf[PAPI_MAX_STR_LEN];
+  int res = PAPI_event_code_to_name(event, buf);
+  if (res)
+    snprintf(buf, PAPI_MAX_STR_LEN, "<unknown PAPI event code %d>", event);
+  return buf;
+}
+
+int papi_add_event(char const* event_name)
+{
+  // PAPI needs to be initialized before calling PAPI_event_name_to_code.
+  if (PAPI_is_initialized() == PAPI_NOT_INITED)
+  {
+    int res = PAPI_library_init(PAPI_VER_CURRENT);
+    if (res != PAPI_OK && res != PAPI_VER_CURRENT)
+    {
+      fprintf(stderr, "%s: PAPI_library_init: error code %d %s\n", progname, res, PAPI_strerror(res));
+      m4ri_die("PAPI failed to initialize.\n");
+    }
+  }
+
+  int event;
+  int res = PAPI_event_name_to_code((char*)event_name, &event);
+
+  if (res != PAPI_OK)
+  {
+    if (res == PAPI_ENOEVNT)
+      fprintf(stderr, "%s: %s: No such event.\n", progname, event_name);
+    else
+      fprintf(stderr, "%s: PAPI_event_name_to_code(\"%s\"): %s\n", progname, event_name, PAPI_strerror(res));
+    return res;
+  }
+
+  int found = 0;
+  for (int nv = 0; nv < papi_array_len; ++nv)
+  {
+    if (papi_events[nv] == event)
+    {
+      found = 1;
+      break;
+    }
+  }
+
+  if (!found)
+    papi_events[papi_array_len++] = event;
+
+  return 0;
+}
+
+void papi_add_events(char* event_names)
+{
+  char* tmpptr;
+  char* name = strtok_r(event_names, ", ", &tmpptr);
+  while (name)
+  {
+    papi_add_event(name);
+    name = strtok_r(NULL, ", ", &tmpptr);
+  }
+}
+
+#endif	// HAVE_LIBPAPI
 
 int global_options(int* argcp, char*** argvp)
 {
@@ -112,12 +200,39 @@ int global_options(int* argcp, char*** argvp)
       return result;
     switch((*argvp)[1][1])
     {
-      case 'd':		// Dump
+      case 'd':
 	bench_dump = 1;
 	break;
-      case 'q':		// Quiet
+      case 'q':
 	bench_quiet = 1;
 	break;
+#ifdef HAVE_LIBPAPI
+      case '2':
+      {
+	bench_disregard_L2_misses = 1;
+	if (papi_add_event("PAPI_L2_TCM"))
+	{
+	  fprintf(stderr, "%s: Ignoring -2: Level 2 cache misses cannot be detected with the current set of PAPI events (-p).\n", progname);
+	  bench_disregard_L2_misses = 0;
+	}
+	for (int nv = 0; nv < papi_array_len; ++nv)
+	{
+	  if (papi_events[nv] == PAPI_L2_TCM)
+	  {
+	    bench_PAPI_L2_TCM_index = nv + 1;	// +1 for in data[] inserted virtual time at index 0.
+	    break;
+	  }
+	}
+	break;
+      }
+      case 'p':
+      {
+	++*argvp;
+	--*argcp;
+        papi_add_events((*argvp)[1]);
+	break;
+      }
+#endif
       case 'm':
 	++*argvp;
 	--*argcp;
@@ -131,7 +246,7 @@ int global_options(int* argcp, char*** argvp)
       case 't':
 	++*argvp;
 	--*argcp;
-	bench_maxtime = strtod((*argvp)[1], NULL);
+	bench_maxtime = 1000000 * strtod((*argvp)[1], NULL);
 	break;
       case 'a':
 	++*argvp;
@@ -171,6 +286,11 @@ int global_options(int* argcp, char*** argvp)
 	--*argcp;
 	bench_count = atoll((*argvp)[1]);
 	break;
+      case 's':
+	++*argvp;
+	--*argcp;
+	bench_stats = atoi((*argvp)[1]);
+	break;
       default:
 	return -1;
     }
@@ -185,12 +305,22 @@ void bench_print_global_options(FILE* out)
   fprintf(out, "OPTIONS\n");
   fprintf(out, "  -d                Dump measurements.\n");
   fprintf(out, "  -q                Quiet, suppress printing.\n");
+#ifdef HAVE_LIBPAPI
+  fprintf(out, "  -2                Disregard measurements with any level 2 cache misses.\n");
+#endif
   fprintf(out, "  -m <minimum>      Do at least <minimum> number of measurements. Default 2.\n");
   fprintf(out, "  -n <maximum>      Do at most <maximum> number of measurements. Default 1000.\n");
   fprintf(out, "  -t <max-time>     Stop after <max-time> seconds. Default 60.0 seconds.\n");
-  fprintf(out, "  -a <accuracy>     Stop after <accuracy> has been reached. Default 0.01 (= 1%)\n");
-  fprintf(out, "  -c <confidence>   Stop when accuracy has been reached with this confidence. Default 99 (%)\n");
+  fprintf(out, "  -a <accuracy>     Stop after <accuracy> has been reached. Default 0.01 (= 1%).\n");
+  fprintf(out, "  -c <confidence>   Stop when accuracy has been reached with this confidence. Default 99 (%).\n");
+  fprintf(out, "  -s <counter>      Counter to perform statistic over (0: realtime, 1: cpuclocks. Default: 1).\n");
   fprintf(out, "  -x <loop-count>   Call function <loop-count> times in the inner most loop (calls per measurement).\n");
+#ifdef HAVE_LIBPAPI
+  fprintf(out, "  -p <PAPI-event>[,<PAPI-event>,...]\n");
+  fprintf(out, "                    Count and report the given events. The list is comma or space separated,\n");
+  fprintf(out, "                    for example -p \"PAPI_TOT_INS PAPI_L1_DCM\".\n");
+  fprintf(out, "                    Run `papi_event_chooser PRESET PAPI_TOT_CYC [PAPI_*]` for more events.\n");
+#endif
 }
 
 /*
@@ -267,7 +397,7 @@ struct normal_st {
 
 typedef struct normal_st normal;
 
-int normal_calculate(vector v, normal* dist)
+int normal_calculate(vector v, normal* dist, double multiplier)
 {
   dist->size = vector_size(v);
 
@@ -277,14 +407,14 @@ int normal_calculate(vector v, normal* dist)
   // Calculate the sum of all data.
   double sum = 0;
   for (int i = 0; i < dist->size; ++i)
-    sum += vector_get(v, i);
+    sum += vector_get(v, i) * multiplier;
   dist->mean = sum / dist->size;
 
   // Calculate the sum of the square of all differences with mean.
   sum = 0;
   for (int i = 0; i < dist->size; ++i)
   {
-    double delta = vector_get(v, i) - dist->mean;
+    double delta = vector_get(v, i) * multiplier - dist->mean;
     sum += delta * delta;
   }
   dist->sigma = sqrt(sum / (dist->size - 1));
@@ -386,29 +516,16 @@ static float t_table(int confidence_index, int freedoms)
 
 /*
  * walltime
- *
- * Author: Marin Albrecht.
  */
 
-double walltime( double t0 )
+unsigned long long walltime(unsigned long long t0)
 {
-  double mic, time;
-  double mega = 0.000001;
+  static time_t base_sec;
   struct timeval tp;
-  static long base_sec = 0;
-  static long base_usec = 0;
-
-  (void)gettimeofday(&tp, NULL);
-  if (base_sec == 0)
-  {
+  gettimeofday(&tp, NULL);
+  if (__M4RI_UNLIKELY(base_sec == 0))
     base_sec = tp.tv_sec;
-    base_usec = tp.tv_usec;
-  }
-
-  time = (double)(tp.tv_sec - base_sec);
-  mic = (double)(tp.tv_usec - base_usec);
-  time = (time + mic * mega) - t0;
-  return time;
+  return (tp.tv_sec - base_sec) * 1000000 + tp.tv_usec - t0;
 }
 
 /*
@@ -477,18 +594,24 @@ void print_double(double d, int precision)
  * Benchmark main loop.
  */
 
-void run_bench(
-    int (*f)(void* params, double* wtp, unsigned long long* ccp),
+int run_bench(
+    int (*f)(void* params, unsigned long long* data, int *data_len),
     void* params,
-    double* wtp,
-    unsigned long long* ccp)
+    unsigned long long* data,
+    int data_len)
 {
   double const CONFIDENCE = 1.0 - student_t_certainty[bench_confidence_index];
-  unsigned long long cc_sum = 0;
-  double wt_diff = 0.0;
-  vector wt_data = vector_create(128);
+  unsigned long long data_sum[32];
+  memset(data_sum, 0, sizeof(data_sum));
+  data_len = MIN(data_len, sizeof(data_sum) / sizeof(unsigned long long));
+  vector stats_data = vector_create(128);
   normal stats;
-  double start_walltime = walltime(0.0);
+#ifdef HAVE_LIBPAPI
+  int total_calls = 0;
+#endif
+  if (!bench_count)
+    bench_count = 1;
+  unsigned long long start_walltime = walltime(0);
   for (int n = 1; n <= bench_maximum; ++n)
   {
     if (!bench_quiet && !bench_dump)
@@ -497,23 +620,35 @@ void run_bench(
       fflush(stdout);
     }
 
-    double wt = 0.0;
-    unsigned long long cc = 0;
-    int res = f(params, &wt, &cc);
-    if (res)
-      m4ri_die("benchmark function failed with exit code: %d\n", res);
+    do
+    {
+      int res = f(params, data, &data_len);
+      if (res < 0)
+	m4ri_die("benchmark function failed with exit code: %d\n", res);
+#ifdef HAVE_LIBPAPI
+      ++total_calls;
+#endif
+    }
+#ifdef HAVE_LIBPAPI
+    while(bench_disregard_L2_misses && data[bench_PAPI_L2_TCM_index]);
+#else
+    while(0);
+#endif
 
     if (bench_dump)
     {
-      printf("%.9f\n", wt);
+      printf("%llu", data[0]);
+      for (int nv = 1; nv < data_len; ++nv)
+	printf(" %llu", data[nv]);
+      printf("\n");
       fflush(stdout);
     }
 
-    cc_sum += cc;
+    vector_pushback(stats_data, data[bench_stats]);
+    for (int nv = 0; nv < data_len; ++nv)
+      data_sum[nv] += data[nv];
 
-    vector_pushback(wt_data, wt);
-
-    if (n >= bench_minimum && normal_calculate(wt_data, &stats) == 0)
+    if (n >= bench_minimum && normal_calculate(stats_data, &stats, (bench_stats == 0) ? 0.000001 : (1.0 / bench_count)) == 0)
     {
       double standard_error = stats.sigma / sqrt(stats.size);
       double critical_value = t_table(bench_confidence_index, stats.size - 1);
@@ -525,20 +660,36 @@ void run_bench(
     }
   }
 
-  *wtp = stats.mean;
-  *ccp = cc_sum / stats.size;
+  for (int nv = 0; nv < data_len; ++nv)
+    data[nv] = (data_sum[nv] + stats.size / 2) / stats.size;
 
   if (!bench_quiet)
   {
     if (!bench_quiet && !bench_dump)
       printf("\n");
-    printf("Total running time: %6.3f seconds.\n", walltime(start_walltime));
+    printf("Total running time: %6.3f seconds.\n", walltime(start_walltime) / 1000000.0);
+#ifdef HAVE_LIBPAPI
+    if (bench_disregard_L2_misses)
+      printf("Samples disregarded because of level 2 cache misses: %d\n", total_calls - stats.size);
+#endif
     int precision = bench_precision(stats.sigma);
+#ifdef HAVE_LIBPAPI
+    if (bench_stats)
+      printf("%s: ", papi_event_name(papi_events[bench_stats - 1]));
+    else
+      printf("Virtual time (s): ");
+#endif
     printf("Sample size: %d; mean: ", stats.size);
     print_double(stats.mean, precision);
     printf("; standard deviation: ");
     print_double(stats.sigma, precision);
     printf("\n");
+#ifdef HAVE_LIBPAPI
+    if (bench_stats)
+      printf("%s: ", papi_event_name(papi_events[bench_stats - 1]));
+    else
+      printf("Virtual time (s): ");
+#endif
     double standard_error = stats.sigma / sqrt(stats.size);
     double critical_value = t_table(bench_confidence_index, stats.size - 1);
     double accuracy = standard_error * critical_value;
@@ -551,7 +702,9 @@ void run_bench(
     printf("]\n");
   }
 
-  vector_destruct(wt_data);
+  vector_destruct(stats_data);
+
+  return data_len;
 }
 
 /*
