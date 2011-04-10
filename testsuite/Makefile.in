@@ -61,9 +61,6 @@ bench_%: cpucycles.o benchmarking.o bench_%.c Makefile
 test_%: test_%.c testing.o Makefile
 	$(CC) $(DEBUG) $(CFLAGS) $@.c $(LDFLAGS) testing.o -o $@
 
-matops: matops.c Makefile
-	$(CC) $(DEBUG) -I.. $(CFLAGS) matops.c $(LDFLAGS) -o $@
-
 clean:
 	rm -f $(TEST_PRGS)
 	rm -f $(BENCH_PRGS)
