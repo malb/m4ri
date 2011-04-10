@@ -51,7 +51,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
   A->nrows = r;
   A->offset = 0;
 
-  A->rows = (word**)m4ri_mmc_calloc(sizeof(word*), r + 1); // We're overcomitting here.
+  A->rows = (word**)m4ri_mmc_calloc(r + 1, sizeof(word*)); // We're overcomitting here.
 
   if(r && c) {
     /* we allow more than one malloc call so he have to be a bit clever
@@ -66,7 +66,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
     A->blocks = (mmb_t*)m4ri_mmc_calloc(nblocks + 1, sizeof(mmb_t));
     for(int i = 0; i < nblocks - 1; ++i) {
       A->blocks[i].size = MM_MAX_MALLOC;
-      A->blocks[i].data = m4ri_mmc_calloc(MM_MAX_MALLOC, 1);
+      A->blocks[i].data = m4ri_mmc_calloc(1, MM_MAX_MALLOC);
       for(rci_t j = 0; j < max_rows_per_block; ++j)
       {
 	int offset = A->width * j;				// Offset to start of row j within block.
@@ -120,7 +120,7 @@ mzd_t *mzd_init_window (mzd_t const *m, rci_t lowr, rci_t lowc, rci_t highr, rci
   window->blocks = NULL;
 
   if(nrows)
-    window->rows = (word**)m4ri_mmc_calloc(sizeof(word*), nrows + 1);
+    window->rows = (word**)m4ri_mmc_calloc(nrows + 1, sizeof(word*));
   else
     window->rows = NULL;
 
@@ -830,7 +830,7 @@ mzd_t *mzd_stack(mzd_t *C, mzd_t const *A, mzd_t const *B) {
   return C;
 }
 
-mzd_t *mzd_invert_naive(mzd_t *INV, mzd_t *A, mzd_t const *I) {
+mzd_t *mzd_invert_naive(mzd_t *INV, mzd_t const *A, mzd_t const *I) {
   assert(A->offset == 0);
   mzd_t *H;
 
@@ -1093,7 +1093,7 @@ void mzd_col_swap(mzd_t *M, rci_t const cola, rci_t const colb) {
 }
 
 
-int mzd_is_zero(mzd_t *A) {
+int mzd_is_zero(mzd_t const *A) {
   /* Could be improved: stopping as the first non zero value is found (status!=0) */
   rci_t const mb = A->nrows;
   rci_t const nb = A->ncols;
@@ -1184,7 +1184,7 @@ void mzd_row_clear_offset(mzd_t *M, rci_t row, rci_t coloffset) {
 }
 
 
-int mzd_find_pivot(mzd_t *A, rci_t start_row, rci_t start_col, rci_t *r, rci_t *c) { 
+int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, rci_t *c) { 
   assert(A->offset == 0);
   rci_t const nrows = A->nrows;
   rci_t const ncols = A->ncols;
@@ -1304,7 +1304,7 @@ static inline int m4ri_bitcount(word w)  {
 }
 
 
-double _mzd_density(mzd_t *A, wi_t res, rci_t r, rci_t c) {
+double _mzd_density(mzd_t const *A, wi_t res, rci_t r, rci_t c) {
   size_t count = 0;
   size_t total = 0;
   
@@ -1341,20 +1341,19 @@ double _mzd_density(mzd_t *A, wi_t res, rci_t r, rci_t c) {
   return (double)count / total;
 }
 
-double mzd_density(mzd_t *A, wi_t res) {
+double mzd_density(mzd_t const *A, wi_t res) {
   return _mzd_density(A, res, 0, 0);
 }
 
-rci_t mzd_first_zero_row(mzd_t *A) {
-  word mask_begin = RIGHT_BITMASK(RADIX - A->offset);
-  word mask_end = LEFT_BITMASK((A->ncols + A->offset) % RADIX);
+rci_t mzd_first_zero_row(mzd_t const *A) {
+  word const mask_begin = RIGHT_BITMASK(RADIX - A->offset);
+  word const mask_end = LEFT_BITMASK((A->ncols + A->offset) % RADIX);
   wi_t const end = A->width - 1;
   word *row;
 
   for(rci_t i = A->nrows - 1; i >= 0; --i) {
-    word tmp = 0;
     row = A->rows[i];
-    tmp |= row[0] & mask_begin;
+    word tmp = row[0] & mask_begin;
     for (wi_t j = 1; j < end; ++j)
       tmp |= row[j];
     tmp |= row[end] & mask_end;

@@ -87,6 +87,15 @@ else
    AC_DEFINE(NDEBUG,1,[Define whether debugging is enabled])
 fi
 
+# For the testsuite. Detect if PAPI is installed. See http://icl.cs.utk.edu/papi/ .
+AC_CHECK_LIB(papi, PAPI_start_counters,
+[ PAPI_LIBS="-lpapi"
+  PAPI_LDFLAGS="-Wl,-rpath,/usr/local/lib"
+  AC_DEFINE_UNQUOTED([HAVE_LIBPAPI], 1, [Define when libpapi is available.])
+])
+AC_SUBST(PAPI_LIBS)
+AC_SUBST(PAPI_LDFLAGS)
+
 # L1 and L2 Cache Size
 AX_CACHE_SIZE()
 AC_ARG_ENABLE([cachetune], 

@@ -58,7 +58,7 @@ void m4ri_build_all_codes() {
   codebook=(code**)m4ri_mm_calloc(MAXKAY+1, sizeof(code*));
   
   for(int k = 1; k < MAXKAY + 1; ++k) {
-    codebook[k] = (code*)m4ri_mm_calloc(sizeof(code), 1);
+    codebook[k] = (code*)m4ri_mm_calloc(1, sizeof(code));
     codebook[k]->ord =(int*)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
     codebook[k]->inc =(int*)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
     m4ri_build_code(codebook[k]->ord, codebook[k]->inc, k);

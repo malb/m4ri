@@ -329,6 +329,28 @@ static inline word swap_bits(word v) {
 #define ALIGNMENT(addr, n) (((unsigned long)(addr))%(n))
 
 /**
+ * \brief Test for gcc >= maj.min, as per __GNUC_PREREQ in glibc
+ *
+ * \param maj The major version.
+ * \param min The minor version.
+ * \return TRUE iff we are using a GNU compile of at least version maj.min.
+ */
+#if defined(__GNUC__) && defined(__GNUC_MINOR__)
+#define __M4RI_GNUC_PREREQ(maj, min) ((__GNUC__ << 16) + __GNUC_MINOR__ >= ((maj) << 16) + (min))
+#else
+#define __M4RI_GNUC_PREREQ(maj, min) FALSE
+#endif
+
+/* __builtin_expect is in gcc 3.0, and not in 2.95. */
+#if __M4RI_GNUC_PREREQ(3,0)
+#define __M4RI_LIKELY(cond)    __builtin_expect ((cond) != 0, 1)
+#define __M4RI_UNLIKELY(cond)  __builtin_expect ((cond) != 0, 0)
+#else
+#define __M4RI_LIKELY(cond)    (cond)
+#define __M4RI_UNLIKELY(cond)  (cond)
+#endif
+
+/**
  * Return true if a's least significant bit is smaller than b's least significant bit.
  *
  * return true if LSBI(a) < LSBI(b),
@@ -463,6 +485,8 @@ void m4ri_fini(void);
  * \param count Number of elements.
  * \param size Size of each element.
  *
+ * \return pointer to allocated memory block.
+ *
  * \todo Allow user to register calloc function.
  */
 
@@ -498,6 +522,8 @@ static inline void *m4ri_mm_calloc(size_t count, size_t size) {
  * \brief Malloc wrapper.
  *
  * \param size Size in bytes.
+ *
+ * \return pointer to allocated memory block.
  *
  * \todo Allow user to register malloc function.
  */
@@ -606,6 +632,8 @@ static inline mmb_t *m4ri_mmc_handle(void) {
  * \brief Allocate size bytes.
  *
  * \param size Number of bytes.
+ *
+ * \return pointer to allocated memory block.
  */
 
 static inline void *m4ri_mmc_malloc(size_t size) {
@@ -648,16 +676,18 @@ static inline void *m4ri_mmc_malloc(size_t size) {
 }
 
 /**
- * \brief Allocate size times count zeroed bytes.
+ * \brief Allocate an array of count times size zeroed bytes.
  *
- * \param size Number of bytes per block.
- * \param count Number of blocks.
+ * \param count Number of elements.
+ * \param size Number of bytes per element.
+ *
+ * \return pointer to allocated memory block.
  *
  * \warning Not thread safe.
  */
 
-static inline void *m4ri_mmc_calloc(size_t size, size_t count) {
-  void *ret = m4ri_mmc_malloc(size * count);
+static inline void *m4ri_mmc_calloc(size_t count, size_t size) {
+  void *ret = m4ri_mmc_malloc(count * size);
   memset((char*)ret, 0, count * size);
   return ret;
 }

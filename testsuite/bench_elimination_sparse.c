@@ -3,7 +3,7 @@
 #include "config.h"
 #include "m4ri.h"
 #include "cpucycles.h"
-#include "benchmarketing.h"
+#include "benchmarking.h"
 
 struct elim_sparse_params {
   rci_t m;
@@ -15,8 +15,9 @@ struct elim_sparse_params {
   int full;
 };
 
-int run(void *_p, double *wt, unsigned long long *cycles) {
+int run(void *_p, unsigned long long *data, int *data_len) {
   struct elim_sparse_params *p = (struct elim_sparse_params *)_p;
+  *data_len = 2;
 
   mzd_t *A = mzd_init(p->m, p->n);
   for(rci_t i = 0; i < p->m; ++i) {
@@ -27,8 +28,8 @@ int run(void *_p, double *wt, unsigned long long *cycles) {
     }
   }
 
-  *wt = walltime(0.0);
-  *cycles = cpucycles();
+  data[0] = walltime(0);
+  data[1] = cpucycles();
   if(strcmp(p->algorithm, "m4ri") == 0)
     p->r = mzd_echelonize_m4ri(A, p->full, 0);
   else if(strcmp(p->algorithm, "cross") == 0)
@@ -37,8 +38,8 @@ int run(void *_p, double *wt, unsigned long long *cycles) {
     p->r = mzd_echelonize_pluq(A, p->full);
   else if(strcmp(p->algorithm, "naive") == 0)
     p->r = mzd_echelonize_naive(A, p->full);
-  *cycles = cpucycles() - *cycles;
-  *wt = walltime(*wt);
+  data[1] = cpucycles() - data[1];
+  data[0] = walltime(data[0]);
   mzd_free(A);
   return 0;
 }
@@ -70,9 +71,8 @@ int main(int argc, char **argv) {
      and over again instead of computing the average of various
      matrices.*/
   srandom(17);
-  unsigned long long t;
-  double wt;
-  run_bench(run,(void*)&p, &wt, &t);
+  unsigned long long data[2];
+  run_bench(run,(void*)&p, data, 2);
 
-  printf("m: %5d, n: %5d, last r: %5d, density: %7.5f, cpu cycles: %10llu, wall time: %lf\n", p.m, p.n, p.r, (double)p.density / RAND_MAX, t, wt);
+  printf("m: %5d, n: %5d, last r: %5d, density: %7.5f, cpu cycles: %10llu, wall time: %lf\n", p.m, p.n, p.r, (double)p.density / RAND_MAX, data[1], data[0] / 1000000.0);
 }

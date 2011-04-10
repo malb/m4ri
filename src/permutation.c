@@ -198,7 +198,7 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, rci_t start_row, rci_t start_co
   word *Brow;
 
   /* setup mathematical permutation */
-  rci_t *permutation = (rci_t*)m4ri_mm_calloc(sizeof(rci_t), A->ncols);
+  rci_t *permutation = (rci_t*)m4ri_mm_calloc(A->ncols, sizeof(rci_t));
   for(rci_t i = 0; i < A->ncols; ++i)
     permutation[i] = i;
 
@@ -217,7 +217,7 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t *P, rci_t start_row, rci_t start_co
   }
 
   /* we have a bitmask to encode where to write to */
-  word *write_mask = (word*)m4ri_mm_calloc(sizeof(word), width);
+  word *write_mask = (word*)m4ri_mm_calloc(width, sizeof(word));
 #ifdef M4RI_WRAPWORD
   word::init_array(write_mask, width);
 #endif
