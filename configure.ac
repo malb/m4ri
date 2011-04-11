@@ -91,38 +91,45 @@ else
    AC_DEFINE(NDEBUG,1,[Define whether debugging is enabled])
 fi
 
-if test x"$m4ri_config_papi" != x"no"; then
 # For the testsuite. Detect if PAPI is installed. See http://icl.cs.utk.edu/papi/ .
-AC_CHECK_LIB(papi, PAPI_start_counters,
-[ if test -n "$m4ri_config_papi"; then
-    LIBPAPI_PATH="`realpath -s $m4ri_config_papi/lib`"
-    PAPI_H_PATH="`realpath -s $m4ri_config_papi/include`"
-  else
+
+if test -z "$m4ri_config_papi"; then
+   AC_CHECK_LIB(papi, PAPI_start_counters,
+   [ 
     AX_GUESS_PATH_LIB(papi)
     AX_GUESS_PATH_HEADER(papi.h)
-  fi
-  if test -n "$LIBPAPI_PATH"; then
-    PAPI_LDFLAGS="-Wl,-rpath,$LIBPAPI_PATH"
-    PAPI_LIBS="-L$LIBPAPI_PATH -lpapi"
-  else
-    PAPI_LIBS="-lpapi"
-    if ! test -e "/usr/lib/libpapi.so"; then
-      AC_MSG_WARN([Could not find libpapi.so. Use --with-papi=<install_prefix> or set LD_LIBRARY_PATH correctly before running benchmark applications.])
+    if test -n "$LIBPAPI_PATH"; then
+       PAPI_LDFLAGS="-Wl,-rpath,$LIBPAPI_PATH"
+       PAPI_LIBS="-L$LIBPAPI_PATH -lpapi"
+    else
+        PAPI_LIBS="-lpapi"
+        if ! test -e "/usr/lib/libpapi.so"; then
+           AC_MSG_WARN([Could not find libpapi.so. Use --with-papi=<install_prefix> or set LD_LIBRARY_PATH correctly before running benchmark applications.])
+        fi
     fi
-  fi
-  if test -n "$PAPI_H_PATH"; then
-    PAPI_CFLAGS="-I$PAPI_H_PATH"
-  else
-    AC_MSG_WARN([
+    if test -n "$PAPI_H_PATH"; then
+       PAPI_CFLAGS="-I$PAPI_H_PATH"
+    else
+      AC_MSG_WARN([
 
 *** Could not find papi.h; compiling the benchmark applications will likely fail.
     Use --with-papi=<install_prefix> or add -I<install_prefix>/include to either CPPFLAGS or CFLAGS,
     or turn off papi all together by configuring with --without-papi.
 ])
-  fi
-  AC_DEFINE_UNQUOTED([HAVE_LIBPAPI], 1, [Define when libpapi is available.])
+    fi
+    AC_DEFINE_UNQUOTED([HAVE_LIBPAPI], 1, [Define when libpapi is available.])
 ])
 fi
+
+if test x"$m4ri_config_papi" != x"no" && test -n "$m4ri_config_papi"; then
+    LIBPAPI_PATH="`realpath -s $m4ri_config_papi/lib`"
+    PAPI_H_PATH="`realpath -s $m4ri_config_papi/include`"
+    PAPI_CFLAGS="-I$PAPI_H_PATH"
+    PAPI_LDFLAGS="-Wl,-rpath,$LIBPAPI_PATH"
+    PAPI_LIBS="-L$LIBPAPI_PATH -lpapi"
+    AC_DEFINE_UNQUOTED([HAVE_LIBPAPI], 1, [Define when libpapi is available.])
+fi
+
 AC_SUBST(PAPI_LIBS)
 AC_SUBST(PAPI_LDFLAGS)
 AC_SUBST(PAPI_CFLAGS)
