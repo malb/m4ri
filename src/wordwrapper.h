@@ -121,8 +121,8 @@ class word
     operator int(void) const { assert(false); return 0; }
 };
 
-#define CONVERT_TO_BIT(w) ((w).convert_to_BIT())
-#define CONVERT_TO_INT(w) ((w).convert_to_int())
-#define CONVERT_TO_UINT64_T(w) ((w).convert_to_uint64_t())
-#define CONVERT_TO_WORD(i) word((uint64_t)(i))
+#define __M4RI_CONVERT_TO_BIT(w) ((w).convert_to_BIT())
+#define __M4RI_CONVERT_TO_INT(w) ((w).convert_to_int())
+#define __M4RI_CONVERT_TO_UINT64_T(w) ((w).convert_to_uint64_t())
+#define __M4RI_CONVERT_TO_WORD(i) word((uint64_t)(i))
 

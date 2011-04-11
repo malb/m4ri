@@ -28,7 +28,12 @@
 #include "packedmatrix.h"
 #include "parity.h"
 
-#define SAFECHAR (RADIX + RADIX / 4 + 1)
+#define SAFECHAR (m4ri_radix + m4ri_radix / 4 + 1)
+
+/*
+ * Return r such that x elements fit into r blocks of length y.
+ */
+#define DIV_CEIL(x,y) (((x) % (y)) ? (x) / (y) + 1 : (x) / (y))
 
 void mzd_copy_row_weird_to_even(mzd_t *B, rci_t i, mzd_t const *A, rci_t j);
 
@@ -36,7 +41,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
 
   mzd_t *A = (mzd_t *)m4ri_mmc_malloc(sizeof(mzd_t));
 
-  A->width = DIV_CEIL(c, RADIX);
+  A->width = DIV_CEIL(c, m4ri_radix);
 
 #ifdef HAVE_SSE2
   int incw = 0;
@@ -58,15 +63,15 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
        here */
     
     int const bytes_per_row = A->width * sizeof(word);
-    int const max_rows_per_block = MM_MAX_MALLOC / bytes_per_row;
+    int const max_rows_per_block = __M4RI_MM_MAX_MALLOC / bytes_per_row;
     assert(max_rows_per_block);
     int rest = r % max_rows_per_block;
     
     int const nblocks = (rest == 0) ? r / max_rows_per_block : r / max_rows_per_block + 1;
     A->blocks = (mmb_t*)m4ri_mmc_calloc(nblocks + 1, sizeof(mmb_t));
     for(int i = 0; i < nblocks - 1; ++i) {
-      A->blocks[i].size = MM_MAX_MALLOC;
-      A->blocks[i].data = m4ri_mmc_calloc(1, MM_MAX_MALLOC);
+      A->blocks[i].size = __M4RI_MM_MAX_MALLOC;
+      A->blocks[i].data = m4ri_mmc_calloc(1, __M4RI_MM_MAX_MALLOC);
       for(rci_t j = 0; j < max_rows_per_block; ++j)
       {
 	int offset = A->width * j;				// Offset to start of row j within block.
@@ -111,11 +116,11 @@ mzd_t *mzd_init_window (mzd_t const *m, rci_t lowr, rci_t lowc, rci_t highr, rci
   window->ncols = ncols;
   window->nrows = nrows;
 
-  window->offset = (lowc + m->offset) % RADIX;
-  wi_t const offset = (lowc + m->offset) / RADIX;
+  window->offset = (lowc + m->offset) % m4ri_radix;
+  wi_t const offset = (lowc + m->offset) / m4ri_radix;
   
-  window->width = (ncols + window->offset) / RADIX;
-  if ((ncols + window->offset) % RADIX)
+  window->width = (ncols + window->offset) / m4ri_radix;
+  if ((ncols + window->offset) % m4ri_radix)
     window->width++;
   window->blocks = NULL;
 
@@ -156,11 +161,11 @@ void mzd_print( mzd_t const *M ) {
         printf("%s|", temp);
       }
       row = row + M->width - 1;
-      int const wide = (M->ncols % RADIX) ? M->ncols % RADIX : RADIX;
+      int const wide = (M->ncols % m4ri_radix) ? M->ncols % m4ri_radix : m4ri_radix;
       for (int j = 0; j < wide; ++j) {
         if(j != 0 && (j % 4) == 0)
           printf(":");
-        if (GET_BIT(*row, j)) 
+        if (__M4RI_GET_BIT(*row, j)) 
           printf("1");
         else
           printf(" ");
@@ -168,7 +173,7 @@ void mzd_print( mzd_t const *M ) {
     } else {
       for (rci_t j = 0; j < M->ncols; ++j) {
         if(j != 0 && (j % 4) == 0)
-          printf(((j % RADIX) == 0) ? "|" : ":");
+          printf(((j % m4ri_radix) == 0) ? "|" : ":");
         if(mzd_read_bit(M, i, j))
           printf("1");
         else
@@ -188,13 +193,13 @@ void mzd_print_tight(mzd_t const *M) {
   for (rci_t i = 0; i < M->nrows; ++i) {
     printf("[");
     row = M->rows[i];
-    for (wi_t j = 0; j < M->ncols / RADIX; ++j) {
+    for (wi_t j = 0; j < M->ncols / m4ri_radix; ++j) {
       m4ri_word_to_str(temp, row[j], 0);
       printf("%s", temp);
     }
     row = row + M->width - 1;
-    for (int j = 0; j < (M->ncols % RADIX); ++j) {
-      printf("%d", GET_BIT(*row, j));
+    for (int j = 0; j < (M->ncols % m4ri_radix); ++j) {
+      printf("%d", __M4RI_GET_BIT(*row, j));
     }
     printf("]\n");
   }
@@ -255,7 +260,7 @@ static inline mzd_t *_mzd_transpose_direct_128(mzd_t *DST, mzd_t const *SRC) {
 
   /* now transpose each block A,B,C,D separately, cf. Hacker's Delight */
   word t[4];
-  word m = CONVERT_TO_WORD(0xFFFFFFFF);
+  word m = __M4RI_CONVERT_TO_WORD(0xFFFFFFFF);
   for (int j = 32; j != 0; j = j >> 1, m = m ^ (m << j)) {
     for (int k = 0; k < 64; k = (k + j + 1) & ~j) {
       t[0] = ((DST->rows[k][0] >> j) ^ DST->rows[k+j][0]) & m;
@@ -290,19 +295,19 @@ static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, mzd_t const *A) {
     return DST;
   }
 
-  if (A->nrows == 128 && A->ncols == 128 && RADIX == 64) {
+  if (A->nrows == 128 && A->ncols == 128 && m4ri_radix == 64) {
     _mzd_transpose_direct_128(DST, A);
     return DST;
   }
 
-  int const spill = DST->ncols % RADIX;
+  int const spill = DST->ncols % m4ri_radix;
   int const have_incomplete_word = (spill != 0);			/* 0: all words are full; 1: last word is incomplete */
   wi_t const complete_words = DST->width - have_incomplete_word;
   //wi_t const rowdiff = A->rows[1] - A->rows[0];			/* Assume that the distance between every row is the same */
   for (rci_t i = 0; i < DST->nrows; ++i)
   {
-    int const shift = i % RADIX;
-    wi_t const wordi = i / RADIX;
+    int const shift = i % m4ri_radix;
+    wi_t const wordi = i / m4ri_radix;
     word *dstp = &DST->rows[i][complete_words + 1];			/* If there is no incomplete word, then the first k loop will be empty (k = -1) */
     int k = spill - 1;
     rci_t j = DST->ncols - spill;
@@ -310,33 +315,33 @@ static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, mzd_t const *A) {
     word collect = 0;
     if (spill == 0)
     {
-      k = RADIX - 1;
+      k = m4ri_radix - 1;
       --dstp;
-      j -= RADIX;
+      j -= m4ri_radix;
     }
     /* Make k even... */
     else if ((spill & 1))
     {
-      collect = ((*ap >> shift) & ONE) << k;
+      collect = ((*ap >> shift) & m4ri_one) << k;
       //ap -= rowdiff;
       --k;
       ap = &A->rows[j + k][wordi];
     }
-    for (; j >= 0; j -= RADIX)
+    for (; j >= 0; j -= m4ri_radix)
     {
       /* ...so that we can unroll this loop a factor of two */
       for (; k > 0; k -=2)
       {
-        collect |= ((*ap >> shift) & ONE) << k;
+        collect |= ((*ap >> shift) & m4ri_one) << k;
 	//ap -= rowdiff;
 	ap = &A->rows[j + k - 1][wordi];
-        collect |= ((*ap >> shift) & ONE) << (k - 1);
+        collect |= ((*ap >> shift) & m4ri_one) << (k - 1);
 	//ap -= rowdiff;
 	//FIXME (this test is too slow, use rowstride)
 	if (j > 0 || k > 1)
 	  ap = &A->rows[j + k - 2][wordi];
       }
-      k = RADIX - 1;
+      k = m4ri_radix - 1;
       *--dstp = collect;
       collect = 0;
     }
@@ -359,8 +364,8 @@ static inline mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *X) {
   }
 
   /* we cut at multiples of 128 if possible, otherwise at multiples of 64 */
-  rci_t nr2 = (X->nrows > 256) ? 2 * RADIX * (X->nrows / (4 * RADIX)) : RADIX * (X->nrows / (2 * RADIX));
-  rci_t nc2 = (X->ncols > 256) ? 2 * RADIX * (X->ncols / (4 * RADIX)) : RADIX * (X->ncols / (2 * RADIX));
+  rci_t nr2 = (X->nrows > 256) ? 2 * m4ri_radix * (X->nrows / (4 * m4ri_radix)) : m4ri_radix * (X->nrows / (2 * m4ri_radix));
+  rci_t nc2 = (X->ncols > 256) ? 2 * m4ri_radix * (X->ncols / (4 * m4ri_radix)) : m4ri_radix * (X->ncols / (2 * m4ri_radix));
 
   mzd_t *A = mzd_init_window(X,    0,   0, nr2, nc2);
   mzd_t *B = mzd_init_window(X,    0, nc2, nr2,  nc);
@@ -408,7 +413,7 @@ mzd_t *mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B) {
       m4ri_die("mzd_mul_naive: Provided return matrix has wrong dimensions.\n");
     }
   }
-  if(B->ncols < RADIX-10) { /* this cutoff is rather arbitrary */
+  if(B->ncols < m4ri_radix-10) { /* this cutoff is rather arbitrary */
     mzd_t *BT = mzd_transpose(NULL, B);
     _mzd_mul_naive(C, A, BT, 1);
     mzd_free (BT);
@@ -423,7 +428,7 @@ mzd_t *mzd_addmul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B) {
     m4ri_die("mzd_mul_naive: Provided return matrix has wrong dimensions.\n");
   }
 
-  if(B->ncols < RADIX-10) { /* this cutoff is rather arbitrary */
+  if(B->ncols < m4ri_radix-10) { /* this cutoff is rather arbitrary */
     mzd_t *BT = mzd_transpose(NULL, B);
     _mzd_mul_naive(C, A, BT, 0);
     mzd_free (BT);
@@ -441,7 +446,7 @@ mzd_t *_mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B, const int clear)
   word *a, *b, *c;
 
   if (clear) {
-    word const mask_end = LEFT_BITMASK(C->ncols % RADIX);
+    word const mask_end = __M4RI_LEFT_BITMASK(C->ncols % m4ri_radix);
     /* improves performance on x86_64 but is not cross plattform */
     /* asm __volatile__ (".p2align 4\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop"); */
     for (rci_t i = 0; i < C->nrows; ++i) {
@@ -453,7 +458,7 @@ mzd_t *_mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B, const int clear)
     }
   }
 
-  if(C->ncols % RADIX) {
+  if(C->ncols % m4ri_radix) {
     eol = (C->width - 1);
   } else {
     eol = (C->width);
@@ -464,32 +469,32 @@ mzd_t *_mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B, const int clear)
     parity[i] = 0;
   }
   wi_t const wide = A->width;
-  int const blocksize = MZD_MUL_BLOCKSIZE;
+  int const blocksize = __M4RI_MZD_MUL_BLOCKSIZE;
   for (rci_t start = 0; start + blocksize <= C->nrows; start += blocksize) {
     for (rci_t i = start; i < start + blocksize; ++i) {
       a = A->rows[i];
       c = C->rows[i];
-      for (rci_t j = 0; j < RADIX * eol; j += RADIX) {
-	for (int k = 0; k < RADIX; ++k) {
+      for (rci_t j = 0; j < m4ri_radix * eol; j += m4ri_radix) {
+	for (int k = 0; k < m4ri_radix; ++k) {
           b = B->rows[j + k];
           parity[k] = a[0] & b[0];
           for (wi_t ii = wide - 1; ii >= 1; --ii)
 	    parity[k] ^= a[ii] & b[ii];
         }
-        c[j / RADIX] ^= parity64(parity);
+        c[j / m4ri_radix] ^= m4ri_parity64(parity);
       }
       
       if (eol != C->width) {
-	word const mask_end = LEFT_BITMASK(C->ncols % RADIX);
+	word const mask_end = __M4RI_LEFT_BITMASK(C->ncols % m4ri_radix);
         /* improves performance on x86_64 but is not cross plattform */
 	/* asm __volatile__ (".p2align 4\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop"); */
-        for (int k = 0; k < (C->ncols % RADIX); ++k) {
-          b = B->rows[RADIX * eol + k];
+        for (int k = 0; k < (C->ncols % m4ri_radix); ++k) {
+          b = B->rows[m4ri_radix * eol + k];
           parity[k] = a[0] & b[0];
           for (wi_t ii = 1; ii < A->width; ++ii)
             parity[k] ^= a[ii] & b[ii];
         }
-        c[eol] ^= parity64(parity) & mask_end;
+        c[eol] ^= m4ri_parity64(parity) & mask_end;
       }
     }
   }
@@ -497,27 +502,27 @@ mzd_t *_mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B, const int clear)
   for (rci_t i = C->nrows - (C->nrows % blocksize); i < C->nrows; ++i) {
     a = A->rows[i];
     c = C->rows[i];
-    for (rci_t j = 0; j < RADIX * eol; j += RADIX) {
-      for (int k = 0; k < RADIX; ++k) {
+    for (rci_t j = 0; j < m4ri_radix * eol; j += m4ri_radix) {
+      for (int k = 0; k < m4ri_radix; ++k) {
         b = B->rows[j+k];
         parity[k] = a[0] & b[0];
         for (wi_t ii = wide - 1; ii >= 1; --ii)
           parity[k] ^= a[ii] & b[ii];
       }
-      c[j/RADIX] ^= parity64(parity);
+      c[j/m4ri_radix] ^= m4ri_parity64(parity);
     }
     
     if (eol != C->width) {
-      word const mask_end = LEFT_BITMASK(C->ncols % RADIX);
+      word const mask_end = __M4RI_LEFT_BITMASK(C->ncols % m4ri_radix);
       /* improves performance on x86_64 but is not cross plattform */
       /* asm __volatile__ (".p2align 4\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop"); */
-      for (int k = 0; k < (C->ncols % RADIX); ++k) {
-        b = B->rows[RADIX * eol + k];
+      for (int k = 0; k < (C->ncols % m4ri_radix); ++k) {
+        b = B->rows[m4ri_radix * eol + k];
         parity[k] = a[0] & b[0];
         for (wi_t ii = 1; ii < A->width; ++ii)
           parity[k] ^= a[ii] & b[ii];
       }
-      c[eol] ^= parity64(parity) & mask_end;
+      c[eol] ^= m4ri_parity64(parity) & mask_end;
     }
   }
 
@@ -547,13 +552,13 @@ void mzd_randomize(mzd_t *A) {
   int const offset = A->offset;
   if(offset) {
     if(width == 0) {
-      word const mask = MIDDLE_BITMASK(A->ncols, offset);
+      word const mask = __M4RI_MIDDLE_BITMASK(A->ncols, offset);
       for(rci_t i = 0; i < A->nrows; ++i)
 	A->rows[i][0] ^= (A->rows[i][0] ^ (m4ri_random_word() << offset)) & mask;
     } else {
-      word const mask_begin = RIGHT_BITMASK(RADIX - offset);
-      word const mask_end = LEFT_BITMASK((A->ncols + offset) % RADIX);
-      int const need_last_bits = ((ONE << offset) & mask_end) != 0;
+      word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - offset);
+      word const mask_end = __M4RI_LEFT_BITMASK((A->ncols + offset) % m4ri_radix);
+      int const need_last_bits = ((m4ri_one << offset) & mask_end) != 0;
       for(rci_t i = 0; i < A->nrows; ++i) {
 	word prev_random_word;
 	word random_word = m4ri_random_word();
@@ -561,17 +566,17 @@ void mzd_randomize(mzd_t *A) {
 	for(wi_t j = 1; j < width; ++j) {
 	  prev_random_word = random_word;
 	  random_word = m4ri_random_word();
-	  A->rows[i][j] = (random_word << offset) | (prev_random_word >> (RADIX - offset));
+	  A->rows[i][j] = (random_word << offset) | (prev_random_word >> (m4ri_radix - offset));
 	}
 	prev_random_word = random_word;
 	random_word = 0;
 	if (need_last_bits)
 	  random_word = m4ri_random_word();
-	A->rows[i][width] ^= (A->rows[i][width] ^ ((random_word << offset) | (prev_random_word >> (RADIX - offset)))) & mask_end;
+	A->rows[i][width] ^= (A->rows[i][width] ^ ((random_word << offset) | (prev_random_word >> (m4ri_radix - offset)))) & mask_end;
       }
     }
   } else {
-    word const mask_end = LEFT_BITMASK(A->ncols % RADIX);
+    word const mask_end = __M4RI_LEFT_BITMASK(A->ncols % m4ri_radix);
     for(rci_t i = 0; i < A->nrows; ++i) {
       for(wi_t j = 0; j < width; ++j)
 	A->rows[i][j] = m4ri_random_word();
@@ -581,8 +586,8 @@ void mzd_randomize(mzd_t *A) {
 }
 
 void mzd_set_ui( mzd_t *A, unsigned int value) {
-  word const mask_begin = RIGHT_BITMASK(RADIX - A->offset);
-  word const mask_end = LEFT_BITMASK((A->ncols + A->offset) % RADIX);
+  word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - A->offset);
+  word const mask_end = __M4RI_LEFT_BITMASK((A->ncols + A->offset) % m4ri_radix);
   
   if(A->width == 1) {
     for(rci_t i = 0; i < A->nrows; ++i) {
@@ -625,9 +630,9 @@ int mzd_equal(mzd_t const *A, mzd_t const *B) {
 	}
       }
     }
-    word const mask_end = LEFT_BITMASK(A->ncols % RADIX);
+    word const mask_end = __M4RI_LEFT_BITMASK(A->ncols % m4ri_radix);
     if (non_zero_offset) {
-      word mask_begin = RIGHT_BITMASK(RADIX - A->offset);
+      word mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - A->offset);
       if (!width)
 	mask_begin &= mask_end;
       for (rci_t i = 0; i < A->nrows; ++i) {
@@ -653,20 +658,20 @@ int mzd_equal(mzd_t const *A, mzd_t const *B) {
     if (non_zero_offset < width) {
       for (rci_t i = 0; i < A->nrows; ++i) {
 	for (wi_t j = non_zero_offset; j < width; ++j) {
-	  word Bval = (B->rows[i][j] >> shift) | (B->rows[i][j + 1] << (RADIX - shift));
+	  word Bval = (B->rows[i][j] >> shift) | (B->rows[i][j + 1] << (m4ri_radix - shift));
 	  if (A->rows[i][j] != Bval)
 	    return FALSE;
 	}
       }
     }
-    word const mask_end = LEFT_BITMASK(A->ncols % RADIX);
+    word const mask_end = __M4RI_LEFT_BITMASK(A->ncols % m4ri_radix);
     if (non_zero_offset) {
-      word mask_begin = RIGHT_BITMASK(RADIX - A->offset);
+      word mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - A->offset);
       if (!width)
 	mask_begin &= mask_end;
       if (1 < B->width) {
 	for (rci_t i = 0; i < A->nrows; ++i) {
-	  word Bval = (B->rows[i][0] >> shift) | (B->rows[i][1] << (RADIX - shift));
+	  word Bval = (B->rows[i][0] >> shift) | (B->rows[i][1] << (m4ri_radix - shift));
 	  if (((A->rows[i][0] ^ Bval) & mask_begin))
 	    return FALSE;
 	}
@@ -683,7 +688,7 @@ int mzd_equal(mzd_t const *A, mzd_t const *B) {
     if (width + 1 < B->width)
     {
       for (rci_t i = 0; i < A->nrows; ++i) {
-	word Bval = (B->rows[i][width] >> shift) | (B->rows[i][width + 1] << (RADIX - shift));
+	word Bval = (B->rows[i][width] >> shift) | (B->rows[i][width + 1] << (m4ri_radix - shift));
 	if (((A->rows[i][width] ^ Bval) & mask_end))
 	  return FALSE;
       }
@@ -711,9 +716,9 @@ int mzd_cmp(mzd_t const *A, mzd_t const *B) {
      index are more important than with large index. */
   for(rci_t i = 0; i < A->nrows; ++i) {
     for(wi_t j = A->width - 1; j >= 0; --j) {
-      if (CONVERT_TO_UINT64_T(A->rows[i][j]) < CONVERT_TO_UINT64_T(B->rows[i][j]))
+      if (__M4RI_CONVERT_TO_UINT64_T(A->rows[i][j]) < __M4RI_CONVERT_TO_UINT64_T(B->rows[i][j]))
 	return -1;
-      else if (CONVERT_TO_UINT64_T(A->rows[i][j]) > CONVERT_TO_UINT64_T(B->rows[i][j]))
+      else if (__M4RI_CONVERT_TO_UINT64_T(A->rows[i][j]) > __M4RI_CONVERT_TO_UINT64_T(B->rows[i][j]))
 	return 1;
     }
   }
@@ -733,7 +738,7 @@ mzd_t *mzd_copy(mzd_t *N, mzd_t const *P) {
     }
     word *p_truerow, *n_truerow;
     wi_t const wide = P->width - 1;
-    word mask = LEFT_BITMASK(P->ncols % RADIX);
+    word mask = __M4RI_LEFT_BITMASK(P->ncols % m4ri_radix);
     for (rci_t i = 0; i < P->nrows; ++i) {
       p_truerow = P->rows[i];
       n_truerow = N->rows[i];
@@ -879,7 +884,7 @@ mzd_t *_mzd_add(mzd_t *C, mzd_t const *A, mzd_t const *B) {
     return C;
   }
 
-  word const mask_end = LEFT_BITMASK(C->ncols%RADIX);
+  word const mask_end = __M4RI_LEFT_BITMASK(C->ncols%m4ri_radix);
 
   switch(A->width) {
   case 0:
@@ -972,40 +977,40 @@ mzd_t *mzd_submatrix(mzd_t *S, mzd_t const *M, rci_t const startrow, rci_t const
   }
   assert(M->offset == S->offset);
 
-  wi_t const startword = (startcol + M->offset) / RADIX;
+  wi_t const startword = (startcol + M->offset) / m4ri_radix;
 
   /* we start at the beginning of a word */
-  if ((startcol + M->offset) % RADIX == 0) {
-    if(ncols / RADIX != 0) {
+  if ((startcol + M->offset) % m4ri_radix == 0) {
+    if(ncols / m4ri_radix != 0) {
       for(rci_t x = startrow, i = 0; i < nrows; ++i, ++x) {
-        memcpy(S->rows[i], M->rows[x] + startword, sizeof(word) * (ncols / RADIX));
+        memcpy(S->rows[i], M->rows[x] + startword, sizeof(word) * (ncols / m4ri_radix));
       }
     }
-    if (ncols % RADIX) {
-      word const mask_end = LEFT_BITMASK(ncols % RADIX);
+    if (ncols % m4ri_radix) {
+      word const mask_end = __M4RI_LEFT_BITMASK(ncols % m4ri_radix);
       for(rci_t x = startrow, i = 0; i < nrows; ++i, ++x) {
         /* process remaining bits */
-	word temp = M->rows[x][startword + ncols / RADIX] & mask_end;
-	S->rows[i][ncols / RADIX] = temp;
+	word temp = M->rows[x][startword + ncols / m4ri_radix] & mask_end;
+	S->rows[i][ncols / m4ri_radix] = temp;
       } 
     }
     /* startcol is not the beginning of a word */
   } else { 
-    int const spot = (startcol + M->offset) % RADIX;
+    int const spot = (startcol + M->offset) % m4ri_radix;
     for(rci_t x = startrow, i = 0; i < nrows; ++i, ++x) {
       word *truerow = M->rows[x];
 
       /* process full words first */
-      for(wi_t colword = 0; colword < (ncols / RADIX); ++colword) {
+      for(wi_t colword = 0; colword < (ncols / m4ri_radix); ++colword) {
 	wi_t block = colword + startword;
-	word temp = (truerow[block] >> spot) | (truerow[block + 1] << (RADIX - spot)); 
+	word temp = (truerow[block] >> spot) | (truerow[block + 1] << (m4ri_radix - spot)); 
 	S->rows[i][colword] = temp;
       }
       /* process remaining bits (lazy) */
-      wi_t colword = ncols / RADIX;
-      for (int y = 0; y < ncols % RADIX; ++y) {
-	BIT bit = mzd_read_bit(M, x, startcol + colword * RADIX + y);
-	mzd_write_bit(S, i, colword * RADIX + y, bit);
+      wi_t colword = ncols / m4ri_radix;
+      for (int y = 0; y < ncols % m4ri_radix; ++y) {
+	BIT bit = mzd_read_bit(M, x, startcol + colword * m4ri_radix + y);
+	mzd_write_bit(S, i, colword * m4ri_radix + y, bit);
       }
     }
   }
@@ -1042,23 +1047,23 @@ void mzd_col_swap(mzd_t *M, rci_t const cola, rci_t const colb) {
   rci_t const _cola = cola + M->offset;
   rci_t const _colb = colb + M->offset;
 
-  wi_t const a_word = _cola / RADIX;
-  wi_t const b_word = _colb / RADIX;
-  int const a_bit = _cola % RADIX;
-  int const b_bit = _colb % RADIX;
+  wi_t const a_word = _cola / m4ri_radix;
+  wi_t const b_word = _colb / m4ri_radix;
+  int const a_bit = _cola % m4ri_radix;
+  int const b_bit = _colb % m4ri_radix;
 
   if(a_word == b_word) {
     for (rci_t i = 0; i < M->nrows; ++i) {
       word *base = (M->rows[i] + a_word);
       register word b = *base;
-      register word x = ((b >> a_bit) ^ (b >> b_bit)) & ONE; // XOR temporary
+      register word x = ((b >> a_bit) ^ (b >> b_bit)) & m4ri_one; // XOR temporary
       *base = b ^ ((x << a_bit) | (x << b_bit));
     }
     return;
   }
 
-  word const a_bm = ONE << a_bit;
-  word const b_bm = ONE << b_bit;
+  word const a_bm = m4ri_one << a_bit;
+  word const b_bm = m4ri_one << b_bit;
 
   if(a_bit > b_bit) {
     int const offset = a_bit - b_bit;
@@ -1098,14 +1103,14 @@ int mzd_is_zero(mzd_t const *A) {
   rci_t const mb = A->nrows;
   rci_t const nb = A->ncols;
   int const Aoffset = A->offset;
-  int const nbrest = (nb + Aoffset) % RADIX;
+  int const nbrest = (nb + Aoffset) % m4ri_radix;
   word status = 0;
-  if (nb + Aoffset >= RADIX) {
+  if (nb + Aoffset >= m4ri_radix) {
     // Large A
-    word mask_begin = RIGHT_BITMASK(RADIX-Aoffset);
+    word mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix-Aoffset);
     if (Aoffset == 0)
       mask_begin = ~mask_begin;
-    word mask_end = LEFT_BITMASK(nbrest);
+    word mask_end = __M4RI_LEFT_BITMASK(nbrest);
     for (rci_t i = 0; i < mb; ++i) {
         status |= A->rows[i][0] & mask_begin;
         for (wi_t j = 1; j < A->width - 1; ++j)
@@ -1114,7 +1119,7 @@ int mzd_is_zero(mzd_t const *A) {
     }
   } else {
     // Small A
-    word mask = MIDDLE_BITMASK(nb,Aoffset);
+    word mask = __M4RI_MIDDLE_BITMASK(nb,Aoffset);
     for (rci_t i = 0; i < mb; ++i) {
       status |= A->rows[i][0] & mask;
     }
@@ -1129,16 +1134,16 @@ void mzd_copy_row_weird_to_even(mzd_t *B, rci_t i, mzd_t const *A, rci_t j) {
 
   word *b = B->rows[j];
 
-  int const rest = A->ncols % RADIX;
+  int const rest = A->ncols % m4ri_radix;
 
   rci_t c;
-  for(c = 0; c + RADIX <= A->ncols; c += RADIX) {
-    b[c / RADIX] = mzd_read_bits(A, i, c, RADIX);
+  for(c = 0; c + m4ri_radix <= A->ncols; c += m4ri_radix) {
+    b[c / m4ri_radix] = mzd_read_bits(A, i, c, m4ri_radix);
   }
   if (rest) {
     word const temp = mzd_read_bits(A, i, c, rest);
-    b[c / RADIX] &= LEFT_BITMASK(RADIX - rest);
-    b[c / RADIX] |= temp;
+    b[c / m4ri_radix] &= __M4RI_LEFT_BITMASK(m4ri_radix - rest);
+    b[c / m4ri_radix] |= temp;
   }
 }
 
@@ -1150,8 +1155,8 @@ void mzd_copy_row(mzd_t *B, rci_t i, mzd_t const *A, rci_t j) {
   word *a = A->rows[j];
   word *b = B->rows[i];
  
-  word const mask_begin = RIGHT_BITMASK(RADIX - A->offset);
-  word const mask_end = LEFT_BITMASK((A->ncols + A->offset) % RADIX);
+  word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - A->offset);
+  word const mask_end = __M4RI_LEFT_BITMASK((A->ncols + A->offset) % m4ri_radix);
 
   if (width != 0) {
     b[0] = (b[0] & ~mask_begin) | (a[0] & mask_begin);
@@ -1167,13 +1172,13 @@ void mzd_copy_row(mzd_t *B, rci_t i, mzd_t const *A, rci_t j) {
 
 void mzd_row_clear_offset(mzd_t *M, rci_t row, rci_t coloffset) {
   coloffset += M->offset;
-  wi_t const startblock = coloffset / RADIX;
+  wi_t const startblock = coloffset / m4ri_radix;
   word temp;
 
   /* make sure to start clearing at coloffset */
-  if (coloffset%RADIX) {
+  if (coloffset%m4ri_radix) {
     temp = M->rows[row][startblock];
-    temp &= RIGHT_BITMASK(RADIX - coloffset);
+    temp &= __M4RI_RIGHT_BITMASK(m4ri_radix - coloffset);
   } else {
     temp = 0;
   }
@@ -1190,12 +1195,12 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
   rci_t const ncols = A->ncols;
   word data = 0;
   rci_t row_candidate = 0;
-  if(A->ncols - start_col < RADIX) {
-    for(rci_t j = start_col; j < A->ncols; j += RADIX) {
-      int const length = MIN(RADIX, ncols - j);
+  if(A->ncols - start_col < m4ri_radix) {
+    for(rci_t j = start_col; j < A->ncols; j += m4ri_radix) {
+      int const length = MIN(m4ri_radix, ncols - j);
       for(rci_t i = start_row; i < nrows; ++i) {
         word const curr_data = mzd_read_bits(A, i, j, length);
-        if (lesser_LSB(curr_data, data)) {
+        if (m4ri_lesser_LSB(curr_data, data)) {
           row_candidate = i;
           data = curr_data;
         }
@@ -1203,7 +1208,7 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
       if(data) {
         *r = row_candidate;
         for(int l = 0; l < length; ++l) {
-          if(GET_BIT(data, l)) {
+          if(__M4RI_GET_BIT(data, l)) {
             *c = j + l;
             break;
           }
@@ -1214,15 +1219,15 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
   } else {
     /* we definitely have more than one word */
     /* handle first word */
-    int const bit_offset = (start_col % RADIX);
-    wi_t const word_offset = start_col / RADIX;
-    word const mask_begin = RIGHT_BITMASK(RADIX-bit_offset);
+    int const bit_offset = (start_col % m4ri_radix);
+    wi_t const word_offset = start_col / m4ri_radix;
+    word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix-bit_offset);
     for(rci_t i = start_row; i < nrows; ++i) {
       word const curr_data = A->rows[i][word_offset] & mask_begin;
-      if (lesser_LSB(curr_data, data)) {
+      if (m4ri_lesser_LSB(curr_data, data)) {
         row_candidate = i;
         data = curr_data;
-        if(GET_BIT(data,bit_offset)) {
+        if(__M4RI_GET_BIT(data,bit_offset)) {
           break;
         }
       }
@@ -1231,8 +1236,8 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
       *r = row_candidate;
       data >>= bit_offset;
       assert(data);
-      for(int l = 0; l < (RADIX - bit_offset); ++l) {
-        if(GET_BIT(data, l)) {
+      for(int l = 0; l < (m4ri_radix - bit_offset); ++l) {
+        if(__M4RI_GET_BIT(data, l)) {
           *c = start_col + l;
           break;
         }
@@ -1243,18 +1248,18 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
     for(wi_t wi = word_offset + 1; wi < A->width - 1; ++wi) {
       for(rci_t i = start_row; i < nrows; ++i) {
         word const curr_data = A->rows[i][wi];
-        if (lesser_LSB(curr_data, data)) {
+        if (m4ri_lesser_LSB(curr_data, data)) {
           row_candidate = i;
           data = curr_data;
-          if(GET_BIT(data, 0))
+          if(__M4RI_GET_BIT(data, 0))
             break;
         }
       }
       if(data) {
         *r = row_candidate;
-        for(int l = 0; l < RADIX; ++l) {
-          if(GET_BIT(data, l)) {
-            *c = wi * RADIX + l;
+        for(int l = 0; l < m4ri_radix; ++l) {
+          if(__M4RI_GET_BIT(data, l)) {
+            *c = wi * m4ri_radix + l;
             break;
           }
         }
@@ -1262,23 +1267,23 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
       }
     }
     /* handle last word */
-    int const end_offset = (A->ncols % RADIX) ? (A->ncols % RADIX) : RADIX;
-    word const mask_end = LEFT_BITMASK(end_offset % RADIX);
+    int const end_offset = (A->ncols % m4ri_radix) ? (A->ncols % m4ri_radix) : m4ri_radix;
+    word const mask_end = __M4RI_LEFT_BITMASK(end_offset % m4ri_radix);
     wi_t wi = A->width - 1;
     for(rci_t i = start_row; i < nrows; ++i) {
       word const curr_data = A->rows[i][wi] & mask_end;
-      if (lesser_LSB(curr_data, data)) {
+      if (m4ri_lesser_LSB(curr_data, data)) {
         row_candidate = i;
         data = curr_data;
-        if(GET_BIT(data,0))
+        if(__M4RI_GET_BIT(data,0))
           break;
       }
     }
     if(data) {
       *r = row_candidate;
       for(int l = 0; l < end_offset; ++l) {
-        if(GET_BIT(data, l)) {
-          *c = wi * RADIX + l;
+        if(__M4RI_GET_BIT(data, l)) {
+          *c = wi * m4ri_radix + l;
           break;
         }
       }
@@ -1289,11 +1294,11 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
 }
 
 
-#define MASK(c)    (((uint64_t)(-1)) / (TWOPOW(TWOPOW(c)) + 1))
-#define COUNT(x,c) ((x) & MASK(c)) + (((x) >> (TWOPOW(c))) & MASK(c))
+#define MASK(c)    (((uint64_t)(-1)) / (__M4RI_TWOPOW(__M4RI_TWOPOW(c)) + 1))
+#define COUNT(x,c) ((x) & MASK(c)) + (((x) >> (__M4RI_TWOPOW(c))) & MASK(c))
 
 static inline int m4ri_bitcount(word w)  {
-   uint64_t n = CONVERT_TO_UINT64_T(w);
+   uint64_t n = __M4RI_CONVERT_TO_UINT64_T(w);
    n = COUNT(n, 0);
    n = COUNT(n, 1);
    n = COUNT(n, 2);
@@ -1323,19 +1328,19 @@ double _mzd_density(mzd_t const *A, wi_t res, rci_t r, rci_t c) {
 
   for(rci_t i = r; i < A->nrows; ++i) {
     word *truerow = A->rows[i];
-    for(rci_t j = c; j < RADIX-A->offset; ++j)
+    for(rci_t j = c; j < m4ri_radix-A->offset; ++j)
       if(mzd_read_bit(A, i, j))
         ++count;
-    total += RADIX - A->offset;
+    total += m4ri_radix - A->offset;
 
-    for(wi_t j = MAX(1, (c + A->offset) / RADIX); j < A->width - 1; j += res) {
+    for(wi_t j = MAX(1, (c + A->offset) / m4ri_radix); j < A->width - 1; j += res) {
       count += m4ri_bitcount(truerow[j]);
-      total += RADIX;
+      total += m4ri_radix;
     }
-    for(int j = 0; j < (A->ncols + A->offset) % RADIX; ++j)
-      if(mzd_read_bit(A, i, RADIX * ((A->ncols + A->offset) / RADIX) + j))
+    for(int j = 0; j < (A->ncols + A->offset) % m4ri_radix; ++j)
+      if(mzd_read_bit(A, i, m4ri_radix * ((A->ncols + A->offset) / m4ri_radix) + j))
         ++count;
-    total += (A->ncols + A->offset) % RADIX;
+    total += (A->ncols + A->offset) % m4ri_radix;
   }
 
   return (double)count / total;
@@ -1346,8 +1351,8 @@ double mzd_density(mzd_t const *A, wi_t res) {
 }
 
 rci_t mzd_first_zero_row(mzd_t const *A) {
-  word const mask_begin = RIGHT_BITMASK(RADIX - A->offset);
-  word const mask_end = LEFT_BITMASK((A->ncols + A->offset) % RADIX);
+  word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - A->offset);
+  word const mask_end = __M4RI_LEFT_BITMASK((A->ncols + A->offset) % m4ri_radix);
   wi_t const end = A->width - 1;
   word *row;
 

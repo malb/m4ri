@@ -62,7 +62,7 @@ int main() {
 
   srandom(17);
 
-  for (rci_t n = 0; n < 3 * RADIX; n += RADIX)
+  for (rci_t n = 0; n < 3 * m4ri_radix; n += m4ri_radix)
   {
     status += test_random(20, n + 1);
     status += test_random(20, n + 2);

@@ -24,8 +24,9 @@
 *
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
-#ifndef PERMUTATION_H
-#define PERMUTATION_H
+
+#ifndef M4RI_PERMUTATION_H
+#define M4RI_PERMUTATION_H
 
 #include "packedmatrix.h"
 
@@ -217,4 +218,4 @@ void mzp_print(mzp_t *P);
 
 void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2);
 
-#endif //PERMUTATION_H
+#endif // M4RI_PERMUTATION_H

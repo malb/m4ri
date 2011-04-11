@@ -7,8 +7,9 @@
  * \example testsuite/test_pluq.c
  */
 
-#ifndef LQUP_MMPF_H
-#define LQUP_MMPF_H
+#ifndef M4RI_PLS_MMPF_H
+#define M4RI_PLS_MMPF_H
+
  /*******************************************************************
  *
  *                 M4RI:  Linear Algebra over GF(2)
@@ -101,4 +102,4 @@ int _mzd_pls_submatrix(mzd_t *A,
                           mzp_t *P, mzp_t *Q, rci_t *done, rci_t *done_row,
                           wi_t const splitblock);
 
-#endif //LQUP_MMPF_H
+#endif // M4RI_PLS_MMPF_H

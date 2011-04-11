@@ -8,9 +8,9 @@
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
  */
 
+#ifndef M4RI_STRASSEN_H
+#define M4RI_STRASSEN_H
 
-#ifndef STRASSEN_H
-#define STRASSEN_H
 /*******************************************************************
 *
 *                 M4RI: Linear Algebra over GF(2)
@@ -114,7 +114,7 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
  * C = C + AB.
  * 
  * The matrices A and B are respectively m x k and k x n, and can be not
- * aligned on the RADIX grid.
+ * aligned on the m4ri_radix grid.
  * 
  * \param C Preallocated product matrix, may be NULL for automatic creation.
  * \param A Input matrix A
@@ -160,8 +160,8 @@ mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
  * hold hold that 2 * (n^2)/8 fits into the L2 cache.
  */
 
-#ifndef STRASSEN_MUL_CUTOFF
-#define STRASSEN_MUL_CUTOFF MIN(((int)sqrt((double)(4 * CPU_L2_CACHE))), 4096)
-#endif// STRASSEN_MUL_CUTOFF
+#ifndef __M4RI_STRASSEN_MUL_CUTOFF
+#define __M4RI_STRASSEN_MUL_CUTOFF MIN(((int)sqrt((double)(4 * __M4RI_CPU_L2_CACHE))), 4096)
+#endif
 
-#endif //STRASSEN_H
+#endif // M4RI_STRASSEN_H

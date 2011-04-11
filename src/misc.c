@@ -37,7 +37,7 @@
 #include "misc.h"
 
 /* blocks of memory we like to keep around for later re-use */
-mmb_t m4ri_mmc_cache[M4RI_MMC_NBLOCKS];
+mmb_t m4ri_mmc_cache[__M4RI_MMC_NBLOCKS];
 
 void m4ri_die(const char *errormessage, ...) {
   va_list lst;
@@ -47,13 +47,13 @@ void m4ri_die(const char *errormessage, ...) {
   abort();
 }
 
-/* Warning: If colon, destination must have RADIX + (RADIX - 1) / 4 + 1 bytes available. */
+/* Warning: If colon, destination must have m4ri_radix + (m4ri_radix - 1) / 4 + 1 bytes available. */
 void m4ri_word_to_str(char *destination, word data, int colon) {
   int j = 0;
-  for (int i = 0; i < RADIX; ++i) {
+  for (int i = 0; i < m4ri_radix; ++i) {
     if (colon && (i % 4) == 0 && i != 0)
       destination[j++] = ':';
-    if (GET_BIT(data, i))
+    if (__M4RI_GET_BIT(data, i))
       destination[j++] = '1';
     else 
       destination[j++] = ' ';

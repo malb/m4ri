@@ -7,8 +7,10 @@
  *
  * \attention This file is currently broken.
  */
-#ifndef SOLVE_H
-#define SOLVE_H
+
+#ifndef M4RI_SOLVE_H
+#define M4RI_SOLVE_H
+
  /*******************************************************************
  *
  *            M4RI: Linear Algebra over GF(2)
@@ -56,7 +58,7 @@ int mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency
  * The solution X is stored inplace on B
  *
  * This version assumes that the matrices are at an even position on
- * the RADIX grid and that their dimension is a multiple of RADIX.
+ * the m4ri_radix grid and that their dimension is a multiple of m4ri_radix.
  *
  * \param A Input upper/lower triangular matrices.
  * \param rank is rank of A.
@@ -84,7 +86,7 @@ int mzd_pluq_solve_left (mzd_t *A, rci_t rank,
  * The solution X is stored inplace on B.
  *
  * This version assumes that the matrices are at an even position on
- * the RADIX grid and that their dimension is a multiple of RADIX.
+ * the m4ri_radix grid and that their dimension is a multiple of m4ri_radix.
  *
  * \param A Input upper/lower triangular matrices.
  * \param rank is rank of A.
@@ -108,7 +110,7 @@ int _mzd_pluq_solve_left(mzd_t *A, rci_t rank,
  * The solution X is stored inplace on B.
  *
  * This version assumes that the matrices are at an even position on
- * the RADIX grid and that their dimension is a multiple of RADIX.
+ * the m4ri_radix grid and that their dimension is a multiple of m4ri_radix.
  *
  * \param A Input matrix.
  * \param B Input matrix, being overwritten by the solution matrix X.
@@ -141,4 +143,4 @@ int _mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistenc
 
 mzd_t *mzd_kernel_left_pluq(mzd_t *A, const int cutoff);
 
-#endif // SOLVE_H
+#endif // M4RI_SOLVE_H

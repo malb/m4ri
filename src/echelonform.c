@@ -28,7 +28,7 @@
 #include "trsm.h"
 
 rci_t mzd_echelonize(mzd_t *A, int full) {
-  return _mzd_echelonize_m4ri(A, full, 0, 1, ECHELONFORM_CROSSOVER_DENSITY);
+  return _mzd_echelonize_m4ri(A, full, 0, 1, __M4RI_ECHELONFORM_CROSSOVER_DENSITY);
 }
 
 rci_t mzd_echelonize_m4ri(mzd_t *A, int full, int k) {
@@ -64,8 +64,8 @@ rci_t mzd_echelonize_pluq(mzd_t *A, int full) {
   } else {
     r = mzd_pls(A, P, Q, 0);
     for(rci_t i = 0; i < r; ++i) {
-      for(rci_t j = 0; j <= i; j += RADIX) {
-        int const length = MIN(RADIX, i - j + 1);
+      for(rci_t j = 0; j <= i; j += m4ri_radix) {
+        int const length = MIN(m4ri_radix, i - j + 1);
         mzd_clear_bits(A, i, j, length);
       }
       mzd_write_bit(A, i, Q->values[i], 1);

@@ -10,9 +10,9 @@
  * http://eprint.iacr.org/2006/251.pdf
  */
 
+#ifndef M4RI_BRILLIANTRUSSIAN_H
+#define M4RI_BRILLIANTRUSSIAN_H
 
-#ifndef BRILLIANTRUSSIAN_H
-#define BRILLIANTRUSSIAN_H
  /*******************************************************************
  *
  *                 M4RI:  Linear Algebra over GF(2)
@@ -348,8 +348,8 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear);
  * \brief If defined 8 Gray code tables are used in parallel.
  */
 
-#define M4RM_GRAY8
+#define __M4RI_M4RM_GRAY8
 
 void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, int k);
 
-#endif //BRILLIANTRUSSIAN_H
+#endif // M4RI_BRILLIANTRUSSIAN_H

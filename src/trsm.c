@@ -27,7 +27,7 @@
 #include "parity.h"
 #include "stdio.h"
 
-#define TRSM_THRESHOLD RADIX
+#define TRSM_THRESHOLD m4ri_radix
 
 /*****************
  * UPPER RIGHT
@@ -35,7 +35,7 @@
 
 /* 
  * This version assumes that the matrices are at an even position on
- * the RADIX grid and that their dimension is a multiple of RADIX.
+ * the m4ri_radix grid and that their dimension is a multiple of m4ri_radix.
  */
 
 void _mzd_trsm_upper_right_even(mzd_t *U, mzd_t *B, const int cutoff);
@@ -61,7 +61,7 @@ void mzd_trsm_upper_right(mzd_t *U, mzd_t *B, const int cutoff) {
 void _mzd_trsm_upper_right(mzd_t *U, mzd_t *B, const int cutoff) {
   rci_t const nb = B->ncols;
   rci_t const mb = B->nrows;
-  int const n1 = RADIX-B->offset;
+  int const n1 = m4ri_radix-B->offset;
   if(nb <= n1) {
     _mzd_trsm_upper_right_weird(U, B, cutoff);
     return;
@@ -114,21 +114,21 @@ void _mzd_trsm_upper_right_weird(mzd_t *U, mzd_t *B, int const cutoff) {	// FIXM
     
     register word ucol = 0;
     for(rci_t k = 0; k < i; ++k) {
-      if(GET_BIT(U->rows[k][0], i + U->offset))
-	SET_BIT(ucol, k + offset);
+      if(__M4RI_GET_BIT(U->rows[k][0], i + U->offset))
+	__M4RI_SET_BIT(ucol, k + offset);
     }
     /* doing 64 dotproducts at a time, to use the parity64 parallelism */
     rci_t giantstep;
     word tmp[64];
-    for(giantstep = 0; giantstep + RADIX < mb; giantstep += RADIX) {
-      for(int babystep = 0; babystep < RADIX; ++babystep)
+    for(giantstep = 0; giantstep + m4ri_radix < mb; giantstep += m4ri_radix) {
+      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
 	tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
 
-      word const dotprod = parity64 (tmp);
+      word const dotprod = m4ri_parity64(tmp);
       
-      for(int babystep = 0; babystep < RADIX; ++babystep)
-        if(GET_BIT(dotprod, babystep))
-          FLIP_BIT(B->rows[giantstep + babystep][0], i + offset);
+      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
+        if(__M4RI_GET_BIT(dotprod, babystep))
+          __M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i + offset);
     }      
     for(int babystep = 0; giantstep + babystep < mb; ++babystep){
       tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
@@ -138,11 +138,11 @@ void _mzd_trsm_upper_right_weird(mzd_t *U, mzd_t *B, int const cutoff) {	// FIXM
       tmp[babystep] = 0;
     }
     
-    word const dotprod = parity64 (tmp);
+    word const dotprod = m4ri_parity64(tmp);
     
     for(int babystep = 0; giantstep + babystep < mb; ++babystep)
-      if(GET_BIT(dotprod, babystep))
-	FLIP_BIT(B->rows[giantstep + babystep][0], i + offset);
+      if(__M4RI_GET_BIT(dotprod, babystep))
+	__M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i + offset);
   }
 }
 
@@ -156,7 +156,7 @@ void _mzd_trsm_upper_right_even(mzd_t *U, mzd_t *B, const int cutoff) {
     return;
   }
   
-  rci_t const nb1 = (((nb - 1) / RADIX + 1) >> 1) * RADIX;
+  rci_t const nb1 = (((nb - 1) / m4ri_radix + 1) >> 1) * m4ri_radix;
   
   mzd_t *B0 = mzd_init_window(B,  0,     0,   mb, nb1);
   mzd_t *B1 = mzd_init_window(B,  0,   nb1,   mb, nb);
@@ -184,22 +184,22 @@ void _mzd_trsm_upper_right_base(mzd_t *U, mzd_t *B, int const cutoff) {		// FIXM
     /* Computes X_i = B_i + X_{0..i-1} U_{0..i-1,i} */
     register word ucol = 0;
     for(rci_t k = 0; k < i; ++k) {
-      if(GET_BIT(U->rows[k][0], i))
-	SET_BIT(ucol, k);
+      if(__M4RI_GET_BIT(U->rows[k][0], i))
+	__M4RI_SET_BIT(ucol, k);
     }
     
-    /* doing 64 dotproducts at a time, to use the parity64 parallelism */
+    /* doing 64 dotproducts at a time, to use the m4ri_parity64 parallelism */
     rci_t giantstep;
     word tmp[64];
-    for(giantstep = 0; giantstep + RADIX < mb; giantstep += RADIX) {
-      for(int babystep = 0; babystep < RADIX; ++babystep)
+    for(giantstep = 0; giantstep + m4ri_radix < mb; giantstep += m4ri_radix) {
+      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
 	tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
       
-      word const dotprod = parity64 (tmp);
+      word const dotprod = m4ri_parity64(tmp);
       
-      for(int babystep = 0; babystep < RADIX; ++babystep)
-	if(GET_BIT(dotprod, babystep))
-	  FLIP_BIT(B->rows[giantstep + babystep][0], i);
+      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
+	if(__M4RI_GET_BIT(dotprod, babystep))
+	  __M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i);
     }
     
     for(int babystep = 0; giantstep + babystep < mb; ++babystep)
@@ -207,10 +207,10 @@ void _mzd_trsm_upper_right_base(mzd_t *U, mzd_t *B, int const cutoff) {		// FIXM
     for(int babystep = mb - giantstep; babystep < 64; ++babystep)
       tmp[babystep] = 0;
     
-    word const dotprod = parity64(tmp);
+    word const dotprod = m4ri_parity64(tmp);
     for(int babystep = 0; giantstep + babystep < mb; ++babystep)
-      if(GET_BIT(dotprod, babystep))
-	FLIP_BIT(B->rows[giantstep + babystep][0], i);
+      if(__M4RI_GET_BIT(dotprod, babystep))
+	__M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i);
   }
 }
 
@@ -246,7 +246,7 @@ void mzd_trsm_lower_right(mzd_t *L, mzd_t *B, const int cutoff) {
 void _mzd_trsm_lower_right(mzd_t *L, mzd_t *B, const int cutoff) {
   rci_t const nb = B->ncols;
   rci_t const mb = B->nrows;
-  int const n1 = RADIX-B->offset;
+  int const n1 = m4ri_radix-B->offset;
   if(nb <= n1)
     _mzd_trsm_lower_right_weird (L, B, cutoff);
   else{
@@ -300,21 +300,21 @@ void _mzd_trsm_lower_right_weird(mzd_t *L, mzd_t *B, int const cutoff) {	// FIXM
     
     register word ucol = 0;
     for(rci_t k = i + 1; k < nb; ++k) {
-      if(GET_BIT(L->rows[k][0], i + L->offset))
-	SET_BIT(ucol, k + offset);
+      if(__M4RI_GET_BIT(L->rows[k][0], i + L->offset))
+	__M4RI_SET_BIT(ucol, k + offset);
     }
-    /* doing 64 dotproducts at a time, to use the parity64 parallelism */
+    /* doing 64 dotproducts at a time, to use the m4ri_parity64 parallelism */
     rci_t giantstep;
     word tmp[64];
-    for(giantstep = 0; giantstep + RADIX < mb; giantstep += RADIX) {
-      for(int babystep = 0; babystep < RADIX; ++babystep)
+    for(giantstep = 0; giantstep + m4ri_radix < mb; giantstep += m4ri_radix) {
+      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
 	tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
       
-      word const dotprod = parity64(tmp);
+      word const dotprod = m4ri_parity64(tmp);
       
-      for(int babystep = 0; babystep < RADIX; ++babystep)
-        if(GET_BIT(dotprod, babystep))
-          FLIP_BIT(B->rows[giantstep + babystep][0], i + offset);
+      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
+        if(__M4RI_GET_BIT(dotprod, babystep))
+          __M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i + offset);
     }      
     for(int babystep = 0; giantstep + babystep < mb; ++babystep){
       tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
@@ -323,11 +323,11 @@ void _mzd_trsm_lower_right_weird(mzd_t *L, mzd_t *B, int const cutoff) {	// FIXM
       tmp[babystep] = 0;
     }
     
-    word const dotprod = parity64(tmp);
+    word const dotprod = m4ri_parity64(tmp);
     
     for(int babystep = 0; giantstep + babystep < mb; ++babystep)
-      if(GET_BIT(dotprod, babystep))
-	FLIP_BIT(B->rows[giantstep + babystep ][0], i + offset);
+      if(__M4RI_GET_BIT(dotprod, babystep))
+	__M4RI_FLIP_BIT(B->rows[giantstep + babystep ][0], i + offset);
   }
 }
 
@@ -340,7 +340,7 @@ void _mzd_trsm_lower_right_even(mzd_t *L, mzd_t *B, const int cutoff) {
     _mzd_trsm_lower_right_base (L, B, cutoff);
   }
   else {
-    rci_t const nb1 = (((nb - 1) / RADIX + 1) >> 1) * RADIX;
+    rci_t const nb1 = (((nb - 1) / m4ri_radix + 1) >> 1) * m4ri_radix;
 
     mzd_t *B0 = mzd_init_window(B,  0,     0,   mb, nb1);
     mzd_t *B1 = mzd_init_window(B,  0,   nb1,   mb, nb);
@@ -371,22 +371,22 @@ void _mzd_trsm_lower_right_base(mzd_t *L, mzd_t *B, int const cutoff) { 	// FIXM
     
     register word ucol = 0;
     for(rci_t k = i + 1; k < nb; ++k) {
-      if(GET_BIT(L->rows[k][0], i))
-	SET_BIT(ucol, k);
+      if(__M4RI_GET_BIT(L->rows[k][0], i))
+	__M4RI_SET_BIT(ucol, k);
     }
     
     /* doing 64 dotproducts at a time, to use the parity64 parallelism */
     rci_t giantstep;
     word tmp[64];
-    for(giantstep = 0; giantstep + RADIX < mb; giantstep += RADIX) {
-      for(int babystep = 0; babystep < RADIX; ++babystep)
+    for(giantstep = 0; giantstep + m4ri_radix < mb; giantstep += m4ri_radix) {
+      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
 	tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
       
-      word const dotprod = parity64 (tmp);
+      word const dotprod = m4ri_parity64(tmp);
       
-      for(int babystep = 0; babystep < RADIX; ++babystep)
-	if(GET_BIT(dotprod, babystep))
-	  FLIP_BIT(B->rows[giantstep + babystep][0], i);
+      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
+	if(__M4RI_GET_BIT(dotprod, babystep))
+	  __M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i);
     }
     
     for(int babystep = 0; giantstep + babystep < mb; ++babystep)
@@ -394,10 +394,10 @@ void _mzd_trsm_lower_right_base(mzd_t *L, mzd_t *B, int const cutoff) { 	// FIXM
     for(int babystep = mb - giantstep; babystep < 64; ++babystep)
       tmp[babystep] = 0;
     
-    word const dotprod = parity64 (tmp);
+    word const dotprod = m4ri_parity64(tmp);
     for(int babystep = 0; giantstep + babystep < mb; ++babystep)
-      if(GET_BIT(dotprod, babystep))
-	FLIP_BIT(B->rows[giantstep + babystep][0], i);
+      if(__M4RI_GET_BIT(dotprod, babystep))
+	__M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i);
   }
 }
 
@@ -415,7 +415,7 @@ void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B, const int cutoff);
 
 /* 
  * This version assumes that the matrices are at an even position on
- * the RADIX grid and that their dimension is a multiple of RADIX.
+ * the m4ri_radix grid and that their dimension is a multiple of m4ri_radix.
  */
 
 void _mzd_trsm_lower_left_even(mzd_t *L, mzd_t *B, const int cutoff);
@@ -435,7 +435,7 @@ void _mzd_trsm_lower_left(mzd_t *L, mzd_t *B, const int cutoff) {
   else{
     rci_t const nb = B->ncols;
     rci_t const mb = B->nrows;
-    int const m1 = RADIX - L->offset;
+    int const m1 = m4ri_radix - L->offset;
     if(mb <= m1) {
       _mzd_trsm_lower_left_weird (L, B, cutoff);
       return;
@@ -481,12 +481,12 @@ void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B, int const cutoff) {		// FIXM
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const Boffset = B->offset;
-  int const nbrest = (nb + Boffset) % RADIX;
-  if(nb + B->offset > RADIX) {
+  int const nbrest = (nb + Boffset) % m4ri_radix;
+  if(nb + B->offset > m4ri_radix) {
 
     // Large B
-    word const mask_begin = RIGHT_BITMASK(RADIX-B->offset);
-    word const mask_end = LEFT_BITMASK(nbrest);
+    word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix-B->offset);
+    word const mask_end = __M4RI_LEFT_BITMASK(nbrest);
 
     // L[0,0] = 1, so no work required for i=0
     for(rci_t i = 1; i < mb; ++i) {
@@ -499,7 +499,7 @@ void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B, int const cutoff) {		// FIXM
       word *Brow = B->rows[i];
 
       for(rci_t k = 0; k < i; ++k) {
-	if(GET_BIT(Lrow[0], k + L->offset)) {
+	if(__M4RI_GET_BIT(Lrow[0], k + L->offset)) {
 	  Brow[0] ^= B->rows[k][0] & mask_begin;
 	  for(wi_t j = 1; j < B->width - 1; ++j)
 	    Brow[j] ^= B->rows[k][j];
@@ -508,7 +508,7 @@ void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B, int const cutoff) {		// FIXM
       }
     }
   } else { // Small B
-    word const mask = MIDDLE_BITMASK(nb, B->offset);
+    word const mask = __M4RI_MIDDLE_BITMASK(nb, B->offset);
     for(rci_t i = 1; i < mb; ++i) {
       /* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
       /**
@@ -518,7 +518,7 @@ void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B, int const cutoff) {		// FIXM
       word *Brow = B->rows[i];
 
       for(rci_t k = 0; k < i; ++k) {
-	if(GET_BIT(Lrow[0], k + L->offset)) {
+	if(__M4RI_GET_BIT(Lrow[0], k + L->offset)) {
 	  Brow[0] ^= B->rows[k][0] & mask;
 	}
       }
@@ -530,15 +530,15 @@ void _mzd_trsm_lower_left_even(mzd_t *L, mzd_t *B, const int cutoff) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const Boffset = B->offset;
-  int const nbrest = (nb + Boffset) % RADIX;
+  int const nbrest = (nb + Boffset) % m4ri_radix;
 
-  if(mb <= RADIX){
+  if(mb <= m4ri_radix){
     /* base case */
 
-    if(nb + B->offset > RADIX) {
+    if(nb + B->offset > m4ri_radix) {
       // B is large
-      word const mask_begin = RIGHT_BITMASK(RADIX-B->offset);
-      word const mask_end = LEFT_BITMASK(nbrest);
+      word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix-B->offset);
+      word const mask_end = __M4RI_LEFT_BITMASK(nbrest);
 
       for(rci_t i = 1; i < mb; ++i) {
 	/* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
@@ -549,7 +549,7 @@ void _mzd_trsm_lower_left_even(mzd_t *L, mzd_t *B, const int cutoff) {
 	word *Brow = B->rows[i];
 
 	for(rci_t k = 0; k < i; ++k) {
-	  if(GET_BIT(Lrow[0], k)){
+	  if(__M4RI_GET_BIT(Lrow[0], k)){
 	    Brow[0] ^= B->rows[k][0] & mask_begin;
 	    for(wi_t j = 1; j < B->width - 1; ++j)
 	      Brow[j] ^= B->rows[k][j];
@@ -558,7 +558,7 @@ void _mzd_trsm_lower_left_even(mzd_t *L, mzd_t *B, const int cutoff) {
 	}
       }
     } else { // B is small
-      word const mask = MIDDLE_BITMASK(nb, B->offset);
+      word const mask = __M4RI_MIDDLE_BITMASK(nb, B->offset);
       for(rci_t i = 1; i < mb; ++i) {
 	/* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
 	/** Need to be optimized !!! **/
@@ -566,14 +566,14 @@ void _mzd_trsm_lower_left_even(mzd_t *L, mzd_t *B, const int cutoff) {
 	word *Brow = B->rows [i];
 
 	for(rci_t k = 0; k < i; ++k) {
-	  if(GET_BIT(Lrow[0], k)){
+	  if(__M4RI_GET_BIT(Lrow[0], k)){
 	    Brow[0] ^= B->rows[k][0] & mask;
 	  }
 	}
       }
     }
   } else {
-    rci_t const mb1 = (((mb - 1) / RADIX + 1) >> 1) * RADIX;
+    rci_t const mb1 = (((mb - 1) / m4ri_radix + 1) >> 1) * m4ri_radix;
 
     mzd_t *B0 = mzd_init_window(B,  0,     0,   mb1, nb);
     mzd_t *B1 = mzd_init_window(B, mb1,    0,   mb,  nb);
@@ -623,7 +623,7 @@ void _mzd_trsm_upper_left(mzd_t *U, mzd_t *B, const int cutoff) {
   else{
     rci_t const nb = B->ncols;
     rci_t const mb = B->nrows;
-    int const m1 = RADIX - U->offset;
+    int const m1 = m4ri_radix - U->offset;
     if(mb <= m1) {
       _mzd_trsm_upper_left_weird (U, B, cutoff);
       return;
@@ -670,12 +670,12 @@ void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B, int const cutoff) {	// FIXM
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const Boffset = B->offset;
-  int const nbrest = (nb + Boffset) % RADIX;
-  if(nb + Boffset > RADIX) {
+  int const nbrest = (nb + Boffset) % m4ri_radix;
+  if(nb + Boffset > m4ri_radix) {
 
     // Large B
-    word const mask_begin = RIGHT_BITMASK(RADIX-B->offset);
-    word const mask_end = LEFT_BITMASK(nbrest);
+    word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix-B->offset);
+    word const mask_end = __M4RI_LEFT_BITMASK(nbrest);
 
     // U[mb-1,mb-1] = 1, so no work required for i=mb-1
     for(rci_t i = mb - 2; i >= 0; --i) {
@@ -685,7 +685,7 @@ void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B, int const cutoff) {	// FIXM
       word *Brow = B->rows[i];
 
       for(rci_t k = i + 1; k < mb; ++k) {
-	if(GET_BIT(Urow[0], k + U->offset)) {
+	if(__M4RI_GET_BIT(Urow[0], k + U->offset)) {
 	  Brow[0] ^= B->rows[k][0] & mask_begin;
 	  for(wi_t j = 1; j < B->width - 1; ++j)
 	    Brow[j] ^= B->rows[k][j];
@@ -694,7 +694,7 @@ void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B, int const cutoff) {	// FIXM
       }
     }
   } else { // Small B
-    word const mask = MIDDLE_BITMASK(nb, B->offset);
+    word const mask = __M4RI_MIDDLE_BITMASK(nb, B->offset);
     // U[mb-1,mb-1] = 1, so no work required for i=mb-1
     for(rci_t i = mb - 2; i >= 0; --i) {
       /* Computes X_i = B_i + U_{i,i+1..mb} X_{i+1..mb}  */
@@ -702,7 +702,7 @@ void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B, int const cutoff) {	// FIXM
       word *Brow = B->rows[i];
 
       for(rci_t k = i + 1; k < mb; ++k) {
-	if(GET_BIT(Urow[0], k + U->offset)) {
+	if(__M4RI_GET_BIT(Urow[0], k + U->offset)) {
           Brow[0] ^= B->rows[k][0] & mask;
 	}
       }
@@ -714,15 +714,15 @@ void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const Boffset = B->offset;
-  int const nbrest = (nb + Boffset) % RADIX;
+  int const nbrest = (nb + Boffset) % m4ri_radix;
 
-  if(mb <= RADIX) {
+  if(mb <= m4ri_radix) {
     /* base case */
     
-    if(nb + B->offset > RADIX) {
+    if(nb + B->offset > m4ri_radix) {
       // B is large
-      word const mask_begin = RIGHT_BITMASK(RADIX-B->offset);
-      word const mask_end = LEFT_BITMASK(nbrest);
+      word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix-B->offset);
+      word const mask_end = __M4RI_LEFT_BITMASK(nbrest);
       
       // U[mb-1,mb-1] = 1, so no work required for i=mb-1
       for(rci_t i = mb - 2; i >= 0; --i) {
@@ -732,7 +732,7 @@ void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff) {
         word *Brow = B->rows[i];
         
         for(rci_t k = i + 1; k < mb; ++k) {
-          if(GET_BIT(Urow[0], k)){
+          if(__M4RI_GET_BIT(Urow[0], k)){
             Brow[0] ^= B->rows[k][0] & mask_begin;
             for(wi_t j = 1; j < B->width - 1; ++j)
               Brow[j] ^= B->rows[k][j];
@@ -741,7 +741,7 @@ void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff) {
         }
       }
     } else { // B is small
-      word const mask = MIDDLE_BITMASK(nb, B->offset);
+      word const mask = __M4RI_MIDDLE_BITMASK(nb, B->offset);
       // U[mb-1,mb-1] = 1, so no work required for i=mb-1
       for(rci_t i = mb - 2; i >= 0; --i) {
         
@@ -750,16 +750,16 @@ void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff) {
 	word *Brow = B->rows [i];
 
 	for(rci_t k = i + 1; k < mb; ++k) {
-	  if(GET_BIT(Urow[0], k)){
+	  if(__M4RI_GET_BIT(Urow[0], k)){
 	    Brow[0] ^= B->rows[k][0] & mask;
 	  }
 	}
       }
     }
-  } else if(mb <= MZD_MUL_BLOCKSIZE) {
+  } else if(mb <= __M4RI_MZD_MUL_BLOCKSIZE) {
     _mzd_trsm_upper_left_even_m4r(U, B, 0);
   } else {
-    rci_t const mb1 = (((mb-1) / RADIX + 1) >> 1) * RADIX;
+    rci_t const mb1 = (((mb-1) / m4ri_radix + 1) >> 1) * m4ri_radix;
 
     mzd_t *B0 = mzd_init_window(B,  0,     0,   mb1, nb);
     mzd_t *B1 = mzd_init_window(B, mb1,    0,   mb,  nb);

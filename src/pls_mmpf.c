@@ -46,8 +46,8 @@ int _mzd_pls_submatrix(mzd_t *A,
                        rci_t const start_col, int const k, 
                        mzp_t *P, mzp_t *Q,
                        rci_t *done, rci_t *done_row, wi_t const splitblock)  {
-  word bm[4 * MAXKAY];
-  wi_t os[4 * MAXKAY];
+  word bm[4 * __M4RI_MAXKAY];
+  wi_t os[4 * __M4RI_MAXKAY];
 
   /* we're essentially constructing a submatrix but cheaply */
   wi_t const width = A->width;
@@ -55,13 +55,13 @@ int _mzd_pls_submatrix(mzd_t *A,
 
   if (A->width > splitblock) {
     A->width = splitblock;
-    A->ncols = splitblock * RADIX;
+    A->ncols = splitblock * m4ri_radix;
   }
 
   int curr_pos;
   for(curr_pos = 0; curr_pos < k; ++curr_pos) {
-    os[curr_pos] = (start_col + curr_pos) / RADIX;
-    bm[curr_pos] = ONE << ((start_col + curr_pos) % RADIX);
+    os[curr_pos] = (start_col + curr_pos) / m4ri_radix;
+    bm[curr_pos] = m4ri_one << ((start_col + curr_pos) % m4ri_radix);
     int found = 0;
     /* search for some pivot */
     rci_t i;
@@ -110,8 +110,8 @@ int _mzd_pls_submatrix(mzd_t *A,
 /* create a table of all 2^k linear combinations */
 void mzd_make_table_pls(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *Le, rci_t *Lm) {
   assert(T->blocks[1].size == 0);
-  wi_t const blockoffset= c / RADIX;
-  int const twokay= TWOPOW(k);
+  wi_t const blockoffset= c / m4ri_radix;
+  int const twokay= __M4RI_TWOPOW(k);
   wi_t const wide = T->width - blockoffset;
   wi_t const count = (wide + 7) / 8;
   int const entry_point = wide % 8;
@@ -129,7 +129,7 @@ void mzd_make_table_pls(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *Le, 
   Le[0] = 0;
   Lm[0] = 0;
   for (int i = 1; i < twokay; ++i) {
-    rci_t rowneeded = r + codebook[k]->inc[i - 1];
+    rci_t rowneeded = r + m4ri_codebook[k]->inc[i - 1];
     m = M->rows[rowneeded] + blockoffset;
 
     /* Duff's device loop unrolling */
@@ -154,7 +154,7 @@ void mzd_make_table_pls(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *Le, 
     /* U is a basis but not the canonical basis, so we need to read what
        element we just created from T */
     Le[mzd_read_bits_int(T,i,c,k)] = i;
-    Lm[codebook[k]->ord[i]] = i;
+    Lm[m4ri_codebook[k]->ord[i]] = i;
     
   }
   /* We need fix the table to update the transformation matrix
@@ -162,7 +162,7 @@ void mzd_make_table_pls(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *Le, 
      below with [1 0 1] we need to encode that this row is cleared by
      adding the first row only ([1 0 0]). */
   for(int i = 1; i < twokay; ++i) {
-    word const correction = CONVERT_TO_WORD(codebook[k]->ord[i]);
+    word const correction = __M4RI_CONVERT_TO_WORD(m4ri_codebook[k]->ord[i]);
     mzd_xor_bits(T, i,c, k, correction);
   }
 }
@@ -170,8 +170,8 @@ void mzd_make_table_pls(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *Le, 
 void mzd_process_rows2_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t *T0, rci_t *E0, mzd_t *T1, rci_t *E1) {
   int const ka = k / 2;
   int const kb = k - k / 2;
-  wi_t const blocknuma = startcol / RADIX;
-  wi_t const blocknumb = (startcol + ka) / RADIX;
+  wi_t const blocknuma = startcol / m4ri_radix;
+  wi_t const blocknumb = (startcol + ka) / m4ri_radix;
   wi_t const blockoffset = blocknumb - blocknuma;
   wi_t wide = M->width - blocknuma;
 
@@ -210,9 +210,9 @@ void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
   int const ka = k / 3 + ((rem >= 2) ? 1 : 0);
   int const kb = k / 3 + ((rem >= 1) ? 1 : 0);
   int const kc = k / 3;
-  wi_t const blocknuma = startcol / RADIX;
-  wi_t const blocknumb = (startcol + ka) / RADIX;
-  wi_t const blocknumc = (startcol + ka + kb) / RADIX;
+  wi_t const blocknuma = startcol / m4ri_radix;
+  wi_t const blocknumb = (startcol + ka) / m4ri_radix;
+  wi_t const blocknumc = (startcol + ka + kb) / m4ri_radix;
   wi_t const blockoffsetb = blocknumb - blocknuma;
   wi_t const blockoffsetc = blocknumc - blocknuma;
   wi_t wide = M->width - blocknuma;
@@ -264,10 +264,10 @@ void mzd_process_rows4_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
   int const kb = k / 4 + ((rem >= 2) ? 1 : 0);
   int const kc = k / 4 + ((rem >= 1) ? 1 : 0);
   int const kd = k / 4;
-  wi_t const blocknuma = startcol / RADIX;
-  wi_t const blocknumb = (startcol + ka) / RADIX;
-  wi_t const blocknumc = (startcol + ka + kb) / RADIX;
-  wi_t const blocknumd = (startcol + ka + kb + kc) / RADIX;
+  wi_t const blocknuma = startcol / m4ri_radix;
+  wi_t const blocknumb = (startcol + ka) / m4ri_radix;
+  wi_t const blocknumc = (startcol + ka + kb) / m4ri_radix;
+  wi_t const blocknumd = (startcol + ka + kb + kc) / m4ri_radix;
   wi_t const blockoffsetb = blocknumb - blocknuma;
   wi_t const blockoffsetc = blocknumc - blocknuma;
   wi_t const blockoffsetd = blocknumd - blocknuma;
@@ -332,7 +332,7 @@ void _mzd_finish_pls_done_pivots(mzd_t *A, mzp_t const *P, rci_t const start_row
     word const tmp = mzd_read_bits(A, start_row + i, start_col, i);
     word *target = A->rows[start_row + i];
     for(int j = 0; j < i; ++j) {
-      if((tmp & ONE << j)) {
+      if((tmp & m4ri_one << j)) {
         word const *source = A->rows[start_row + j];
         for(wi_t w = addblock; w < A->width; ++w) {
           target[w] ^= source[w];
@@ -426,7 +426,7 @@ mzd_t *_mzd_pls_to_u(mzd_t *U, mzd_t *A, rci_t r, rci_t c, int k) {
      completetly if needed */
   assert(U->offset == 0);
   assert(A->offset == 0);
-  rci_t startcol = (c / RADIX) * RADIX;
+  rci_t startcol = (c / m4ri_radix) * m4ri_radix;
   mzd_submatrix(U, A, r, 0, r+k, A->ncols);
 
   for(rci_t i = 0; i < k; ++i)
@@ -449,7 +449,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
     k = m4ri_opt_k(nrows, ncols, 0);
     if (k >= 7)
       k = 7;
-    if (0.5 * TWOPOW(k) * A->ncols > CPU_L2_CACHE / 2.0)
+    if (0.5 * __M4RI_TWOPOW(k) * A->ncols > __M4RI_CPU_L2_CACHE / 2.0)
       k -= 1;
   }
 
@@ -461,23 +461,23 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
   for(rci_t i = 0; i < A->nrows; ++i)
     P->values[i] = i;
 
-  mzd_t *T0 = mzd_init(TWOPOW(k), ncols);
-  mzd_t *T1 = mzd_init(TWOPOW(k), ncols);
-  mzd_t *T2 = mzd_init(TWOPOW(k), ncols);
-  mzd_t *T3 = mzd_init(TWOPOW(k), ncols);
+  mzd_t *T0 = mzd_init(__M4RI_TWOPOW(k), ncols);
+  mzd_t *T1 = mzd_init(__M4RI_TWOPOW(k), ncols);
+  mzd_t *T2 = mzd_init(__M4RI_TWOPOW(k), ncols);
+  mzd_t *T3 = mzd_init(__M4RI_TWOPOW(k), ncols);
   mzd_t *U = mzd_init(kk, ncols);
 
   /* these are the elimination lookups */
-  rci_t *E0 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *E1 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *E2 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *E3 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
+  rci_t *E0 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *E1 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *E2 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *E3 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
 
   /* these are the multiplication lookups */
-  rci_t *M0 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *M1 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *M2 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *M3 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
+  rci_t *M0 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *M1 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *M2 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *M3 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
 
   rci_t *done = (rci_t*)m4ri_mm_malloc(kk * sizeof(rci_t));
 
@@ -492,7 +492,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
     /**
      * 1. compute PLS factorisation for the kbar x kbar submatrix A00
 \verbatim
-       RADIX * splitblock
+       m4ri_radix * splitblock
 --------------------------------------
 | A00  |  A10                        |
 |      |                             |
@@ -509,7 +509,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
 --------------------------------------
 \endverbatim
      */
-    wi_t splitblock = (curr_col + kk) / RADIX + 1;
+    wi_t splitblock = (curr_col + kk) / m4ri_radix + 1;
 
     kbar = _mzd_pls_submatrix(A, curr_row, nrows, curr_col, kk, P, Q, done, &done_row, splitblock);
 
@@ -626,8 +626,8 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
         P->values[curr_row] = i;
         Q->values[curr_row] = j;
         mzd_row_swap(A, curr_row, i);
-        wi_t const wrd = j / RADIX;
-        word const bm = ONE << (j % RADIX);
+        wi_t const wrd = j / m4ri_radix;
+        word const bm = m4ri_one << (j % m4ri_radix);
 	if (j + 1 < A->ncols)
 	  for(rci_t l = curr_row + 1; l < nrows; ++l)
 	    if(A->rows[l][wrd] & bm)

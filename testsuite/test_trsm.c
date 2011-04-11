@@ -39,7 +39,7 @@ int test_trsm_upper_right (rci_t m, rci_t n, int offset, const char* description
   mzd_copy (B, W);
 
   for (rci_t i = 0; i < 2048; ++i)
-    for (wi_t j = 0; j < 2048 / RADIX; ++j){
+    for (wi_t j = 0; j < 2048 / m4ri_radix; ++j){
       if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
 	status = 1;
       }
@@ -92,7 +92,7 @@ int test_trsm_lower_right (rci_t m, rci_t n, int offset, const char *description
   mzd_copy (B, W);
 
   for (rci_t i = 0; i < 2048; ++i)
-    for (wi_t j = 0; j < 2048 / RADIX; ++j){
+    for (wi_t j = 0; j < 2048 / m4ri_radix; ++j){
       if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
 	status = 1;
       }
@@ -147,7 +147,7 @@ int test_trsm_lower_left (rci_t m, rci_t n, int offsetL, int offsetB, const char
   mzd_copy (B, W);
 
   for (rci_t i = 0; i < 2048; ++i)
-    for (wi_t j = 0; j < 2048 / RADIX; ++j){
+    for (wi_t j = 0; j < 2048 / m4ri_radix; ++j){
       if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
 	status = 1;
       }
@@ -202,7 +202,7 @@ int test_trsm_upper_left (rci_t m, rci_t n, int offsetU, int offsetB, const char
   mzd_copy (B, W);
 
   for (rci_t i = 0; i < 2048; ++i)
-    for (wi_t j = 0; j < 2048 / RADIX; ++j){
+    for (wi_t j = 0; j < 2048 / m4ri_radix; ++j){
       if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]){
 	status = 1;
       }

@@ -77,7 +77,7 @@ rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
   rci_t nrows = A->nrows;
 #endif
 
-  if (ncols <= RADIX || A->width * A->nrows <= PLS_CUTOFF) {
+  if (ncols <= m4ri_radix || A->width * A->nrows <= __M4RI_PLS_CUTOFF) {
 /*   if(ncols <= PLUQ_CUTOFF) { */
     /* this improves data locality and runtime considerably */
     mzd_t *Abar = mzd_copy(NULL, A);
@@ -100,7 +100,7 @@ rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
      *   ------------------------------------------
      */
 
-    rci_t n1 = (((ncols - 1) / RADIX + 1) >> 1) * RADIX;
+    rci_t n1 = (((ncols - 1) / m4ri_radix + 1) >> 1) * m4ri_radix;
 
     mzd_t *A0  = mzd_init_window(A,  0,  0, nrows,    n1);
     mzd_t *A1  = mzd_init_window(A,  0, n1, nrows, ncols);

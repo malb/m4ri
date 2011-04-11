@@ -24,8 +24,9 @@
 *
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
-#ifndef M4RI_H
-#define M4RI_H
+
+#ifndef M4RI_M4RI_H
+#define M4RI_M4RI_H
 
 /**
  * \mainpage 
@@ -62,4 +63,4 @@ extern "C" {
 }
 #endif
 
-#endif //M4RI_H
+#endif // M4RI_M4RI_H

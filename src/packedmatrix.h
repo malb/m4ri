@@ -7,8 +7,9 @@
  * \author Carlo Wood <carlo@alinoe.com>
  */
 
-#ifndef PACKEDMATRIX_H
-#define PACKEDMATRIX_H
+#ifndef M4RI_PACKEDMATRIX_H
+#define M4RI_PACKEDMATRIX_H
+
 /*******************************************************************
 *
 *                M4RI: Linear Algebra over GF(2)
@@ -60,12 +61,12 @@
  * algorithm.
  */
 
-#define MZD_MUL_BLOCKSIZE MIN(((int)sqrt((double)(4 * CPU_L2_CACHE))) / 2, 2048)
+#define __M4RI_MZD_MUL_BLOCKSIZE MIN(((int)sqrt((double)(4 * __M4RI_CPU_L2_CACHE))) / 2, 2048)
 
 typedef struct {
   /**
    * Contains pointers to the actual blocks of memory containing the
-   * values packed into words of size RADIX.
+   * values packed into words of size m4ri_radix.
    */
 
   mmb_t *blocks;
@@ -83,7 +84,7 @@ typedef struct {
   rci_t ncols;
 
   /**
-   * width = ceil(ncols/RADIX)
+   * width = ceil(ncols/m4ri_radix)
    */
 
   wi_t width; 
@@ -177,7 +178,7 @@ static inline void _mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb, w
   word *a = M->rows[rowa] + startblock;
   word *b = M->rows[rowb] + startblock;
   word tmp; 
-  word const mask_end = LEFT_BITMASK((M->ncols + M->offset) % RADIX);
+  word const mask_end = __M4RI_LEFT_BITMASK((M->ncols + M->offset) % m4ri_radix);
 
   if (width != 0) {
     for(wi_t i = 0; i < width; ++i) {
@@ -207,8 +208,8 @@ static inline void mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb) {
   wi_t width = M->width - 1;
   word *a = M->rows[rowa];
   word *b = M->rows[rowb];
-  word const mask_begin = RIGHT_BITMASK(RADIX - M->offset);
-  word const mask_end = LEFT_BITMASK((M->ncols + M->offset) % RADIX);
+  word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - M->offset);
+  word const mask_end = __M4RI_LEFT_BITMASK((M->ncols + M->offset) % m4ri_radix);
 
   word tmp = (a[0] ^ b[0]) & mask_begin;
   if (width != 0) {
@@ -273,13 +274,13 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
   rci_t const _colb = colb + M->offset;
 
   /* Make sure that a_spill >= b_spill (larger if a_word == b_word) */
-  int const swap_a_b = _cola % RADIX < _colb % RADIX;
-  int const a_spill = swap_a_b ? _colb % RADIX : _cola % RADIX;
-  int const b_spill = swap_a_b ? _cola % RADIX : _colb % RADIX;
-  wi_t const a_word = swap_a_b ? _colb / RADIX : _cola / RADIX;
-  wi_t const b_word = swap_a_b ? _cola / RADIX : _colb / RADIX;
+  int const swap_a_b = _cola % m4ri_radix < _colb % m4ri_radix;
+  int const a_spill = swap_a_b ? _colb % m4ri_radix : _cola % m4ri_radix;
+  int const b_spill = swap_a_b ? _cola % m4ri_radix : _colb % m4ri_radix;
+  wi_t const a_word = swap_a_b ? _colb / m4ri_radix : _cola / m4ri_radix;
+  wi_t const b_word = swap_a_b ? _cola / m4ri_radix : _colb / m4ri_radix;
 
-  word const b_bm = ONE << b_spill;
+  word const b_bm = m4ri_one << b_spill;
   int const coldiff = a_spill - b_spill;
 
   if (a_word == b_word)
@@ -322,7 +323,7 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
  */
 
 static inline BIT mzd_read_bit(mzd_t const *M, rci_t const row, rci_t const col ) {
-  return GET_BIT(M->rows[row][(col+M->offset)/RADIX], (col+M->offset) % RADIX);
+  return __M4RI_GET_BIT(M->rows[row][(col+M->offset)/m4ri_radix], (col+M->offset) % m4ri_radix);
 }
 
 /**
@@ -338,7 +339,7 @@ static inline BIT mzd_read_bit(mzd_t const *M, rci_t const row, rci_t const col 
  */
 
 static inline void mzd_write_bit(mzd_t *M, rci_t const row, rci_t const col, BIT const value) {
-  WRITE_BIT(M->rows[row][(col + M->offset) / RADIX], (col + M->offset) % RADIX, value);
+  __M4RI_WRITE_BIT(M->rows[row][(col + M->offset) / m4ri_radix], (col + M->offset) % m4ri_radix, value);
 }
 
 
@@ -348,15 +349,15 @@ static inline void mzd_write_bit(mzd_t *M, rci_t const row, rci_t const col, BIT
  * \param M Source matrix.
  * \param x Starting row.
  * \param y Starting column.
- * \param n Number of bits (<= RADIX);
+ * \param n Number of bits (<= m4ri_radix);
  * \param values Word with values;
  */
 
 static inline void mzd_xor_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n, word values) {
-  int const spot = (y + M->offset) % RADIX;
-  wi_t const block = (y + M->offset) / RADIX;
+  int const spot = (y + M->offset) % m4ri_radix;
+  wi_t const block = (y + M->offset) / m4ri_radix;
   M->rows[x][block] ^= values << spot;
-  int const space = RADIX - spot;
+  int const space = m4ri_radix - spot;
   if (n > space)
     M->rows[x][block + 1] ^= values >> space;
 }
@@ -367,18 +368,18 @@ static inline void mzd_xor_bits(mzd_t const *M, rci_t const x, rci_t const y, in
  * \param M Source matrix.
  * \param x Starting row.
  * \param y Starting column.
- * \param n Number of bits (<= RADIX);
+ * \param n Number of bits (<= m4ri_radix);
  * \param values Word with values;
  */
 
 static inline void mzd_and_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n, word values) {
   /* This is the best way, since this will drop out once we inverse the bits in values: */
-  values >>= (RADIX - n);	/* Move the bits to the lowest columns */
+  values >>= (m4ri_radix - n);	/* Move the bits to the lowest columns */
 
-  int const spot = (y + M->offset) % RADIX;
-  wi_t const block = (y + M->offset) / RADIX;
+  int const spot = (y + M->offset) % m4ri_radix;
+  wi_t const block = (y + M->offset) / m4ri_radix;
   M->rows[x][block] &= values << spot;
-  int const space = RADIX - spot;
+  int const space = m4ri_radix - spot;
   if (n > space)
     M->rows[x][block + 1] &= values >> space;
 }
@@ -389,15 +390,15 @@ static inline void mzd_and_bits(mzd_t const *M, rci_t const x, rci_t const y, in
  * \param M Source matrix.
  * \param x Starting row.
  * \param y Starting column.
- * \param n Number of bits (0 < n <= RADIX);
+ * \param n Number of bits (0 < n <= m4ri_radix);
  */
 
 static inline void mzd_clear_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n) {
-  word values = FFFF >> (RADIX - n);
-  int const spot = (y + M->offset) % RADIX;
-  wi_t const block = (y + M->offset) / RADIX;
+  word values = m4ri_ffff >> (m4ri_radix - n);
+  int const spot = (y + M->offset) % m4ri_radix;
+  wi_t const block = (y + M->offset) / m4ri_radix;
   M->rows[x][block] &= ~(values << spot);
-  int const space = RADIX - spot;
+  int const space = m4ri_radix - spot;
   if (n > space)
     M->rows[x][block + 1] &= ~(values >> space);
 }
@@ -433,18 +434,18 @@ void mzd_print_tight(mzd_t const *M);
 static inline void mzd_row_add_offset(mzd_t *M, rci_t dstrow, rci_t srcrow, rci_t coloffset) {
   assert(dstrow < M->nrows && srcrow < M->nrows && coloffset < M->ncols);
   coloffset += M->offset;
-  wi_t const startblock= coloffset/RADIX;
+  wi_t const startblock= coloffset/m4ri_radix;
   wi_t wide = M->width - startblock;
   word *src = M->rows[srcrow] + startblock;
   word *dst = M->rows[dstrow] + startblock;
-  word const mask_begin = RIGHT_BITMASK(RADIX - coloffset % RADIX);
-  word const mask_end = LEFT_BITMASK((M->ncols + M->offset) % RADIX);
+  word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - coloffset % m4ri_radix);
+  word const mask_end = __M4RI_LEFT_BITMASK((M->ncols + M->offset) % m4ri_radix);
 
   *dst++ ^= *src++ & mask_begin;
   --wide;
 
 #ifdef HAVE_SSE2 
-  int not_aligned = ALIGNMENT(src,16) != 0;		/* 0: Aligned, 1: Not aligned */
+  int not_aligned = __M4RI_ALIGNMENT(src,16) != 0;		/* 0: Aligned, 1: Not aligned */
   if (wide > not_aligned + 1)				/* Speed up for small matrices */
   {
     if (not_aligned) {
@@ -790,15 +791,15 @@ mzd_t *_mzd_add(mzd_t *C, mzd_t const *A, mzd_t const *B);
  * \param M Source matrix.
  * \param x Starting row.
  * \param y Starting column.
- * \param n Number of bits (<= RADIX);
+ * \param n Number of bits (<= m4ri_radix);
  */ 
 
 static inline word mzd_read_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n) {
-  int const spot = (y + M->offset) % RADIX;
-  wi_t const block = (y + M->offset) / RADIX;
-  int const spill = spot + n - RADIX;
-  word temp = (spill <= 0) ? M->rows[x][block] << -spill : (M->rows[x][block + 1] << (RADIX - spill)) | (M->rows[x][block] >> spill);
-  return temp >> (RADIX - n);
+  int const spot = (y + M->offset) % m4ri_radix;
+  wi_t const block = (y + M->offset) / m4ri_radix;
+  int const spill = spot + n - m4ri_radix;
+  word temp = (spill <= 0) ? M->rows[x][block] << -spill : (M->rows[x][block + 1] << (m4ri_radix - spill)) | (M->rows[x][block] >> spill);
+  return temp >> (m4ri_radix - n);
 }
 
 
@@ -852,10 +853,10 @@ void static inline mzd_combine_weird(mzd_t *C,       rci_t const c_row, wi_t con
   rci_t i = 0;
 
 
-  for(; i + RADIX <= A->ncols; i += RADIX) {
-    tmp = mzd_read_bits(A, a_row, i, RADIX) ^ mzd_read_bits(B, b_row, i, RADIX);
-    mzd_clear_bits(C, c_row, i, RADIX);
-    mzd_xor_bits(C, c_row, i, RADIX, tmp);
+  for(; i + m4ri_radix <= A->ncols; i += m4ri_radix) {
+    tmp = mzd_read_bits(A, a_row, i, m4ri_radix) ^ mzd_read_bits(B, b_row, i, m4ri_radix);
+    mzd_clear_bits(C, c_row, i, m4ri_radix);
+    mzd_xor_bits(C, c_row, i, m4ri_radix, tmp);
   }
   if(A->ncols - i) {
     tmp = mzd_read_bits(A, a_row, i, (A->ncols - i)) ^ mzd_read_bits(B, b_row, i, (B->ncols - i));
@@ -892,12 +893,12 @@ void static inline mzd_combine_even_in_place(mzd_t *A,       rci_t const a_row, 
 #ifdef HAVE_SSE2
   if(wide > SSE2_CUTOFF) {
     /** check alignments **/
-    if (ALIGNMENT(a,16)) {
+    if (__M4RI_ALIGNMENT(a,16)) {
       *a++ ^= *b++;
       wide--;
     }
     
-    if (ALIGNMENT(a, 16) == 0 && ALIGNMENT(b, 16) == 0) {
+    if (__M4RI_ALIGNMENT(a, 16) == 0 && __M4RI_ALIGNMENT(b, 16) == 0) {
       __m128i *a128 = (__m128i*)a;
       __m128i *b128 = (__m128i*)b;
       const __m128i *eof = (__m128i*)((unsigned long)(a + wide) & ~0xFUL);
@@ -930,7 +931,7 @@ void static inline mzd_combine_even_in_place(mzd_t *A,       rci_t const a_row, 
     }
   }
 
-  *a ^= *b & LEFT_BITMASK(A->ncols%RADIX);
+  *a ^= *b & __M4RI_LEFT_BITMASK(A->ncols%m4ri_radix);
   return;
 }
 
@@ -975,12 +976,12 @@ void static inline mzd_combine_even(mzd_t *C,       rci_t const c_row, wi_t cons
 #ifdef HAVE_SSE2
   if(wide > SSE2_CUTOFF) {
     /** check alignments **/
-    if (ALIGNMENT(a,16)) {
+    if (__M4RI_ALIGNMENT(a,16)) {
       *c++ = *b++ ^ *a++;
       wide--;
     }
       
-    if ( (ALIGNMENT(b, 16) | ALIGNMENT(c, 16)) == 0) {
+    if ( (__M4RI_ALIGNMENT(b, 16) | __M4RI_ALIGNMENT(c, 16)) == 0) {
       __m128i *a128 = (__m128i*)a;
       __m128i *b128 = (__m128i*)b;
       __m128i *c128 = (__m128i*)c;
@@ -1015,7 +1016,7 @@ void static inline mzd_combine_even(mzd_t *C,       rci_t const c_row, wi_t cons
     } while (--n > 0);
     }
   }
-  *c ^= ((*a ^ *b ^ *c) & LEFT_BITMASK(C->ncols%RADIX));
+  *c ^= ((*a ^ *b ^ *c) & __M4RI_LEFT_BITMASK(C->ncols%m4ri_radix));
   return;
 }
 
@@ -1030,7 +1031,7 @@ void static inline mzd_combine_even(mzd_t *C,       rci_t const c_row, wi_t cons
 
 static inline int mzd_read_bits_int(mzd_t const *M, rci_t const x, rci_t const y, int const n)
 {
-  return CONVERT_TO_INT(mzd_read_bits(M, x, y, n));
+  return __M4RI_CONVERT_TO_INT(mzd_read_bits(M, x, y, n));
 }
 
 
@@ -1112,4 +1113,4 @@ double _mzd_density(mzd_t const *A, wi_t res, rci_t r, rci_t c);
 
 rci_t mzd_first_zero_row(mzd_t const *A);
 
-#endif //PACKEDMATRIX_H
+#endif // M4RI_PACKEDMATRIX_H

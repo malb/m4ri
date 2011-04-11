@@ -70,7 +70,7 @@ mzd_t *_mzd_mul_even_orig(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   }
 
   /* adjust cutting numbers to work on words */
-  rci_t mult = RADIX;
+  rci_t mult = m4ri_radix;
   rci_t width = MIN(MIN(a,b),c);
   while (width > 2 * cutoff) {
     width /= 2;
@@ -80,10 +80,10 @@ mzd_t *_mzd_mul_even_orig(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   b -= b % mult;
   c -= c % mult;
 
-  rci_t anr = ((a / RADIX) >> 1) * RADIX;
-  rci_t anc = ((b / RADIX) >> 1) * RADIX;
+  rci_t anr = ((a / m4ri_radix) >> 1) * m4ri_radix;
+  rci_t anc = ((b / m4ri_radix) >> 1) * m4ri_radix;
   rci_t bnr = anc;
-  rci_t bnc = ((c / RADIX) >> 1) * RADIX;
+  rci_t bnc = ((c / m4ri_radix) >> 1) * m4ri_radix;
 
   mzd_t *A00 = mzd_init_window(A,   0,   0,   anr,   anc);
   mzd_t *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc);
@@ -225,16 +225,16 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
 
   /* adjust cutting numbers to work on words */
   {
-    rci_t mult = RADIX;
+    rci_t mult = m4ri_radix;
     rci_t width = MIN(MIN(m, n), k) / 2;
     while (width > cutoff) {
       width /= 2;
       mult *= 2;
     }
 
-    mmm = (((m - m % mult) / RADIX) >> 1) * RADIX;
-    kkk = (((k - k % mult) / RADIX) >> 1) * RADIX;
-    nnn = (((n - n % mult) / RADIX) >> 1) * RADIX;
+    mmm = (((m - m % mult) / m4ri_radix) >> 1) * m4ri_radix;
+    kkk = (((k - k % mult) / m4ri_radix) >> 1) * m4ri_radix;
+    nnn = (((n - n % mult) / m4ri_radix) >> 1) * m4ri_radix;
   }
   /*         |A |   |B |   |C |
    * Compute |  | x |  | = |  | */
@@ -377,13 +377,13 @@ mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t *A, int cutoff) {
   /* adjust cutting numbers to work on words */
   rci_t mmm;
   {
-    rci_t mult = RADIX;
+    rci_t mult = m4ri_radix;
     rci_t width = m / 2;
     while (width > cutoff) {
       width /= 2;
       mult *= 2;
     }
-    mmm = (((m - m % mult) / RADIX) >> 1) * RADIX;
+    mmm = (((m - m % mult) / m4ri_radix) >> 1) * m4ri_radix;
   }
   /*         |A |   |A |   |C |
    * Compute |  | x |  | = |  | */
@@ -487,7 +487,7 @@ mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t *A, int cutoff) {
 #ifdef HAVE_OPENMP
 mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   /**
-   * \todo make sure not to overwrite crap after ncols and before width * RADIX
+   * \todo make sure not to overwrite crap after ncols and before width * m4ri_radix
    */
   rci_t a = A->nrows;
   rci_t b = A->ncols;
@@ -507,7 +507,7 @@ mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
 
   /* adjust cutting numbers to work on words */
   {
-    rci_t mult = 2 * RADIX;
+    rci_t mult = 2 * m4ri_radix;
 /*    rci_t width = a; */
 /*    while (width > 2 * cutoff) { */
 /*      width /= 2; */
@@ -518,10 +518,10 @@ mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
     c -= c % mult;
   }
 
-  rci_t anr = ((a / RADIX) >> 1) * RADIX;
-  rci_t anc = ((b / RADIX) >> 1) * RADIX;
+  rci_t anr = ((a / m4ri_radix) >> 1) * m4ri_radix;
+  rci_t anc = ((b / m4ri_radix) >> 1) * m4ri_radix;
   rci_t bnr = anc;
-  rci_t bnc = ((c / RADIX) >> 1) * RADIX;
+  rci_t bnc = ((c / m4ri_radix) >> 1) * m4ri_radix;
 
   mzd_t *A00 = mzd_init_window(A,   0,   0,   anr,   anc);
   mzd_t *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc);
@@ -611,12 +611,12 @@ mzd_t *mzd_mul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
     m4ri_die("mzd_mul: cutoff must be >= 0.\n");
 
   if(cutoff == 0) {
-    cutoff = STRASSEN_MUL_CUTOFF;
+    cutoff = __M4RI_STRASSEN_MUL_CUTOFF;
   }
 
-  cutoff = cutoff / RADIX * RADIX;
-  if (cutoff < RADIX) {
-    cutoff = RADIX;
+  cutoff = cutoff / m4ri_radix * m4ri_radix;
+  if (cutoff < m4ri_radix) {
+    cutoff = m4ri_radix;
   };
 
   if (C == NULL) {
@@ -638,7 +638,7 @@ mzd_t *mzd_mul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
 
 mzd_t *_mzd_addmul_even_orig(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   /**
-   * \todo make sure not to overwrite crap after ncols and before width * RADIX
+   * \todo make sure not to overwrite crap after ncols and before width * m4ri_radix
    */
   if(C->nrows == 0 || C->ncols == 0)
     return C;
@@ -660,7 +660,7 @@ mzd_t *_mzd_addmul_even_orig(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
 
   /* adjust cutting numbers to work on words */
   {
-    rci_t mult = RADIX;
+    rci_t mult = m4ri_radix;
     rci_t width = MIN(MIN(a,b),c);
     while (width > 2 * cutoff) {
       width /= 2;
@@ -671,10 +671,10 @@ mzd_t *_mzd_addmul_even_orig(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
     c -= c % mult;
   }
 
-  rci_t anr = ((a/RADIX) >> 1) * RADIX;
-  rci_t anc = ((b/RADIX) >> 1) * RADIX;
+  rci_t anr = ((a/m4ri_radix) >> 1) * m4ri_radix;
+  rci_t anc = ((b/m4ri_radix) >> 1) * m4ri_radix;
   rci_t bnr = anc;
-  rci_t bnc = ((c/RADIX) >> 1) * RADIX;
+  rci_t bnc = ((c/m4ri_radix) >> 1) * m4ri_radix;
 
   mzd_t *A00 = mzd_init_window(A,   0,   0,   anr,   anc);
   mzd_t *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc);
@@ -777,7 +777,7 @@ mzd_t *_mzd_addmul_even_orig(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
 
 mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   /**
-   * \todo make sure not to overwrite crap after ncols and before width * RADIX
+   * \todo make sure not to overwrite crap after ncols and before width * m4ri_radix
    */
   if(C->nrows == 0 || C->ncols == 0)
     return C;
@@ -807,16 +807,16 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
   /* adjust cutting numbers to work on words */
   rci_t mmm, kkk, nnn;
   {
-    rci_t mult = RADIX;
+    rci_t mult = m4ri_radix;
     rci_t width = MIN(MIN(m, n), k) / 2;
     while (width > cutoff) {
       width /= 2;
       mult *= 2;
     }
 
-    mmm = (((m - m % mult) / RADIX) >> 1) * RADIX;
-    kkk = (((k - k % mult) / RADIX) >> 1) * RADIX;
-    nnn = (((n - n % mult) / RADIX) >> 1) * RADIX;
+    mmm = (((m - m % mult) / m4ri_radix) >> 1) * m4ri_radix;
+    kkk = (((k - k % mult) / m4ri_radix) >> 1) * m4ri_radix;
+    nnn = (((n - n % mult) / m4ri_radix) >> 1) * m4ri_radix;
   }
 
   /*         |C |    |A |   |B | 
@@ -931,7 +931,7 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
 
 mzd_t *_mzd_addsqr_even(mzd_t *C, mzd_t *A, int cutoff) {
   /**
-   * \todo make sure not to overwrite crap after ncols and before width * RADIX
+   * \todo make sure not to overwrite crap after ncols and before width * m4ri_radix
    */
   if(C->nrows == 0)
     return C;
@@ -953,14 +953,14 @@ mzd_t *_mzd_addsqr_even(mzd_t *C, mzd_t *A, int cutoff) {
   /* adjust cutting numbers to work on words */
   rci_t mmm;
   {
-    rci_t mult = RADIX;
+    rci_t mult = m4ri_radix;
     rci_t width = m / 2;
     while (width > cutoff) {
       width /= 2;
       mult *= 2;
     }
 
-    mmm = (((m - m % mult) / RADIX) >> 1) * RADIX;
+    mmm = (((m - m % mult) / m4ri_radix) >> 1) * m4ri_radix;
   }
 
   /*         |C |    |A |   |B | 
@@ -1068,7 +1068,7 @@ mzd_t *_mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
     if (!B->offset) /* A even, B even */
       return (A == B) ? _mzd_addsqr_even(C, A, cutoff) : _mzd_addmul_even(C, A, B, cutoff);
     else {          /* A even, B weird */
-      int const bnc = RADIX - B->offset;
+      int const bnc = m4ri_radix - B->offset;
       if (B->ncols <= bnc){
 	_mzd_addmul_even_weird  (C,  A, B, cutoff);
       } else {
@@ -1083,8 +1083,8 @@ mzd_t *_mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
       }
     }
   } else if (B->offset) { /* A weird, B weird */
-    int const anc = RADIX - A->offset;
-    int const bnc = RADIX - B->offset;
+    int const anc = m4ri_radix - A->offset;
+    int const bnc = m4ri_radix - B->offset;
     if (B->ncols <= bnc){
       if (A->ncols <= anc)
 	_mzd_addmul_weird_weird (C, A, B, cutoff);
@@ -1128,7 +1128,7 @@ mzd_t *_mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
       mzd_free_window (B10); mzd_free_window (B11);
     }
   } else { /* A weird, B even */
-    int const anc = RADIX - A->offset;
+    int const anc = m4ri_radix - A->offset;
     if (A->ncols <= anc){
       _mzd_addmul_weird_even  (C,  A, B, cutoff);
     } else {
@@ -1146,7 +1146,7 @@ mzd_t *_mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
 }
 
 mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
-  mzd_t *tmp = mzd_init(A->nrows, MIN((rci_t)RADIX - A->offset, A->ncols));
+  mzd_t *tmp = mzd_init(A->nrows, MIN((rci_t)m4ri_radix - A->offset, A->ncols));
   for (rci_t i = 0; i < A->nrows; ++i){
     tmp->rows[i][0] = (A->rows[i][0] >> A->offset);
   }
@@ -1156,12 +1156,12 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
 }
 
  mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
-   mzd_t *tmp = mzd_init (B->nrows, (rci_t)RADIX);
+   mzd_t *tmp = mzd_init (B->nrows, (rci_t)m4ri_radix);
    int const offset = C->offset;
    rci_t const cncols = C->ncols;
    C->offset = 0;
-   C->ncols = RADIX;
-   word const mask = MIDDLE_BITMASK(B->ncols, B->offset);
+   C->ncols = m4ri_radix;
+   word const mask = __M4RI_MIDDLE_BITMASK(B->ncols, B->offset);
    for (rci_t i = 0; i < B->nrows; ++i)
      tmp->rows[i][0] = B->rows[i][0] & mask;
    _mzd_addmul_even (C, A, tmp, cutoff);
@@ -1176,9 +1176,9 @@ mzd_t *_mzd_addmul_weird_weird (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {	// F
    
   for (rci_t i = 0; i < B->ncols; ++i) {
     word *dstp = BT->rows[i];
-    wi_t const ii = (i + B->offset) / RADIX;
-    int const is = (i + B->offset) % RADIX;
-    word const mask = ONE << is;
+    wi_t const ii = (i + B->offset) / m4ri_radix;
+    int const is = (i + B->offset) % m4ri_radix;
+    word const mask = m4ri_one << is;
     int const ke = (is - A->offset < 0) ? -1 : is - A->offset;
     rci_t k = B->nrows - 1;
     while (k > ke)
@@ -1205,8 +1205,8 @@ mzd_t *_mzd_addmul_weird_weird (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {	// F
       word *b = BT->rows[k];
       parity[(k + C->offset)] = (*a) & (*b);	// FIXME: Why is C->ncols always less than 64 - C->offset?
     }
-    word par = parity64(parity);
-    *c ^= par;//parity64(parity);
+    word par = m4ri_parity64(parity);
+    *c ^= par;//m4ri_parity64(parity);
   }
   mzd_free (BT);
   return C;
@@ -1220,12 +1220,12 @@ mzd_t *mzd_addmul(mzd_t *C, mzd_t *A, mzd_t *B, int cutoff) {
     m4ri_die("mzd_addmul: cutoff must be >= 0.\n");
 
   if(cutoff == 0) {
-    cutoff = STRASSEN_MUL_CUTOFF;
+    cutoff = __M4RI_STRASSEN_MUL_CUTOFF;
   }
   
-  cutoff = cutoff / RADIX * RADIX;
-  if (cutoff < RADIX) {
-    cutoff = RADIX;
+  cutoff = cutoff / m4ri_radix * m4ri_radix;
+  if (cutoff < m4ri_radix) {
+    cutoff = m4ri_radix;
   };
 
   if (C == NULL) {

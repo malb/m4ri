@@ -7,8 +7,8 @@
  * \todo start counting at 0!
  */
 
-#ifndef XOR_H
-#define XOR_H
+#ifndef M4RI_XOR_H
+#define M4RI_XOR_H
 
 #ifdef HAVE_SSE2
 #include <emmintrin.h>
@@ -47,7 +47,7 @@ static inline void _mzd_combine8(word *c, word const *t1, word const *t2, word c
                                  word const *t5, word const *t6, word const *t7, word const *t8, wi_t wide) {
 #ifdef HAVE_SSE2
   /* assuming t1 ... t8 are aligned, but c might not be */
-  if (ALIGNMENT(c,16)==0) {
+  if (__M4RI_ALIGNMENT(c,16)==0) {
     __m128i *__c = (__m128i*)c;
     __m128i *__t1 = (__m128i*)t1;
     __m128i *__t2 = (__m128i*)t2;
@@ -96,7 +96,7 @@ static inline void _mzd_combine8(word *c, word const *t1, word const *t2, word c
 static inline void _mzd_combine4(word *c, word const *t1, word const *t2, word const *t3, word const *t4, wi_t wide) {
 #ifdef HAVE_SSE2
   /* assuming t1 ... t4 are aligned, but c might not be */
-  if (ALIGNMENT(c,16)==0) {
+  if (__M4RI_ALIGNMENT(c,16)==0) {
     __m128i *__c = (__m128i*)c;
     __m128i *__t1 = (__m128i*)t1;
     __m128i *__t2 = (__m128i*)t2;
@@ -144,7 +144,7 @@ static inline void _mzd_combine4(word *c, word const *t1, word const *t2, word c
 static inline void _mzd_combine3(word *c, word const *t1, word const *t2, word const *t3, wi_t wide) {
 #ifdef HAVE_SSE2
   /* assuming t1 ... t3 are aligned, but c might not be */
-  if (ALIGNMENT(c,16)==0) {
+  if (__M4RI_ALIGNMENT(c,16)==0) {
     __m128i *__c = (__m128i*)c;
     __m128i *__t1 = (__m128i*)t1;
     __m128i *__t2 = (__m128i*)t2;
@@ -190,7 +190,7 @@ static inline void _mzd_combine3(word *c, word const *t1, word const *t2, word c
 static inline void _mzd_combine2(word *c, word const *t1, word const *t2, wi_t wide) {
 #ifdef HAVE_SSE2
   /* assuming t1 ... t2 are aligned, but c might not be */
-  if (ALIGNMENT(c,16)==0) {
+  if (__M4RI_ALIGNMENT(c,16)==0) {
     __m128i *__c = (__m128i*)c;
     __m128i *__t1 = (__m128i*)t1;
     __m128i *__t2 = (__m128i*)t2;
@@ -233,7 +233,7 @@ static inline void _mzd_combine(word *c, word const *t1, wi_t wide) {
 #ifdef HAVE_SSE2
   /* assuming c, t1 are alligned the same way */
 
-  if (ALIGNMENT(c,16)==8 && wide) {
+  if (__M4RI_ALIGNMENT(c,16)==8 && wide) {
     *c++ ^= *t1++;
     wide--;
   }
@@ -279,10 +279,10 @@ static inline void _mzd_combine(word *c, word const *t1, wi_t wide) {
 }
 
 
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
 #define _MZD_COMBINE _mzd_combine8(c, t1, t2, t3, t4, t5, t6, t7, t8, wide)
-#else //M4RM_GRAY8
+#else // __M4RI_M4RM_GRAY8
 #define _MZD_COMBINE _mzd_combine4(c, t1, t2, t3, t4, wide)
-#endif //M4RM_GRAY8
+#endif // __M4RI_M4RM_GRAY8
 
-#endif //XOR_H
+#endif // M4RI_XOR_H

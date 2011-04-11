@@ -47,7 +47,7 @@
  */
 
 static inline int _mzd_gauss_submatrix_full(mzd_t *A, rci_t r, rci_t c, rci_t end_row, int k) {
-  assert(k <= RADIX);
+  assert(k <= m4ri_radix);
   rci_t start_row = r;
   rci_t j;
   for (j = c; j < c + k; ++j) {
@@ -57,7 +57,7 @@ static inline int _mzd_gauss_submatrix_full(mzd_t *A, rci_t r, rci_t c, rci_t en
       word const tmp = mzd_read_bits(A, i, c, j - c + 1);
       if(tmp) {
         for (int l = 0; l < j - c; ++l)
-          if (GET_BIT(tmp, l))
+          if (__M4RI_GET_BIT(tmp, l))
             mzd_row_add_offset(A, i, r+l, c+l);
       
         /* pivot? */
@@ -155,7 +155,7 @@ static inline int _mzd_gauss_submatrix_top(mzd_t *A, rci_t r, rci_t c, int k) {
 }
 
 static inline void _mzd_copy_back_rows(mzd_t *A, mzd_t *U, rci_t r, rci_t c, int k) {
-  wi_t const startblock = c / RADIX;
+  wi_t const startblock = c / m4ri_radix;
   wi_t const width = A->width - startblock;
   for (int i = 0; i < k; ++i) {
     word const *const src = U->rows[i] + startblock;
@@ -168,20 +168,20 @@ static inline void _mzd_copy_back_rows(mzd_t *A, mzd_t *U, rci_t r, rci_t c, int
 
 void mzd_make_table(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L)
 {
-  wi_t const homeblock = (c + M->offset) / RADIX;
-  word const mask_end = LEFT_BITMASK((M->ncols + M->offset) % RADIX);
-  word const pure_mask_begin = RIGHT_BITMASK(RADIX - ((c + M->offset) % RADIX));
+  wi_t const homeblock = (c + M->offset) / m4ri_radix;
+  word const mask_end = __M4RI_LEFT_BITMASK((M->ncols + M->offset) % m4ri_radix);
+  word const pure_mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - ((c + M->offset) % m4ri_radix));
   word const mask_begin = (M->width - homeblock != 1) ? pure_mask_begin : pure_mask_begin & mask_end;
   wi_t const wide = M->width - homeblock;
 
-  int const twokay = TWOPOW(k);
+  int const twokay = __M4RI_TWOPOW(k);
   L[0] = 0;
   for (rci_t i = 1; i < twokay; ++i) {
     word *ti = T->rows[i] + homeblock;
     word *ti1 = T->rows[i-1] + homeblock;   
 
-    rci_t const rowneeded = r + codebook[k]->inc[i - 1];
-    int const id = codebook[k]->ord[i];
+    rci_t const rowneeded = r + m4ri_codebook[k]->inc[i - 1];
+    int const id = m4ri_codebook[k]->ord[i];
     L[id] = i;
 
     if (rowneeded >= M->nrows)
@@ -216,13 +216,13 @@ void mzd_make_table(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L)
 }
 
 void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t *T, rci_t *L) {
-  wi_t const block = startcol / RADIX;
+  wi_t const block = startcol / m4ri_radix;
   wi_t const wide = M->width - block;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
   int const entry_point = wide % 8;	/* Unrolled loop entry point */
 
   if(k == 1) {
-    word const bm = ONE << (startcol % RADIX);
+    word const bm = m4ri_one << (startcol % m4ri_radix);
 
     rci_t r;
     for (r = startrow; r + 2 <= stoprow; r += 2) {
@@ -343,7 +343,7 @@ void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, i
 }
 
 void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1) {
-  wi_t const blocknum = startcol / RADIX;
+  wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
   int const entry_point = wide % 8;	/* Unrolled loop entry point */
@@ -352,7 +352,7 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   int const kb = k - k / 2;
 
 #ifdef HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) // MAX((CPU_L1_CACHE >> 3) / wide,
+#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) // MAX((__M4RI_CPU_L1_CACHE >> 3) / wide,
 #endif
   for(rci_t r = startrow; r < stoprow; ++r) {
     rci_t const x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
@@ -379,7 +379,7 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 }
 
 void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1, mzd_t *T2, rci_t *L2) {
-  wi_t const blocknum = startcol / RADIX;
+  wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
   int const entry_point = wide % 8;	/* Unrolled loop entry point */
@@ -422,7 +422,7 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 
 void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, 
                        mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1, mzd_t *T2, rci_t *L2, mzd_t *T3, rci_t *L3) {
-  wi_t const blocknum = startcol / RADIX;
+  wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
   int const entry_point = wide % 8;	/* Unrolled loop entry point */
@@ -469,7 +469,7 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, 
                        mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1, mzd_t *T2, rci_t *L2, mzd_t *T3, rci_t *L3,
                        mzd_t *T4, rci_t *L4) {
-  wi_t const blocknum = startcol / RADIX;
+  wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
   int const entry_point = wide % 8;	/* Unrolled loop entry point */
@@ -520,7 +520,7 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, 
                        mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1, mzd_t *T2, rci_t *L2, mzd_t *T3, rci_t *L3,
                        mzd_t *T4, rci_t *L4, mzd_t *T5, rci_t *L5) {
-  wi_t const blocknum = startcol / RADIX;
+  wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
   int const entry_point = wide % 8;	/* Unrolled loop entry point */
@@ -617,24 +617,24 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
     k = m4ri_opt_k(A->nrows, ncols, 0);
     if (k >= 7)
       k = 7;
-    if (0.75 * TWOPOW(k) * ncols > CPU_L2_CACHE / 2.0)
+    if (0.75 * __M4RI_TWOPOW(k) * ncols > __M4RI_CPU_L2_CACHE / 2.0)
       k -= 1;
   }
   int kk = 6 * k;
 
   mzd_t *U  = mzd_init(kk, ncols);
-  mzd_t *T0 = mzd_init(TWOPOW(k), ncols);
-  mzd_t *T1 = mzd_init(TWOPOW(k), ncols);
-  mzd_t *T2 = mzd_init(TWOPOW(k), ncols);
-  mzd_t *T3 = mzd_init(TWOPOW(k), ncols);
-  mzd_t *T4 = mzd_init(TWOPOW(k), ncols);
-  mzd_t *T5 = mzd_init(TWOPOW(k), ncols);
-  rci_t *L0 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L1 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L2 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L3 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L4 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L5 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
+  mzd_t *T0 = mzd_init(__M4RI_TWOPOW(k), ncols);
+  mzd_t *T1 = mzd_init(__M4RI_TWOPOW(k), ncols);
+  mzd_t *T2 = mzd_init(__M4RI_TWOPOW(k), ncols);
+  mzd_t *T3 = mzd_init(__M4RI_TWOPOW(k), ncols);
+  mzd_t *T4 = mzd_init(__M4RI_TWOPOW(k), ncols);
+  mzd_t *T5 = mzd_init(__M4RI_TWOPOW(k), ncols);
+  rci_t *L0 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L1 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L2 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L3 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L4 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L5 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
 
   rci_t last_check = 0;
   rci_t r = 0;
@@ -642,8 +642,8 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
 
   if (heuristic) {
     if (c < ncols && r < A->nrows && _mzd_density(A, 32, 0, 0) >= threshold) {
-      wi_t const tmp = c / RADIX;
-      rci_t const tmp2 = tmp * RADIX;
+      wi_t const tmp = c / m4ri_radix;
+      rci_t const tmp2 = tmp * m4ri_radix;
       mzd_t *Abar = mzd_init_window(A, r, tmp2, A->nrows, ncols);
       r += mzd_echelonize_pluq(Abar, full);
       mzd_free(Abar);
@@ -655,7 +655,7 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
     if (heuristic && c > (last_check + 256)) {
       last_check = c;
       if (c < ncols && r < A->nrows && _mzd_density(A, 32, r, c) >= threshold) {
-        mzd_t *Abar = mzd_init_window(A, r, (c / RADIX) * RADIX, A->nrows, ncols);
+        mzd_t *Abar = mzd_init_window(A, r, (c / m4ri_radix) * m4ri_radix, A->nrows, ncols);
         if (!full) {
           r += mzd_echelonize_pluq(Abar, full);
         } else {
@@ -821,24 +821,24 @@ rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r) {
     k = m4ri_opt_k(max_r, A->ncols, 0);
     if (k >= 7)
       k = 7;
-    if (0.75 * TWOPOW(k) *A->ncols > CPU_L2_CACHE / 2.0)
+    if (0.75 * __M4RI_TWOPOW(k) *A->ncols > __M4RI_CPU_L2_CACHE / 2.0)
       k -= 1;
   }
   int kk = 6 * k;
 
   mzd_t *U  = mzd_init(kk, A->ncols);
-  mzd_t *T0 = mzd_init(TWOPOW(k), A->ncols);
-  mzd_t *T1 = mzd_init(TWOPOW(k), A->ncols);
-  mzd_t *T2 = mzd_init(TWOPOW(k), A->ncols);
-  mzd_t *T3 = mzd_init(TWOPOW(k), A->ncols);
-  mzd_t *T4 = mzd_init(TWOPOW(k), A->ncols);
-  mzd_t *T5 = mzd_init(TWOPOW(k), A->ncols);
-  rci_t *L0 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L1 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L2 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L3 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L4 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L5 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
+  mzd_t *T0 = mzd_init(__M4RI_TWOPOW(k), A->ncols);
+  mzd_t *T1 = mzd_init(__M4RI_TWOPOW(k), A->ncols);
+  mzd_t *T2 = mzd_init(__M4RI_TWOPOW(k), A->ncols);
+  mzd_t *T3 = mzd_init(__M4RI_TWOPOW(k), A->ncols);
+  mzd_t *T4 = mzd_init(__M4RI_TWOPOW(k), A->ncols);
+  mzd_t *T5 = mzd_init(__M4RI_TWOPOW(k), A->ncols);
+  rci_t *L0 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L1 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L2 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L3 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L4 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L5 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
 
   while(c < ncols) {
     if(c+kk > A->ncols) {
@@ -1022,7 +1022,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
   rci_t x1, x2, x3, x4;
   word *t1, *t2, *t3, *t4;
 
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
   rci_t x5, x6, x7, x8;
   word *t5, *t6, *t7, *t8;
 #endif
@@ -1033,7 +1033,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
   rci_t const a_nc = A->ncols;
   rci_t const b_nc = B->ncols;
 
-  if (b_nc < RADIX-10 || a_nr < 16) {
+  if (b_nc < m4ri_radix-10 || a_nr < 16) {
     if(clear)
       return mzd_mul_naive(C, A, B);
     else
@@ -1047,16 +1047,16 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
     mzd_set_ui(C, 0);
   }
 
-  int const blocksize = MZD_MUL_BLOCKSIZE;
+  int const blocksize = __M4RI_MZD_MUL_BLOCKSIZE;
 
   if (k == 0) {
     k = m4ri_opt_k(blocksize, a_nc, b_nc);
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
     if (k > 3)
       k -= 2;
     /* reduce k further if that has a chance of hitting L1 */
-    size_t const tsize = 0.8 * TWOPOW(k) * b_nc;
-    if(CPU_L1_CACHE < tsize && tsize <= 2 * CPU_L1_CACHE)
+    size_t const tsize = 0.8 * __M4RI_TWOPOW(k) * b_nc;
+    if(__M4RI_CPU_L1_CACHE < tsize && tsize <= 2 * __M4RI_CPU_L1_CACHE)
       k -= 1;
 #else
     if (k > 2)
@@ -1064,34 +1064,34 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
 #endif
   }
 
-#ifndef M4RM_GRAY8
-  rci_t *buffer = (rci_t*)m4ri_mm_malloc(4 * TWOPOW(k) * sizeof(rci_t));
+#ifndef __M4RI_M4RM_GRAY8
+  rci_t *buffer = (rci_t*)m4ri_mm_malloc(4 * __M4RI_TWOPOW(k) * sizeof(rci_t));
 #else
-  rci_t *buffer = (rci_t*)m4ri_mm_malloc(8 * TWOPOW(k) * sizeof(rci_t));
+  rci_t *buffer = (rci_t*)m4ri_mm_malloc(8 * __M4RI_TWOPOW(k) * sizeof(rci_t));
 #endif
 
-  mzd_t *T1 = mzd_init(TWOPOW(k), b_nc);
+  mzd_t *T1 = mzd_init(__M4RI_TWOPOW(k), b_nc);
   rci_t *L1 = buffer;
-  mzd_t *T2 = mzd_init(TWOPOW(k), b_nc);
-  rci_t *L2 = buffer + 1*TWOPOW(k);
-  mzd_t *T3 = mzd_init(TWOPOW(k), b_nc);
-  rci_t *L3 = buffer + 2*TWOPOW(k);
-  mzd_t *T4 = mzd_init(TWOPOW(k), b_nc);
-  rci_t *L4 = buffer + 3*TWOPOW(k);
+  mzd_t *T2 = mzd_init(__M4RI_TWOPOW(k), b_nc);
+  rci_t *L2 = buffer + 1*__M4RI_TWOPOW(k);
+  mzd_t *T3 = mzd_init(__M4RI_TWOPOW(k), b_nc);
+  rci_t *L3 = buffer + 2*__M4RI_TWOPOW(k);
+  mzd_t *T4 = mzd_init(__M4RI_TWOPOW(k), b_nc);
+  rci_t *L4 = buffer + 3*__M4RI_TWOPOW(k);
 
-#ifdef M4RM_GRAY8
-  mzd_t *T5 = mzd_init(TWOPOW(k), b_nc);
-  rci_t *L5 = buffer + 4*TWOPOW(k);
-  mzd_t *T6 = mzd_init(TWOPOW(k), b_nc);
-  rci_t *L6 = buffer + 5*TWOPOW(k);
-  mzd_t *T7 = mzd_init(TWOPOW(k), b_nc);
-  rci_t *L7 = buffer + 6*TWOPOW(k);
-  mzd_t *T8 = mzd_init(TWOPOW(k), b_nc);
-  rci_t *L8 = buffer + 7*TWOPOW(k);
+#ifdef __M4RI_M4RM_GRAY8
+  mzd_t *T5 = mzd_init(__M4RI_TWOPOW(k), b_nc);
+  rci_t *L5 = buffer + 4*__M4RI_TWOPOW(k);
+  mzd_t *T6 = mzd_init(__M4RI_TWOPOW(k), b_nc);
+  rci_t *L6 = buffer + 5*__M4RI_TWOPOW(k);
+  mzd_t *T7 = mzd_init(__M4RI_TWOPOW(k), b_nc);
+  rci_t *L7 = buffer + 6*__M4RI_TWOPOW(k);
+  mzd_t *T8 = mzd_init(__M4RI_TWOPOW(k), b_nc);
+  rci_t *L8 = buffer + 7*__M4RI_TWOPOW(k);
 #endif
 
   /* process stuff that fits into multiple of k first, but blockwise (babystep-giantstep)*/
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
   int const kk = 8 * k;
 #else
   int const kk = 4 * k;
@@ -1105,7 +1105,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
       mzd_make_table( B, kk*i+k, 0, k, T2, L2);
       mzd_make_table( B, kk*i+k+k, 0, k, T3, L3);
       mzd_make_table( B, kk*i+k+k+k, 0, k, T4, L4);
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
       mzd_make_table( B, kk*i+k+k+k+k, 0, k, T5, L5);
       mzd_make_table( B, kk*i+k+k+k+k+k, 0, k, T6, L6);
       mzd_make_table( B, kk*i+k+k+k+k+k+k, 0, k, T7, L7);
@@ -1118,7 +1118,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
         x2 = L2[ mzd_read_bits_int(A, j, kk*i+k, k) ];
         x3 = L3[ mzd_read_bits_int(A, j, kk*i+k+k, k) ];
         x4 = L4[ mzd_read_bits_int(A, j, kk*i+k+k+k, k) ];
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
         x5 = L5[ mzd_read_bits_int(A, j, kk*i+k+k+k+k, k) ];
         x6 = L6[ mzd_read_bits_int(A, j, kk*i+k+k+k+k+k, k) ];
         x7 = L7[ mzd_read_bits_int(A, j, kk*i+k+k+k+k+k+k, k) ];
@@ -1129,7 +1129,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
         t2 = T2->rows[x2];
         t3 = T3->rows[x3];
         t4 = T4->rows[x4];
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
         t5 = T5->rows[x5];
         t6 = T6->rows[x6];
         t7 = T7->rows[x7];
@@ -1145,7 +1145,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
     mzd_make_table( B, kk*i+k, 0, k, T2, L2);
     mzd_make_table( B, kk*i+k+k, 0, k, T3, L3);
     mzd_make_table( B, kk*i+k+k+k, 0, k, T4, L4);
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
     mzd_make_table( B, kk*i+k+k+k+k, 0, k, T5, L5);
     mzd_make_table( B, kk*i+k+k+k+k+k, 0, k, T6, L6);
     mzd_make_table( B, kk*i+k+k+k+k+k+k, 0, k, T7, L7);
@@ -1157,7 +1157,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
       x2 = L2[ mzd_read_bits_int(A, j, kk*i+k, k) ];
       x3 = L3[ mzd_read_bits_int(A, j, kk*i+k+k, k) ];
       x4 = L4[ mzd_read_bits_int(A, j, kk*i+k+k+k, k) ];
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
       x5 = L5[ mzd_read_bits_int(A, j, kk*i+k+k+k+k, k) ];
       x6 = L6[ mzd_read_bits_int(A, j, kk*i+k+k+k+k+k, k) ];
       x7 = L7[ mzd_read_bits_int(A, j, kk*i+k+k+k+k+k+k, k) ];
@@ -1168,7 +1168,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
       t2 = T2->rows[x2];
       t3 = T3->rows[x3];
       t4 = T4->rows[x4];
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
       t5 = T5->rows[x5];
       t6 = T6->rows[x6];
       t7 = T7->rows[x7];
@@ -1210,7 +1210,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
   mzd_free(T2);
   mzd_free(T3);
   mzd_free(T4);
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
   mzd_free(T5);
   mzd_free(T6);
   mzd_free(T7);
@@ -1256,26 +1256,26 @@ void _mzd_trsm_upper_left_even_submatrix(mzd_t *U, mzd_t *B, rci_t const start_r
   }
 }
 
-//#undef M4RM_GRAY8
+//#undef __M4RI_M4RM_GRAY8
 
 void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, int k) {
   wi_t const wide = B->width;
-  int const blocksize = MZD_MUL_BLOCKSIZE;
+  int const blocksize = __M4RI_MZD_MUL_BLOCKSIZE;
 
-  word mask_begin = RIGHT_BITMASK(RADIX - B->offset);
-  word mask_end = LEFT_BITMASK((B->ncols + B->offset) % RADIX);
+  word mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - B->offset);
+  word mask_end = __M4RI_LEFT_BITMASK((B->ncols + B->offset) % m4ri_radix);
   
   if (B->width == 1)
     mask_begin = mask_begin & mask_end;
 
   if (k == 0) {
     k = m4ri_opt_k(blocksize, B->nrows, B->ncols);
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
     if (k > 3)
       k -= 2;
     /* reduce k further if that has a chance of hitting L1 */
-    size_t const tsize = (int)(0.8 * (TWOPOW(k) * B->nrows));
-    if(CPU_L1_CACHE < tsize && tsize <= 2 * CPU_L1_CACHE)
+    size_t const tsize = (int)(0.8 * (__M4RI_TWOPOW(k) * B->nrows));
+    if(__M4RI_CPU_L1_CACHE < tsize && tsize <= 2 * __M4RI_CPU_L1_CACHE)
       k -= 1;
 #else
     if (k > 2)
@@ -1283,29 +1283,29 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, int k) {
 #endif
   }
 
-  mzd_t *T0 = mzd_init(TWOPOW(k), B->ncols + B->offset);
-  mzd_t *T1 = mzd_init(TWOPOW(k), B->ncols + B->offset);
-  mzd_t *T2 = mzd_init(TWOPOW(k), B->ncols + B->offset);
-  mzd_t *T3 = mzd_init(TWOPOW(k), B->ncols + B->offset);
-#ifdef M4RM_GRAY8
-  mzd_t *T4 = mzd_init(TWOPOW(k), B->ncols + B->offset);
-  mzd_t *T5 = mzd_init(TWOPOW(k), B->ncols + B->offset);
-  mzd_t *T6 = mzd_init(TWOPOW(k), B->ncols + B->offset);
-  mzd_t *T7 = mzd_init(TWOPOW(k), B->ncols + B->offset);
+  mzd_t *T0 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
+  mzd_t *T1 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
+  mzd_t *T2 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
+  mzd_t *T3 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
+#ifdef __M4RI_M4RM_GRAY8
+  mzd_t *T4 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
+  mzd_t *T5 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
+  mzd_t *T6 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
+  mzd_t *T7 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
 #endif
 
-  rci_t *L0 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L1 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L2 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L3 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-#ifdef M4RM_GRAY8
-  rci_t *L4 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L5 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L6 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
-  rci_t *L7 = (rci_t*)m4ri_mm_calloc(TWOPOW(k), sizeof(rci_t));
+  rci_t *L0 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L1 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L2 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L3 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+#ifdef __M4RI_M4RM_GRAY8
+  rci_t *L4 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L5 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L6 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *L7 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
 #endif
 
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
   int kk = 8 * k;
 #else
   int kk = 4 * k;
@@ -1316,7 +1316,7 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, int k) {
 
     _mzd_trsm_upper_left_even_submatrix(U, B, B->nrows-i-kk, kk, mask_begin, mask_end);
 
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
     mzd_make_table(B, B->nrows - i - 8*k, 0, k, T7, L7);
     mzd_make_table(B, B->nrows - i - 7*k, 0, k, T6, L6);
     mzd_make_table(B, B->nrows - i - 6*k, 0, k, T5, L5);
@@ -1328,7 +1328,7 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, int k) {
     mzd_make_table(B, B->nrows - i - 1*k, 0, k, T0, L0);
 
     for(rci_t j = 0; j < B->nrows - i - kk; ++j) {
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
       rci_t const x7 = L7[ mzd_read_bits_int(U, j, B->nrows - i - 8*k, k) ];
       rci_t const x6 = L6[ mzd_read_bits_int(U, j, B->nrows - i - 7*k, k) ];
       rci_t const x5 = L5[ mzd_read_bits_int(U, j, B->nrows - i - 6*k, k) ];
@@ -1341,7 +1341,7 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, int k) {
 
 
       word *b = B->rows[j];
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
       word *t7 = T7->rows[x7];
       word *t6 = T6->rows[x6];
       word *t5 = T5->rows[x5];
@@ -1352,7 +1352,7 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, int k) {
       word *t1 = T1->rows[x1];
       word *t0 = T0->rows[x0];
 
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
       _mzd_combine8(b, t0, t1, t2, t3, t4, t5, t6, t7, wide);
       //b[wide-1] ^= (t0[wide-1] ^ t1[wide-1] ^ t2[wide-1] ^ t3[wide-1] ^ t4[wide-1] ^ t5[wide-1] ^ t6[wide-1] ^ t7[wide-1]) & mask_end;
 #else
@@ -1387,7 +1387,7 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, int k) {
   mzd_free(T1);
   mzd_free(T2);
   mzd_free(T3);
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
   mzd_free(T4);
   mzd_free(T5);
   mzd_free(T6);
@@ -1398,7 +1398,7 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, int k) {
   m4ri_mm_free(L1);
   m4ri_mm_free(L2);
   m4ri_mm_free(L3);
-#ifdef M4RM_GRAY8
+#ifdef __M4RI_M4RM_GRAY8
   m4ri_mm_free(L4);
   m4ri_mm_free(L5);
   m4ri_mm_free(L6);

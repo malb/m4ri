@@ -748,8 +748,8 @@ double complexity1(struct test_params *p, char code)
     case 'n':
       return p->n;			// Linear with the number of columns of the matrix.
     case 'W':
-      assert(p->n > RADIX * p->wrd[0]);	// Linear with the number of processed columns.
-      return p->n - RADIX * p->wrd[0];
+      assert(p->n > m4ri_radix * p->wrd[0]);	// Linear with the number of processed columns.
+      return p->n - m4ri_radix * p->wrd[0];
     case 'D':
       assert(p->row[0] < p->row[1]);
       return p->row[1] - p->row[0];	// Linear with the number of rows between start_row and stop_row.

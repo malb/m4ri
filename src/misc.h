@@ -8,8 +8,9 @@
  * \author Carlo Wood <carlo@alinoe.com>
  */
 
-#ifndef MISC_H
-#define MISC_H
+#ifndef M4RI_MISC_H
+#define M4RI_MISC_H
+
 /*******************************************************************
 *
 *                 M4RI: Linear Algebra over GF(2)
@@ -91,7 +92,7 @@ typedef uint64_t word;
  * No error checking is done that the most significant bits in w are zero.
  */
 
-#define CONVERT_TO_INT(w) ((int)(w))
+#define __M4RI_CONVERT_TO_INT(w) ((int)(w))
 
 /*
  * Explicit conversion of a word, representing 64 columns, to a BIT
@@ -99,23 +100,23 @@ typedef uint64_t word;
  * No error checking is done that only the least significant bit is set (if any).
  */
 
-#define CONVERT_TO_BIT(w) ((BIT)(w))
+#define __M4RI_CONVERT_TO_BIT(w) ((BIT)(w))
 
 /*
  * Explicit conversion of a word, representing 64 columns, to an uint64_t.
  *
  * The returned value is the underlaying integer representation of these 64 columns,
  * meaning in particular that if val is an uint64_t then
- * CONVERT_TO_UINT64_T(CONVERT_TO_WORD(val)) == val.
+ * __M4RI_CONVERT_TO_UINT64_T(__M4RI_CONVERT_TO_WORD(val)) == val.
  */
 
-#define CONVERT_TO_UINT64_T(w) (w)
+#define __M4RI_CONVERT_TO_UINT64_T(w) (w)
 
 /*
  * Explicit conversion of an integer to a word.
  */
 
-#define CONVERT_TO_WORD(i) ((word)(i))
+#define __M4RI_CONVERT_TO_WORD(i) ((word)(i))
 
 #endif
 
@@ -123,19 +124,19 @@ typedef uint64_t word;
  * \brief The number of bits in a word.
  */
 
-static int const RADIX = 64;
+static int const m4ri_radix = 64;
 
 /**
  * \brief The number one as a word.
  */
 
-static word const ONE = CONVERT_TO_WORD(1);
+static word const m4ri_one = __M4RI_CONVERT_TO_WORD(1);
 
 /**
  * \brief A word with all bits set.
  */
 
-static word const FFFF = CONVERT_TO_WORD(-1);
+static word const m4ri_ffff = __M4RI_CONVERT_TO_WORD(-1);
 
 /**
  * \brief Return the maximal element of x and y
@@ -160,25 +161,20 @@ static word const FFFF = CONVERT_TO_WORD(-1);
 #endif
 
 /**
- * \brief Return r such that x elements fit into r blocks of length y.
- *
- * \param x Number of elements
- * \param y Block size
- */
-
-#define DIV_CEIL(x,y) (((x) % (y)) ? (x) / (y) + 1 : (x) / (y))
-
-/**
  *\brief Pretty for 1.
  */ 
 
+#ifndef TRUE
 #define TRUE 1
+#endif
 
 /**
  *\brief Pretty for 0.
  */ 
 
+#ifndef FALSE
 #define FALSE 0
+#endif
 
 /**
  * \brief $2^i$
@@ -186,60 +182,60 @@ static word const FFFF = CONVERT_TO_WORD(-1);
  * \param i Integer.
  */ 
 
-#define TWOPOW(i) ((uint64_t)1 << (i))
+#define __M4RI_TWOPOW(i) ((uint64_t)1 << (i))
 
 /**
  * \brief Clear the bit spot (counting from the left) in the word w
  * 
  * \param w Word
- * \param spot Integer with 0 <= spot < RADIX
+ * \param spot Integer with 0 <= spot < m4ri_radix
  */
 
-#define CLR_BIT(w, spot) ((w) &= ~(ONE << (spot))
+#define __M4RI_CLR_BIT(w, spot) ((w) &= ~(m4ri_one << (spot))
 
 /**
  * \brief Set the bit spot (counting from the left) in the word w
  * 
  * \param w Word
- * \param spot Integer with 0 <= spot < RADIX
+ * \param spot Integer with 0 <= spot < m4ri_radix
  */
 
-#define SET_BIT(w, spot) ((w) |= (ONE << (spot)))
+#define __M4RI_SET_BIT(w, spot) ((w) |= (m4ri_one << (spot)))
 
 /**
  * \brief Get the bit spot (counting from the left) in the word w
  * 
  * \param w Word
- * \param spot Integer with 0 <= spot < RADIX
+ * \param spot Integer with 0 <= spot < m4ri_radix
  */
 
-#define GET_BIT(w, spot) CONVERT_TO_BIT(((w) >> (spot)) & ONE)
+#define __M4RI_GET_BIT(w, spot) __M4RI_CONVERT_TO_BIT(((w) >> (spot)) & m4ri_one)
 
 /**
  * \brief Write the value to the bit spot in the word w
  * 
  * \param w Word.
- * \param spot Integer with 0 <= spot < RADIX.
+ * \param spot Integer with 0 <= spot < m4ri_radix.
  * \param value Either 0 or 1.
  */
 
-#define WRITE_BIT(w, spot, value) ((w) = (((w) & ~(ONE << (spot))) | (-CONVERT_TO_WORD(value) & (ONE << (spot)))))
+#define __M4RI_WRITE_BIT(w, spot, value) ((w) = (((w) & ~(m4ri_one << (spot))) | (-__M4RI_CONVERT_TO_WORD(value) & (m4ri_one << (spot)))))
 
 /**
  * \brief Flip the spot in the word w
  *
  * \param w Word.
- * \param spot Integer with 0 <= spot < RADIX.
+ * \param spot Integer with 0 <= spot < m4ri_radix.
  */
 
-#define FLIP_BIT(w, spot) ((w) ^= (ONE << (spot)))
+#define __M4RI_FLIP_BIT(w, spot) ((w) ^= (m4ri_one << (spot)))
 
 /**
-* \brief create a bit mask to zero out all but the (n - 1) % RADIX + 1 leftmost bits.
+* \brief create a bit mask to zero out all but the (n - 1) % m4ri_radix + 1 leftmost bits.
 *
 * This function returns 1..64 bits, never zero bits.
 * This mask is mainly used to mask the valid bits in the most significant word,
-* by using LEFT_BITMASK((M->ncols + M->offset) % RADIX).
+* by using __M4RI_LEFT_BITMASK((M->ncols + M->offset) % m4ri_radix).
 * In other words, the set bits represent the columns with the lowest index in the word.
 *
 *  Thus,
@@ -252,20 +248,20 @@ static word const FFFF = CONVERT_TO_WORD(-1);
 * 62    0011111111111111111111111111111111111111111111111111111111111111
 * 63	0111111111111111111111111111111111111111111111111111111111111111
 *
-* Note that n == 64 is only passed from MIDDLE_BITMASK, and still works
+* Note that n == 64 is only passed from __M4RI_MIDDLE_BITMASK, and still works
 * (behaves the same as n == 0): the input is modulo 64.
 *
-* \param n Integer with 0 <= n <= RADIX
+* \param n Integer with 0 <= n <= m4ri_radix
 */
 
-#define LEFT_BITMASK(n) (FFFF >> (RADIX - (n)) % RADIX)
+#define __M4RI_LEFT_BITMASK(n) (m4ri_ffff >> (m4ri_radix - (n)) % m4ri_radix)
 
 /**
 * \brief create a bit mask to zero out all but the n rightmost bits.
 *
 * This function returns 1..64 bits, never zero bits.
 * This mask is mainly used to mask the n valid bits in the least significant word
-* with valid bits by using RIGHT_BITMASK(RADIX - M->offset % RADIX).
+* with valid bits by using __M4RI_RIGHT_BITMASK(m4ri_radix - M->offset % m4ri_radix).
 * In other words, the set bits represent the columns with the highest index in the word.
 *
 *  Thus,
@@ -280,27 +276,27 @@ static word const FFFF = CONVERT_TO_WORD(-1);
 *
 * Note that n == 0 is never passed and would fail.
 *
-* \param n Integer with 0 < n <= RADIX
+* \param n Integer with 0 < n <= m4ri_radix
 */
 
-#define RIGHT_BITMASK(n) (FFFF << (RADIX - (n)))
+#define __M4RI_RIGHT_BITMASK(n) (m4ri_ffff << (m4ri_radix - (n)))
 
 /**
-* \brief create a bit mask that is the combination of LEFT_BITMASK and RIGHT_BITMASK.
+* \brief create a bit mask that is the combination of __M4RI_LEFT_BITMASK and __M4RI_RIGHT_BITMASK.
 *
 * This function returns 1..64 bits, never zero bits.
 * This mask is mainly used to mask the n valid bits in the only word with valid bits,
-* when M->ncols + M->offset <= RADIX), by using MIDDLE_BITMASK(M->ncols, M->offset).
-* It is equivalent to LEFT_BITMASK(n + offset) & RIGHT_BITMASK(RADIX - offset).
+* when M->ncols + M->offset <= m4ri_radix), by using __M4RI_MIDDLE_BITMASK(M->ncols, M->offset).
+* It is equivalent to __M4RI_LEFT_BITMASK(n + offset) & __M4RI_RIGHT_BITMASK(m4ri_radix - offset).
 * In other words, the set bits represent the valid columns in the word.
 *
-* Note that when n == RADIX (and thus offset == 0) then LEFT_BITMASK is called with n == 64.
+* Note that when n == m4ri_radix (and thus offset == 0) then __M4RI_LEFT_BITMASK is called with n == 64.
 *
-* \param n Integer with 0 < n <= RADIX - offset
-* \param offset Column offset, with 0 <= offset < RADIX
+* \param n Integer with 0 < n <= m4ri_radix - offset
+* \param offset Column offset, with 0 <= offset < m4ri_radix
 */
 
-#define MIDDLE_BITMASK(n, offset) (LEFT_BITMASK(n) << (offset))
+#define __M4RI_MIDDLE_BITMASK(n, offset) (__M4RI_LEFT_BITMASK(n) << (offset))
 
 /**
  * \brief swap bits in the word v
@@ -326,7 +322,7 @@ static inline word swap_bits(word v) {
  * \param n
  */
 
-#define ALIGNMENT(addr, n) (((unsigned long)(addr))%(n))
+#define __M4RI_ALIGNMENT(addr, n) (((unsigned long)(addr))%(n))
 
 /**
  * \brief Test for gcc >= maj.min, as per __GNUC_PREREQ in glibc
@@ -360,10 +356,10 @@ static inline word swap_bits(word v) {
  * \param b Word
  */
 
-static inline int lesser_LSB(word a, word b)
+static inline int m4ri_lesser_LSB(word a, word b)
 {
-  uint64_t const ia = CONVERT_TO_UINT64_T(a);
-  uint64_t const ib = CONVERT_TO_UINT64_T(b);
+  uint64_t const ia = __M4RI_CONVERT_TO_UINT64_T(a);
+  uint64_t const ib = __M4RI_CONVERT_TO_UINT64_T(b);
   /*
    * If a is zero then we should always return false, otherwise
    * if b is zero we should return true iff a has at least one bit set.
@@ -396,10 +392,10 @@ void m4ri_die(const char *errormessage, ...);
 /**
  * \brief Write a sting representing the word data to destination. 
  * 
- * \param destination Address of buffer of length at least RADIX*1.3
+ * \param destination Address of buffer of length at least m4ri_radix*1.3
  * \param data Source word
  * \param colon Insert a Colon after every 4-th bit. 
- * \warning Assumes destination has RADIX*1.3 bytes available 
+ * \warning Assumes destination has m4ri_radix*1.3 bytes available 
  */
 void m4ri_word_to_str( char *destination, word data, int colon);
 
@@ -469,15 +465,15 @@ void m4ri_fini(void);
  * determined by configure.
  */
 #define CPU_L2_CACHE 524288
-#endif //CPU_L2_CACHE
+#endif // CPU_L2_CACHE
 
-#if CPU_L1_CACHE == 0
+#if __M4RI_CPU_L1_CACHE == 0
 /**
  * Fix some standard value for L1 cache size if it couldn't be
  * determined by configure.
  */
-#define CPU_L1_CACHE 16384
-#endif //CPU_L1_CACHE
+#define __M4RI_CPU_L1_CACHE 16384
+#endif // __M4RI_CPU_L1_CACHE
 
 /**
  * \brief Calloc wrapper.
@@ -574,25 +570,24 @@ static inline void m4ri_mm_free(void *condemned, ...) {
  * This value must fit in an int, even though it's type is size_t.
  */
 
-#define MM_MAX_MALLOC (((size_t)1)<<30)
+#define __M4RI_MM_MAX_MALLOC (((size_t)1)<<30)
 
 /**
  * \brief Enable memory block cache (default: disabled)
  */
-#define ENABLE_MMC
-
+#define __M4RI_ENABLE_MMC
 
 /**
  * \brief Number of blocks that are cached.
  */
 
-#define M4RI_MMC_NBLOCKS 16
+#define __M4RI_MMC_NBLOCKS 16
 
 /**
  * \brief Maximal size of blocks stored in cache.
  */
 
-#define M4RI_MMC_THRESHOLD CPU_L2_CACHE
+#define __M4RI_MMC_THRESHOLD CPU_L2_CACHE
 
 /**
  * The mmc memory management functions check a cache for re-usable
@@ -616,7 +611,7 @@ typedef struct _mm_block {
  * The actual memory block cache.
  */
 
-extern mmb_t m4ri_mmc_cache[M4RI_MMC_NBLOCKS];
+extern mmb_t m4ri_mmc_cache[__M4RI_MMC_NBLOCKS];
 
 /**
  * \brief Return handle for locale memory management cache.
@@ -638,7 +633,7 @@ static inline mmb_t *m4ri_mmc_handle(void) {
 
 static inline void *m4ri_mmc_malloc(size_t size) {
 
-#ifdef ENABLE_MMC
+#ifdef __M4RI_ENABLE_MMC
   void *ret = NULL;
 #endif
 
@@ -647,10 +642,10 @@ static inline void *m4ri_mmc_malloc(size_t size) {
 {
 #endif
 
-#ifdef ENABLE_MMC
+#ifdef __M4RI_ENABLE_MMC
   mmb_t *mm = m4ri_mmc_handle();
-  if (size <= M4RI_MMC_THRESHOLD) {
-    for (int i = 0; i < M4RI_MMC_NBLOCKS; ++i) {
+  if (size <= __M4RI_MMC_THRESHOLD) {
+    for (int i = 0; i < __M4RI_MMC_NBLOCKS; ++i) {
       if(mm[i].size == size) {
         ret = mm[i].data;
         mm[i].data = NULL;
@@ -659,13 +654,13 @@ static inline void *m4ri_mmc_malloc(size_t size) {
       }
     }
   }
-#endif //ENABLE_MMC
+#endif // __M4RI_ENABLE_MMC
 
 #ifdef HAVE_OPENMP
  }
 #endif
 
-#ifdef ENABLE_MMC
+#ifdef __M4RI_ENABLE_MMC
  if (ret)
    return ret;
  else
@@ -706,11 +701,11 @@ static inline void m4ri_mmc_free(void *condemned, size_t size) {
 #pragma omp critical
 {
 #endif
-#ifdef ENABLE_MMC  
+#ifdef __M4RI_ENABLE_MMC  
   static int j = 0;
   mmb_t *mm = m4ri_mmc_handle();
-  if (size < M4RI_MMC_THRESHOLD) {
-    for(int i = 0; i < M4RI_MMC_NBLOCKS; ++i) {
+  if (size < __M4RI_MMC_THRESHOLD) {
+    for(int i = 0; i < __M4RI_MMC_NBLOCKS; ++i) {
       if(mm[i].size == 0) {
         mm[i].size = size;
         mm[i].data = condemned;
@@ -720,13 +715,13 @@ static inline void m4ri_mmc_free(void *condemned, size_t size) {
     m4ri_mm_free(mm[j].data);
     mm[j].size = size;
     mm[j].data = condemned;
-    j = (j+1) % M4RI_MMC_NBLOCKS;
+    j = (j+1) % __M4RI_MMC_NBLOCKS;
   } else {
     m4ri_mm_free(condemned);
   }
 #else
   m4ri_mm_free(condemned);
-#endif //ENABLE_MMC
+#endif // __M4RI_ENABLE_MMC
 #ifdef HAVE_OPENMP
  }
 #endif
@@ -747,7 +742,7 @@ static inline void m4ri_mmc_cleanup(void) {
 {
 #endif
   mmb_t *mm = m4ri_mmc_handle();
-  for(int i = 0; i < M4RI_MMC_NBLOCKS; ++i) {
+  for(int i = 0; i < __M4RI_MMC_NBLOCKS; ++i) {
     if (mm[i].size)
       m4ri_mm_free(mm[i].data);
     mm[i].size = 0;
@@ -757,4 +752,4 @@ static inline void m4ri_mmc_cleanup(void) {
 #endif
 }
 
-#endif //MISC_H
+#endif // M4RI_MISC_H

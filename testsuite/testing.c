@@ -32,31 +32,31 @@ int mzd_check_pattern(mzd_t *A, rci_t m, rci_t n, rci_t offset, word pattern) {
 
     } else {
 
-      for(rci_t j=0; j < (offset/RADIX); j++)
+      for(rci_t j=0; j < (offset/m4ri_radix); j++)
         if(A->rows[i][j] ^ pattern) {
           return 1;
         }
 
-      if ( (offset/RADIX) == (offset+n)/RADIX ) {
-        word const mask = ~MIDDLE_BITMASK(m, offset%RADIX);
-        if( (A->rows[i][offset/RADIX] ^ pattern) & mask ) {
+      if ( (offset/m4ri_radix) == (offset+n)/m4ri_radix ) {
+        word const mask = ~__M4RI_MIDDLE_BITMASK(m, offset%m4ri_radix);
+        if( (A->rows[i][offset/m4ri_radix] ^ pattern) & mask ) {
           return 1;
         }
 
       } else {
-        word const mask_begin = ~RIGHT_BITMASK(RADIX - offset%RADIX);
-        word const mask_end = ~LEFT_BITMASK((n + offset) % RADIX);
+        word const mask_begin = ~__M4RI_RIGHT_BITMASK(m4ri_radix - offset%m4ri_radix);
+        word const mask_end = ~__M4RI_LEFT_BITMASK((n + offset) % m4ri_radix);
 
-        if( (A->rows[i][offset/RADIX] ^ pattern) & mask_begin ) {
+        if( (A->rows[i][offset/m4ri_radix] ^ pattern) & mask_begin ) {
           return 1;
         }
 
-        if( (A->rows[i][(offset+n)/RADIX] ^ pattern) & mask_end ) {
+        if( (A->rows[i][(offset+n)/m4ri_radix] ^ pattern) & mask_end ) {
           return 1;       
         }
       }
       
-      for(rci_t j=(offset+n)/RADIX+1; j<A->width; j++) 
+      for(rci_t j=(offset+n)/m4ri_radix+1; j<A->width; j++) 
         if(A->rows[i][j] ^ pattern) {
           return 1;
         }

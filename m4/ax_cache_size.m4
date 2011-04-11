@@ -10,13 +10,13 @@
 #
 #   Find L1 and L2 caches size by reading the corresponding file on UNIX or
 #   by requesting cpuid. The results are available in the defines
-#   CPU_L1_CACHE and CPU_L2_CACHE.
+#   __M4RI_CPU_L1_CACHE and __M4RI_CPU_L2_CACHE.
 #
 #   This macro depends on AX_GCC_X86_CPUID, AC_PROG_SED, and AX_CPU_VENDOR.
 #
 # LAST MODIFICATION
 #
-#   2008-04-12
+#   2011-04-11
 #
 # COPYLEFT
 #
@@ -117,6 +117,6 @@ AC_DEFUN([AX_CACHE_SIZE],
     ax_l2_size=$(($ax_l2_size*1024))
     AC_MSG_RESULT( $ax_l2_size Bytes)
 
-    AC_DEFINE_UNQUOTED([CPU_L1_CACHE], ${ax_l1_size}, [L1 cache size (in Bytes)])
-    AC_DEFINE_UNQUOTED([CPU_L2_CACHE], ${ax_l2_size}, [L2 cache size (in Bytes)])
+    AC_DEFINE_UNQUOTED([__M4RI_CPU_L1_CACHE], ${ax_l1_size}, [L1 cache size (in Bytes)])
+    AC_DEFINE_UNQUOTED([__M4RI_CPU_L2_CACHE], ${ax_l2_size}, [L2 cache size (in Bytes)])
 ])

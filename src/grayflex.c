@@ -26,7 +26,7 @@
 #include "misc.h"
 #include "grayflex.h"
 
-code **codebook = NULL;
+code **m4ri_codebook = NULL;
 
 int m4ri_gray_code(int number, int length) {
   int lastbit = 0;
@@ -40,42 +40,42 @@ int m4ri_gray_code(int number, int length) {
 }
 
 void m4ri_build_code(int *ord, int *inc, int l) {
-  for(int i = 0 ; i < (int)TWOPOW(l); ++i) {
+  for(int i = 0 ; i < (int)__M4RI_TWOPOW(l); ++i) {
     ord[i] = m4ri_gray_code(i, l);
   }
 
   for(int i = l; i > 0; --i) {
-    for(int j = 1; j < (int)TWOPOW(i) + 1; ++j) {
-      inc[j * TWOPOW(l - i) - 1] = l - i;
+    for(int j = 1; j < (int)__M4RI_TWOPOW(i) + 1; ++j) {
+      inc[j * __M4RI_TWOPOW(l - i) - 1] = l - i;
     }
   }
 }
 
 void m4ri_build_all_codes() {
-  if (codebook) {
+  if (m4ri_codebook) {
     return;
   }
-  codebook=(code**)m4ri_mm_calloc(MAXKAY+1, sizeof(code*));
+  m4ri_codebook=(code**)m4ri_mm_calloc(__M4RI_MAXKAY + 1, sizeof(code*));
   
-  for(int k = 1; k < MAXKAY + 1; ++k) {
-    codebook[k] = (code*)m4ri_mm_calloc(1, sizeof(code));
-    codebook[k]->ord =(int*)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
-    codebook[k]->inc =(int*)m4ri_mm_calloc(TWOPOW(k), sizeof(int));
-    m4ri_build_code(codebook[k]->ord, codebook[k]->inc, k);
+  for(int k = 1; k < __M4RI_MAXKAY + 1; ++k) {
+    m4ri_codebook[k] = (code*)m4ri_mm_calloc(1, sizeof(code));
+    m4ri_codebook[k]->ord =(int*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(int));
+    m4ri_codebook[k]->inc =(int*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(int));
+    m4ri_build_code(m4ri_codebook[k]->ord, m4ri_codebook[k]->inc, k);
   }
 }
 
 void m4ri_destroy_all_codes() {
-  if (!codebook) {
+  if (!m4ri_codebook) {
     return;
   }
-  for(int i = 1; i < MAXKAY + 1; ++i) {
-    m4ri_mm_free(codebook[i]->inc);
-    m4ri_mm_free(codebook[i]->ord);
-    m4ri_mm_free(codebook[i]);
+  for(int i = 1; i < __M4RI_MAXKAY + 1; ++i) {
+    m4ri_mm_free(m4ri_codebook[i]->inc);
+    m4ri_mm_free(m4ri_codebook[i]->ord);
+    m4ri_mm_free(m4ri_codebook[i]);
   }
-  m4ri_mm_free(codebook);
-  codebook = NULL;
+  m4ri_mm_free(m4ri_codebook);
+  m4ri_codebook = NULL;
 }
 
 static int log2_floor(int v) {
@@ -95,6 +95,6 @@ static int log2_floor(int v) {
 
 int m4ri_opt_k(int a, int b, int c) {
   int n = MIN(a, b);
-  int res = MIN(MAXKAY, MAX(1, (int)(0.75 * (1 + log2_floor(n)))) );
+  int res = MIN(__M4RI_MAXKAY, MAX(1, (int)(0.75 * (1 + log2_floor(n)))) );
   return res;
 }

@@ -7,8 +7,9 @@
  * 
  */
 
-#ifndef PLUQ_H
-#define PLUQ_H
+#ifndef M4RI_PLUQ_H
+#define M4RI_PLUQ_H
+
 /*******************************************************************
 *
 *                 M4RI: Linear Algebra over GF(2)
@@ -36,7 +37,7 @@
  * Crossover point for PLUQ factorization.
  */
 
-#define PLS_CUTOFF MIN(524288,CPU_L2_CACHE>>3)
+#define __M4RI_PLS_CUTOFF MIN(524288, __M4RI_CPU_L2_CACHE >> 3)
 
 /**
  * \brief PLUQ matrix decomposition.
@@ -176,4 +177,4 @@ rci_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q);
 
 rci_t _mzd_pls_naive(mzd_t *A, mzp_t *P, mzp_t *Qt);
 
-#endif
+#endif // M4RI_PLUQ_H

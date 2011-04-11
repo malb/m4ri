@@ -5,8 +5,8 @@
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
  */
 
-#ifndef ECHELONFORM_H
-#define ECHELONFORM_H
+#ifndef M4RI_ECHELONFORM_H
+#define M4RI_ECHELONFORM_H
 
 /*******************************************************************
 *
@@ -34,7 +34,7 @@
  * Density at which we switch to PLS decomposition.
  */
 
-#define ECHELONFORM_CROSSOVER_DENSITY 0.15
+#define __M4RI_ECHELONFORM_CROSSOVER_DENSITY 0.15
 
 /**
  * \brief (Reduced) row echelon form.
@@ -84,4 +84,4 @@ rci_t mzd_echelonize_pluq(mzd_t *A, int full);
 
 rci_t mzd_echelonize_m4ri(mzd_t *A, int full, int k);
 
-#endif //ECHELONFORM_H
+#endif // M4RI_ECHELONFORM_H

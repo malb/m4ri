@@ -103,8 +103,8 @@ int _mzd_pluq_solve_left(mzd_t *A, rci_t rank,
      * clearing is not needed
      */
     for(rci_t i = rank; i < B->nrows; ++i) {
-      for(rci_t j = 0; j < B->ncols; j += RADIX) {
-        mzd_clear_bits(B, i, j, MIN(RADIX, B->ncols - j));
+      for(rci_t j = 0; j < B->ncols; j += m4ri_radix) {
+        mzd_clear_bits(B, i, j, MIN(m4ri_radix, B->ncols - j));
       }
     }
   }
