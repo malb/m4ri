@@ -66,6 +66,10 @@ AS_IF([test "x$enable_sse2" != "xno"], [
    esac
 ])
 
+AC_ARG_WITH(papi,
+    AS_HELP_STRING([--with-papi@<:@=PATH@:>@], [The PAPI install prefix, if configure can't find it.]),
+    [m4ri_config_papi=$withval])
+
 AC_CHECK_HEADER([mm_malloc.h],AC_DEFINE(HAVE_MM_MALLOC,,[Support aligned allocations]),)
 
 # OpenMP support
@@ -87,12 +91,23 @@ else
    AC_DEFINE(NDEBUG,1,[Define whether debugging is enabled])
 fi
 
+if test x"$m4ri_config_papi" != x"no"; then
 # For the testsuite. Detect if PAPI is installed. See http://icl.cs.utk.edu/papi/ .
 AC_CHECK_LIB(papi, PAPI_start_counters,
-[ PAPI_LIBS="-lpapi"
-  PAPI_LDFLAGS="-Wl,-rpath,/usr/local/lib"
+[ if test -n "$m4ri_config_papi"; then
+    LIBPAPI_PATH="`realpath -s $m4ri_config_papi/lib`"
+  else
+    AX_FIND_LIB(papi)
+  fi
+  if test -n "$LIBPAPI_PATH"; then
+    PAPI_LDFLAGS="-Wl,-rpath,$LIBPAPI_PATH"
+    PAPI_LIBS="-L$LIBPAPI_PATH -lpapi"
+  else
+    PAPI_LIBS="-lpapi"
+  fi
   AC_DEFINE_UNQUOTED([HAVE_LIBPAPI], 1, [Define when libpapi is available.])
 ])
+fi
 AC_SUBST(PAPI_LIBS)
 AC_SUBST(PAPI_LDFLAGS)
 
