@@ -69,7 +69,7 @@ typedef struct {
    * values packed into words of size m4ri_radix.
    */
 
-  mmb_t *blocks;
+  struct _mm_block *blocks;
 
   /**
    * Number of rows.
@@ -103,6 +103,9 @@ typedef struct {
   word **rows;
 
 } mzd_t;
+
+
+extern void m4ri_mmc_cleanup(void);
 
 /**
  * \brief Create a new matrix of dimension r x c.

@@ -36,9 +36,6 @@
 #include "grayflex.h"
 #include "misc.h"
 
-/* blocks of memory we like to keep around for later re-use */
-mmb_t m4ri_mmc_cache[__M4RI_MMC_NBLOCKS];
-
 void m4ri_die(const char *errormessage, ...) {
   va_list lst;
   va_start(lst, errormessage);

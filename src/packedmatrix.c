@@ -35,7 +35,170 @@
  */
 #define DIV_CEIL(x,y) (((x) % (y)) ? (x) / (y) + 1 : (x) / (y))
 
-void mzd_copy_row_weird_to_even(mzd_t *B, rci_t i, mzd_t const *A, rci_t j);
+/*
+ * Maximum number of bytes allocated in one malloc() call.
+ * This value must fit in an int, even though it's type is size_t.
+ */
+#define __M4RI_MM_MAX_MALLOC (((size_t)1)<<30)
+
+/*
+ * Enable memory block cache (default: enabled)
+ */
+#define __M4RI_ENABLE_MMC
+
+/*
+ * Number of blocks that are cached.
+ */
+#define __M4RI_MMC_NBLOCKS 16
+
+/*
+ * Maximal size of blocks stored in cache.
+ */
+#define __M4RI_MMC_THRESHOLD CPU_L2_CACHE
+
+/*
+ * The mmc memory management functions check a cache for re-usable
+ * unused memory before asking the system for it.
+ */
+typedef struct _mm_block {
+  /**
+   * Size in bytes of the data.
+   */
+  size_t size;
+
+  /**
+   * Pointer to buffer of data.
+   */
+  void *data;
+
+} mmb_t;
+
+#ifdef __M4RI_ENABLE_MMC
+/*
+ * The actual memory block cache.
+ */
+static mmb_t m4ri_mmc_cache[__M4RI_MMC_NBLOCKS];
+#endif // __M4RI_ENABLE_MMC
+
+/*
+ * Allocate size bytes.
+ *
+ * size: Number of bytes.
+ *
+ * Returns pointer to allocated memory block.
+ */
+static void *m4ri_mmc_malloc(size_t size) {
+
+#ifdef __M4RI_ENABLE_MMC
+  void *ret = NULL;
+#endif
+
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
+
+#ifdef __M4RI_ENABLE_MMC
+  mmb_t *mm = m4ri_mmc_cache;
+  if (size <= __M4RI_MMC_THRESHOLD) {
+    for (int i = 0; i < __M4RI_MMC_NBLOCKS; ++i) {
+      if(mm[i].size == size) {
+        ret = mm[i].data;
+        mm[i].data = NULL;
+        mm[i].size = 0;
+        break;
+      }
+    }
+  }
+#endif // __M4RI_ENABLE_MMC
+
+#ifdef HAVE_OPENMP
+ }
+#endif
+
+#ifdef __M4RI_ENABLE_MMC
+ if (ret)
+   return ret;
+ else
+   return m4ri_mm_malloc(size);
+#else 
+ return m4ri_mm_malloc(size);
+#endif
+}
+
+/*
+ * Allocate an array of count times size zeroed bytes.
+ *
+ * count: Number of elements.
+ * size: Number of bytes per element.
+ *
+ * Returns pointer to allocated memory block.
+ */
+static inline void *m4ri_mmc_calloc(size_t count, size_t size) {
+  void *ret = m4ri_mmc_malloc(count * size);
+  memset((char*)ret, 0, count * size);
+  return ret;
+}
+
+/*
+ * Free the data pointed to by condemned of the given size.
+ *
+ * condemned: Pointer to memory.
+ * size: Number of bytes.
+ */
+static void m4ri_mmc_free(void *condemned, size_t size) {
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
+#ifdef __M4RI_ENABLE_MMC
+  static int j = 0;
+  mmb_t *mm = m4ri_mmc_cache;
+  if (size < __M4RI_MMC_THRESHOLD) {
+    for(int i = 0; i < __M4RI_MMC_NBLOCKS; ++i) {
+      if(mm[i].size == 0) {
+        mm[i].size = size;
+        mm[i].data = condemned;
+        return;
+      }
+    }
+    m4ri_mm_free(mm[j].data);
+    mm[j].size = size;
+    mm[j].data = condemned;
+    j = (j+1) % __M4RI_MMC_NBLOCKS;
+  } else {
+    m4ri_mm_free(condemned);
+  }
+#else
+  m4ri_mm_free(condemned);
+#endif // __M4RI_ENABLE_MMC
+#ifdef HAVE_OPENMP
+ }
+#endif
+}
+
+/*
+ * Cleans up memory block cache.
+ *
+ * This function is called automatically when the shared library is loaded.
+ */
+void m4ri_mmc_cleanup(void) {
+#ifdef HAVE_OPENMP
+#pragma omp critical
+{
+#endif
+#ifdef __M4RI_ENABLE_MMC
+  mmb_t *mm = m4ri_mmc_cache;
+  for(int i = 0; i < __M4RI_MMC_NBLOCKS; ++i) {
+    if (mm[i].size)
+      m4ri_mm_free(mm[i].data);
+    mm[i].size = 0;
+  }
+#endif // __M4RI_ENABLE_MMC
+#ifdef HAVE_OPENMP
+ }
+#endif
+}
 
 mzd_t *mzd_init(rci_t r, rci_t c) {
 
@@ -724,6 +887,8 @@ int mzd_cmp(mzd_t const *A, mzd_t const *B) {
   }
   return 0;
 }
+
+void mzd_copy_row_weird_to_even(mzd_t *B, rci_t i, mzd_t const *A, rci_t j);
 
 mzd_t *mzd_copy(mzd_t *N, mzd_t const *P) {
   if (N == P)
