@@ -25,8 +25,8 @@ DEFINES =
 TOPSRCDIR = ..
 CFLAGS = -I$(TOPSRCDIR)/m4ri -D_XOPEN_SOURCE=600 @CFLAGS@ $(DEFINES)
 STAGEDIR := $(realpath -s $(TOPSRCDIR)/.libs)
-LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri
-PAPI_FLAGS = @PAPI_LDFLAGS@ @PAPI_LIBS@
+LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri 
+PAPI_FLAGS = @PAPI_LDFLAGS@ @PAPI_LIBS@ @PAPI_CFLAGS@
 DEBUG = -ggdb
 
 TEST_PRGS = \
@@ -46,8 +46,7 @@ BENCH_PRGS = \
 	bench_trsm_lowerright \
 	bench_trsm_upperright \
 	bench_elimination_sparse \
-	bench_packedmatrix \
-	bench_smallops
+	bench_packedmatrix
 
 CPUCYCLES_DIR = ./cpucycles-20060326
 

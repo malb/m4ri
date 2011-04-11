@@ -102,6 +102,14 @@ AC_CHECK_LIB(papi, PAPI_start_counters,
   if test -n "$LIBPAPI_PATH"; then
     PAPI_LDFLAGS="-Wl,-rpath,$LIBPAPI_PATH"
     PAPI_LIBS="-L$LIBPAPI_PATH -lpapi"
+
+    # this is a hack: we assume here that LIBPAPI_PATH ends with
+    # "/lib" and that the headers are in "/include" relative to this
+    # directory. A proper solution would call something similar to
+    # AX_FIND_LIB but on the header papi.h.
+
+    LIBPAPI_INCLUDE="${LIBPAPI_PATH:0:${#LIBPAPI_PATH}-4}/include"
+    PAPI_CFLAGS="-I$LIBPAPI_INCLUDE"
   else
     PAPI_LIBS="-lpapi"
   fi
@@ -110,6 +118,7 @@ AC_CHECK_LIB(papi, PAPI_start_counters,
 fi
 AC_SUBST(PAPI_LIBS)
 AC_SUBST(PAPI_LDFLAGS)
+AC_SUBST(PAPI_CFLAGS)
 
 # L1 and L2 Cache Size
 AX_CACHE_SIZE()
