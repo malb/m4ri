@@ -96,22 +96,29 @@ if test x"$m4ri_config_papi" != x"no"; then
 AC_CHECK_LIB(papi, PAPI_start_counters,
 [ if test -n "$m4ri_config_papi"; then
     LIBPAPI_PATH="`realpath -s $m4ri_config_papi/lib`"
+    PAPI_H_PATH="`realpath -s $m4ri_config_papi/include`"
   else
-    AX_FIND_LIB(papi)
+    AX_GUESS_PATH_LIB(papi)
+    AX_GUESS_PATH_HEADER(papi.h)
   fi
   if test -n "$LIBPAPI_PATH"; then
     PAPI_LDFLAGS="-Wl,-rpath,$LIBPAPI_PATH"
     PAPI_LIBS="-L$LIBPAPI_PATH -lpapi"
-
-    # this is a hack: we assume here that LIBPAPI_PATH ends with
-    # "/lib" and that the headers are in "/include" relative to this
-    # directory. A proper solution would call something similar to
-    # AX_FIND_LIB but on the header papi.h.
-
-    LIBPAPI_INCLUDE="${LIBPAPI_PATH:0:${#LIBPAPI_PATH}-4}/include"
-    PAPI_CFLAGS="-I$LIBPAPI_INCLUDE"
   else
     PAPI_LIBS="-lpapi"
+    if ! test -e "/usr/lib/libpapi.so"; then
+      AC_MSG_WARN([Could not find libpapi.so. Use --with-papi=<install_prefix> or set LD_LIBRARY_PATH correctly before running benchmark applications.])
+    fi
+  fi
+  if test -n "$PAPI_H_PATH"; then
+    PAPI_CFLAGS="-I$PAPI_H_PATH"
+  else
+    AC_MSG_WARN([
+
+*** Could not find papi.h; compiling the benchmark applications will likely fail.
+    Use --with-papi=<install_prefix> or add -I<install_prefix>/include to either CPPFLAGS or CFLAGS,
+    or turn off papi all together by configuring with --without-papi.
+])
   fi
   AC_DEFINE_UNQUOTED([HAVE_LIBPAPI], 1, [Define when libpapi is available.])
 ])

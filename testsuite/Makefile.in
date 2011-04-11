@@ -26,7 +26,8 @@ TOPSRCDIR = ..
 CFLAGS = -I$(TOPSRCDIR)/m4ri -D_XOPEN_SOURCE=600 @CFLAGS@ $(DEFINES)
 STAGEDIR := $(realpath -s $(TOPSRCDIR)/.libs)
 LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri 
-PAPI_FLAGS = @PAPI_LDFLAGS@ @PAPI_LIBS@ @PAPI_CFLAGS@
+PAPI_FLAGS = @PAPI_LDFLAGS@ @PAPI_LIBS@
+PAPI_CFLAGS = @PAPI_CFLAGS@
 DEBUG = -ggdb
 
 TEST_PRGS = \
@@ -55,7 +56,7 @@ CPUCYCLES_DIR = ./cpucycles-20060326
 all: $(TEST_PRGS) $(BENCH_PRGS)
 
 bench_%: cpucycles.o benchmarking.o bench_%.c Makefile
-	$(CC) $(DEBUG) $(CFLAGS) $@.c cpucycles.o benchmarking.o $(LDFLAGS) $(PAPI_FLAGS) -lm -o $@
+	$(CC) $(DEBUG) $(PAPI_CFLAGS) $(CFLAGS) $@.c cpucycles.o benchmarking.o $(LDFLAGS) $(PAPI_FLAGS) -lm -o $@
 
 test_%: test_%.c testing.o Makefile
 	$(CC) $(DEBUG) $(CFLAGS) $@.c $(LDFLAGS) testing.o -o $@
@@ -79,7 +80,7 @@ testing.o: testing.c testing.h
 	$(CC) $(DEBUG) $(CFLAGS) -c testing.c $(LDFLAGS) -o $@
 
 benchmarking.o: benchmarking.c benchmarking.h
-	$(CC) $(DEBUG) $(CFLAGS) -c benchmarking.c $(LDFLAGS) -o $@
+	$(CC) $(DEBUG) $(PAPI_CFLAGS) $(CFLAGS) -c benchmarking.c $(LDFLAGS) -o $@
 
 Makefile: @MAINTAINER_MODE_TRUE@ Makefile.in ../config.status
 	(cd .. && /bin/sh ./config.status testsuite/Makefile)
