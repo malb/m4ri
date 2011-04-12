@@ -756,7 +756,7 @@ void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff) {
 	}
       }
     }
-  } else if(mb <= __M4RI_MZD_MUL_BLOCKSIZE) {
+  } else if(mb <= __M4RI_MUL_BLOCKSIZE) {
     _mzd_trsm_upper_left_even_m4r(U, B, 0);
   } else {
     rci_t const mb1 = (((mb-1) / m4ri_radix + 1) >> 1) * m4ri_radix;

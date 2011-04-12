@@ -54,6 +54,14 @@
 #endif
 
 /**
+ * Maximum number of bytes allocated for one mzd_t block.
+ *
+ * \note This value must fit in an int, even though it's type is size_t.
+ */
+
+#define __M4RI_MAX_MZD_BLOCKSIZE (((size_t)1) << 30)
+
+/**
  * \brief Matrix multiplication block-ing dimension.
  * 
  * Defines the number of rows of the matrix A that are
@@ -61,7 +69,7 @@
  * algorithm.
  */
 
-#define __M4RI_MZD_MUL_BLOCKSIZE MIN(((int)sqrt((double)(4 * __M4RI_CPU_L2_CACHE))) / 2, 2048)
+#define __M4RI_MUL_BLOCKSIZE MIN(((int)sqrt((double)(4 * __M4RI_CPU_L2_CACHE))) / 2, 2048)
 
 typedef struct {
   /**
@@ -103,9 +111,6 @@ typedef struct {
   word **rows;
 
 } mzd_t;
-
-
-extern void m4ri_mmc_cleanup(void);
 
 /**
  * \brief Create a new matrix of dimension r x c.

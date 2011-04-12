@@ -1047,7 +1047,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
     mzd_set_ui(C, 0);
   }
 
-  int const blocksize = __M4RI_MZD_MUL_BLOCKSIZE;
+  int const blocksize = __M4RI_MUL_BLOCKSIZE;
 
   if (k == 0) {
     k = m4ri_opt_k(blocksize, a_nc, b_nc);
@@ -1260,7 +1260,7 @@ void _mzd_trsm_upper_left_even_submatrix(mzd_t *U, mzd_t *B, rci_t const start_r
 
 void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, int k) {
   wi_t const wide = B->width;
-  int const blocksize = __M4RI_MZD_MUL_BLOCKSIZE;
+  int const blocksize = __M4RI_MUL_BLOCKSIZE;
 
   word mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - B->offset);
   word mask_end = __M4RI_LEFT_BITMASK((B->ncols + B->offset) % m4ri_radix);

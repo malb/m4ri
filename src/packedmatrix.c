@@ -27,6 +27,7 @@
 #include <string.h>
 #include "packedmatrix.h"
 #include "parity.h"
+#include "mmc.h"
 
 #define SAFECHAR (m4ri_radix + m4ri_radix / 4 + 1)
 
@@ -34,181 +35,6 @@
  * Return r such that x elements fit into r blocks of length y.
  */
 #define DIV_CEIL(x,y) (((x) % (y)) ? (x) / (y) + 1 : (x) / (y))
-
-/*
- * Maximum number of bytes allocated in one malloc() call.
- * This value must fit in an int, even though it's type is size_t.
- */
-#define __M4RI_MM_MAX_MALLOC (((size_t)1)<<30)
-
-/*
- * Enable memory block cache (default: enabled)
- */
-#define __M4RI_ENABLE_MMC
-
-/*
- * Number of blocks that are cached.
- */
-#define __M4RI_MMC_NBLOCKS 16
-
-/*
- * Maximal size of blocks stored in cache.
- */
-#define __M4RI_MMC_THRESHOLD __M4RI_CPU_L2_CACHE
-
-/*
- * The mmc memory management functions check a cache for re-usable
- * unused memory before asking the system for it.
- */
-typedef struct _mm_block {
-  /*
-   * Size in bytes of the data.
-   */
-  size_t size;
-
-  /*
-   * Pointer to buffer of data.
-   */
-  void *data;
-
-} mmb_t;
-
-#ifdef __M4RI_ENABLE_MMC
-/*
- * The actual memory block cache.
- */
-static mmb_t m4ri_mmc_cache[__M4RI_MMC_NBLOCKS];
-#endif // __M4RI_ENABLE_MMC
-
-/*
- * Allocate size bytes.
- *
- * size: Number of bytes.
- *
- * Returns pointer to allocated memory block.
- */
-static void *m4ri_mmc_malloc(size_t size) {
-
-#ifdef __M4RI_ENABLE_MMC
-  void *ret = NULL;
-
-#ifdef HAVE_OPENMP
-#pragma omp critical
-{
-#endif
-  mmb_t *mm = m4ri_mmc_cache;
-  if (size <= __M4RI_MMC_THRESHOLD) {
-    for (int i = 0; i < __M4RI_MMC_NBLOCKS; ++i) {
-      if(mm[i].size == size) {
-        ret = mm[i].data;
-        mm[i].data = NULL;
-        mm[i].size = 0;
-        break;
-      }
-    }
-  }
-#ifdef HAVE_OPENMP
- }
-#endif
-
- if (ret)
-   return ret;
- else
-   return m4ri_mm_malloc(size);
-
-#else // __M4RI_ENABLE_MMC
-
- return m4ri_mm_malloc(size);
-
-#endif // __M4RI_ENABLE_MMC
-}
-
-/*
- * Allocate an array of count times size zeroed bytes.
- *
- * count: Number of elements.
- * size: Number of bytes per element.
- *
- * Returns pointer to allocated memory block.
- */
-static inline void *m4ri_mmc_calloc(size_t count, size_t size) {
-#ifdef __M4RI_ENABLE_MMC
-  size_t total_size = count * size;
-  if (total_size <= __M4RI_MMC_THRESHOLD)
-  {
-    void *ret = m4ri_mmc_malloc(total_size);
-    memset((char*)ret, 0, total_size);
-    return ret;
-  }
-#endif
-  return m4ri_mm_calloc(count, size);
-}
-
-/*
- * Free the data pointed to by condemned of the given size.
- *
- * condemned: Pointer to memory.
- * size: Number of bytes.
- */
-static void m4ri_mmc_free(void *condemned, size_t size) {
-#ifdef __M4RI_ENABLE_MMC
-
-#ifdef HAVE_OPENMP
-#pragma omp critical
-{
-#endif
-  static int j = 0;
-  mmb_t *mm = m4ri_mmc_cache;
-  if (size < __M4RI_MMC_THRESHOLD) {
-    for(int i = 0; i < __M4RI_MMC_NBLOCKS; ++i) {
-      if(mm[i].size == 0) {
-        mm[i].size = size;
-        mm[i].data = condemned;
-        return;
-      }
-    }
-    m4ri_mm_free(mm[j].data);
-    mm[j].size = size;
-    mm[j].data = condemned;
-    j = (j+1) % __M4RI_MMC_NBLOCKS;
-  } else {
-    m4ri_mm_free(condemned);
-  }
-#ifdef HAVE_OPENMP
- }
-#endif
-
-#else // __M4RI_ENABLE_MMC
-
-  m4ri_mm_free(condemned);
-
-#endif // __M4RI_ENABLE_MMC
-}
-
-/*
- * Cleans up memory block cache.
- *
- * This function is called automatically when the shared library is loaded.
- */
-void m4ri_mmc_cleanup(void) {
-#ifdef __M4RI_ENABLE_MMC
-
-#ifdef HAVE_OPENMP
-#pragma omp critical
-{
-#endif
-  mmb_t *mm = m4ri_mmc_cache;
-  for(int i = 0; i < __M4RI_MMC_NBLOCKS; ++i) {
-    if (mm[i].size)
-      m4ri_mm_free(mm[i].data);
-    mm[i].size = 0;
-  }
-#ifdef HAVE_OPENMP
- }
-#endif
-
-#endif // __M4RI_ENABLE_MMC
-}
 
 mzd_t *mzd_init(rci_t r, rci_t c) {
 
@@ -236,15 +62,15 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
        here */
     
     int const bytes_per_row = A->width * sizeof(word);
-    int const max_rows_per_block = __M4RI_MM_MAX_MALLOC / bytes_per_row;
+    int const max_rows_per_block = __M4RI_MAX_MZD_BLOCKSIZE / bytes_per_row;
     assert(max_rows_per_block);
     int rest = r % max_rows_per_block;
     
     int const nblocks = (rest == 0) ? r / max_rows_per_block : r / max_rows_per_block + 1;
     A->blocks = (mmb_t*)m4ri_mmc_calloc(nblocks + 1, sizeof(mmb_t));
     for(int i = 0; i < nblocks - 1; ++i) {
-      A->blocks[i].size = __M4RI_MM_MAX_MALLOC;
-      A->blocks[i].data = m4ri_mmc_calloc(1, __M4RI_MM_MAX_MALLOC);
+      A->blocks[i].size = __M4RI_MAX_MZD_BLOCKSIZE;
+      A->blocks[i].data = m4ri_mmc_calloc(1, __M4RI_MAX_MZD_BLOCKSIZE);
       for(rci_t j = 0; j < max_rows_per_block; ++j)
       {
 	int offset = A->width * j;				// Offset to start of row j within block.
@@ -642,7 +468,7 @@ mzd_t *_mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B, const int clear)
     parity[i] = 0;
   }
   wi_t const wide = A->width;
-  int const blocksize = __M4RI_MZD_MUL_BLOCKSIZE;
+  int const blocksize = __M4RI_MUL_BLOCKSIZE;
   for (rci_t start = 0; start + blocksize <= C->nrows; start += blocksize) {
     for (rci_t i = start; i < start + blocksize; ++i) {
       a = A->rows[i];

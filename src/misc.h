@@ -33,6 +33,8 @@
 *
 ********************************************************************/
 
+#include "config.h"
+
 #ifndef HAVE_SSE2
 #undef HAVE_MM_MALLOC
 #endif
