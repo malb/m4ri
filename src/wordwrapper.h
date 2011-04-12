@@ -29,6 +29,8 @@
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
 
+#ifndef M4RI_DOXYGEN
+
 class word
 {
   private:
@@ -126,3 +128,4 @@ class word
 #define __M4RI_CONVERT_TO_UINT64_T(w) ((w).convert_to_uint64_t())
 #define __M4RI_CONVERT_TO_WORD(i) word((uint64_t)(i))
 
+#endif // M4RI_DOXYGEN

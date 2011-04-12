@@ -82,40 +82,55 @@ typedef int wi_t;
 #else
 
 /**
- * A word is the typical packed data structure to represent packed
- * bits.
+ * \brief A word is the typical packed data structure to represent packed bits.
  */
 
 typedef uint64_t word;
 
-/*
+/**
+ * \brief Explicit conversion macro.
+ *
  * Explicit conversion of a word, representing 64 columns, to an integer
  * to be used as index into an array. This is used for Gray codes.
  * No error checking is done that the most significant bits in w are zero.
+ *
+ * \note This is a no-op. It's purpose it to track intention.
  */
 
 #define __M4RI_CONVERT_TO_INT(w) ((int)(w))
 
-/*
+/**
+ * \brief Explicit conversion macro.
+ *
  * Explicit conversion of a word, representing 64 columns, to a BIT
  * to be used as boolean: this is an int with value 0 (false) or 1 (true).
  * No error checking is done that only the least significant bit is set (if any).
+ *
+ * \note This is a no-op. It's purpose it to track intention.
  */
 
 #define __M4RI_CONVERT_TO_BIT(w) ((BIT)(w))
 
-/*
+/**
+ * \brief Explicit conversion macro.
+ *
  * Explicit conversion of a word, representing 64 columns, to an uint64_t.
  *
  * The returned value is the underlaying integer representation of these 64 columns,
  * meaning in particular that if val is an uint64_t then
  * __M4RI_CONVERT_TO_UINT64_T(__M4RI_CONVERT_TO_WORD(val)) == val.
+ *
+ * \note This is a no-op. It's purpose it to track intention.
  */
 
 #define __M4RI_CONVERT_TO_UINT64_T(w) (w)
 
-/*
+/**
+ * \brief Explicit conversion macro.
+ *
  * Explicit conversion of an integer to a word.
+ *
+ * \note This is a no-op. It's purpose it to track intention.
  */
 
 #define __M4RI_CONVERT_TO_WORD(i) ((word)(i))
@@ -303,7 +318,7 @@ static word const m4ri_ffff = __M4RI_CONVERT_TO_WORD(-1);
 /**
  * \brief swap bits in the word v
  *
- * \param n
+ * \param v The word whose bits need to be reversed.
  */
 
 static inline word swap_bits(word v) {
@@ -340,9 +355,20 @@ static inline word swap_bits(word v) {
 #endif
 
 /* __builtin_expect is in gcc 3.0, and not in 2.95. */
-#if __M4RI_GNUC_PREREQ(3,0)
+#if __M4RI_GNUC_PREREQ(3,0) || defined(M4RI_DOXYGEN)
+
+/**
+ * \brief Macro to help with branch prediction.
+ */
+
 #define __M4RI_LIKELY(cond)    __builtin_expect ((cond) != 0, 1)
+
+/**
+ * \brief Macro to help with branch prediction.
+ */
+
 #define __M4RI_UNLIKELY(cond)  __builtin_expect ((cond) != 0, 0)
+
 #else
 #define __M4RI_LIKELY(cond)    (cond)
 #define __M4RI_UNLIKELY(cond)  (cond)
@@ -461,16 +487,16 @@ void m4ri_fini(void);
 
 /***** Memory Management *****/
 
-#if __M4RI_CPU_L2_CACHE == 0
-/**
+#if __M4RI_CPU_L2_CACHE == 0 && !defined(M4RI_DOXYGEN)
+/*
  * Fix some standard value for L2 cache size if it couldn't be
  * determined by configure.
  */
 #define __M4RI_CPU_L2_CACHE 524288
 #endif // __M4RI_CPU_L2_CACHE
 
-#if __M4RI_CPU_L1_CACHE == 0
-/**
+#if __M4RI_CPU_L1_CACHE == 0 && !defined(M4RI_DOXYGEN)
+/*
  * Fix some standard value for L1 cache size if it couldn't be
  * determined by configure.
  */

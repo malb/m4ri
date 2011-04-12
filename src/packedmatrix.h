@@ -71,6 +71,12 @@
 
 #define __M4RI_MUL_BLOCKSIZE MIN(((int)sqrt((double)(4 * __M4RI_CPU_L2_CACHE))) / 2, 2048)
 
+/**
+ * \brief Dense matrices over GF(2). 
+ * 
+ * The most fundamental data type in this library.
+ */
+
 typedef struct {
   /**
    * Contains pointers to the actual blocks of memory containing the
@@ -206,7 +212,6 @@ static inline void _mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb, w
  * \param M Matrix
  * \param rowa Row index.
  * \param rowb Row index.
- * \param startblock Start swapping only in this block.
  */
  
 static inline void mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb) {
@@ -1029,8 +1034,8 @@ void static inline mzd_combine_even(mzd_t *C,       rci_t const c_row, wi_t cons
 }
 
 
-/*
- * Get n bits starting a position (x,y) from the matrix M.
+/**
+ * \brief Get n bits starting a position (x,y) from the matrix M.
  *
  * This function is in principle the same as mzd_read_bits,
  * but it explicitely returns an 'int' and is used as
