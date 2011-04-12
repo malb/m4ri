@@ -459,13 +459,13 @@ void m4ri_fini(void);
 
 /***** Memory Management *****/
 
-#if CPU_L2_CACHE == 0
+#if __M4RI_CPU_L2_CACHE == 0
 /**
  * Fix some standard value for L2 cache size if it couldn't be
  * determined by configure.
  */
-#define CPU_L2_CACHE 524288
-#endif // CPU_L2_CACHE
+#define __M4RI_CPU_L2_CACHE 524288
+#endif // __M4RI_CPU_L2_CACHE
 
 #if __M4RI_CPU_L1_CACHE == 0
 /**

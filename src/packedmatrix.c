@@ -54,7 +54,7 @@
 /*
  * Maximal size of blocks stored in cache.
  */
-#define __M4RI_MMC_THRESHOLD CPU_L2_CACHE
+#define __M4RI_MMC_THRESHOLD __M4RI_CPU_L2_CACHE
 
 /*
  * The mmc memory management functions check a cache for re-usable
