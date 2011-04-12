@@ -859,7 +859,7 @@ void mzd_combine(mzd_t *DST, rci_t const row3, wi_t const startblock3,
  *
  */
 
-void static inline mzd_combine_weird(mzd_t *C,       rci_t const c_row, wi_t const c_startblock,
+static inline void mzd_combine_weird(mzd_t *C,       rci_t const c_row, wi_t const c_startblock,
                                      mzd_t const *A, rci_t const a_row, wi_t const a_startblock, 
                                      mzd_t const *B, rci_t const b_row, wi_t const b_startblock) {
   word tmp;
@@ -895,7 +895,7 @@ void static inline mzd_combine_weird(mzd_t *C,       rci_t const c_row, wi_t con
  *
  */
 
-void static inline mzd_combine_even_in_place(mzd_t *A,       rci_t const a_row, wi_t const a_startblock,
+static inline void mzd_combine_even_in_place(mzd_t *A,       rci_t const a_row, wi_t const a_startblock,
                                              mzd_t const *B, rci_t const b_row, wi_t const b_startblock) {
 
   wi_t wide = A->width - a_startblock - 1;
@@ -968,7 +968,7 @@ void static inline mzd_combine_even_in_place(mzd_t *A,       rci_t const a_row, 
  *
  */
 
-void static inline mzd_combine_even(mzd_t *C,       rci_t const c_row, wi_t const c_startblock,
+static inline void mzd_combine_even(mzd_t *C,       rci_t const c_row, wi_t const c_startblock,
                                     mzd_t const *A, rci_t const a_row, wi_t const a_startblock, 
                                     mzd_t const *B, rci_t const b_row, wi_t const b_startblock) {
 

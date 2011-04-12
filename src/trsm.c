@@ -45,9 +45,9 @@ void _mzd_trsm_upper_right_even(mzd_t *U, mzd_t *B, const int cutoff);
  * U->ncols < 64
  */
 
-void _mzd_trsm_upper_right_weird(mzd_t *U, mzd_t *B, const int cutoff);
+void _mzd_trsm_upper_right_weird(mzd_t *U, mzd_t *B);
 
-void _mzd_trsm_upper_right_base(mzd_t *U, mzd_t *B, const int cutoff);
+void _mzd_trsm_upper_right_base(mzd_t *U, mzd_t *B);
 
 void mzd_trsm_upper_right(mzd_t *U, mzd_t *B, const int cutoff) {
   if(U->nrows != B->ncols)
@@ -63,7 +63,7 @@ void _mzd_trsm_upper_right(mzd_t *U, mzd_t *B, const int cutoff) {
   rci_t const mb = B->nrows;
   int const n1 = m4ri_radix-B->offset;
   if(nb <= n1) {
-    _mzd_trsm_upper_right_weird(U, B, cutoff);
+    _mzd_trsm_upper_right_weird(U, B);
     return;
   }
   /**
@@ -91,7 +91,7 @@ void _mzd_trsm_upper_right(mzd_t *U, mzd_t *B, const int cutoff) {
   mzd_t *U01 = mzd_init_window (U,  0, n1, n1, nb);
   mzd_t *U11 = mzd_init_window (U, n1, n1, nb, nb);
   
-  _mzd_trsm_upper_right_weird (U00, B0, cutoff);
+  _mzd_trsm_upper_right_weird (U00, B0);
   mzd_addmul (B1, B0, U01, cutoff);
   _mzd_trsm_upper_right_even (U11, B1, cutoff);
   
@@ -103,7 +103,7 @@ void _mzd_trsm_upper_right(mzd_t *U, mzd_t *B, const int cutoff) {
   mzd_free_window(U11);
 }
 
-void _mzd_trsm_upper_right_weird(mzd_t *U, mzd_t *B, int const cutoff) {	// FIXME: cutoff is not used?!
+void _mzd_trsm_upper_right_weird(mzd_t *U, mzd_t *B) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const offset = B->offset;
@@ -152,7 +152,7 @@ void _mzd_trsm_upper_right_even(mzd_t *U, mzd_t *B, const int cutoff) {
 
   if(nb <= TRSM_THRESHOLD) {
     /* base case */
-    _mzd_trsm_upper_right_base (U, B, cutoff);
+    _mzd_trsm_upper_right_base (U, B);
     return;
   }
   
@@ -176,7 +176,7 @@ void _mzd_trsm_upper_right_even(mzd_t *U, mzd_t *B, const int cutoff) {
   mzd_free_window(U11);
 }
 
-void _mzd_trsm_upper_right_base(mzd_t *U, mzd_t *B, int const cutoff) {		// FIXME: cutoff isn't used?!
+void _mzd_trsm_upper_right_base(mzd_t *U, mzd_t *B) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
 
@@ -223,7 +223,7 @@ void _mzd_trsm_upper_right_base(mzd_t *U, mzd_t *B, int const cutoff) {		// FIXM
  * Variant where L and B start at an odd bit position Assumes that
  * L->ncols < 64
  */
-void _mzd_trsm_lower_right_weird(mzd_t *L, mzd_t *B, const int cutoff);
+void _mzd_trsm_lower_right_weird(mzd_t *L, mzd_t *B);
 
 /*
  * Variant where L and B start at an even bit position Assumes that
@@ -232,7 +232,7 @@ void _mzd_trsm_lower_right_weird(mzd_t *L, mzd_t *B, const int cutoff);
 
 void _mzd_trsm_lower_right_even(mzd_t *L, mzd_t *B, const int cutoff);
 
-void _mzd_trsm_lower_right_base(mzd_t *L, mzd_t *B, const int cutoff);
+void _mzd_trsm_lower_right_base(mzd_t *L, mzd_t *B);
 
 void mzd_trsm_lower_right(mzd_t *L, mzd_t *B, const int cutoff) {
   if(L->nrows != B->ncols)
@@ -248,7 +248,7 @@ void _mzd_trsm_lower_right(mzd_t *L, mzd_t *B, const int cutoff) {
   rci_t const mb = B->nrows;
   int const n1 = m4ri_radix-B->offset;
   if(nb <= n1)
-    _mzd_trsm_lower_right_weird (L, B, cutoff);
+    _mzd_trsm_lower_right_weird (L, B);
   else{
   /**
    \verbatim  
@@ -278,7 +278,7 @@ void _mzd_trsm_lower_right(mzd_t *L, mzd_t *B, const int cutoff) {
     
     _mzd_trsm_lower_right_even (L11, B1, cutoff);
     mzd_addmul (B0, B1, L10, cutoff);
-    _mzd_trsm_lower_right_weird (L00, B0, cutoff);
+    _mzd_trsm_lower_right_weird (L00, B0);
     
     mzd_free_window(B0);
     mzd_free_window(B1);
@@ -289,7 +289,7 @@ void _mzd_trsm_lower_right(mzd_t *L, mzd_t *B, const int cutoff) {
   }
 }
 
-void _mzd_trsm_lower_right_weird(mzd_t *L, mzd_t *B, int const cutoff) {	// FIXME: cutoff isn't used?!
+void _mzd_trsm_lower_right_weird(mzd_t *L, mzd_t *B) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const offset = B->offset;
@@ -337,7 +337,7 @@ void _mzd_trsm_lower_right_even(mzd_t *L, mzd_t *B, const int cutoff) {
   
   if(nb <= TRSM_THRESHOLD){
     /* base case */
-    _mzd_trsm_lower_right_base (L, B, cutoff);
+    _mzd_trsm_lower_right_base (L, B);
   }
   else {
     rci_t const nb1 = (((nb - 1) / m4ri_radix + 1) >> 1) * m4ri_radix;
@@ -361,7 +361,7 @@ void _mzd_trsm_lower_right_even(mzd_t *L, mzd_t *B, const int cutoff) {
   }
 }
 
-void _mzd_trsm_lower_right_base(mzd_t *L, mzd_t *B, int const cutoff) { 	// FIXME: cutoff isn't used?!
+void _mzd_trsm_lower_right_base(mzd_t *L, mzd_t *B) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
 
@@ -411,7 +411,7 @@ void _mzd_trsm_lower_right_base(mzd_t *L, mzd_t *B, int const cutoff) { 	// FIXM
  * L->ncols < 64
  */
 
-void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B, const int cutoff);
+void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B);
 
 /* 
  * This version assumes that the matrices are at an even position on
@@ -437,7 +437,7 @@ void _mzd_trsm_lower_left(mzd_t *L, mzd_t *B, const int cutoff) {
     rci_t const mb = B->nrows;
     int const m1 = m4ri_radix - L->offset;
     if(mb <= m1) {
-      _mzd_trsm_lower_left_weird (L, B, cutoff);
+      _mzd_trsm_lower_left_weird (L, B);
       return;
     }
     /**
@@ -464,7 +464,7 @@ void _mzd_trsm_lower_left(mzd_t *L, mzd_t *B, const int cutoff) {
     mzd_t *L10 = mzd_init_window (L,  m1, 0, mb, m1);
     mzd_t *L11 = mzd_init_window (L, m1, m1, mb, mb);
     
-    _mzd_trsm_lower_left_weird (L00, B0, cutoff);
+    _mzd_trsm_lower_left_weird (L00, B0);
     mzd_addmul (B1, L10, B0, cutoff);
     _mzd_trsm_lower_left_even (L11, B1, cutoff);
     
@@ -477,7 +477,7 @@ void _mzd_trsm_lower_left(mzd_t *L, mzd_t *B, const int cutoff) {
   }
 }
 
-void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B, int const cutoff) {		// FIXME: cutoff isn't used?!
+void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const Boffset = B->offset;
@@ -604,7 +604,7 @@ void _mzd_trsm_lower_left_even(mzd_t *L, mzd_t *B, const int cutoff) {
  * Variant where U and B start at an odd bit position
  * Assumes that U->ncols < 64
  */
-void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B, const int cutoff);
+void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B);
 
 void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff);
 
@@ -625,7 +625,7 @@ void _mzd_trsm_upper_left(mzd_t *U, mzd_t *B, const int cutoff) {
     rci_t const mb = B->nrows;
     int const m1 = m4ri_radix - U->offset;
     if(mb <= m1) {
-      _mzd_trsm_upper_left_weird (U, B, cutoff);
+      _mzd_trsm_upper_left_weird (U, B);
       return;
     }
     /**
@@ -655,7 +655,7 @@ void _mzd_trsm_upper_left(mzd_t *U, mzd_t *B, const int cutoff) {
     
     _mzd_trsm_upper_left_even (U11, B1, cutoff);
     mzd_addmul (B0, U01, B1, cutoff);
-    _mzd_trsm_upper_left_weird (U00, B0, cutoff);
+    _mzd_trsm_upper_left_weird (U00, B0);
     
     mzd_free_window(B0);
     mzd_free_window(B1);
@@ -666,7 +666,7 @@ void _mzd_trsm_upper_left(mzd_t *U, mzd_t *B, const int cutoff) {
   }
 }
 
-void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B, int const cutoff) {	// FIXME: cutoff isn't used?!
+void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const Boffset = B->offset;

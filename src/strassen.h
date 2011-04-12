@@ -133,7 +133,7 @@ mzd_t *_mzd_addmul (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
  * \internal
  */
 
-mzd_t *_mzd_addmul_weird_weird (mzd_t *C, mzd_t *A, mzd_t *B, int cutoff);
+mzd_t *_mzd_addmul_weird_weird (mzd_t *C, mzd_t *A, mzd_t *B);
 
 /**
  * C = A*B + C for A with offset == 0 and B with offset != 0.

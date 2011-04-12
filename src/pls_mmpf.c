@@ -32,6 +32,9 @@
 #include "brilliantrussian.h"
 #include "grayflex.h"
 #include "xor.h"
+#ifndef NDEBUG
+#include "mmc.h"
+#endif
 
 static inline rci_t _max_value(rci_t *data, int length) {
   rci_t max = 0;
@@ -342,7 +345,7 @@ void _mzd_finish_pls_done_pivots(mzd_t *A, mzp_t const *P, rci_t const start_row
   }
 }
 
-void _mzd_finish_pls_done_rest1(mzd_t *A, mzp_t const *P,	// FIXME: P isn't used?!
+void _mzd_finish_pls_done_rest1(mzd_t *A,
     rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, int k0, mzd_t *T0, rci_t const *M0) {
 
   wi_t const wide = A->width - addblock;
@@ -358,7 +361,7 @@ void _mzd_finish_pls_done_rest1(mzd_t *A, mzp_t const *P,	// FIXME: P isn't used
 }
 
 
-void _mzd_finish_pls_done_rest2(mzd_t *A, mzp_t const *P,	// FIXME: P isn't used?!
+void _mzd_finish_pls_done_rest2(mzd_t *A,
     rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
     int k0, mzd_t *T0, rci_t const *M0, int k1, mzd_t *T1, rci_t const *M1) {
 
@@ -377,7 +380,7 @@ void _mzd_finish_pls_done_rest2(mzd_t *A, mzp_t const *P,	// FIXME: P isn't used
 }
 
 
-void _mzd_finish_pls_done_rest3(mzd_t *A, mzp_t const *P,	// FIXME: P isn't used?!
+void _mzd_finish_pls_done_rest3(mzd_t *A,
     rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
     int k0, mzd_t *T0, rci_t const *M0, int k1, mzd_t *T1, rci_t const *M1, int k2, mzd_t *T2, rci_t const *M2) { 
   wi_t const wide = A->width - addblock;
@@ -397,7 +400,7 @@ void _mzd_finish_pls_done_rest3(mzd_t *A, mzp_t const *P,	// FIXME: P isn't used
 }
 
 
-void _mzd_finish_pls_done_rest4(mzd_t *A, mzp_t const *P,	// FIXME: P isn't used?!
+void _mzd_finish_pls_done_rest4(mzd_t *A,
     rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
     int k0, mzd_t *T0, rci_t const *M0, int k1, mzd_t *T1, rci_t const *M1,
     int k2, mzd_t *T2, rci_t const *M2, int k3, mzd_t *T3, rci_t const *M3) {
@@ -539,7 +542,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
       mzd_make_table_pls(U, first_col+ka+kb,    curr_col+ka+kb,    kc, T2, E2, M2);
       mzd_make_table_pls(U, first_col+ka+kb+kc, curr_col+ka+kb+kc, kd, T3, E3, M3);
 
-      _mzd_finish_pls_done_rest4(A, P, curr_row, done_row+1, curr_col, splitblock,
+      _mzd_finish_pls_done_rest4(A, curr_row, done_row+1, curr_col, splitblock,
                                  ka, T0, M0,
                                  kb, T1, M1,
                                  kc, T2, M2,
@@ -563,7 +566,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
       mzd_make_table_pls(U, first_col+ka,    curr_col+ka,    kb, T1, E1, M1);
       mzd_make_table_pls(U, first_col+ka+kb, curr_col+ka+kb, kc, T2, E2, M2);
 
-      _mzd_finish_pls_done_rest3(A, P, curr_row, done_row+1, curr_col, splitblock,
+      _mzd_finish_pls_done_rest3(A, curr_row, done_row+1, curr_col, splitblock,
                                  ka, T0, M0,
                                  kb, T1, M1,
                                  kc, T2, M2);
@@ -583,7 +586,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
       mzd_make_table_pls(U, first_col,    curr_col,    ka, T0, E0, M0);
       mzd_make_table_pls(U, first_col+ka, curr_col+ka, kb, T1, E1, M1);
 
-      _mzd_finish_pls_done_rest2(A, P, curr_row, done_row+1, curr_col, splitblock,
+      _mzd_finish_pls_done_rest2(A, curr_row, done_row+1, curr_col, splitblock,
                                  ka, T0, M0,
                                  kb, T1, M1);
 
@@ -604,7 +607,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
       /**
        * 5. update A11 using A10 and the multiplication table M
        */
-      _mzd_finish_pls_done_rest1(A, P, curr_row, done_row+1, curr_col, splitblock, kbar, T0, M0);
+      _mzd_finish_pls_done_rest1(A, curr_row, done_row+1, curr_col, splitblock, kbar, T0, M0);
 
 
       if(done_row < nrows) {

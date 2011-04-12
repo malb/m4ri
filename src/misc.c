@@ -35,6 +35,7 @@
 #include <stdarg.h>
 #include "grayflex.h"
 #include "misc.h"
+#include "mmc.h"
 
 void m4ri_die(const char *errormessage, ...) {
   va_list lst;
