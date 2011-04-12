@@ -24,50 +24,30 @@
 /*
  * Example usage:
  *
- * ./bench_elimination -m 4 -c 90 -a 0.005 -d -t 30 -n 1000 1000 1000
+ * ./bench_elimination -s 0 -m 4 -c 90 -a 0.005 -d -t 30 -n 1000 1000 1000
  *
  * would run at most 30 seconds (-t) or 1000 times (-n), whichever comes
- * first, or stop after the real average falls with 90% certainty (-c) in
- * a range that is +/- 0.005 times the observed mean (-a: accuracry),
+ * first, or stop after the real average of wall time (-s 0) falls with 90%
+ * certainty (-c) in a range that is +/- 0.005 times the observed mean (-a: accuracry),
  * but no sooner than that at least 4 (-m: minimum) measurements have been
- * done. It would also print (-d: dump) each measurement.
+ * done. It would also print (-d: dump) each measurement (0:microseconds 1:cpuclocks).
  *
  * Example output.
  *
- * 0.002446
- * 0.002528
- * 0.002373
- * 0.002363
- * 0.002373
- * 0.002364
- * 0.002367
- * 0.002357
- * 0.002354
- * 0.002360
- * 0.002429
- * 0.002373
- * 0.002379
- * 0.002347
- * 0.002367
- * 0.002368
- * 0.002377
- * 0.002373
- * 0.002357
- * 0.002371
- * 0.002370
- * 0.002402
- * 0.002384
- * 0.002370
- * 0.002367
- * 0.002359
- * 0.002470
- * 0.002372
- * 0.002361
- * 0.002364
- * 0.002373
- * Total running time:  1.092 seconds.
- * Sample size: 31; mean: 0.002381; standard deviation: 0.000038
- * 90% confidence interval: +/- 0.000012 (0.5%): [0.002370..0.002393]
+ * 2416 6441500
+ * 2376 6335490
+ * 2360 6294450
+ * 2361 6295280
+ * 2371 6321440
+ * 2350 6266740
+ * 2362 6298700
+ * 2386 6362520
+ * 2344 6249890
+ * 2347 6260450
+ * 2346 6254590
+ * Total running time:  0.103 seconds.
+ * Virtual time (s): Sample size: 11; mean: 0.002365; standard deviation: 0.000021
+ * Virtual time (s): 90% confidence interval: +/- 0.000012 (0.5%): [0.002354..0.002377]
  *
  * The last three lines can be suppressed by passing the option -q (quiet).
  */
@@ -87,6 +67,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
+#include <ctype.h>
 #include "benchmarking.h"
 #include "misc.h"
 
@@ -104,6 +85,7 @@ unsigned long long bench_maxtime = 60000000;	// Maximum number of microseconds t
 double bench_accuracy = 0.01;			// The +/- range (where 1.0 is 100%) within that we want the real population mean to be with the given confidence. Set with -a <bench_accuracy>
 int bench_confidence_index = C99;		// The confidence that the real mean is within the given (or found) range.
 int bench_stats = 1;				// The counter used for statistics (0 = realtime, 1 = cpuclocks). Set with -s <counter>.
+int bench_dump_counter = -1;			// The counter to dump (see bench_stats). Set with -d <counter>. If not given all counters are dumped.
 char const* progname;				// Set to argv[0].
 
 /*
@@ -213,6 +195,12 @@ int global_options(int* argcp, char*** argvp)
     {
       case 'd':
 	bench_dump = 1;
+	if (isdigit((*argvp)[2][0]))
+	{
+	  ++*argvp;
+	  --*argcp;
+	  bench_dump_counter = atoi((*argvp)[1]);
+	}
 	break;
       case 'q':
 	bench_quiet = 1;
@@ -314,11 +302,6 @@ int global_options(int* argcp, char*** argvp)
 void bench_print_global_options(FILE* out)
 {
   fprintf(out, "OPTIONS\n");
-  fprintf(out, "  -d                Dump measurements.\n");
-  fprintf(out, "  -q                Quiet, suppress printing.\n");
-#ifdef HAVE_LIBPAPI
-  fprintf(out, "  -2                Disregard measurements with any level 2 cache misses.\n");
-#endif
   fprintf(out, "  -m <minimum>      Do at least <minimum> number of measurements. Default 2.\n");
   fprintf(out, "  -n <maximum>      Do at most <maximum> number of measurements. Default 1000.\n");
   fprintf(out, "  -t <max-time>     Stop after <max-time> seconds. Default 60.0 seconds.\n");
@@ -326,7 +309,10 @@ void bench_print_global_options(FILE* out)
   fprintf(out, "  -c <confidence>   Stop when accuracy has been reached with this confidence. Default 99 (%).\n");
   fprintf(out, "  -s <counter>      Counter to perform statistic over (0: realtime, 1: cpuclocks. Default: 1).\n");
   fprintf(out, "  -x <loop-count>   Call function <loop-count> times in the inner most loop (calls per measurement).\n");
+  fprintf(out, "  -d [<counter>]    Dump measurements. Dump all or only <counter> when given.\n");
+  fprintf(out, "  -q                Quiet. Suppress printing of statistics.\n");
 #ifdef HAVE_LIBPAPI
+  fprintf(out, "  -2                Disregard measurements with any level 2 cache misses.\n");
   fprintf(out, "  -p <PAPI-event>[,<PAPI-event>,...]\n");
   fprintf(out, "                    Count and report the given events. The list is comma or space separated,\n");
   fprintf(out, "                    for example -p \"PAPI_TOT_INS PAPI_L1_DCM\".\n");
@@ -648,9 +634,14 @@ int run_bench(
 
     if (bench_dump)
     {
-      printf("%llu", data[0]);
-      for (int nv = 1; nv < data_len; ++nv)
-	printf(" %llu", data[nv]);
+      if (bench_dump_counter >= 0 && bench_dump_counter < data_len)
+	printf("%llu", data[bench_dump_counter]);
+      else
+      {
+	printf("%llu", data[0]);
+	for (int nv = 1; nv < data_len; ++nv)
+	  printf(" %llu", data[nv]);
+      }
       printf("\n");
       fflush(stdout);
     }
