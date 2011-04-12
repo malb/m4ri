@@ -129,6 +129,17 @@ int bench_PAPI_L2_TCM_index;
 
 char* papi_event_name(int event)
 {
+  // PAPI needs to be initialized before calling PAPI_event_code_to_name.
+  if (PAPI_is_initialized() == PAPI_NOT_INITED)
+  {
+    int res = PAPI_library_init(PAPI_VER_CURRENT);
+    if (res != PAPI_OK && res != PAPI_VER_CURRENT)
+    {
+      fprintf(stderr, "%s: PAPI_library_init: error code %d %s\n", progname, res, PAPI_strerror(res));
+      m4ri_die("PAPI failed to initialize.\n");
+    }
+  }
+
   static char buf[PAPI_MAX_STR_LEN];
   int res = PAPI_event_code_to_name(event, buf);
   if (res)
