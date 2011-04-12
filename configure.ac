@@ -72,6 +72,9 @@ AC_ARG_WITH(papi,
 
 AC_CHECK_HEADER([mm_malloc.h],AC_DEFINE(HAVE_MM_MALLOC,,[Support aligned allocations]),)
 
+# Correctly working posix_memalign
+AX_FUNC_POSIX_MEMALIGN
+
 # OpenMP support
 AC_ARG_ENABLE([openmp],
         AS_HELP_STRING( [--enable-openmp],[add support for OpenMP multicore support.]))

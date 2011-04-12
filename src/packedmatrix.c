@@ -61,12 +61,12 @@
  * unused memory before asking the system for it.
  */
 typedef struct _mm_block {
-  /**
+  /*
    * Size in bytes of the data.
    */
   size_t size;
 
-  /**
+  /*
    * Pointer to buffer of data.
    */
   void *data;
@@ -91,14 +91,11 @@ static void *m4ri_mmc_malloc(size_t size) {
 
 #ifdef __M4RI_ENABLE_MMC
   void *ret = NULL;
-#endif
 
 #ifdef HAVE_OPENMP
 #pragma omp critical
 {
 #endif
-
-#ifdef __M4RI_ENABLE_MMC
   mmb_t *mm = m4ri_mmc_cache;
   if (size <= __M4RI_MMC_THRESHOLD) {
     for (int i = 0; i < __M4RI_MMC_NBLOCKS; ++i) {
@@ -110,20 +107,20 @@ static void *m4ri_mmc_malloc(size_t size) {
       }
     }
   }
-#endif // __M4RI_ENABLE_MMC
-
 #ifdef HAVE_OPENMP
  }
 #endif
 
-#ifdef __M4RI_ENABLE_MMC
  if (ret)
    return ret;
  else
    return m4ri_mm_malloc(size);
-#else 
+
+#else // __M4RI_ENABLE_MMC
+
  return m4ri_mm_malloc(size);
-#endif
+
+#endif // __M4RI_ENABLE_MMC
 }
 
 /*
@@ -135,9 +132,16 @@ static void *m4ri_mmc_malloc(size_t size) {
  * Returns pointer to allocated memory block.
  */
 static inline void *m4ri_mmc_calloc(size_t count, size_t size) {
-  void *ret = m4ri_mmc_malloc(count * size);
-  memset((char*)ret, 0, count * size);
-  return ret;
+#ifdef __M4RI_ENABLE_MMC
+  size_t total_size = count * size;
+  if (total_size <= __M4RI_MMC_THRESHOLD)
+  {
+    void *ret = m4ri_mmc_malloc(total_size);
+    memset((char*)ret, 0, total_size);
+    return ret;
+  }
+#endif
+  return m4ri_mm_calloc(count, size);
 }
 
 /*
@@ -147,11 +151,12 @@ static inline void *m4ri_mmc_calloc(size_t count, size_t size) {
  * size: Number of bytes.
  */
 static void m4ri_mmc_free(void *condemned, size_t size) {
+#ifdef __M4RI_ENABLE_MMC
+
 #ifdef HAVE_OPENMP
 #pragma omp critical
 {
 #endif
-#ifdef __M4RI_ENABLE_MMC
   static int j = 0;
   mmb_t *mm = m4ri_mmc_cache;
   if (size < __M4RI_MMC_THRESHOLD) {
@@ -169,12 +174,15 @@ static void m4ri_mmc_free(void *condemned, size_t size) {
   } else {
     m4ri_mm_free(condemned);
   }
-#else
-  m4ri_mm_free(condemned);
-#endif // __M4RI_ENABLE_MMC
 #ifdef HAVE_OPENMP
  }
 #endif
+
+#else // __M4RI_ENABLE_MMC
+
+  m4ri_mm_free(condemned);
+
+#endif // __M4RI_ENABLE_MMC
 }
 
 /*
@@ -183,21 +191,23 @@ static void m4ri_mmc_free(void *condemned, size_t size) {
  * This function is called automatically when the shared library is loaded.
  */
 void m4ri_mmc_cleanup(void) {
+#ifdef __M4RI_ENABLE_MMC
+
 #ifdef HAVE_OPENMP
 #pragma omp critical
 {
 #endif
-#ifdef __M4RI_ENABLE_MMC
   mmb_t *mm = m4ri_mmc_cache;
   for(int i = 0; i < __M4RI_MMC_NBLOCKS; ++i) {
     if (mm[i].size)
       m4ri_mm_free(mm[i].data);
     mm[i].size = 0;
   }
-#endif // __M4RI_ENABLE_MMC
 #ifdef HAVE_OPENMP
  }
 #endif
+
+#endif // __M4RI_ENABLE_MMC
 }
 
 mzd_t *mzd_init(rci_t r, rci_t c) {

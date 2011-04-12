@@ -495,6 +495,9 @@ static inline void *m4ri_mm_calloc(size_t count, size_t size) {
 
 #ifdef HAVE_MM_MALLOC
   newthing = _mm_malloc(count * size, 16);
+#elif HAVE_POSIX_MEMALIGN
+  int error = posix_memalign(&newthing, 16, count * size);
+  if (error) newthing = NULL;
 #else
   newthing = calloc(count, size);
 #endif
@@ -507,7 +510,7 @@ static inline void *m4ri_mm_calloc(size_t count, size_t size) {
     m4ri_die("m4ri_mm_calloc: calloc returned NULL\n");
     return NULL; /* unreachable. */
   }
-#ifdef HAVE_MM_MALLOC
+#if defined(HAVE_MM_MALLOC) || defined(HAVE_POSIX_MEMALIGN)
   char *b = (char*)newthing;
   memset(b, 0, count * size);
 #endif
@@ -533,6 +536,9 @@ static inline void *m4ri_mm_malloc(size_t size) {
 
 #ifdef HAVE_MM_MALLOC
   newthing = _mm_malloc(size, 16);
+#elif HAVE_POSIX_MEMALIGN
+  int error = posix_memalign(&newthing, 16, size);
+  if (error) newthing = NULL;
 #else
   newthing = malloc( size );
 #endif  
