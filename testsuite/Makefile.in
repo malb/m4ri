@@ -49,16 +49,34 @@ BENCH_PRGS = \
 	bench_elimination_sparse \
 	bench_packedmatrix
 
+M4RI_HEADERS = \
+        ../src/config.h \
+	../src/m4ri.h \
+	../src/brilliantrussian.h \
+        ../src/echelonform.h \
+        ../src/grayflex.h \
+        ../src/misc.h \
+        ../src/mmc.h \
+        ../src/parity.h \
+        ../src/pls.h \
+        ../src/solve.h \
+        ../src/strassen.h \
+        ../src/trsm.h \
+        ../src/packedmatrix.h \
+        ../src/permutation.h \
+        ../src/pls_mmpf.h \
+        ../src/xor.h
+
 CPUCYCLES_DIR = ./cpucycles-20060326
 
 .PHONY: all clean dist-clean
 
 all: $(TEST_PRGS) $(BENCH_PRGS)
 
-bench_%: cpucycles.o benchmarking.o bench_%.c Makefile
+bench_%: cpucycles.o benchmarking.o bench_%.c Makefile cpucycles.h $(M4RI_HEADERS)
 	$(CC) $(DEBUG) $(PAPI_CFLAGS) $(CFLAGS) $@.c cpucycles.o benchmarking.o $(LDFLAGS) $(PAPI_FLAGS) -lm -o $@
 
-test_%: test_%.c testing.o Makefile
+test_%: test_%.c testing.o Makefile $(M4RI_HEADERS)
 	$(CC) $(DEBUG) $(CFLAGS) $@.c $(LDFLAGS) testing.o -o $@
 
 clean:
@@ -76,10 +94,10 @@ cpucycles.h: cpucycles.o
 cpucycles.o:
 	(cd $(CPUCYCLES_DIR); sh do; cp cpucycles.o ..; cp cpucycles.h ..)
 
-testing.o: testing.c testing.h
+testing.o: testing.c testing.h ../src/misc.h ../src/packedmatrix.h
 	$(CC) $(DEBUG) $(CFLAGS) -c testing.c $(LDFLAGS) -o $@
 
-benchmarking.o: benchmarking.c benchmarking.h
+benchmarking.o: benchmarking.c benchmarking.h ../src/config.h ../src/misc.h
 	$(CC) $(DEBUG) $(PAPI_CFLAGS) $(CFLAGS) -c benchmarking.c $(LDFLAGS) -o $@
 
 Makefile: @MAINTAINER_MODE_TRUE@ Makefile.in ../config.status
