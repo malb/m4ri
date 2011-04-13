@@ -122,6 +122,17 @@ static unsigned long long loop_calibration[32];
     for (uint64_t i = 0; i < loop_count; ++i) { mzd_func_with_ARGS; }	\
     TIME_END
 
+mzd_t* volatile vA;
+rci_t volatile vrowa;
+rci_t volatile vcola;
+rci_t volatile vrowb;
+rci_t volatile vcolb;
+wi_t volatile vstartblock;
+int volatile vn;
+int volatile vint;
+word volatile vword;
+BIT volatile vbit;
+
 BENCHMARK_PREFIX(bench_nothing)
 {
   mzd_t* const A = mzd_init(64, 64);
@@ -138,12 +149,15 @@ BENCHMARK_PREFIX(_mzd_row_swap)
 {
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
-  rci_t const rowa = p->row[0];
-  rci_t const rowb = p->row[1];
-  wi_t const startblock = p->wrd[0];
+
+  vA = A;
+  vrowa = p->row[0];
+  vrowb = p->row[1];
+  vstartblock = p->wrd[0];
+
   uint64_t const loop_count = p->count;
 
-  TIME(_mzd_row_swap(A, rowa, rowb, startblock));
+  TIME(_mzd_row_swap(vA, vrowa, vrowb, vstartblock));
 
   mzd_free(A);
 }
@@ -197,13 +211,16 @@ BENCHMARK_PREFIX(mzd_col_swap_in_rows)
 {
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
-  rci_t const cola = p->col[0];
-  rci_t const colb = p->col[1];
-  rci_t const start_row = p->row[0];
-  rci_t const stop_row = p->row[1];
+
+  vA = A;
+  vcola = p->col[0];
+  vcolb = p->col[1];
+  vrowa = p->row[0];
+  vrowb = p->row[1];
+
   uint64_t const loop_count = p->count;
 
-  TIME(mzd_col_swap_in_rows(A, cola, colb, start_row, stop_row));
+  TIME(mzd_col_swap_in_rows(vA, vcola, vcolb, vrowa, vrowb));
 
   mzd_free(A);
 }
@@ -213,12 +230,14 @@ BENCHMARK_PREFIX(mzd_read_bit)
 {
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
-  rci_t const rowa = p->row[0];
-  rci_t const cola = p->col[0];
-  uint64_t const loop_count = p->count;
-  BIT volatile result;
 
-  TIME(result = mzd_read_bit(A, rowa, cola));
+  vA = A;
+  vrowa = p->row[0];
+  vcola = p->col[0];
+
+  uint64_t const loop_count = p->count;
+
+  TIME(vbit = mzd_read_bit(vA, vrowa, vcola));
 
   mzd_free(A);
 }
@@ -227,12 +246,15 @@ BENCHMARK_POSTFIX
 BENCHMARK_PREFIX(mzd_write_bit)
 {
   mzd_t* const A = mzd_init(p->m, p->n);
-  rci_t const rowa = p->row[0];
-  rci_t const cola = p->col[0];
-  int bit = 0;
+
+  vA = A;
+  vrowa = p->row[0];
+  vcola = p->col[0];
+  vbit = 0;
+
   uint64_t const loop_count = p->count;
 
-  TIME(mzd_write_bit(A, rowa, cola, bit); bit = !bit);
+  TIME(mzd_write_bit(vA, vrowa, vcola, vbit); vbit = !vbit);
 
   mzd_free(A);
 }
@@ -242,12 +264,15 @@ BENCHMARK_PREFIX(mzd_row_add_offset)
 {
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
-  rci_t const rowa = p->row[0];
-  rci_t const rowb = p->row[1];
-  rci_t const cola = p->col[0];
+
+  vA = A;
+  vrowa = p->row[0];
+  vrowb = p->row[1];
+  vcola = p->col[0];
+
   uint64_t const loop_count = p->count;
 
-  TIME(mzd_row_add_offset(A, rowa, rowb, cola));
+  TIME(mzd_row_add_offset(vA, vrowa, vrowb, vcola));
 
   mzd_free(A);
 }
@@ -572,13 +597,15 @@ BENCHMARK_PREFIX(mzd_read_bits)
 {
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
-  rci_t row = p->row[0];
-  rci_t col = p->col[0];
-  int n = p->integer;
-  uint64_t const loop_count = p->count;
-  word volatile result;
 
-  TIME(result = mzd_read_bits(A, row, col, n));
+  vA = A;
+  vrowa = p->row[0];
+  vcola = p->col[0];
+  vn = p->integer;
+
+  uint64_t const loop_count = p->count;
+
+  TIME(vword = mzd_read_bits(vA, vrowa, vcola, vn));
 
   mzd_free(A);
 }
@@ -588,13 +615,15 @@ BENCHMARK_PREFIX(mzd_read_bits_int)
 {
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
-  rci_t row = p->row[0];
-  rci_t col = p->col[0];
-  int n = p->integer;
-  uint64_t const loop_count = p->count;
-  int volatile result;
 
-  TIME(result = mzd_read_bits_int(A, row, col, n));
+  vA = A;
+  vrowa = p->row[0];
+  vcola = p->col[0];
+  vn = p->integer;
+
+  uint64_t const loop_count = p->count;
+
+  TIME(vint = mzd_read_bits_int(vA, vrowa, vcola, vn));
 
   mzd_free(A);
 }
@@ -604,13 +633,16 @@ BENCHMARK_PREFIX(mzd_xor_bits)
 {
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
-  rci_t row = p->row[0];
-  rci_t col = p->col[0];
-  int n = p->integer;
-  word volatile const values = 0xffffffffffffffffULL;
+
+  vA = A;
+  vrowa = p->row[0];
+  vcola = p->col[0];
+  vn = p->integer;
+  vword = 0xffffffffffffffffULL;
+
   uint64_t const loop_count = p->count;
 
-  TIME(mzd_xor_bits(A, row, col, n, values));
+  TIME(mzd_xor_bits(vA, vrowa, vcola, vn, vword));
 
   mzd_free(A);
 }
@@ -620,13 +652,16 @@ BENCHMARK_PREFIX(mzd_and_bits)
 {
   mzd_t* const A = mzd_init(p->m, p->n);
   mzd_randomize(A);
-  rci_t row = p->row[0];
-  rci_t col = p->col[0];
-  int n = p->integer;
-  word volatile const values = 0xffffffffffffffffULL;
+
+  vA = A;
+  vrowa = p->row[0];
+  vcola = p->col[0];
+  vn = p->integer;
+  vword = 0xffffffffffffffffULL;
+
   uint64_t const loop_count = p->count;
 
-  TIME(mzd_and_bits(A, row, col, n, values));
+  TIME(mzd_and_bits(vA, vrowa, vcola, vn, vword));
 
   mzd_free(A);
 }
@@ -634,14 +669,17 @@ BENCHMARK_POSTFIX
 
 BENCHMARK_PREFIX(mzd_clear_bits)
 {
-  mzd_t* const A = mzd_init(p->m, p->n);
+  mzd_t* volatile A = mzd_init(p->m, p->n);
   mzd_randomize(A);
-  rci_t row = p->row[0];
-  rci_t col = p->col[0];
-  int n = p->integer;
+
+  vA = A;
+  vrowa = p->row[0];
+  vcola = p->col[0];
+  vn = p->integer;
+
   uint64_t const loop_count = p->count;
 
-  TIME(mzd_clear_bits(A, row, col, n));
+  TIME(mzd_clear_bits(vA, vrowa, vcola, vn));
 
   mzd_free(A);
 }
