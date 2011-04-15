@@ -32,17 +32,19 @@
 *
 ********************************************************************/
 
+#include "m4ri_config.h"
+
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
 
-#ifdef HAVE_SSE2
+#if __M4RI_HAVE_SSE2
 #include <emmintrin.h>
 #endif
 
 #include "misc.h"
 
-#ifdef HAVE_SSE2
+#if __M4RI_HAVE_SSE2
 /**
  * \brief SSE2 cutoff in words.
  *
@@ -50,7 +52,7 @@
  * used.
  */
 
-#define SSE2_CUTOFF 10
+#define __M4RI_SSE2_CUTOFF 10
 #endif
 
 /**
@@ -457,8 +459,8 @@ static inline void mzd_row_add_offset(mzd_t *M, rci_t dstrow, rci_t srcrow, rci_
   *dst++ ^= *src++ & mask_begin;
   --wide;
 
-#ifdef HAVE_SSE2 
-  int not_aligned = __M4RI_ALIGNMENT(src,16) != 0;		/* 0: Aligned, 1: Not aligned */
+#if __M4RI_HAVE_SSE2 
+  int not_aligned = __M4RI_ALIGNMENT(src,16) != 0;	/* 0: Aligned, 1: Not aligned */
   if (wide > not_aligned + 1)				/* Speed up for small matrices */
   {
     if (not_aligned) {
@@ -903,8 +905,8 @@ static inline void mzd_combine_even_in_place(mzd_t *A,       rci_t const a_row, 
   word *a = A->rows[a_row] + a_startblock;
   word *b = B->rows[b_row] + b_startblock;
   
-#ifdef HAVE_SSE2
-  if(wide > SSE2_CUTOFF) {
+#if __M4RI_HAVE_SSE2
+  if(wide > __M4RI_SSE2_CUTOFF) {
     /** check alignments **/
     if (__M4RI_ALIGNMENT(a,16)) {
       *a++ ^= *b++;
@@ -927,7 +929,7 @@ static inline void mzd_combine_even_in_place(mzd_t *A,       rci_t const a_row, 
       wide = ((sizeof(word) * wide) % 16) / sizeof(word);
     }
   }
-#endif //HAVE_SSE2
+#endif // __M4RI_HAVE_SSE2
 
   if (wide > 0) {
     wi_t n = (wide + 7) / 8;
@@ -986,8 +988,8 @@ static inline void mzd_combine_even(mzd_t *C,       rci_t const c_row, wi_t cons
   /*     c[i] = b[i]; */
   /*   } */
   /* } else { */
-#ifdef HAVE_SSE2
-  if(wide > SSE2_CUTOFF) {
+#if __M4RI_HAVE_SSE2
+  if(wide > __M4RI_SSE2_CUTOFF) {
     /** check alignments **/
     if (__M4RI_ALIGNMENT(a,16)) {
       *c++ = *b++ ^ *a++;
@@ -1013,7 +1015,7 @@ static inline void mzd_combine_even(mzd_t *C,       rci_t const c_row, wi_t cons
       wide = ((sizeof(word) * wide) % 16) / sizeof(word);
     }
   }
-#endif //HAVE_SSE2
+#endif // __M4RI_HAVE_SSE2
 
   if (wide > 0) {
     wi_t n = (wide + 7) / 8;

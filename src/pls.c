@@ -78,7 +78,7 @@ rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
 #endif
 
   if (ncols <= m4ri_radix || A->width * A->nrows <= __M4RI_PLS_CUTOFF) {
-/*   if(ncols <= PLUQ_CUTOFF) { */
+/*   if(ncols <= __M4RI_PLUQ_CUTOFF) { */
     /* this improves data locality and runtime considerably */
     mzd_t *Abar = mzd_copy(NULL, A);
     rci_t r = _mzd_pls_mmpf(Abar, P, Q, 0);

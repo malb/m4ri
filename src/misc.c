@@ -26,10 +26,6 @@
 #include <windows.h>
 #endif
 
-#ifndef HAVE_SSE2
-#undef HAVE_MM_MALLOC
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

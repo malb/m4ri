@@ -6,9 +6,11 @@ AM_CFLAGS=${SIMD_FLAGS} ${OPENMP_CFLAGS} ${DEBUG_FLAGS}
 lib_LTLIBRARIES = libm4ri.la
 
 libm4ri_la_SOURCES = src/brilliantrussian.c src/misc.c src/packedmatrix.c src/grayflex.c src/strassen.c src/permutation.c src/trsm.c src/pls.c src/solve.c src/pls_mmpf.c src/echelonform.c src/mmc.c
+BUILT_SOURCES = src/m4ri_config.h
 
 pkgincludesubdir = $(includedir)/m4ri
-pkgincludesub_HEADERS = src/m4ri.h src/brilliantrussian.h src/misc.h src/packedmatrix.h src/grayflex.h src/strassen.h src/parity.h src/permutation.h src/config.h src/trsm.h src/pls.h src/solve.h src/pls_mmpf.h src/echelonform.h src/xor.h src/mmc.h
+pkgincludesub_HEADERS = src/m4ri.h src/brilliantrussian.h src/misc.h src/packedmatrix.h src/grayflex.h src/strassen.h src/parity.h src/permutation.h src/trsm.h src/pls.h src/solve.h src/pls_mmpf.h src/echelonform.h src/xor.h src/mmc.h
+nodist_pkgincludesub_HEADERS = src/m4ri_config.h
 
 #libm4ri_la_LDFLAGS = -version-info 0:0:0
 libm4ri_la_LDFLAGS = -release 0.0.20110501 -no-undefined
@@ -43,7 +45,7 @@ test_random_SOURCES=testsuite/test_random.c
 test_random_LDFLAGS=-lm4ri -lm
 test_random_CFLAGS=-I$(srcdir)/src
 
-test_smallops_SOURCES=testsuite/test_smallops.c testsuite/testing.c
+test_smallops_SOURCES=testsuite/test_smallops.c testsuite/testing.c testsuite/testing.h
 test_smallops_LDFLAGS=-lm4ri -lm
 test_smallops_CFLAGS=-I$(srcdir)/src
 

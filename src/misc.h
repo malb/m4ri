@@ -33,13 +33,9 @@
 *
 ********************************************************************/
 
-#include "config.h"
+#include "m4ri_config.h"
 
-#ifndef HAVE_SSE2
-#undef HAVE_MM_MALLOC
-#endif
-
-#ifdef HAVE_MM_MALLOC
+#if __M4RI_USE_MM_MALLOC
 #include <mm_malloc.h>
 #endif
 
@@ -516,21 +512,21 @@ void m4ri_fini(void);
 
 static inline void *m4ri_mm_calloc(size_t count, size_t size) {
   void *newthing;
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
 #pragma omp critical
 {
 #endif
 
-#ifdef HAVE_MM_MALLOC
+#if __M4RI_USE_MM_MALLOC
   newthing = _mm_malloc(count * size, 16);
-#elif HAVE_POSIX_MEMALIGN
+#elif __M4RI_USE_POSIX_MEMALIGN
   int error = posix_memalign(&newthing, 16, count * size);
   if (error) newthing = NULL;
 #else
   newthing = calloc(count, size);
 #endif
 
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
  }
 #endif
 
@@ -538,7 +534,7 @@ static inline void *m4ri_mm_calloc(size_t count, size_t size) {
     m4ri_die("m4ri_mm_calloc: calloc returned NULL\n");
     return NULL; /* unreachable. */
   }
-#if defined(HAVE_MM_MALLOC) || defined(HAVE_POSIX_MEMALIGN)
+#if __M4RI_USE_MM_MALLOC || __M4RI_USE_POSIX_MEMALIGN
   char *b = (char*)newthing;
   memset(b, 0, count * size);
 #endif
@@ -557,20 +553,20 @@ static inline void *m4ri_mm_calloc(size_t count, size_t size) {
 
 static inline void *m4ri_mm_malloc(size_t size) {
   void *newthing;
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
 #pragma omp critical
 {
 #endif
 
-#ifdef HAVE_MM_MALLOC
+#if __M4RI_USE_MM_MALLOC
   newthing = _mm_malloc(size, 16);
-#elif HAVE_POSIX_MEMALIGN
+#elif __M4RI_USE_POSIX_MEMALIGN
   int error = posix_memalign(&newthing, 16, size);
   if (error) newthing = NULL;
 #else
   newthing = malloc( size );
 #endif  
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
  }
 #endif
   if (newthing==NULL && (size>0)) {
@@ -590,7 +586,7 @@ static inline void *m4ri_mm_malloc(size_t size) {
 
 /* void m4ri_mm_free(void *condemned, ...); */
 static inline void m4ri_mm_free(void *condemned, ...) { 
-#ifdef HAVE_MM_MALLOC
+#if __M4RI_USE_MM_MALLOC
   _mm_free(condemned); 
 #else
   free(condemned);

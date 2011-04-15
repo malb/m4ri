@@ -23,14 +23,6 @@ AC_PROG_INSTALL
 
 AC_CONFIG_HEADERS(src/config.h)
 
-m4_include([m4/ax_gcc_x86_cpuid.m4])
-m4_include([m4/ax_ext.m4])dnl
-m4_include([m4/ax_cpu_vendor.m4])dnl
-m4_include([m4/ax_cache_size.m4])dnl
-m4_include([m4/ax_cache_size_tune.m4])dnl
-m4_include([m4/ax_check_compiler_flags.m4])dnl
-m4_include([m4/ax_openmp.m4])dnl
-
 dnl Check if a C++ compiler was specified. If so, assume we want to wrap word in a C++ class.
 AC_EGREP_CPP(YES, [
 #ifdef __cplusplus
@@ -65,15 +57,33 @@ AS_IF([test "x$enable_sse2" != "xno"], [
           fi
    esac
 ])
+if test x"$ax_cv_have_sse2_ext" = x"yes"; then
+  M4RI_HAVE_SSE2=1
+else
+  M4RI_HAVE_SSE2=0
+fi
+AC_SUBST(M4RI_HAVE_SSE2)
 
 AC_ARG_WITH(papi,
     AS_HELP_STRING([--with-papi@<:@=PATH@:>@], [The PAPI install prefix, if configure can't find it.]),
     [m4ri_config_papi=$withval])
 
 AC_CHECK_HEADER([mm_malloc.h],AC_DEFINE(HAVE_MM_MALLOC,,[Support aligned allocations]),)
+if test "$ac_cv_header_mm_malloc_h" = "yes"; then
+  M4RI_HAVE_MM_MALLOC=1
+else
+  M4RI_HAVE_MM_MALLOC=0
+fi
+AC_SUBST(M4RI_HAVE_MM_MALLOC)
 
 # Correctly working posix_memalign
 AX_FUNC_POSIX_MEMALIGN
+if test "$ax_cv_func_posix_memalign_works" = "yes"; then
+  M4RI_HAVE_POSIX_MEMALIGN=1
+else
+  M4RI_HAVE_POSIX_MEMALIGN=0
+fi
+AC_SUBST(M4RI_HAVE_POSIX_MEMALIGN)
 
 # OpenMP support
 AC_ARG_ENABLE([openmp],
@@ -83,6 +93,12 @@ AS_IF([test "x$enable_openmp" = "xyes"], [
    AX_OPENMP()
 ])
 AC_SUBST(OPENMP_CFLAGS)
+if test -n "$OPENMP_CFLAGS"; then
+  M4RI_HAVE_OPENMP=1
+else
+  M4RI_HAVE_OPENMP=0
+fi
+AC_SUBST(M4RI_HAVE_OPENMP)
 
 # Debugging support
 AC_ARG_ENABLE(debug, [  --enable-debug          Enable assert() statements for debugging.])
@@ -147,6 +163,6 @@ AS_IF([test "x$enable_cachetune" = "xyes"], [
 
 AC_PROG_MAKE_SET
 
-AC_CONFIG_FILES([Makefile testsuite/Makefile])
+AC_CONFIG_FILES([Makefile testsuite/Makefile src/m4ri_config.h])
 AC_OUTPUT
 
