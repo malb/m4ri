@@ -1222,7 +1222,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
 
 /* TRSM */
 
-void _mzd_trsm_upper_left_even_submatrix(mzd_t *U, mzd_t *B, rci_t const start_row, int const k, word const mask_begin, word const mask_end) {
+void _mzd_trsm_upper_left_even_submatrix(mzd_t const *U, mzd_t *B, rci_t const start_row, int const k, word const mask_begin, word const mask_end) {
   for (int i = 0; i < k; ++i) {
     for (int j = 0; j < i; ++j) {
       if (mzd_read_bit(U, start_row+(k-i-1), start_row+(k-i)+j)) {
@@ -1258,7 +1258,7 @@ void _mzd_trsm_upper_left_even_submatrix(mzd_t *U, mzd_t *B, rci_t const start_r
 
 //#undef __M4RI_M4RM_GRAY8
 
-void _mzd_trsm_upper_left_even_m4r(mzd_t *U, mzd_t *B, int k) {
+void _mzd_trsm_upper_left_even_m4r(mzd_t const *U, mzd_t *B, int k) {
   wi_t const wide = B->width;
   int const blocksize = __M4RI_MUL_BLOCKSIZE;
 

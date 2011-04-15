@@ -38,18 +38,18 @@
  * the m4ri_radix grid and that their dimension is a multiple of m4ri_radix.
  */
 
-void _mzd_trsm_upper_right_even(mzd_t *U, mzd_t *B, const int cutoff);
+void _mzd_trsm_upper_right_even(mzd_t const *U, mzd_t *B, const int cutoff);
 
 /*
  * Variant where U and B start at an odd bit position. Assumes that
  * U->ncols < 64
  */
 
-void _mzd_trsm_upper_right_weird(mzd_t *U, mzd_t *B);
+void _mzd_trsm_upper_right_weird(mzd_t const *U, mzd_t *B);
 
-void _mzd_trsm_upper_right_base(mzd_t *U, mzd_t *B);
+void _mzd_trsm_upper_right_base(mzd_t const *U, mzd_t *B);
 
-void mzd_trsm_upper_right(mzd_t *U, mzd_t *B, const int cutoff) {
+void mzd_trsm_upper_right(mzd_t const *U, mzd_t *B, const int cutoff) {
   if(U->nrows != B->ncols)
     m4ri_die("mzd_trsm_upper_right: U nrows (%d) need to match B ncols (%d).\n", U->nrows, B->ncols);
   if(U->nrows != U->ncols)
@@ -58,7 +58,7 @@ void mzd_trsm_upper_right(mzd_t *U, mzd_t *B, const int cutoff) {
   _mzd_trsm_upper_right(U, B, cutoff);
 }
 
-void _mzd_trsm_upper_right(mzd_t *U, mzd_t *B, const int cutoff) {
+void _mzd_trsm_upper_right(mzd_t const *U, mzd_t *B, const int cutoff) {
   rci_t const nb = B->ncols;
   rci_t const mb = B->nrows;
   int const n1 = m4ri_radix-B->offset;
@@ -103,7 +103,7 @@ void _mzd_trsm_upper_right(mzd_t *U, mzd_t *B, const int cutoff) {
   mzd_free_window(U11);
 }
 
-void _mzd_trsm_upper_right_weird(mzd_t *U, mzd_t *B) {
+void _mzd_trsm_upper_right_weird(mzd_t const *U, mzd_t *B) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const offset = B->offset;
@@ -146,7 +146,7 @@ void _mzd_trsm_upper_right_weird(mzd_t *U, mzd_t *B) {
   }
 }
 
-void _mzd_trsm_upper_right_even(mzd_t *U, mzd_t *B, const int cutoff) {
+void _mzd_trsm_upper_right_even(mzd_t const *U, mzd_t *B, const int cutoff) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
 
@@ -176,7 +176,7 @@ void _mzd_trsm_upper_right_even(mzd_t *U, mzd_t *B, const int cutoff) {
   mzd_free_window(U11);
 }
 
-void _mzd_trsm_upper_right_base(mzd_t *U, mzd_t *B) {
+void _mzd_trsm_upper_right_base(mzd_t const *U, mzd_t *B) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
 
@@ -223,18 +223,18 @@ void _mzd_trsm_upper_right_base(mzd_t *U, mzd_t *B) {
  * Variant where L and B start at an odd bit position Assumes that
  * L->ncols < 64
  */
-void _mzd_trsm_lower_right_weird(mzd_t *L, mzd_t *B);
+void _mzd_trsm_lower_right_weird(mzd_t const *L, mzd_t *B);
 
 /*
  * Variant where L and B start at an even bit position Assumes that
  * L->ncols < 64
  */
 
-void _mzd_trsm_lower_right_even(mzd_t *L, mzd_t *B, const int cutoff);
+void _mzd_trsm_lower_right_even(mzd_t const *L, mzd_t *B, const int cutoff);
 
-void _mzd_trsm_lower_right_base(mzd_t *L, mzd_t *B);
+void _mzd_trsm_lower_right_base(mzd_t const *L, mzd_t *B);
 
-void mzd_trsm_lower_right(mzd_t *L, mzd_t *B, const int cutoff) {
+void mzd_trsm_lower_right(mzd_t const *L, mzd_t *B, const int cutoff) {
   if(L->nrows != B->ncols)
     m4ri_die("mzd_trsm_lower_right: L nrows (%d) need to match B ncols (%d).\n", L->nrows, B->ncols);
   if(L->nrows != L->ncols)
@@ -243,7 +243,7 @@ void mzd_trsm_lower_right(mzd_t *L, mzd_t *B, const int cutoff) {
   _mzd_trsm_lower_right (L, B, cutoff);
 }
 
-void _mzd_trsm_lower_right(mzd_t *L, mzd_t *B, const int cutoff) {
+void _mzd_trsm_lower_right(mzd_t const *L, mzd_t *B, const int cutoff) {
   rci_t const nb = B->ncols;
   rci_t const mb = B->nrows;
   int const n1 = m4ri_radix-B->offset;
@@ -289,7 +289,7 @@ void _mzd_trsm_lower_right(mzd_t *L, mzd_t *B, const int cutoff) {
   }
 }
 
-void _mzd_trsm_lower_right_weird(mzd_t *L, mzd_t *B) {
+void _mzd_trsm_lower_right_weird(mzd_t const *L, mzd_t *B) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const offset = B->offset;
@@ -331,7 +331,7 @@ void _mzd_trsm_lower_right_weird(mzd_t *L, mzd_t *B) {
   }
 }
 
-void _mzd_trsm_lower_right_even(mzd_t *L, mzd_t *B, const int cutoff) {
+void _mzd_trsm_lower_right_even(mzd_t const *L, mzd_t *B, const int cutoff) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   
@@ -361,7 +361,7 @@ void _mzd_trsm_lower_right_even(mzd_t *L, mzd_t *B, const int cutoff) {
   }
 }
 
-void _mzd_trsm_lower_right_base(mzd_t *L, mzd_t *B) {
+void _mzd_trsm_lower_right_base(mzd_t const *L, mzd_t *B) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
 
@@ -411,16 +411,16 @@ void _mzd_trsm_lower_right_base(mzd_t *L, mzd_t *B) {
  * L->ncols < 64
  */
 
-void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B);
+void _mzd_trsm_lower_left_weird(mzd_t const *L, mzd_t *B);
 
 /* 
  * This version assumes that the matrices are at an even position on
  * the m4ri_radix grid and that their dimension is a multiple of m4ri_radix.
  */
 
-void _mzd_trsm_lower_left_even(mzd_t *L, mzd_t *B, const int cutoff);
+void _mzd_trsm_lower_left_even(mzd_t const *L, mzd_t *B, const int cutoff);
 
-void mzd_trsm_lower_left(mzd_t *L, mzd_t *B, const int cutoff) {
+void mzd_trsm_lower_left(mzd_t const *L, mzd_t *B, const int cutoff) {
   if(L->ncols != B->nrows)
     m4ri_die("mzd_trsm_lower_left: L ncols (%d) need to match B nrows (%d).\n", L->ncols, B->nrows);
   if(L->nrows != L->ncols)
@@ -429,7 +429,7 @@ void mzd_trsm_lower_left(mzd_t *L, mzd_t *B, const int cutoff) {
   _mzd_trsm_lower_left (L, B, cutoff);
 }
 
-void _mzd_trsm_lower_left(mzd_t *L, mzd_t *B, const int cutoff) {
+void _mzd_trsm_lower_left(mzd_t const *L, mzd_t *B, const int cutoff) {
   if(!L->offset)
     _mzd_trsm_lower_left_even(L, B, cutoff);
   else{
@@ -477,7 +477,7 @@ void _mzd_trsm_lower_left(mzd_t *L, mzd_t *B, const int cutoff) {
   }
 }
 
-void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B) {
+void _mzd_trsm_lower_left_weird(mzd_t const *L, mzd_t *B) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const Boffset = B->offset;
@@ -526,7 +526,7 @@ void _mzd_trsm_lower_left_weird(mzd_t *L, mzd_t *B) {
   }
 }
 
-void _mzd_trsm_lower_left_even(mzd_t *L, mzd_t *B, const int cutoff) {
+void _mzd_trsm_lower_left_even(mzd_t const *L, mzd_t *B, const int cutoff) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const Boffset = B->offset;
@@ -604,11 +604,11 @@ void _mzd_trsm_lower_left_even(mzd_t *L, mzd_t *B, const int cutoff) {
  * Variant where U and B start at an odd bit position
  * Assumes that U->ncols < 64
  */
-void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B);
+void _mzd_trsm_upper_left_weird (mzd_t const *U, mzd_t *B);
 
-void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff);
+void _mzd_trsm_upper_left_even(mzd_t const *U, mzd_t *B, const int cutoff);
 
-void mzd_trsm_upper_left(mzd_t *U, mzd_t *B, const int cutoff) {
+void mzd_trsm_upper_left(mzd_t const *U, mzd_t *B, const int cutoff) {
   if(U->ncols != B->nrows)
     m4ri_die("mzd_trsm_upper_left: U ncols (%d) need to match B nrows (%d).\n", U->ncols, B->nrows);
   if(U->nrows != U->ncols)
@@ -617,7 +617,7 @@ void mzd_trsm_upper_left(mzd_t *U, mzd_t *B, const int cutoff) {
   _mzd_trsm_upper_left (U, B, cutoff);
 }
 
-void _mzd_trsm_upper_left(mzd_t *U, mzd_t *B, const int cutoff) {
+void _mzd_trsm_upper_left(mzd_t const *U, mzd_t *B, const int cutoff) {
   if(!U->offset)
     _mzd_trsm_upper_left_even (U, B, cutoff);
   else{
@@ -666,7 +666,7 @@ void _mzd_trsm_upper_left(mzd_t *U, mzd_t *B, const int cutoff) {
   }
 }
 
-void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B) {
+void _mzd_trsm_upper_left_weird (mzd_t const *U, mzd_t *B) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const Boffset = B->offset;
@@ -710,7 +710,7 @@ void _mzd_trsm_upper_left_weird (mzd_t *U, mzd_t *B) {
   }
 }
 
-void _mzd_trsm_upper_left_even(mzd_t *U, mzd_t *B, const int cutoff) {
+void _mzd_trsm_upper_left_even(mzd_t const *U, mzd_t *B, const int cutoff) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const Boffset = B->offset;
