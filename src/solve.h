@@ -46,7 +46,7 @@
  *        system is not consistent).
  * \return 0 if a solution was found, -1 otherwise
  */
-int mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency_check);
+int mzd_solve_left(mzd_t *A, mzd_t *B, int const cutoff, int const inconsistency_check);
 
 /**
  * \brief Solves (P L U Q) X = B
@@ -72,9 +72,9 @@ int mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency
  *        found, -1 otherwise
  * \return 0 if a solution was found, -1 otherwise
  */
-int mzd_pluq_solve_left (mzd_t *A, rci_t rank, 
-                         mzp_t *P, mzp_t *Q, 
-                         mzd_t *B, const int cutoff, const int inconsistency_check);
+int mzd_pluq_solve_left (mzd_t const *A, rci_t rank, 
+                         mzp_t const *P, mzp_t const *Q, 
+                         mzd_t *B, int const cutoff, int const inconsistency_check);
 
 /**
  * \brief  Solves (P L U Q) X = B
@@ -100,9 +100,9 @@ int mzd_pluq_solve_left (mzd_t *A, rci_t rank,
  *        found, -1 otherwise
  * \return 0 if a solution was found, -1 otherwise
  */
-int _mzd_pluq_solve_left(mzd_t *A, rci_t rank, 
-                         mzp_t *P, mzp_t *Q, 
-                         mzd_t *B, const int cutoff, const int inconsistency_check);
+int _mzd_pluq_solve_left(mzd_t const *A, rci_t rank, 
+                         mzp_t const *P, mzp_t const *Q, 
+                         mzd_t *B, int const cutoff, int const inconsistency_check);
 
 /**
  * \brief Solves A X = B with A and B matrices.
@@ -112,7 +112,7 @@ int _mzd_pluq_solve_left(mzd_t *A, rci_t rank,
  * This version assumes that the matrices are at an even position on
  * the m4ri_radix grid and that their dimension is a multiple of m4ri_radix.
  *
- * \param A Input matrix.
+ * \param A Input matrix (overwritten).
  * \param B Input matrix, being overwritten by the solution matrix X.
  * \param cutoff Minimal dimension for Strassen recursion (default: 0).
  * \param inconsistency_check decide whether or not to perform a check
@@ -121,8 +121,7 @@ int _mzd_pluq_solve_left(mzd_t *A, rci_t rank,
  *        found, -1 otherwise
  * \return 0 if a solution was found, -1 otherwise
  */
-int _mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistency_check);
-
+int _mzd_solve_left(mzd_t *A, mzd_t *B, int const cutoff, int const inconsistency_check);
 
 /**
  * \brief Solve X for A X = 0.
@@ -131,7 +130,7 @@ int _mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistenc
  * matrix X such that A*X == 0 and that the columns of X are linearly
  * independent.
  *
- * \param A Matrix.
+ * \param A Input matrix (overwritten).
  * \param cutoff Minimal dimension for Strassen recursion (default: 0).
  *
  * \wordoffset
@@ -141,6 +140,6 @@ int _mzd_solve_left(mzd_t *A, mzd_t *B, const int cutoff, const int inconsistenc
  * \return X, NULL if kernel is empty
  */
 
-mzd_t *mzd_kernel_left_pluq(mzd_t *A, const int cutoff);
+mzd_t *mzd_kernel_left_pluq(mzd_t *A, int const cutoff);
 
 #endif // M4RI_SOLVE_H

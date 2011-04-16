@@ -80,10 +80,10 @@ rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
   if (ncols <= m4ri_radix || A->width * A->nrows <= __M4RI_PLS_CUTOFF) {
 /*   if(ncols <= __M4RI_PLUQ_CUTOFF) { */
     /* this improves data locality and runtime considerably */
-    mzd_t *Abar = mzd_copy(NULL, A);
-    rci_t r = _mzd_pls_mmpf(Abar, P, Q, 0);
+    mzd_t *Abar = mzd_copy(NULL, A);				// FIXME: Why is A copied to Abar
+    rci_t r = _mzd_pls_mmpf(Abar, P, Q, 0);			// changed
     //rci_t r = _mzd_pls_naive(Abar, P, Q);
-    mzd_copy(A, Abar);
+    mzd_copy(A, Abar);						// and copied back to A? Can't we work on A directly?
     mzd_free(Abar);
     return r;
   }

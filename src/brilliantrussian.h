@@ -45,7 +45,7 @@
  * \brief Constructs all possible \f$2^k\f$ row combinations using the gray
  * code table.
  * 
- * \param M matrix to operate on
+ * \param M matrix to generate the tables from
  * \param r the starting row
  * \param c the starting column (only exact up to block)
  * \param k
@@ -55,7 +55,7 @@
  * \wordoffset
  */
 
-void mzd_make_table(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L);
+void mzd_make_table(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L);
 
 /**
  * \brief The function looks up k bits from position i,startcol in
@@ -75,7 +75,7 @@ void mzd_make_table(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L);
  * \wordoffset
  */
 
-void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k, mzd_t *T, rci_t *L);
+void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k, mzd_t const *T, rci_t const *L);
 
 /**
  * \brief Same as mzd_process_rows but works with two Gray code tables
@@ -94,7 +94,7 @@ void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, in
  * \wordoffset
  */
 
-void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k, mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1);
+void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k, mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1);
 
 /**
  * \brief Same as mzd_process_rows but works with three Gray code tables
@@ -116,8 +116,8 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, i
  */
 
 void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k, 
-                       mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1,
-                       mzd_t *T2, rci_t *L2);
+                       mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1,
+                       mzd_t const *T2, rci_t const *L2);
 
 /**
  * \brief Same as mzd_process_rows but works with four Gray code tables
@@ -141,9 +141,8 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, i
  */
 
 void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k,
-                       mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1,
-                       mzd_t *T2, rci_t *L2, mzd_t *T3, rci_t *L3);
-
+                       mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1,
+                       mzd_t const *T2, rci_t const *L2, mzd_t const *T3, rci_t const *L3);
 
 /**
  * \brief Same as mzd_process_rows but works with five Gray code tables
@@ -169,9 +168,9 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, i
  */
 
 void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k,
-                       mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1,
-                       mzd_t *T2, rci_t *L2, mzd_t *T3, rci_t *L3,
-                       mzd_t *T4, rci_t *L4);
+                       mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1,
+                       mzd_t const *T2, rci_t const *L2, mzd_t const *T3, rci_t const *L3,
+                       mzd_t const *T4, rci_t const *L4);
 
 /**
  * \brief Same as mzd_process_rows but works with six Gray code tables
@@ -199,9 +198,9 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, i
  */
 
 void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k,
-                       mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1,
-                       mzd_t *T2, rci_t *L2, mzd_t *T3, rci_t *L3,
-                       mzd_t *T4, rci_t *L4, mzd_t *T5, rci_t *L5);
+                       mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1,
+                       mzd_t const *T2, rci_t const *L2, mzd_t const *T3, rci_t const *L3,
+                       mzd_t const *T4, rci_t const *L4, mzd_t const *T5, rci_t const *L5);
 
 /**
  * \brief Matrix elimination using the 'Method of the Four Russians'
@@ -277,7 +276,7 @@ rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r);
  * must be free'd using mzd_free() once it is not needed anymore.
  */
 
-mzd_t *mzd_invert_m4ri(mzd_t *M, mzd_t *I, int k);
+mzd_t *mzd_invert_m4ri(mzd_t const *M, mzd_t const *I, int k);
 
 /**
  * \brief Matrix multiplication using Konrod's method, i.e. compute C
@@ -296,7 +295,7 @@ mzd_t *mzd_invert_m4ri(mzd_t *M, mzd_t *I, int k);
  * \return Pointer to C.
  */
 
-mzd_t *mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k);
+mzd_t *mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k);
 
 
 /**
@@ -315,7 +314,7 @@ mzd_t *mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k);
  * \return Pointer to C.
  */
 
-mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k);
+mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k);
 
 /**
  * \brief Matrix multiplication using Konrod's method, i.e. compute C such
@@ -342,7 +341,7 @@ mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k);
  * \return Pointer to C.
  */
 
-mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear);
+mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear);
 
 /**
  * \brief If defined 8 Gray code tables are used in parallel.

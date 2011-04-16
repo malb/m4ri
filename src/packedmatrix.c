@@ -104,7 +104,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
   return A;
 }
 
-mzd_t *mzd_init_window (mzd_t const *m, rci_t lowr, rci_t lowc, rci_t highr, rci_t highc) {
+mzd_t *mzd_init_window (mzd_t *m, rci_t lowr, rci_t lowc, rci_t highr, rci_t highc) {
   rci_t nrows, ncols;
   mzd_t *window;
   window = (mzd_t*)m4ri_mmc_malloc(sizeof(mzd_t));
@@ -366,10 +366,10 @@ static inline mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *X) {
   rci_t nr2 = (X->nrows > 256) ? 2 * m4ri_radix * (X->nrows / (4 * m4ri_radix)) : m4ri_radix * (X->nrows / (2 * m4ri_radix));
   rci_t nc2 = (X->ncols > 256) ? 2 * m4ri_radix * (X->ncols / (4 * m4ri_radix)) : m4ri_radix * (X->ncols / (2 * m4ri_radix));
 
-  mzd_t *A = mzd_init_window(X,    0,   0, nr2, nc2);
-  mzd_t *B = mzd_init_window(X,    0, nc2, nr2,  nc);
-  mzd_t *C = mzd_init_window(X,  nr2,   0,  nr, nc2);
-  mzd_t *D = mzd_init_window(X,  nr2, nc2,  nr,  nc);
+  mzd_t const *A = mzd_init_window_const(X,    0,   0, nr2, nc2);
+  mzd_t const *B = mzd_init_window_const(X,    0, nc2, nr2,  nc);
+  mzd_t const *C = mzd_init_window_const(X,  nr2,   0,  nr, nc2);
+  mzd_t const *D = mzd_init_window_const(X,  nr2, nc2,  nr,  nc);
 
   mzd_t *AT = mzd_init_window(DST,   0,   0, nc2, nr2);
   mzd_t *CT = mzd_init_window(DST,   0, nr2, nc2,  nr);
@@ -381,8 +381,8 @@ static inline mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *X) {
   _mzd_transpose(CT, C);
   _mzd_transpose(DT, D);
 
-  mzd_free_window(A); mzd_free_window(B);
-  mzd_free_window(C); mzd_free_window(D);
+  mzd_free_window((mzd_t*)A); mzd_free_window((mzd_t*)B);
+  mzd_free_window((mzd_t*)C); mzd_free_window((mzd_t*)D);
 
   mzd_free_window(AT); mzd_free_window(CT);
   mzd_free_window(BT); mzd_free_window(DT);

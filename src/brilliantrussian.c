@@ -166,7 +166,7 @@ static inline void _mzd_copy_back_rows(mzd_t *A, mzd_t *U, rci_t r, rci_t c, int
   }
 }
 
-void mzd_make_table(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L)
+void mzd_make_table(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L)
 {
   wi_t const homeblock = (c + M->offset) / m4ri_radix;
   word const mask_end = __M4RI_LEFT_BITMASK((M->ncols + M->offset) % m4ri_radix);
@@ -215,7 +215,7 @@ void mzd_make_table(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L)
   }
 }
 
-void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t *T, rci_t *L) {
+void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t const *T, rci_t const *L) {
   wi_t const block = startcol / m4ri_radix;
   wi_t const wide = M->width - block;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
@@ -342,7 +342,7 @@ void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, i
   }
 }
 
-void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1) {
+void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1) {
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
@@ -378,7 +378,8 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   }
 }
 
-void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1, mzd_t *T2, rci_t *L2) {
+void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
+                       mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1, mzd_t const *T2, rci_t const *L2) {
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
@@ -421,7 +422,7 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 }
 
 void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, 
-                       mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1, mzd_t *T2, rci_t *L2, mzd_t *T3, rci_t *L3) {
+                       mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1, mzd_t const *T2, rci_t const *L2, mzd_t const *T3, rci_t const *L3) {
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
@@ -467,8 +468,8 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 }
 
 void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, 
-                       mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1, mzd_t *T2, rci_t *L2, mzd_t *T3, rci_t *L3,
-                       mzd_t *T4, rci_t *L4) {
+                       mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1, mzd_t const *T2, rci_t const *L2,
+		       mzd_t const *T3, rci_t const *L3, mzd_t const *T4, rci_t const *L4) {
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
@@ -518,8 +519,9 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 }
 
 void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, 
-                       mzd_t *T0, rci_t *L0, mzd_t *T1, rci_t *L1, mzd_t *T2, rci_t *L2, mzd_t *T3, rci_t *L3,
-                       mzd_t *T4, rci_t *L4, mzd_t *T5, rci_t *L5) {
+                       mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1, mzd_t const *T2,
+		       rci_t const *L2, mzd_t const *T3, rci_t const *L3, mzd_t const *T4, rci_t const *L4,
+		       mzd_t const *T5, rci_t const *L5) {
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
@@ -941,8 +943,7 @@ void mzd_top_echelonize_m4ri(mzd_t *M, int k) {
   _mzd_top_echelonize_m4ri(M,k,0,0,M->nrows);
 }
 
-
-mzd_t *mzd_invert_m4ri(mzd_t *m, mzd_t *I, int k) {
+mzd_t *mzd_invert_m4ri(mzd_t const *m, mzd_t const *I, int k) {
   mzd_t *big = mzd_concat(NULL, m, I);
   rci_t size = m->ncols;
   if (k == 0)
@@ -966,7 +967,7 @@ mzd_t *mzd_invert_m4ri(mzd_t *m, mzd_t *I, int k) {
   return answer;
 }
 
-mzd_t *mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k) {
+mzd_t *mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k) {
   rci_t a = A->nrows;
   rci_t c = B->ncols;
 
@@ -981,7 +982,7 @@ mzd_t *mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k) {
   return _mzd_mul_m4rm(C, A, B, k, TRUE);
 }
 
-mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k) {
+mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k) {
   rci_t a = A->nrows;
   rci_t c = B->ncols;
 
@@ -999,7 +1000,7 @@ mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k) {
   return _mzd_mul_m4rm(C, A, B, k, FALSE);
 }
 
-mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t *A, mzd_t *B, int k, int clear) {
+mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear) {
   /**
    * The algorithm proceeds as follows:
    * 

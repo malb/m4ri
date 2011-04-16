@@ -15,7 +15,7 @@ mzd_t *mzd_init_test_matrix_random(rci_t M, rci_t N, rci_t m, rci_t n, rci_t off
   return a;
 }
 
-mzd_t *mzd_free_test_matrix_random(mzd_t *A, mzd_t *a) {
+void mzd_free_test_matrix_random(mzd_t *A, mzd_t *a) {
   mzd_free(a);
   mzd_free(A);
 };

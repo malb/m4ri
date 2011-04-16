@@ -109,7 +109,7 @@ void mzp_set_ui(mzp_t *P, unsigned int value);
  * \param P Permutation.
  */
 
-void mzd_apply_p_left(mzd_t *A, mzp_t *P);
+void mzd_apply_p_left(mzd_t *A, mzp_t const *P);
 
 /**
  * Apply the permutation P to A from the left but transpose P before.
@@ -120,7 +120,7 @@ void mzd_apply_p_left(mzd_t *A, mzp_t *P);
  * \param P Permutation.
  */
 
-void mzd_apply_p_left_trans(mzd_t *A, mzp_t *P);
+void mzd_apply_p_left_trans(mzd_t *A, mzp_t const *P);
 
 /**
  * Apply the permutation P to A from the right.
@@ -131,7 +131,7 @@ void mzd_apply_p_left_trans(mzd_t *A, mzp_t *P);
  * \param P Permutation.
  */
 
-void mzd_apply_p_right(mzd_t *A, mzp_t *P);
+void mzd_apply_p_right(mzd_t *A, mzp_t const *P);
 
 /**
  * Apply the permutation P to A from the right but transpose P before.
@@ -142,7 +142,7 @@ void mzd_apply_p_right(mzd_t *A, mzp_t *P);
  * \param P Permutation.
  */
 
-void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
+void mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P);
 
 
 /**
@@ -158,7 +158,7 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
  * \wordoffset
  */
 
-void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t *P, rci_t start_row, rci_t start_col);
+void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t start_col);
 
 /**
  * Apply the permutation P^T to A from the right starting at start_row.
@@ -173,7 +173,7 @@ void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t *P, rci_t start_row, rci_t st
  * \wordoffset
  */
 
-void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t *P, rci_t start_row, rci_t start_col);
+void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t start_col);
 
 /**
  * Apply the mzp_t P to A from the right but transpose P before.
@@ -184,7 +184,7 @@ void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t *P, rci_t start_row, rc
  * \param P Permutation.
  */
 
-void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
+void mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P);
 
 
 /**
@@ -196,7 +196,7 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t *P);
  * \param A Matrix.
  * \param Q Permutation.
  */
-void  mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t *Q);
+void  mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t const *Q);
 
 /**
  * Print the mzp_t P
@@ -204,7 +204,7 @@ void  mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t *Q);
  * \param P Permutation.
  */
 
-void mzp_print(mzp_t *P);
+void mzp_print(mzp_t const *P);
 
 /**
  * Compresses the matrix L in a step in blockwise-recursive PLS

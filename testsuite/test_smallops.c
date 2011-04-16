@@ -1,5 +1,6 @@
 #include "config.h"
 #include <stdlib.h>
+#include <inttypes.h>
 #include "testing.h"
 #include "m4ri.h"
 
@@ -8,7 +9,7 @@
 int smallops_test_add(rci_t M, rci_t N, rci_t m, rci_t n, rci_t offset, word pattern) {
   int ret = 0; 
 
-  printf("      mzd_add: M: %4d, N: %4d, m: %4d, n: %4d, offset: %4d, pattern: 0x%llx ", M, N, m, n, offset, pattern);
+  printf("      mzd_add: M: %4d, N: %4d, m: %4d, n: %4d, offset: %4d, pattern: 0x%" PRIx64 " ", M, N, m, n, offset, pattern);
 
   mzd_t *AA;
   mzd_t *A = mzd_init_test_matrix_random(M, N, m, n, offset, pattern, &AA);

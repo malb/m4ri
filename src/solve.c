@@ -34,8 +34,8 @@ int mzd_solve_left(mzd_t *A, mzd_t *B, int const cutoff, int const inconsistency
   return _mzd_solve_left(A, B, cutoff, inconsistency_check);
 }
  
-int mzd_pluq_solve_left (mzd_t *A, rci_t rank, 
-                         mzp_t *P, mzp_t *Q, 
+int mzd_pluq_solve_left (mzd_t const *A, rci_t rank, 
+                         mzp_t const *P, mzp_t const *Q, 
                          mzd_t *B, int const cutoff, int const inconsistency_check) {
   if(A->ncols > B->nrows)
     m4ri_die("mzd_pluq_solve_left: A ncols (%d) need to be lower than B nrows (%d).\n", A->ncols, B->nrows);
@@ -47,8 +47,8 @@ int mzd_pluq_solve_left (mzd_t *A, rci_t rank,
   return _mzd_pluq_solve_left (A, rank, P, Q, B, cutoff, inconsistency_check);
 }
 
-int _mzd_pluq_solve_left(mzd_t *A, rci_t rank, 
-                         mzp_t *P, mzp_t *Q, 
+int _mzd_pluq_solve_left(mzd_t const *A, rci_t rank, 
+                         mzp_t const *P, mzp_t const *Q, 
                          mzd_t *B, int const cutoff, int const inconsistency_check) {
   /** A is supposed to store L lower triangular and U upper triangular
    *  B is modified in place 
@@ -68,14 +68,14 @@ int _mzd_pluq_solve_left(mzd_t *A, rci_t rank,
   /* L B3 = B2 */
   
   /* view on the upper part of L */
-  mzd_t *LU = mzd_init_window(A, 0, 0, rank, rank);
+  mzd_t const *LU = mzd_init_window_const(A, 0, 0, rank, rank);
   mzd_t *Y1 = mzd_init_window(B, 0, 0, rank, B->ncols);
   mzd_trsm_lower_left(LU, Y1, cutoff);
 
   if (inconsistency_check) { /* Check for inconsistency */    
     /** FASTER without this check; update with the lower part of L
      */
-    mzd_t *H  = mzd_init_window(A, rank, 0, A->nrows, rank);
+    mzd_t const *H  = mzd_init_window_const(A, rank, 0, A->nrows, rank);
     mzd_t *Y2 = mzd_init_window(B, rank, 0, A->nrows, B->ncols);
     if(A->nrows < B->nrows) {
       mzd_t *Y3 = mzd_init_window(B, A->nrows, 0, B->nrows, B->ncols);
@@ -89,12 +89,12 @@ int _mzd_pluq_solve_left(mzd_t *A, rci_t rank,
     if(!mzd_is_zero(Y2)) {
       retval = -1;
     }
-    mzd_free_window(H);
+    mzd_free_window((mzd_t*)H);
     mzd_free_window(Y2);
   }
   /* U B4 = B3 */
   mzd_trsm_upper_left(LU, Y1, cutoff);
-  mzd_free_window(LU);
+  mzd_free_window((mzd_t*)LU);
   mzd_free_window(Y1);
   
   if (!inconsistency_check) {

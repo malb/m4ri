@@ -87,9 +87,9 @@ void _mzd_trsm_upper_right(mzd_t const *U, mzd_t *B, const int cutoff) {
    */
   mzd_t *B0  = mzd_init_window (B,  0,  0, mb, n1);
   mzd_t *B1  = mzd_init_window (B,  0, n1, mb, nb);
-  mzd_t *U00 = mzd_init_window (U,  0,  0, n1, n1);
-  mzd_t *U01 = mzd_init_window (U,  0, n1, n1, nb);
-  mzd_t *U11 = mzd_init_window (U, n1, n1, nb, nb);
+  mzd_t const *U00 = mzd_init_window_const (U,  0,  0, n1, n1);
+  mzd_t const *U01 = mzd_init_window_const (U,  0, n1, n1, nb);
+  mzd_t const *U11 = mzd_init_window_const (U, n1, n1, nb, nb);
   
   _mzd_trsm_upper_right_weird (U00, B0);
   mzd_addmul (B1, B0, U01, cutoff);
@@ -98,9 +98,9 @@ void _mzd_trsm_upper_right(mzd_t const *U, mzd_t *B, const int cutoff) {
   mzd_free_window(B0);
   mzd_free_window(B1);
   
-  mzd_free_window(U00);
-  mzd_free_window(U01);
-  mzd_free_window(U11);
+  mzd_free_window((mzd_t*)U00);
+  mzd_free_window((mzd_t*)U01);
+  mzd_free_window((mzd_t*)U11);
 }
 
 void _mzd_trsm_upper_right_weird(mzd_t const *U, mzd_t *B) {
@@ -160,9 +160,9 @@ void _mzd_trsm_upper_right_even(mzd_t const *U, mzd_t *B, const int cutoff) {
   
   mzd_t *B0 = mzd_init_window(B,  0,     0,   mb, nb1);
   mzd_t *B1 = mzd_init_window(B,  0,   nb1,   mb, nb);
-  mzd_t *U00 = mzd_init_window(U, 0,     0, nb1, nb1);
-  mzd_t *U01 = mzd_init_window(U, 0,   nb1, nb1, nb);
-  mzd_t *U11 = mzd_init_window(U, nb1, nb1,  nb, nb);
+  mzd_t const *U00 = mzd_init_window_const(U, 0,     0, nb1, nb1);
+  mzd_t const *U01 = mzd_init_window_const(U, 0,   nb1, nb1, nb);
+  mzd_t const *U11 = mzd_init_window_const(U, nb1, nb1,  nb, nb);
   
   _mzd_trsm_upper_right_even (U00, B0, cutoff);
   mzd_addmul (B1, B0, U01, cutoff);
@@ -171,9 +171,9 @@ void _mzd_trsm_upper_right_even(mzd_t const *U, mzd_t *B, const int cutoff) {
   mzd_free_window(B0);
   mzd_free_window(B1);
   
-  mzd_free_window(U00);
-  mzd_free_window(U01);
-  mzd_free_window(U11);
+  mzd_free_window((mzd_t*)U00);
+  mzd_free_window((mzd_t*)U01);
+  mzd_free_window((mzd_t*)U11);
 }
 
 void _mzd_trsm_upper_right_base(mzd_t const *U, mzd_t *B) {
@@ -272,9 +272,9 @@ void _mzd_trsm_lower_right(mzd_t const *L, mzd_t *B, const int cutoff) {
    */
     mzd_t *B0  = mzd_init_window (B,  0,  0, mb, n1);
     mzd_t *B1  = mzd_init_window (B,  0, n1, mb, nb);
-    mzd_t *L00 = mzd_init_window (L,  0,  0, n1, n1);
-    mzd_t *L10 = mzd_init_window (L,  n1, 0, nb, n1);
-    mzd_t *L11 = mzd_init_window (L, n1, n1, nb, nb);
+    mzd_t const *L00 = mzd_init_window_const (L,  0,  0, n1, n1);
+    mzd_t const *L10 = mzd_init_window_const (L,  n1, 0, nb, n1);
+    mzd_t const *L11 = mzd_init_window_const (L, n1, n1, nb, nb);
     
     _mzd_trsm_lower_right_even (L11, B1, cutoff);
     mzd_addmul (B0, B1, L10, cutoff);
@@ -283,9 +283,9 @@ void _mzd_trsm_lower_right(mzd_t const *L, mzd_t *B, const int cutoff) {
     mzd_free_window(B0);
     mzd_free_window(B1);
     
-    mzd_free_window(L00);
-    mzd_free_window(L10);
-    mzd_free_window(L11);
+    mzd_free_window((mzd_t*)L00);
+    mzd_free_window((mzd_t*)L10);
+    mzd_free_window((mzd_t*)L11);
   }
 }
 
@@ -344,9 +344,9 @@ void _mzd_trsm_lower_right_even(mzd_t const *L, mzd_t *B, const int cutoff) {
 
     mzd_t *B0 = mzd_init_window(B,  0,     0,   mb, nb1);
     mzd_t *B1 = mzd_init_window(B,  0,   nb1,   mb, nb);
-    mzd_t *L00 = mzd_init_window(L, 0,     0, nb1, nb1);
-    mzd_t *L10 = mzd_init_window(L, nb1, 0, nb, nb1);
-    mzd_t *L11 = mzd_init_window(L, nb1, nb1,  nb, nb);
+    mzd_t const *L00 = mzd_init_window_const(L, 0,     0, nb1, nb1);
+    mzd_t const *L10 = mzd_init_window_const(L, nb1, 0, nb, nb1);
+    mzd_t const *L11 = mzd_init_window_const(L, nb1, nb1,  nb, nb);
 
     _mzd_trsm_lower_right_even (L11, B1, cutoff);
     mzd_addmul (B0, B1, L10, cutoff);
@@ -355,9 +355,9 @@ void _mzd_trsm_lower_right_even(mzd_t const *L, mzd_t *B, const int cutoff) {
     mzd_free_window(B0);
     mzd_free_window(B1);
 
-    mzd_free_window(L00);
-    mzd_free_window(L10);
-    mzd_free_window(L11);
+    mzd_free_window((mzd_t*)L00);
+    mzd_free_window((mzd_t*)L10);
+    mzd_free_window((mzd_t*)L11);
   }
 }
 
@@ -460,9 +460,9 @@ void _mzd_trsm_lower_left(mzd_t const *L, mzd_t *B, const int cutoff) {
       
     mzd_t *B0  = mzd_init_window (B,  0,  0, m1, nb);
     mzd_t *B1  = mzd_init_window (B,  m1, 0, mb, nb);
-    mzd_t *L00 = mzd_init_window (L,  0,  0, m1, m1);
-    mzd_t *L10 = mzd_init_window (L,  m1, 0, mb, m1);
-    mzd_t *L11 = mzd_init_window (L, m1, m1, mb, mb);
+    mzd_t const *L00 = mzd_init_window_const (L,  0,  0, m1, m1);
+    mzd_t const *L10 = mzd_init_window_const (L,  m1, 0, mb, m1);
+    mzd_t const *L11 = mzd_init_window_const (L, m1, m1, mb, mb);
     
     _mzd_trsm_lower_left_weird (L00, B0);
     mzd_addmul (B1, L10, B0, cutoff);
@@ -471,9 +471,9 @@ void _mzd_trsm_lower_left(mzd_t const *L, mzd_t *B, const int cutoff) {
     mzd_free_window(B0);
     mzd_free_window(B1);
     
-    mzd_free_window(L00);
-    mzd_free_window(L10);
-    mzd_free_window(L11);
+    mzd_free_window((mzd_t*)L00);
+    mzd_free_window((mzd_t*)L10);
+    mzd_free_window((mzd_t*)L11);
   }
 }
 
@@ -577,9 +577,9 @@ void _mzd_trsm_lower_left_even(mzd_t const *L, mzd_t *B, const int cutoff) {
 
     mzd_t *B0 = mzd_init_window(B,  0,     0,   mb1, nb);
     mzd_t *B1 = mzd_init_window(B, mb1,    0,   mb,  nb);
-    mzd_t *L00 = mzd_init_window(L, 0,     0, mb1, mb1);
-    mzd_t *L10 = mzd_init_window(L, mb1,   0, mb, mb1);
-    mzd_t *L11 = mzd_init_window(L, mb1, mb1, mb, mb);
+    mzd_t const *L00 = mzd_init_window_const(L, 0,     0, mb1, mb1);
+    mzd_t const *L10 = mzd_init_window_const(L, mb1,   0, mb, mb1);
+    mzd_t const *L11 = mzd_init_window_const(L, mb1, mb1, mb, mb);
 
     _mzd_trsm_lower_left_even (L00, B0, cutoff);
 
@@ -590,9 +590,9 @@ void _mzd_trsm_lower_left_even(mzd_t const *L, mzd_t *B, const int cutoff) {
     mzd_free_window(B0);
     mzd_free_window(B1);
 
-    mzd_free_window(L00);
-    mzd_free_window(L10);
-    mzd_free_window(L11);
+    mzd_free_window((mzd_t*)L00);
+    mzd_free_window((mzd_t*)L10);
+    mzd_free_window((mzd_t*)L11);
   }
 }
 
@@ -649,9 +649,9 @@ void _mzd_trsm_upper_left(mzd_t const *U, mzd_t *B, const int cutoff) {
     
     mzd_t *B0  = mzd_init_window (B,  0,  0, m1, nb);
     mzd_t *B1  = mzd_init_window (B,  m1, 0, mb, nb);
-    mzd_t *U00 = mzd_init_window (U,  0,  0, m1, m1);
-    mzd_t *U01 = mzd_init_window (U,  0, m1, m1, mb);
-    mzd_t *U11 = mzd_init_window (U, m1, m1, mb, mb);
+    mzd_t const *U00 = mzd_init_window_const (U,  0,  0, m1, m1);
+    mzd_t const *U01 = mzd_init_window_const (U,  0, m1, m1, mb);
+    mzd_t const *U11 = mzd_init_window_const (U, m1, m1, mb, mb);
     
     _mzd_trsm_upper_left_even (U11, B1, cutoff);
     mzd_addmul (B0, U01, B1, cutoff);
@@ -660,9 +660,9 @@ void _mzd_trsm_upper_left(mzd_t const *U, mzd_t *B, const int cutoff) {
     mzd_free_window(B0);
     mzd_free_window(B1);
     
-    mzd_free_window(U00);
-    mzd_free_window(U01);
-    mzd_free_window(U11);
+    mzd_free_window((mzd_t*)U00);
+    mzd_free_window((mzd_t*)U01);
+    mzd_free_window((mzd_t*)U11);
   }
 }
 
@@ -763,9 +763,9 @@ void _mzd_trsm_upper_left_even(mzd_t const *U, mzd_t *B, const int cutoff) {
 
     mzd_t *B0 = mzd_init_window(B,  0,     0,   mb1, nb);
     mzd_t *B1 = mzd_init_window(B, mb1,    0,   mb,  nb);
-    mzd_t *U00 = mzd_init_window(U, 0,     0, mb1, mb1);
-    mzd_t *U01 = mzd_init_window(U, 0,   mb1, mb1, mb);
-    mzd_t *U11 = mzd_init_window(U, mb1, mb1, mb, mb);
+    mzd_t const *U00 = mzd_init_window_const(U, 0,     0, mb1, mb1);
+    mzd_t const *U01 = mzd_init_window_const(U, 0,   mb1, mb1, mb);
+    mzd_t const *U11 = mzd_init_window_const(U, mb1, mb1, mb, mb);
 
     _mzd_trsm_upper_left_even (U11, B1, cutoff);
 
@@ -776,8 +776,8 @@ void _mzd_trsm_upper_left_even(mzd_t const *U, mzd_t *B, const int cutoff) {
     mzd_free_window(B0);
     mzd_free_window(B1);
 
-    mzd_free_window(U00);
-    mzd_free_window(U01);
-    mzd_free_window(U11);
+    mzd_free_window((mzd_t*)U00);
+    mzd_free_window((mzd_t*)U01);
+    mzd_free_window((mzd_t*)U11);
   }
 }

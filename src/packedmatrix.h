@@ -162,7 +162,18 @@ void mzd_free(mzd_t *A);
  *
  */
 
-mzd_t *mzd_init_window(mzd_t const *M, rci_t const lowr, rci_t const lowc, rci_t const highr, rci_t const highc);
+mzd_t *mzd_init_window(mzd_t *M, rci_t const lowr, rci_t const lowc, rci_t const highr, rci_t const highc);
+
+/**
+ * \brief Create a const window/view into a const matrix M.
+ *
+ * See mzd_init_window, but for constant M.
+ */
+
+static inline mzd_t const *mzd_init_window_const(mzd_t const *M, rci_t const lowr, rci_t const lowc, rci_t const highr, rci_t const highc)
+{
+  return mzd_init_window((mzd_t*)M, lowr, lowc, highr, highc);
+}
 
 /**
  * \brief Free a matrix window created with mzd_init_window.
