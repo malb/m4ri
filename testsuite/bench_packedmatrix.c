@@ -79,7 +79,7 @@ static unsigned long long loop_calibration[32];
 	unsigned long long t0 = PAPI_get_virt_usec(); \
 	papi_res = PAPI_start_counters((int*)papi_events, array_len)
 #define TIME_END \
-	PAPI_stop_counters(&data[1], array_len); \
+	PAPI_stop_counters((long long*)&data[1], array_len); \
 	t0 = PAPI_get_virt_usec() - t0; \
 	data[0] = t0; \
 	for (int nv = 0; nv <= array_len; ++nv) \
@@ -798,6 +798,7 @@ double complexity1(struct test_params *p, char code)
       assert(p->col[0] < p->n);
       return p->n - p->col[0];		// Linear with the number of columns of column col and beyond.
   }
+  return 0.0;
 }
 
 char const* complexity1_human(struct test_params *p, char code)
@@ -821,6 +822,7 @@ char const* complexity1_human(struct test_params *p, char code)
     case 'C':
       return "cols";
   }
+  return "UNKNOWN";
 }
 
 double complexity(struct test_params *p, char const* cp)

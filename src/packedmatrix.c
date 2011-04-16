@@ -1153,7 +1153,7 @@ void mzd_copy_row(mzd_t *B, rci_t i, mzd_t const *A, rci_t j) {
   assert(B->ncols >= A->ncols);
   wi_t const width = MIN(B->width, A->width) - 1;
 
-  word *a = A->rows[j];
+  word const *a = A->rows[j];
   word *b = B->rows[i];
  
   word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - A->offset);
