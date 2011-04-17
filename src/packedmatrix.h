@@ -43,6 +43,7 @@
 #endif
 
 #include "misc.h"
+#include "debug_dump.h"
 
 #if __M4RI_HAVE_SSE2
 /**
@@ -79,7 +80,7 @@
  * The most fundamental data type in this library.
  */
 
-typedef struct {
+typedef struct mzd_t {
   /**
    * Contains pointers to the actual blocks of memory containing the
    * values packed into words of size m4ri_radix.
@@ -217,6 +218,9 @@ static inline void _mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb, w
   tmp = (a[width] ^ b[width]) & mask_end;
   a[width] ^= tmp;
   b[width] ^= tmp;
+
+  __M4RI_DD_ROW(M, rowa);
+  __M4RI_DD_ROW(M, rowb);
 }
 
 /**
@@ -256,6 +260,9 @@ static inline void mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb) {
     a[0] ^= tmp;
     b[0] ^= tmp;
   }
+
+  __M4RI_DD_ROW(M, rowa);
+  __M4RI_DD_ROW(M, rowb);
 }
 
 /**
@@ -319,6 +326,7 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
       x |= x << coldiff;			/* Duplicate this bit at both column positions. */
       *vp = v ^ x;				/* Swap column bits and store result. */
     }
+    __M4RI_DD_MZD(M);
     return;
   }
 
@@ -335,6 +343,8 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
     *(base + a_word) = a;
     *(base + b_word) = b;
   }
+
+  __M4RI_DD_MZD(M);
 }
 
 /**
@@ -504,6 +514,8 @@ static inline void mzd_row_add_offset(mzd_t *M, rci_t dstrow, rci_t srcrow, rci_
    * that we last accessed, in the previous loop.
    */
   dst[i - 1] ^= src[i - 1] & ~mask_end;
+
+  __M4RI_DD_ROW(M, dstrow);
 }
 
 /**
@@ -889,7 +901,8 @@ static inline void mzd_combine_weird(mzd_t *C,       rci_t const c_row, wi_t con
     mzd_clear_bits(C, c_row, i, (C->ncols - i));
     mzd_xor_bits(C, c_row, i, (C->ncols - i), tmp);
   }
-  return;
+
+  __M4RI_DD_MZD(C);
 }
 
 /**
@@ -958,7 +971,8 @@ static inline void mzd_combine_even_in_place(mzd_t *A,       rci_t const a_row, 
   }
 
   *a ^= *b & __M4RI_LEFT_BITMASK(A->ncols%m4ri_radix);
-  return;
+
+  __M4RI_DD_MZD(A);
 }
 
 
@@ -1043,7 +1057,8 @@ static inline void mzd_combine_even(mzd_t *C,       rci_t const c_row, wi_t cons
     }
   }
   *c ^= ((*a ^ *b ^ *c) & __M4RI_LEFT_BITMASK(C->ncols%m4ri_radix));
-  return;
+
+  __M4RI_DD_MZD(C);
 }
 
 

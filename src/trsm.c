@@ -101,6 +101,8 @@ void _mzd_trsm_upper_right(mzd_t const *U, mzd_t *B, const int cutoff) {
   mzd_free_window((mzd_t*)U00);
   mzd_free_window((mzd_t*)U01);
   mzd_free_window((mzd_t*)U11);
+
+  __M4RI_DD_MZD(B);
 }
 
 void _mzd_trsm_upper_right_weird(mzd_t const *U, mzd_t *B) {
@@ -144,6 +146,8 @@ void _mzd_trsm_upper_right_weird(mzd_t const *U, mzd_t *B) {
       if(__M4RI_GET_BIT(dotprod, babystep))
 	__M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i + offset);
   }
+
+  __M4RI_DD_MZD(B);
 }
 
 void _mzd_trsm_upper_right_even(mzd_t const *U, mzd_t *B, const int cutoff) {
@@ -174,6 +178,8 @@ void _mzd_trsm_upper_right_even(mzd_t const *U, mzd_t *B, const int cutoff) {
   mzd_free_window((mzd_t*)U00);
   mzd_free_window((mzd_t*)U01);
   mzd_free_window((mzd_t*)U11);
+
+  __M4RI_DD_MZD(B);
 }
 
 void _mzd_trsm_upper_right_base(mzd_t const *U, mzd_t *B) {
@@ -212,6 +218,8 @@ void _mzd_trsm_upper_right_base(mzd_t const *U, mzd_t *B) {
       if(__M4RI_GET_BIT(dotprod, babystep))
 	__M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i);
   }
+
+  __M4RI_DD_MZD(B);
 }
 
 
@@ -287,6 +295,8 @@ void _mzd_trsm_lower_right(mzd_t const *L, mzd_t *B, const int cutoff) {
     mzd_free_window((mzd_t*)L10);
     mzd_free_window((mzd_t*)L11);
   }
+
+  __M4RI_DD_MZD(B);
 }
 
 void _mzd_trsm_lower_right_weird(mzd_t const *L, mzd_t *B) {
@@ -329,6 +339,8 @@ void _mzd_trsm_lower_right_weird(mzd_t const *L, mzd_t *B) {
       if(__M4RI_GET_BIT(dotprod, babystep))
 	__M4RI_FLIP_BIT(B->rows[giantstep + babystep ][0], i + offset);
   }
+
+  __M4RI_DD_MZD(B);
 }
 
 void _mzd_trsm_lower_right_even(mzd_t const *L, mzd_t *B, const int cutoff) {
@@ -359,6 +371,8 @@ void _mzd_trsm_lower_right_even(mzd_t const *L, mzd_t *B, const int cutoff) {
     mzd_free_window((mzd_t*)L10);
     mzd_free_window((mzd_t*)L11);
   }
+
+  __M4RI_DD_MZD(B);
 }
 
 void _mzd_trsm_lower_right_base(mzd_t const *L, mzd_t *B) {
@@ -399,6 +413,8 @@ void _mzd_trsm_lower_right_base(mzd_t const *L, mzd_t *B) {
       if(__M4RI_GET_BIT(dotprod, babystep))
 	__M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i);
   }
+
+  __M4RI_DD_MZD(B);
 }
 
 
@@ -475,6 +491,8 @@ void _mzd_trsm_lower_left(mzd_t const *L, mzd_t *B, const int cutoff) {
     mzd_free_window((mzd_t*)L10);
     mzd_free_window((mzd_t*)L11);
   }
+
+  __M4RI_DD_MZD(B);
 }
 
 void _mzd_trsm_lower_left_weird(mzd_t const *L, mzd_t *B) {
@@ -524,6 +542,8 @@ void _mzd_trsm_lower_left_weird(mzd_t const *L, mzd_t *B) {
       }
     }
   }
+
+  __M4RI_DD_MZD(B);
 }
 
 void _mzd_trsm_lower_left_even(mzd_t const *L, mzd_t *B, const int cutoff) {
@@ -594,6 +614,8 @@ void _mzd_trsm_lower_left_even(mzd_t const *L, mzd_t *B, const int cutoff) {
     mzd_free_window((mzd_t*)L10);
     mzd_free_window((mzd_t*)L11);
   }
+
+  __M4RI_DD_MZD(B);
 }
 
 /*****************
@@ -664,6 +686,8 @@ void _mzd_trsm_upper_left(mzd_t const *U, mzd_t *B, const int cutoff) {
     mzd_free_window((mzd_t*)U01);
     mzd_free_window((mzd_t*)U11);
   }
+
+  __M4RI_DD_MZD(B);
 }
 
 void _mzd_trsm_upper_left_weird (mzd_t const *U, mzd_t *B) {
@@ -708,6 +732,8 @@ void _mzd_trsm_upper_left_weird (mzd_t const *U, mzd_t *B) {
       }
     }
   }
+
+  __M4RI_DD_MZD(B);
 }
 
 void _mzd_trsm_upper_left_even(mzd_t const *U, mzd_t *B, const int cutoff) {
@@ -780,4 +806,6 @@ void _mzd_trsm_upper_left_even(mzd_t const *U, mzd_t *B, const int cutoff) {
     mzd_free_window((mzd_t*)U01);
     mzd_free_window((mzd_t*)U11);
   }
+
+  __M4RI_DD_MZD(B);
 }

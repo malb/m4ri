@@ -189,6 +189,7 @@ mzd_t *_mzd_mul_even_orig(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) 
   mzd_free(X0);
   mzd_free(X1);
 
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -354,6 +355,7 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
     mzd_free_window(C_bulk);
   }
 
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -480,6 +482,7 @@ mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
     }
   }
 
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -599,6 +602,7 @@ mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff)
   mzd_free_window(C00); mzd_free_window(C01);
   mzd_free_window(C10); mzd_free_window(C11);
   
+  __M4RI_DD_MZD(C);
   return C;
 }
 #endif
@@ -772,6 +776,7 @@ mzd_t *_mzd_addmul_even_orig(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutof
   mzd_free(X1);
   mzd_free(X2);
 
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -926,6 +931,7 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
     mzd_free_window(C_bulk);
   }
 
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -1056,6 +1062,7 @@ mzd_t *_mzd_addsqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
     }
   }
 
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -1142,6 +1149,8 @@ mzd_t *_mzd_addmul(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
       mzd_free_window ((mzd_t*)B0); mzd_free_window ((mzd_t*)B1);
     }
   }
+
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -1210,6 +1219,8 @@ mzd_t *_mzd_addmul_weird_weird (mzd_t *C, mzd_t const *A, mzd_t const *B) {
     *c ^= par;//m4ri_parity64(parity);
   }
   mzd_free (BT);
+
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -1235,11 +1246,12 @@ mzd_t *mzd_addmul(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
     m4ri_die("mzd_addmul: C (%d x %d) has wrong dimensions, expected (%d x %d)\n",
 	     C->nrows, C->ncols, A->nrows, B->ncols);
   }
-  if(A->nrows == 0 || A->ncols == 0 || B->ncols == 0)
+  if(A->nrows == 0 || A->ncols == 0 || B->ncols == 0) {
+    __M4RI_DD_MZD(C);
     return C;
+  }
 
   C = _mzd_addmul(C, A, B, cutoff);
+  __M4RI_DD_MZD(C);
   return C;
 }
-
-

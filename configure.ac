@@ -101,7 +101,8 @@ fi
 AC_SUBST(M4RI_HAVE_OPENMP)
 
 # Debugging support
-AC_ARG_ENABLE(debug, [  --enable-debug          Enable assert() statements for debugging.])
+AC_ARG_ENABLE([debug],
+	AS_HELP_STRING([--enable-debug], [Enable assert() statements for debugging.]))
 
 if test "x$enable_debug" = x"yes"; then
    DEBUG_FLAGS="-g"
@@ -109,6 +110,16 @@ if test "x$enable_debug" = x"yes"; then
 else
    AC_DEFINE(NDEBUG,1,[Define whether debugging is enabled])
 fi
+
+AC_ARG_ENABLE([debug-dump],
+        AS_HELP_STRING([--enable-debug-dump], [Dump output at exit of every function.]))
+
+if test "x$enable_debug_dump" = "xyes"; then
+  M4RI_DEBUG_DUMP=1
+else
+  M4RI_DEBUG_DUMP=0
+fi
+AC_SUBST(M4RI_DEBUG_DUMP)
 
 # For the testsuite. Detect if PAPI is installed. See http://icl.cs.utk.edu/papi/ .
 

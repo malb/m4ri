@@ -112,6 +112,8 @@ int _mzd_pluq_solve_left(mzd_t const *A, rci_t rank,
   mzd_apply_p_left_trans(B, Q);
 
   /* P L U Q B5 = B1 */
+  __M4RI_DD_MZD(B); 
+  __M4RI_DD_INT(retval);
   return retval;
 }
 
@@ -135,6 +137,9 @@ int _mzd_solve_left(mzd_t *A, mzd_t *B, int const cutoff, int const inconsistenc
   
   mzp_free(P);
   mzp_free(Q);
+
+  __M4RI_DD_MZD(A);
+  __M4RI_DD_MZD(B);
   return retval;
 }
 
@@ -147,6 +152,7 @@ mzd_t *mzd_kernel_left_pluq(mzd_t *A, int const cutoff) {
   if (r == A->ncols) {
     mzp_free(P);
     mzp_free(Q);
+    __M4RI_DD_MZD(A);
     return NULL;
   }
 
@@ -167,5 +173,8 @@ mzd_t *mzd_kernel_left_pluq(mzd_t *A, int const cutoff) {
   mzd_free_window(RU);
   mzd_free_window(U);
   mzd_free_window(B);
+
+  __M4RI_DD_MZD(A);
+  __M4RI_DD_MZD(R);
   return R;
 }

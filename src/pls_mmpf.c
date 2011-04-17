@@ -107,6 +107,10 @@ int _mzd_pls_submatrix(mzd_t *A,
   A->ncols = ncols;
   A->width = width;
 
+  __M4RI_DD_MZD(A);
+  __M4RI_DD_MZP(P);
+  __M4RI_DD_MZP(Q);
+  __M4RI_DD_INT(curr_pos);
   return curr_pos;
 }
 
@@ -168,6 +172,10 @@ void mzd_make_table_pls(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t
     word const correction = __M4RI_CONVERT_TO_WORD(m4ri_codebook[k]->ord[i]);
     mzd_xor_bits(T, i,c, k, correction);
   }
+
+  __M4RI_DD_MZD(T);
+  __M4RI_DD_RCI_ARRAY(Le, twokay);
+  __M4RI_DD_RCI_ARRAY(Lm, twokay);
 }
 
 void mzd_process_rows2_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
@@ -207,6 +215,8 @@ void mzd_process_rows2_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
 
     _mzd_combine2(m0,t0,t1,wide);
   }
+
+  __M4RI_DD_MZD(M);
 }
 
 void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
@@ -262,6 +272,8 @@ void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
 
     _mzd_combine3(m0,t0,t1,t2,wide);
   }
+
+  __M4RI_DD_MZD(M);
 }
 
 void mzd_process_rows4_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
@@ -328,6 +340,8 @@ void mzd_process_rows4_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
 
     _mzd_combine4(m0, t0, t1, t2, t3, wide);
   }
+
+  __M4RI_DD_MZD(M);
 }
 
 void _mzd_finish_pls_done_pivots(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const start_col, wi_t const addblock, int const k) {
@@ -348,6 +362,9 @@ void _mzd_finish_pls_done_pivots(mzd_t *A, mzp_t const *P, rci_t const start_row
       }
     }
   }
+
+  __M4RI_DD_MZD(A);
+  __M4RI_DD_MZP(P);
 }
 
 void _mzd_finish_pls_done_rest1(mzd_t *A,
@@ -363,6 +380,8 @@ void _mzd_finish_pls_done_rest1(mzd_t *A,
     word *t = A->rows[i] + addblock;
     _mzd_combine(t, s0, wide);
   }
+
+  __M4RI_DD_MZD(A);
 }
 
 
@@ -382,6 +401,8 @@ void _mzd_finish_pls_done_rest2(mzd_t *A,
     word *t = A->rows[i] + addblock;
     _mzd_combine2(t, s0, s1, wide);
   }
+
+  __M4RI_DD_MZD(A);
 }
 
 
@@ -402,6 +423,8 @@ void _mzd_finish_pls_done_rest3(mzd_t *A,
     word *t = A->rows[i] + addblock;
     _mzd_combine3(t, s0, s1, s2, wide);
   }
+
+  __M4RI_DD_MZD(A);
 }
 
 
@@ -426,6 +449,8 @@ void _mzd_finish_pls_done_rest4(mzd_t *A,
     word *t = A->rows[i] + addblock;
     _mzd_combine4(t, s0, s1, s2, s3, wide);
   }
+
+  __M4RI_DD_MZD(A);
 }
 
 /* extract U from A for table creation */
@@ -440,6 +465,8 @@ mzd_t *_mzd_pls_to_u(mzd_t *U, mzd_t const *A, rci_t r, rci_t c, int k) {
   for(rci_t i = 0; i < k; ++i)
     for(rci_t j = startcol; j < c + i; ++j) 
       mzd_write_bit(U, i, j,  0);
+
+  __M4RI_DD_MZD(U);
   return U;
 }
 
@@ -677,6 +704,11 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
   m4ri_mm_free(E2);  m4ri_mm_free(M2);
   m4ri_mm_free(E3);  m4ri_mm_free(M3);
   m4ri_mm_free(done);
+
+  __M4RI_DD_MZD(A);
+  __M4RI_DD_MZP(P);
+  __M4RI_DD_MZP(Q);
+  __M4RI_DD_RCI(curr_row);
   return curr_row;
 }
 

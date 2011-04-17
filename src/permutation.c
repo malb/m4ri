@@ -43,6 +43,7 @@ mzp_t *mzp_init_window(mzp_t *P, rci_t begin, rci_t end){
   mzp_t *window = (mzp_t *)m4ri_mm_malloc(sizeof(mzp_t));
   window->values = P->values + begin;
   window->length = end - begin;
+  __M4RI_DD_MZP(window);
   return window;
 }
 
@@ -180,7 +181,10 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t const *B, rci_t 
       Arow[a_word] |= value;
     }
   }
+
+  __M4RI_DD_MZD(A);
 }
+
 /**
  * Implements both apply_p_right and apply_p_right_trans.
  */
@@ -248,6 +252,8 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t st
   m4ri_mm_free(permutation);
   m4ri_mm_free(write_mask);
   mzd_free(B);
+
+  __M4RI_DD_MZD(A);
 }
 
 void _mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P) {
@@ -266,6 +272,8 @@ void _mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P) {
 /*     assert(P->values[i] >= i); */
 /*     mzd_col_swap(A, i, P->values[i]); */
 /*   } */
+
+  __M4RI_DD_MZD(A);
 }
 
 void _mzd_apply_p_right(mzd_t *A, mzp_t const *P) {
@@ -284,6 +292,8 @@ void _mzd_apply_p_right(mzd_t *A, mzp_t const *P) {
 /*     assert(P->values[i] >= i); */
 /*     mzd_col_swap(A, i, P->values[i]); */
 /*   } */
+
+  __M4RI_DD_MZD(A);
 }
 
 
@@ -340,6 +350,8 @@ void mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t const *P) {
       mzd_col_swap_in_rows(A, i, P->values[i], r, MIN(row_bound, i));
     }
   }
+
+  __M4RI_DD_MZD(A);
 }
 
 void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
@@ -450,5 +462,7 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
   }
  
 #endif
+
+  __M4RI_DD_MZD(A);
 }
 

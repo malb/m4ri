@@ -34,7 +34,7 @@
  * \brief Permutations.
  */
 
-typedef struct {
+typedef struct mzp_t {
   /**
    * The swap operations in LAPACK format.
    */

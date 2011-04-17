@@ -132,6 +132,7 @@ mzd_t *mzd_init_window (mzd_t *m, rci_t lowr, rci_t lowc, rci_t highr, rci_t hig
     window->rows[i] = m->rows[lowr + i] + offset;
   }
   
+  __M4RI_DD_MZD(window);
   return window;
 }
 
@@ -232,6 +233,8 @@ rci_t mzd_gauss_delayed(mzd_t *M, rci_t startcol, int full) {
     }
   }
 
+  __M4RI_DD_MZD(M);
+  __M4RI_DD_RCI(pivots);
   return pivots;
 }
 
@@ -280,6 +283,8 @@ static inline mzd_t *_mzd_transpose_direct_128(mzd_t *DST, mzd_t const *SRC) {
       DST->rows[64+k+j][1] ^= t[3];			// D
     }
   }
+
+  __M4RI_DD_MZD(DST);
   return DST;
 }
 
@@ -291,6 +296,7 @@ static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, mzd_t const *A) {
         mzd_write_bit(DST, j, i, mzd_read_bit(A, i, j));
       }
     }
+    __M4RI_DD_MZD(DST);
     return DST;
   }
 
@@ -345,6 +351,8 @@ static inline mzd_t *_mzd_transpose_direct(mzd_t *DST, mzd_t const *A) {
       collect = 0;
     }
   }
+
+  __M4RI_DD_MZD(DST);
   return DST;
 }
 
@@ -387,6 +395,7 @@ static inline mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *X) {
   mzd_free_window(AT); mzd_free_window(CT);
   mzd_free_window(BT); mzd_free_window(DT);
   
+  __M4RI_DD_MZD(DST);
   return DST;
 }
 
@@ -525,6 +534,7 @@ mzd_t *_mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B, const int clear)
     }
   }
 
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -543,6 +553,8 @@ mzd_t *_mzd_mul_va(mzd_t *C, mzd_t const *v, mzd_t const *A, int const clear) {
     for(rci_t j = 0; j < n; ++j)
       if (mzd_read_bit(v,i,j))
         mzd_combine(C,i,0, C,i,0, A,j,0);
+
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -582,6 +594,8 @@ void mzd_randomize(mzd_t *A) {
       A->rows[i][width] ^= (A->rows[i][width] ^ m4ri_random_word()) & mask_end;
     }
   }
+
+  __M4RI_DD_MZD(A);
 }
 
 void mzd_set_ui( mzd_t *A, unsigned int value) {
@@ -603,13 +617,17 @@ void mzd_set_ui( mzd_t *A, unsigned int value) {
     }
   }
 
-  if(value % 2 == 0)
+  if(value % 2 == 0) {
+    __M4RI_DD_MZD(A);
     return;
+  }
 
   rci_t const stop = MIN(A->nrows, A->ncols);
   for (rci_t i = 0; i < stop; ++i) {
     mzd_write_bit(A, i, i, 1);
   }
+
+  __M4RI_DD_MZD(A);
 }
 
 int mzd_equal(mzd_t const *A, mzd_t const *B) {
@@ -769,6 +787,8 @@ mzd_t *mzd_copy(mzd_t *N, mzd_t const *P) {
       m4ri_die("mzd_copy: completely unaligned copy not implemented yet.");
     }
   }
+
+  __M4RI_DD_MZD(N);
   return N;
 }
 
@@ -801,6 +821,7 @@ mzd_t *mzd_concat(mzd_t *C, mzd_t const *A, mzd_t const *B) {
     }
   }
 
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -833,6 +854,8 @@ mzd_t *mzd_stack(mzd_t *C, mzd_t const *A, mzd_t const *B) {
       dst_truerow[j] = src_truerow[j]; 
     }
   }
+
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -852,6 +875,8 @@ mzd_t *mzd_invert_naive(mzd_t *INV, mzd_t const *A, mzd_t const *I) {
   INV = mzd_submatrix(INV, H, 0, A->ncols, A->nrows, 2 * A->ncols);
 
   mzd_free(H);
+
+  __M4RI_DD_MZD(INV);
   return INV;
 }
 
@@ -882,6 +907,7 @@ mzd_t *_mzd_add(mzd_t *C, mzd_t const *A, mzd_t const *B) {
     for(rci_t i = 0; i < nrows; ++i) {
       mzd_combine_weird(C,i,0, A,i,0, B,i,0);
     }
+    __M4RI_DD_MZD(C);
     return C;
   }
 
@@ -964,6 +990,8 @@ mzd_t *_mzd_add(mzd_t *C, mzd_t const *A, mzd_t const *B) {
       mzd_combine_even(C,i,0, A,i,0, B,i,0);
     }
   }
+
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -1015,6 +1043,7 @@ mzd_t *mzd_submatrix(mzd_t *S, mzd_t const *M, rci_t const startrow, rci_t const
       }
     }
   }
+  __M4RI_DD_MZD(S);
   return S;
 }
 
@@ -1060,6 +1089,7 @@ void mzd_col_swap(mzd_t *M, rci_t const cola, rci_t const colb) {
       register word x = ((b >> a_bit) ^ (b >> b_bit)) & m4ri_one; // XOR temporary
       *base = b ^ ((x << a_bit) | (x << b_bit));
     }
+    __M4RI_DD_MZD(M);
     return;
   }
 
@@ -1096,8 +1126,8 @@ void mzd_col_swap(mzd_t *M, rci_t const cola, rci_t const colb) {
     }
   }
 
+  __M4RI_DD_MZD(M);
 }
-
 
 int mzd_is_zero(mzd_t const *A) {
   /* Could be improved: stopping as the first non zero value is found (status!=0) */
@@ -1146,6 +1176,8 @@ void mzd_copy_row_weird_to_even(mzd_t *B, rci_t i, mzd_t const *A, rci_t j) {
     b[c / m4ri_radix] &= __M4RI_LEFT_BITMASK(m4ri_radix - rest);
     b[c / m4ri_radix] |= temp;
   }
+
+  __M4RI_DD_MZD(B);
 }
 
 void mzd_copy_row(mzd_t *B, rci_t i, mzd_t const *A, rci_t j) {
@@ -1168,6 +1200,8 @@ void mzd_copy_row(mzd_t *B, rci_t i, mzd_t const *A, rci_t j) {
   } else {
     b[0] = (b[0] & ~mask_begin) | (a[0] & mask_begin & mask_end) | (b[0] & ~mask_end);
   }
+
+  __M4RI_DD_ROW(B, i);
 }
 
 
@@ -1187,10 +1221,12 @@ void mzd_row_clear_offset(mzd_t *M, rci_t row, rci_t coloffset) {
   for (wi_t i = startblock + 1; i < M->width; ++i) {
     M->rows[row][i] = 0;
   }
+
+  __M4RI_DD_ROW(M, row);
 }
 
 
-int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, rci_t *c) { 
+int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, rci_t *c) {
   assert(A->offset == 0);
   rci_t const nrows = A->nrows;
   rci_t const ncols = A->ncols;
@@ -1214,6 +1250,9 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
             break;
           }
         }
+	__M4RI_DD_RCI(*r);
+	__M4RI_DD_RCI(*c);
+	__M4RI_DD_INT(1);
         return 1;
       }
     }
@@ -1243,6 +1282,9 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
           break;
         }
       }
+      __M4RI_DD_RCI(*r);
+      __M4RI_DD_RCI(*c);
+      __M4RI_DD_INT(1);
       return 1;
     }
     /* handle complete words */
@@ -1264,6 +1306,9 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
             break;
           }
         }
+	__M4RI_DD_RCI(*r);
+	__M4RI_DD_RCI(*c);
+	__M4RI_DD_INT(1);
         return 1;
       }
     }
@@ -1288,9 +1333,15 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
           break;
         }
       }
+      __M4RI_DD_RCI(*r);
+      __M4RI_DD_RCI(*c);
+      __M4RI_DD_INT(1);
       return 1;
     }
   }
+  __M4RI_DD_RCI(*r);
+  __M4RI_DD_RCI(*c);
+  __M4RI_DD_INT(0);
   return 0;
 }
 
@@ -1363,8 +1414,11 @@ rci_t mzd_first_zero_row(mzd_t const *A) {
     for (wi_t j = 1; j < end; ++j)
       tmp |= row[j];
     tmp |= row[end] & mask_end;
-    if(tmp)
+    if(tmp) {
+      __M4RI_DD_INT(i + 1);
       return i + 1;
+    }
   }
+  __M4RI_DD_INT(0);
   return 0;
 }

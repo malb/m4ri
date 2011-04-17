@@ -5,7 +5,7 @@ AM_CFLAGS=${SIMD_FLAGS} ${OPENMP_CFLAGS} ${DEBUG_FLAGS}
 
 lib_LTLIBRARIES = libm4ri.la
 
-libm4ri_la_SOURCES = src/brilliantrussian.c src/misc.c src/packedmatrix.c src/grayflex.c src/strassen.c src/permutation.c src/trsm.c src/pls.c src/solve.c src/pls_mmpf.c src/echelonform.c src/mmc.c
+libm4ri_la_SOURCES = src/brilliantrussian.c src/misc.c src/packedmatrix.c src/grayflex.c src/strassen.c src/permutation.c src/trsm.c src/pls.c src/solve.c src/pls_mmpf.c src/echelonform.c src/mmc.c src/debug_dump.c
 BUILT_SOURCES = src/m4ri_config.h
 
 pkgincludesubdir = $(includedir)/m4ri

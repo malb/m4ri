@@ -76,9 +76,11 @@ static inline int _mzd_gauss_submatrix_full(mzd_t *A, rci_t r, rci_t c, rci_t en
       }
     }
     if (found == 0) {
-      return j - c;
+      break;
     }
   }
+  __M4RI_DD_MZD(A);
+  __M4RI_DD_INT(j - c);
   return j - c;
 }
 
@@ -119,9 +121,11 @@ static inline int _mzd_gauss_submatrix(mzd_t *A, rci_t r, rci_t c, rci_t end_row
       }
     }
     if (found == 0) {
-      return j - c;
+      break;
     }
   }
+  __M4RI_DD_MZD(A);
+  __M4RI_DD_INT(j - c);
   return j - c;
 }
 
@@ -151,6 +155,8 @@ static inline int _mzd_gauss_submatrix_top(mzd_t *A, rci_t r, rci_t c, int k) {
     }
     ++start_row;
   }
+  __M4RI_DD_MZD(A);
+  __M4RI_DD_INT(k);
   return k;
 }
 
@@ -164,6 +170,7 @@ static inline void _mzd_copy_back_rows(mzd_t *A, mzd_t const *U, rci_t r, rci_t 
       dst[j] = src[j];
     }
   }
+  __M4RI_DD_MZD(A);
 }
 
 void mzd_make_table(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L)
@@ -213,6 +220,8 @@ void mzd_make_table(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L)
     case 1:  *ti++ = (*m++ ^ *ti1++) & mask_end;
     }
   }
+  __M4RI_DD_MZD(T);
+  __M4RI_DD_RCI_ARRAY(L, twokay);
 }
 
 void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t const *T, rci_t const *L) {
@@ -293,6 +302,7 @@ void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, i
         } while (--n > 0);
       }
     }
+    __M4RI_DD_MZD(M);
     return;
   }
 
@@ -340,6 +350,8 @@ void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, i
       } while (--n > 0);
     }
   }
+
+  __M4RI_DD_MZD(M);
 }
 
 void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1) {
@@ -376,6 +388,8 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
       } while (--n > 0);
     }
   }
+
+  __M4RI_DD_MZD(M);
 }
 
 void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
@@ -419,6 +433,8 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
       } while (--n > 0);
     }
   }
+
+  __M4RI_DD_MZD(M);
 }
 
 void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, 
@@ -465,6 +481,8 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
       } while (--n > 0);
     }
   }
+
+  __M4RI_DD_MZD(M);
 }
 
 void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, 
@@ -516,6 +534,8 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
       } while (--n > 0);
     }
   }
+
+  __M4RI_DD_MZD(M);
 }
 
 void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, 
@@ -573,6 +593,8 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
       } while (--n > 0);
     }
   }
+
+  __M4RI_DD_MZD(M);
 }
 
 rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, double const threshold) {
@@ -812,6 +834,9 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
   mzd_free(T5);
   m4ri_mm_free(L5);
   mzd_free(U);
+
+  __M4RI_DD_MZD(A);
+  __M4RI_DD_RCI(r);
   return r;
 }
 
@@ -936,6 +961,9 @@ rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r) {
   mzd_free(T5);
   m4ri_mm_free(L5);
   mzd_free(U);
+
+  __M4RI_DD_MZD(A);
+  __M4RI_DD_RCI(r);
   return r;
 }
 
@@ -964,6 +992,7 @@ mzd_t *mzd_invert_m4ri(mzd_t const *m, mzd_t const *I, int k) {
   
   mzd_free(big);
   
+  __M4RI_DD_MZD(answer);
   return answer;
 }
 
@@ -1218,6 +1247,8 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
   mzd_free(T8);
 #endif
   m4ri_mm_free(buffer);
+
+  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -1255,6 +1286,8 @@ void _mzd_trsm_upper_left_even_submatrix(mzd_t const *U, mzd_t *B, rci_t const s
       }
     }
   }
+
+  __M4RI_DD_MZD(B);
 }
 
 //#undef __M4RI_M4RM_GRAY8
@@ -1405,4 +1438,6 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t const *U, mzd_t *B, int k) {
   m4ri_mm_free(L6);
   m4ri_mm_free(L7);
 #endif
+
+  __M4RI_DD_MZD(B);
 }

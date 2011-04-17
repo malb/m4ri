@@ -181,10 +181,13 @@ rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
     mzd_free_window(A10);
     mzd_free_window(A11);
 
+    __M4RI_DD_MZD(A);
+    __M4RI_DD_MZP(P);
+    __M4RI_DD_MZP(Q);
+    __M4RI_DD_RCI(r1 + r2);
     return r1 + r2;
   }
 }
-
 
 rci_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
   rci_t curr_pos = 0;
@@ -226,6 +229,11 @@ rci_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
     P->values[i] = i;
   for (rci_t i = curr_pos; i < A->ncols; ++i)
     Q->values[i] = i;
+
+  __M4RI_DD_MZD(A);
+  __M4RI_DD_MZP(P);
+  __M4RI_DD_MZP(Q);
+  __M4RI_DD_RCI(curr_pos);
   return curr_pos;
 }
  
@@ -279,7 +287,9 @@ rci_t _mzd_pls_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
     }
   }
 
+  __M4RI_DD_MZD(A);
+  __M4RI_DD_MZP(P);
+  __M4RI_DD_MZP(Q);
+  __M4RI_DD_RCI(row_pos);
   return row_pos;
 }
-
-

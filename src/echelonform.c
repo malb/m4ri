@@ -80,5 +80,8 @@ rci_t mzd_echelonize_pluq(mzd_t *A, int full) {
   
   mzp_free(P);
   mzp_free(Q);
+
+  __M4RI_DD_MZD(A);
+  __M4RI_DD_RCI(r);
   return r;
 }
