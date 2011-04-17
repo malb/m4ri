@@ -111,7 +111,7 @@ int _mzd_pls_submatrix(mzd_t *A,
 }
 
 /* create a table of all 2^k linear combinations */
-void mzd_make_table_pls(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *Le, rci_t *Lm) {
+void mzd_make_table_pls(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *Le, rci_t *Lm) {
   assert(T->blocks[1].size == 0);
   wi_t const blockoffset= c / m4ri_radix;
   int const twokay= __M4RI_TWOPOW(k);
@@ -170,7 +170,8 @@ void mzd_make_table_pls(mzd_t *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *Le, 
   }
 }
 
-void mzd_process_rows2_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t *T0, rci_t *E0, mzd_t *T1, rci_t *E1) {
+void mzd_process_rows2_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
+                           mzd_t const *T0, rci_t const *E0, mzd_t const *T1, rci_t const *E1) {
   int const ka = k / 2;
   int const kb = k - k / 2;
   wi_t const blocknuma = startcol / m4ri_radix;
@@ -190,12 +191,12 @@ void mzd_process_rows2_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
 #endif
   for(rci_t r = startrow; r < stoprow; ++r) {
     rci_t const x0 = E0[ mzd_read_bits_int(M, r, startcol, ka) ];
-    word *t0 = T0->rows[x0] + blocknuma;
+    word const *t0 = T0->rows[x0] + blocknuma;
     word *m0 = M->rows[r+0] + blocknuma;
     m0[0] ^= t0[0];
     m0[1] ^= t0[1];
     rci_t const x1 = E1[ mzd_read_bits_int(M, r, startcol+ka, kb) ];
-    word *t1 = T1->rows[x1] + blocknumb;
+    word const *t1 = T1->rows[x1] + blocknumb;
     for(wi_t i = blockoffset; i < 2; ++i) {
       m0[i] ^= t1[i - blockoffset];
     }
@@ -208,7 +209,9 @@ void mzd_process_rows2_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
   }
 }
 
-void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t *T0, rci_t *E0, mzd_t *T1, rci_t *E1, mzd_t *T2, rci_t *E2) {
+void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
+                           mzd_t const *T0, rci_t const *E0, mzd_t const *T1, rci_t const *E1,
+			   mzd_t const *T2, rci_t const *E2) {
   int const rem = k % 3;
   int const ka = k / 3 + ((rem >= 2) ? 1 : 0);
   int const kb = k / 3 + ((rem >= 1) ? 1 : 0);
@@ -233,7 +236,7 @@ void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
 #endif
   for(rci_t r = startrow; r < stoprow; ++r) {
     rci_t const x0 = E0[ mzd_read_bits_int(M, r, startcol, ka) ];
-    word *t0 = T0->rows[x0] + blocknuma;
+    word const *t0 = T0->rows[x0] + blocknuma;
     word *m0 = M->rows[r] + blocknuma;
     m0[0] ^= t0[0];
     m0[1] ^= t0[1];
@@ -242,14 +245,14 @@ void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
     t0 += 3;
 
     rci_t const x1 = E1[ mzd_read_bits_int(M, r, startcol+ka, kb) ];
-    word *t1 = T1->rows[x1] + blocknumb;
+    word const *t1 = T1->rows[x1] + blocknumb;
     for(wi_t i = blockoffsetb; i < 3; ++i) {
       m0[i] ^= t1[i-blockoffsetb];
     }
     t1 += 3 - blockoffsetb;
 
     rci_t const x2 = E2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc) ];
-    word *t2 = T2->rows[x2] + blocknumc;
+    word const *t2 = T2->rows[x2] + blocknumc;
     for(wi_t i = blockoffsetc; i < 3; ++i) {
       m0[i] ^= t2[i-blockoffsetc];
     }
@@ -261,7 +264,9 @@ void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
   }
 }
 
-void mzd_process_rows4_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t *T0, rci_t *E0, mzd_t *T1, rci_t *E1, mzd_t *T2, rci_t *E2, mzd_t *T3, rci_t *E3) {
+void mzd_process_rows4_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
+                           mzd_t const *T0, rci_t const *E0, mzd_t const *T1, rci_t const *E1,
+			   mzd_t const *T2, rci_t const *E2, mzd_t const *T3, rci_t const *E3) {
   int const rem = k % 4;
   int const ka = k / 4 + ((rem >= 3) ? 1 : 0);
   int const kb = k / 4 + ((rem >= 2) ? 1 : 0);
@@ -346,7 +351,7 @@ void _mzd_finish_pls_done_pivots(mzd_t *A, mzp_t const *P, rci_t const start_row
 }
 
 void _mzd_finish_pls_done_rest1(mzd_t *A,
-    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, int k0, mzd_t *T0, rci_t const *M0) {
+    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, int k0, mzd_t const *T0, rci_t const *M0) {
 
   wi_t const wide = A->width - addblock;
   if (wide <= 0)
@@ -363,7 +368,7 @@ void _mzd_finish_pls_done_rest1(mzd_t *A,
 
 void _mzd_finish_pls_done_rest2(mzd_t *A,
     rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
-    int k0, mzd_t *T0, rci_t const *M0, int k1, mzd_t *T1, rci_t const *M1) {
+    int k0, mzd_t const *T0, rci_t const *M0, int k1, mzd_t const *T1, rci_t const *M1) {
 
   wi_t const wide = A->width - addblock;
   if (wide <= 0)
@@ -382,7 +387,7 @@ void _mzd_finish_pls_done_rest2(mzd_t *A,
 
 void _mzd_finish_pls_done_rest3(mzd_t *A,
     rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
-    int k0, mzd_t *T0, rci_t const *M0, int k1, mzd_t *T1, rci_t const *M1, int k2, mzd_t *T2, rci_t const *M2) { 
+    int k0, mzd_t *T0, rci_t const *M0, int k1, mzd_t const *T1, rci_t const *M1, int k2, mzd_t const *T2, rci_t const *M2) { 
   wi_t const wide = A->width - addblock;
   if (wide <= 0)
     return;
@@ -424,7 +429,7 @@ void _mzd_finish_pls_done_rest4(mzd_t *A,
 }
 
 /* extract U from A for table creation */
-mzd_t *_mzd_pls_to_u(mzd_t *U, mzd_t *A, rci_t r, rci_t c, int k) {
+mzd_t *_mzd_pls_to_u(mzd_t *U, mzd_t const *A, rci_t r, rci_t c, int k) {
   /* this function call is now rather cheap, but it could be avoided
      completetly if needed */
   assert(U->offset == 0);
@@ -676,7 +681,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
 }
 
 rci_t _mzd_pluq_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int const k) {
-  rci_t r  = _mzd_pls_mmpf(A, P, Q, k);
+  rci_t r = _mzd_pls_mmpf(A, P, Q, k);
   mzd_apply_p_right_trans_tri(A, Q);
   return r;
 }

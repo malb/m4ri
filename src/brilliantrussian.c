@@ -154,7 +154,7 @@ static inline int _mzd_gauss_submatrix_top(mzd_t *A, rci_t r, rci_t c, int k) {
   return k;
 }
 
-static inline void _mzd_copy_back_rows(mzd_t *A, mzd_t *U, rci_t r, rci_t c, int k) {
+static inline void _mzd_copy_back_rows(mzd_t *A, mzd_t const *U, rci_t r, rci_t c, int k) {
   wi_t const startblock = c / m4ri_radix;
   wi_t const width = A->width - startblock;
   for (int i = 0; i < k; ++i) {

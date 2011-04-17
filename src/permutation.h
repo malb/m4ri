@@ -64,7 +64,6 @@ mzp_t *mzp_init(rci_t length);
 
 void mzp_free(mzp_t *P);
 
-
 /**
  * \brief Create a window/view into the permutation P.
  *
@@ -144,7 +143,6 @@ void mzd_apply_p_right(mzd_t *A, mzp_t const *P);
 
 void mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P);
 
-
 /**
  * Apply the permutation P to A from the right starting at start_row.
  *
@@ -185,7 +183,6 @@ void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t const *P, rci_t start_r
  */
 
 void mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P);
-
 
 /**
  * Apply the permutation P to A from the right, but only on the upper

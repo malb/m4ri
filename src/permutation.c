@@ -79,7 +79,7 @@ void mzd_apply_p_left_trans(mzd_t *A, mzp_t const *P) {
 
 /* optimised column swap operations */
 
-static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t *B, rci_t *permutation, word *write_mask, rci_t const start_row, rci_t const stop_row, rci_t length) {
+static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t const *B, rci_t const *permutation, word const *write_mask, rci_t const start_row, rci_t const stop_row, rci_t length) {
   assert(A->offset == 0);
   for(rci_t i = 0; i < length; i += m4ri_radix) {
     /* optimisation for identity permutations */
@@ -100,7 +100,7 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t *B, rci_t *permu
     }
 
     for (rci_t r = start_row; r < stop_row; ++r) {
-      word *Brow = B->rows[r-start_row];
+      word const *Brow = B->rows[r-start_row];
       word *Arow = A->rows[r];
       register word value = 0;
 

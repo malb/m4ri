@@ -253,14 +253,14 @@ void _mzd_trsm_lower_right(mzd_t const *L, mzd_t *B, const int cutoff) {
   /**
    \verbatim  
      |\
-     | \  
+     | \
      |  \
      |L00\
      |____\
-     |    |\  
+     |    |\
      |    | \
      |    |  \
-     |L10 |L11\ 
+     |L10 |L11\
      |____|____\
       _________
      |B0  |B1  |
