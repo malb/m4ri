@@ -31,75 +31,54 @@
 
 #define SAFECHAR (m4ri_radix + m4ri_radix / 4 + 1)
 
-/*
- * Return r such that x elements fit into r blocks of length y.
- */
-#define DIV_CEIL(x,y) (((x) % (y)) ? (x) / (y) + 1 : (x) / (y))
-
 mzd_t *mzd_init(rci_t r, rci_t c) {
 
   mzd_t *A = (mzd_t *)m4ri_mmc_malloc(sizeof(mzd_t));
 
-  A->width = DIV_CEIL(c, m4ri_radix);
-
-#ifdef HAVE_SSE2
-  int incw = 0;
-  /* make sure each row is 16-byte aligned */
-  if ((A->width & 1)) {
-    A->width++;
-    incw = 1;
-  }
-#endif
-
-  A->ncols = c;
   A->nrows = r;
+  A->ncols = c;
+  A->width = (c + m4ri_radix - 1) / m4ri_radix;
+  A->rowstride = (A->width < mzd_paddingwidth || (A->width & 1) == 0) ? A->width : A->width + 1;
+  if (A->width == 1) {
+    A->high_bitmask = A->low_bitmask = __M4RI_MIDDLE_BITMASK(c, 0);
+  } else {
+    A->high_bitmask = __M4RI_LEFT_BITMASK(c % m4ri_radix);
+    A->low_bitmask = m4ri_ffff;
+  }
+  A->flags = (A->high_bitmask != m4ri_ffff) ? mzd_flag_nonzero_excess : 0;
   A->offset = 0;
 
   A->rows = (word**)m4ri_mmc_calloc(r + 1, sizeof(word*)); // We're overcomitting here.
 
-  if(r && c) {
-    /* we allow more than one malloc call so he have to be a bit clever
-       here */
-    
-    int const bytes_per_row = A->width * sizeof(word);
-    int const max_rows_per_block = __M4RI_MAX_MZD_BLOCKSIZE / bytes_per_row;
-    assert(max_rows_per_block);
-    int rest = r % max_rows_per_block;
-    
-    int const nblocks = (rest == 0) ? r / max_rows_per_block : r / max_rows_per_block + 1;
-    A->blocks = (mmb_t*)m4ri_mmc_calloc(nblocks + 1, sizeof(mmb_t));
-    for(int i = 0; i < nblocks - 1; ++i) {
-      A->blocks[i].size = __M4RI_MAX_MZD_BLOCKSIZE;
-      A->blocks[i].data = m4ri_mmc_calloc(1, __M4RI_MAX_MZD_BLOCKSIZE);
-      for(rci_t j = 0; j < max_rows_per_block; ++j)
-      {
-	int offset = A->width * j;				// Offset to start of row j within block.
-	word *block_start = (word*)A->blocks[i].data;		// Start of block i.
-	rci_t r = j + i * max_rows_per_block;
-        A->rows[r] = block_start + offset;			// FIXME: rowstride candidate
-      }
-    }
-    if(rest == 0)
-      rest = max_rows_per_block;
+  if (r && c) {
+    int blockrows = __M4RI_MAX_MZD_BLOCKSIZE / A->rowstride;
+    A->blockrows_log = 0;
+    while(blockrows >>= 1)
+      A->blockrows_log++;
+    blockrows = 1 << A->blockrows_log;
+    A->blockrows_mask = blockrows - 1;
+    int const nblocks = (r + blockrows - 1) / blockrows;
+    A->flags |= (nblocks > 1) ? mzd_flag_multiple_blocks : 0;
+    A->blocks = (mzd_block_t*)m4ri_mmc_calloc(nblocks + 1, sizeof(mzd_block_t));
 
-    A->blocks[nblocks-1].size = rest * bytes_per_row;
-    A->blocks[nblocks-1].data = m4ri_mmc_calloc(rest, bytes_per_row);
-    for(rci_t j = 0; j < rest; ++j) {
-      A->rows[j + max_rows_per_block * (nblocks - 1)] = (word*)(A->blocks[nblocks - 1].data) + A->width * j;
+    size_t block_words = (r - (nblocks - 1) * blockrows) * A->rowstride;
+    for(int i = nblocks - 1; i >= 0; --i) {
+      A->blocks[i].size = block_words * sizeof(word);
+      A->blocks[i].begin = m4ri_mmc_calloc(1, A->blocks[i].size);
+      A->blocks[i].end = A->blocks[i].begin + block_words;
+      block_words = blockrows * A->rowstride;
     }
+
+    for(rci_t i = 0; i < A->nrows; ++i) {
+      A->rows[i] = A->blocks[i >> A->blockrows_log].begin + (i & A->blockrows_mask) * A->rowstride;
 #ifdef M4RI_WRAPWORD
-    for (rci_t i = 0; i < A->nrows; ++i)
       word::init_array(A->rows[i], A->width);
 #endif
+    }
+
   } else {
     A->blocks = NULL;
   }
-
-#ifdef HAVE_SSE2
-  if (incw) {
-    A->width--;
-  }
-#endif
 
   return A;
 }
@@ -112,22 +91,29 @@ mzd_t *mzd_init_window (mzd_t *m, rci_t lowr, rci_t lowc, rci_t highr, rci_t hig
   nrows = MIN(highr - lowr, m->nrows - lowr);
   ncols = highc - lowc;
   
-  window->ncols = ncols;
   window->nrows = nrows;
-
+  window->ncols = ncols;
+  window->rowstride = m->rowstride;
   window->offset = (lowc + m->offset) % m4ri_radix;
-  wi_t const offset = (lowc + m->offset) / m4ri_radix;
-  
-  window->width = (ncols + window->offset) / m4ri_radix;
-  if ((ncols + window->offset) % m4ri_radix)
-    window->width++;
+  window->width = (ncols + window->offset + m4ri_radix - 1) / m4ri_radix;
+  if (window->width == 1) {
+    window->high_bitmask = window->low_bitmask = __M4RI_MIDDLE_BITMASK(ncols, window->offset);
+  } else {
+    window->high_bitmask = __M4RI_LEFT_BITMASK((ncols + window->offset) % m4ri_radix);
+    window->low_bitmask = __M4RI_RIGHT_BITMASK(m4ri_radix - window->offset);
+  }
+  window->flags = m->flags & mzd_flag_multiple_blocks;
+  window->flags |= (window->offset == 0) ? mzd_flag_windowed_zerooffset : mzd_flag_nonzero_offset;
+  window->flags |= ((ncols + window->offset) % m4ri_radix == 0) ? mzd_flag_windowed_zeroexcess : mzd_flag_nonzero_excess;
+  window->blockrows_log = m->blockrows_log;
+  window->blockrows_mask = m->blockrows_mask;
   window->blocks = NULL;
 
   if(nrows)
     window->rows = (word**)m4ri_mmc_calloc(nrows + 1, sizeof(word*));
   else
     window->rows = NULL;
-
+  wi_t const offset = (lowc + m->offset) / m4ri_radix;
   for(rci_t i = 0; i < nrows; ++i) {
     window->rows[i] = m->rows[lowr + i] + offset;
   }
@@ -143,9 +129,9 @@ void mzd_free(mzd_t *A) {
   if(A->blocks) {
     int i;
     for(i = 0; A->blocks[i].size; ++i) {
-      m4ri_mmc_free(A->blocks[i].data, A->blocks[i].size);
+      m4ri_mmc_free(A->blocks[i].begin, A->blocks[i].size);
     }
-    m4ri_mmc_free(A->blocks, (i + 1) * sizeof(mmb_t));
+    m4ri_mmc_free(A->blocks, (i + 1) * sizeof(mzd_block_t));
   }
   m4ri_mmc_free(A, sizeof(mzd_t));
 }
@@ -770,7 +756,12 @@ mzd_t *mzd_copy(mzd_t *N, mzd_t const *P) {
       N = mzd_init(P->nrows, P->ncols+ P->offset);
       N->ncols -= P->offset;
       N->offset = P->offset;
-      N->width=P->width;
+      N->width = P->width;
+      N->flags |= mzd_flag_nonzero_offset;
+      N->low_bitmask &= m4ri_ffff << N->offset;
+      if (N->width == 1)
+	N->high_bitmask = N->low_bitmask;
+      N->flags |= ((N->high_bitmask & ((word)1 << (m4ri_radix - 1)))) ? mzd_flag_windowed_zeroexcess : mzd_flag_nonzero_excess;
     } else {
       if (N->nrows < P->nrows || N->ncols < P->ncols)
 	m4ri_die("mzd_copy: Target matrix is too small.");

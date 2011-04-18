@@ -74,6 +74,12 @@
 
 #define __M4RI_MUL_BLOCKSIZE MIN(((int)sqrt((double)(4 * __M4RI_CPU_L2_CACHE))) / 2, 2048)
 
+typedef struct {
+  size_t size;
+  word* begin;
+  word* end;
+} mzd_block_t;
+
 /**
  * \brief Dense matrices over GF(2). 
  * 
@@ -81,13 +87,6 @@
  */
 
 typedef struct mzd_t {
-  /**
-   * Contains pointers to the actual blocks of memory containing the
-   * values packed into words of size m4ri_radix.
-   */
-
-  struct _mm_block *blocks;
-
   /**
    * Number of rows.
    */
@@ -101,17 +100,75 @@ typedef struct mzd_t {
   rci_t ncols;
 
   /**
-   * width = ceil(ncols/m4ri_radix)
+   * Number of words with valid bits.
+   *
+   * width = ceil((ncols + offset) / m4ri_radix)
    */
 
   wi_t width; 
+
+  /**
+   * Offset in words between rows.
+   *
+   * rowstride = (width < mzd_paddingwidth || (width & 1) == 0) ? width : width + 1;
+   * where width is the width of the underlaying non-windowed matrix.
+   */
+
+  wi_t rowstride;
+
+  /**
+   * Booleans to speed up things.
+   *
+   * The bits have the following meaning:
+   *
+   * 0: Has non-zero offset (and thus is windowed).
+   * 1: Has non-zero excess.
+   * 2: Is windowed, but has zero offset.
+   * 3: Is windowed, but has zero excess.
+   * 4: Spans more than 1 block.
+   */
+
+  int flags;
 
   /**
    * column offset of the first column.
    */
 
   int offset;
-  
+
+  /**
+   * blockrows_log = log2(blockrows);
+   * where blockrows is the number of rows in one block, which is a power of 2.
+   */
+
+  int blockrows_log;
+
+  /**
+   * blockrows_mask = blockrows - 1;
+   * where blockrows is the number of rows in one block, which is a power of 2.
+   */
+
+  int blockrows_mask;
+
+  /**
+   * Mask for valid bits in the word with the highest index (width - 1).
+   */
+
+  word high_bitmask;
+
+  /**
+   * Mask for valid bits in the word with the lowest index (0).
+   */
+
+  word low_bitmask;
+
+  /**
+   * Contains pointers to the actual blocks of memory containing the
+   * values packed into words of size m4ri_radix.
+   */
+
+  mzd_block_t *blocks;
+
   /**
    * Address of first word in each row, so the first word of row i is
    * is m->rows[i]
@@ -120,6 +177,26 @@ typedef struct mzd_t {
   word **rows;
 
 } mzd_t;
+
+/**
+ * \brief The minimum width where padding occurs.
+ */
+static wi_t const mzd_paddingwidth = 3;
+
+static int const mzd_flag_nonzero_offset = 0x1;
+static int const mzd_flag_nonzero_excess = 0x2;
+static int const mzd_flag_windowed_zerooffset = 0x4;
+static int const mzd_flag_windowed_zeroexcess = 0x8;
+static int const mzd_flag_multiple_blocks = 0x10;
+
+/**
+ * \brief Test if a matrix is windowed.
+ *
+ * \return a non-zero value if the matrix is windowed, otherwise return zero.
+ */
+static inline int mzd_is_windowed(mzd_t const *M) {
+  return M->flags & (mzd_flag_nonzero_offset | mzd_flag_windowed_zerooffset);
+}
 
 /**
  * \brief Create a new matrix of dimension r x c.

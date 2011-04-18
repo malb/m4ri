@@ -55,10 +55,17 @@ int _mzd_pls_submatrix(mzd_t *A,
   /* we're essentially constructing a submatrix but cheaply */
   wi_t const width = A->width;
   rci_t const ncols = A->ncols;
+  int const flags = A->flags;
+  word low_bitmask = A->low_bitmask;
+  word high_bitmask = A->high_bitmask;
 
   if (A->width > splitblock) {
     A->width = splitblock;
     A->ncols = splitblock * m4ri_radix;
+    assert(A->offset == 0);
+    A->flags &= mzd_flag_multiple_blocks;
+    A->flags |= (mzd_flag_windowed_zerooffset | mzd_flag_windowed_zeroexcess);
+    A->high_bitmask = A->low_bitmask = m4ri_ffff;
   }
 
   int curr_pos;
@@ -106,6 +113,9 @@ int _mzd_pls_submatrix(mzd_t *A,
   /* reset to original size */
   A->ncols = ncols;
   A->width = width;
+  A->flags = flags;
+  A->low_bitmask = low_bitmask;
+  A->high_bitmask = high_bitmask;
 
   __M4RI_DD_MZD(A);
   __M4RI_DD_MZP(P);
@@ -122,16 +132,12 @@ void mzd_make_table_pls(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t
   wi_t const wide = T->width - blockoffset;
   wi_t const count = (wide + 7) / 8;
   int const entry_point = wide % 8;
+  wi_t const next_row_offset = blockoffset + T->rowstride - T->width;
 
   word *ti, *ti1, *m;
 
   ti1 = T->rows[0] + blockoffset;
-  ti = ti1 + T->width;
-#ifdef HAVE_SSE2
-  unsigned long incw = 0;
-  if (T->width & 1) incw = 1;
-  ti += incw;
-#endif
+  ti = ti1 + T->rowstride;
 
   Le[0] = 0;
   Lm[0] = 0;
@@ -152,11 +158,8 @@ void mzd_make_table_pls(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t
     case 1:      *(ti++) = *(m++) ^ *(ti1++);
       } while (--n > 0);
     }
-#ifdef HAVE_SSE2
-    ti += incw; ti1 += incw;
-#endif
-    ti += blockoffset;
-    ti1 += blockoffset;
+    ti += next_row_offset;
+    ti1 += next_row_offset;
 
     /* U is a basis but not the canonical basis, so we need to read what
        element we just created from T */

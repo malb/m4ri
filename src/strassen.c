@@ -1168,14 +1168,22 @@ mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t const *A, mzd_t const *B, int cut
   mzd_t *tmp = mzd_init (B->nrows, (rci_t)m4ri_radix);
   int const offset = C->offset;
   rci_t const cncols = C->ncols;
+  int const flags = C->flags;
+  word const bitmask = C->low_bitmask;
   C->offset = 0;
   C->ncols = m4ri_radix;
+  C->flags &= mzd_flag_multiple_blocks;
+  C->flags |= (mzd_flag_windowed_zerooffset | mzd_flag_windowed_zeroexcess);
+  assert(C->width == 1);
+  C->low_bitmask = C->high_bitmask = m4ri_ffff;
   word const mask = __M4RI_MIDDLE_BITMASK(B->ncols, B->offset);
   for (rci_t i = 0; i < B->nrows; ++i)
     tmp->rows[i][0] = B->rows[i][0] & mask;
   _mzd_addmul_even (C, A, tmp, cutoff);
   C->offset = offset;
   C->ncols = cncols;
+  C->flags = flags;
+  C->low_bitmask = C->high_bitmask = bitmask;
   mzd_free (tmp);
   return C;
 }
