@@ -274,7 +274,7 @@ static word const m4ri_ffff = __M4RI_CONVERT_TO_WORD(-1);
 *
 * This function returns 1..64 bits, never zero bits.
 * This mask is mainly used to mask the n valid bits in the least significant word
-* with valid bits by using __M4RI_RIGHT_BITMASK(m4ri_radix - M->offset % m4ri_radix).
+* with valid bits by using __M4RI_RIGHT_BITMASK(m4ri_radix - M->offset).
 * In other words, the set bits represent the columns with the highest index in the word.
 *
 *  Thus,
