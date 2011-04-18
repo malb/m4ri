@@ -121,6 +121,16 @@ else
 fi
 AC_SUBST(M4RI_DEBUG_DUMP)
 
+AC_ARG_ENABLE([debug-mzd],
+        AS_HELP_STRING([--enable-debug-mzd], [Add consistency checks on matrix structures.]))
+
+if test "x$enable_debug_mzd" = "xyes"; then
+  M4RI_DEBUG_MZD=1
+else
+  M4RI_DEBUG_MZD=0
+fi
+AC_SUBST(M4RI_DEBUG_MZD)
+
 # For the testsuite. Detect if PAPI is installed. See http://icl.cs.utk.edu/papi/ .
 
 if test -z "$m4ri_config_papi"; then
