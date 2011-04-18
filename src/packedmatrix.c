@@ -47,6 +47,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
   }
   A->flags = (A->high_bitmask != m4ri_ffff) ? mzd_flag_nonzero_excess : 0;
   A->offset = 0;
+  A->offset_vector = 0;
 
   A->rows = (word**)m4ri_mmc_calloc(r + 1, sizeof(word*)); // We're overcomitting here.
 
@@ -56,7 +57,8 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
     while(blockrows >>= 1)
       A->blockrows_log++;
     blockrows = 1 << A->blockrows_log;
-    A->blockrows_mask = blockrows - 1;
+    //A->blockrows_mask = blockrows - 1;
+    int const blockrows_mask = blockrows - 1;
     int const nblocks = (r + blockrows - 1) / blockrows;
     A->flags |= (nblocks > 1) ? mzd_flag_multiple_blocks : 0;
     A->blocks = (mzd_block_t*)m4ri_mmc_calloc(nblocks + 1, sizeof(mzd_block_t));
@@ -70,7 +72,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
     }
 
     for(rci_t i = 0; i < A->nrows; ++i) {
-      A->rows[i] = A->blocks[i >> A->blockrows_log].begin + (i & A->blockrows_mask) * A->rowstride;
+      A->rows[i] = A->blocks[i >> A->blockrows_log].begin + (i & blockrows_mask) * A->rowstride;
 #ifdef M4RI_WRAPWORD
       word::init_array(A->rows[i], A->width);
 #endif
@@ -82,6 +84,39 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
 
   return A;
 }
+
+/*
+   Explanation of offset_vector (in words)
+
+   <------------------------------- row_stride (in words)--------------------->
+   .---------------------------------------------------------------------------.  <-- m->blocks[0].begin   ^
+   |                                                                          /|                           |
+   |                                                        m->offset_vector_/ |                           |
+   |                                                                        /  |                           |
+   |  .--------------------------------------------------------------------v<--|---- m->rows[0]            |_ skipped_blocks (in blocks)
+   |  |m (also a window)             ^                                     |   |                           |
+   |  |                              |                                     |   |                           |
+   `---------------------------------|-----------------------------------------'                           v
+   .---------------------------------|----------------------------------------_.  <-- m->blocks[1].begin <-- windows.blocks[0].begin
+   |  |                          lowr|                                     |_^ |
+   |  |                              |            window->offset_vector _-^|   |
+   |  |                              v                               _-^   |   |                     
+   |  |  .----------------------------------------------------------v<--.  |<--|---- m->rows[lowr]
+   |  |  |window                                                    |    `-|---|---- window->rows[0]
+   |  |  |                                                          |      |   |
+   `---------------------------------------------------------------------------'
+   .---------------------------------------------------------------------------.  <-- m->blocks[2].begin <-- windows.blocks[1].begin
+   |  |  |                                                          |      |   |
+   |  |  |                                                          | lowc |   |
+   |  |  |                                                          |<---->|   |
+   |  |  |                                                          |   \__|___|__ also wrd_offset (in words)
+   |  |  `----------------------------------------------------------'      |   |
+   |  `--------------------------------------------------------------------'   |
+   `---------------------------------------------------------------------------'
+   .---------------------------------------------------------------------------.
+   |                                                                           |
+
+*/
 
 mzd_t *mzd_init_window (mzd_t *m, rci_t lowr, rci_t lowc, rci_t highr, rci_t highc) {
   rci_t nrows, ncols;
@@ -102,31 +137,36 @@ mzd_t *mzd_init_window (mzd_t *m, rci_t lowr, rci_t lowc, rci_t highr, rci_t hig
     window->high_bitmask = __M4RI_LEFT_BITMASK((ncols + window->offset) % m4ri_radix);
     window->low_bitmask = __M4RI_RIGHT_BITMASK(m4ri_radix - window->offset);
   }
-  window->flags = m->flags & mzd_flag_multiple_blocks;
-  window->flags |= (window->offset == 0) ? mzd_flag_windowed_zerooffset : mzd_flag_nonzero_offset;
+  window->flags = (window->offset == 0) ? mzd_flag_windowed_zerooffset : mzd_flag_nonzero_offset;
   window->flags |= ((ncols + window->offset) % m4ri_radix == 0) ? mzd_flag_windowed_zeroexcess : mzd_flag_nonzero_excess;
   window->blockrows_log = m->blockrows_log;
-  window->blockrows_mask = m->blockrows_mask;
-  window->blocks = NULL;
-
+  //window->blockrows_mask = m->blockrows_mask;
+  int const skipped_blocks = (m->offset_vector + lowr * window->rowstride) / m->blocks[0].size;
+  assert(skipped_blocks == 0 || ((m->flags & mzd_flag_multiple_blocks)));
+  window->blocks = &m->blocks[skipped_blocks];
+  wi_t const wrd_offset = (lowc + m->offset) / m4ri_radix;
+  window->offset_vector = (m->offset_vector + lowr * window->rowstride + wrd_offset) - skipped_blocks * m->blocks[0].size;
   if(nrows)
     window->rows = (word**)m4ri_mmc_calloc(nrows + 1, sizeof(word*));
   else
     window->rows = NULL;
-  wi_t const offset = (lowc + m->offset) / m4ri_radix;
   for(rci_t i = 0; i < nrows; ++i) {
-    window->rows[i] = m->rows[lowr + i] + offset;
+    window->rows[i] = m->rows[lowr + i] + wrd_offset;
   }
-  
+  if (window->blocks[1].size)
+    window->flags |= m->flags & mzd_flag_multiple_blocks;
+
+  /* offset_vector is the distance from the start of the first block to the first word of the first row. */
+  assert(nrows == 0 || window->blocks[0].begin + window->offset_vector == window->rows[0]);
+
   __M4RI_DD_MZD(window);
   return window;
 }
 
-
 void mzd_free(mzd_t *A) {
   if(A->rows)
     m4ri_mmc_free(A->rows, (A->nrows + 1) * sizeof(word*));
-  if(A->blocks) {
+  if(mzd_owns_blocks(A)) {
     int i;
     for(i = 0; A->blocks[i].size; ++i) {
       m4ri_mmc_free(A->blocks[i].begin, A->blocks[i].size);
@@ -757,7 +797,7 @@ mzd_t *mzd_copy(mzd_t *N, mzd_t const *P) {
       N->ncols -= P->offset;
       N->offset = P->offset;
       N->width = P->width;
-      N->flags |= mzd_flag_nonzero_offset;
+      N->flags |= (mzd_flag_nonzero_offset | mzd_flag_windowed_ownsblocks);
       N->low_bitmask &= m4ri_ffff << N->offset;
       if (N->width == 1)
 	N->high_bitmask = N->low_bitmask;

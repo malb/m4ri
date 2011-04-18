@@ -67,7 +67,7 @@ static void consistency_check(mzd_t const *M)
   assert(M->width * m4ri_radix >= M->ncols + M->offset);
   assert((M->width - 1) * m4ri_radix < M->ncols + M->offset);
   assert(M->width < mzd_paddingwidth || (M->rowstride & 1) == 0);
-  assert((M->blockrows_mask + 1) == (1 << M->blockrows_log));
+  //assert((M->blockrows_mask + 1) == (1 << M->blockrows_log));
   assert((1 << M->blockrows_log) * M->rowstride <= __M4RI_MAX_MZD_BLOCKSIZE);
   assert((1 << M->blockrows_log) * M->rowstride > __M4RI_MAX_MZD_BLOCKSIZE / 2);
   assert((M->width > 1 && M->low_bitmask == __M4RI_RIGHT_BITMASK(m4ri_radix - M->offset)) ||

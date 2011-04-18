@@ -1174,6 +1174,7 @@ mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t const *A, mzd_t const *B, int cut
   C->ncols = m4ri_radix;
   C->flags &= mzd_flag_multiple_blocks;
   C->flags |= (mzd_flag_windowed_zerooffset | mzd_flag_windowed_zeroexcess);
+  /* No need to set mzd_flag_windowed_ownsblocks, because we won't free C until it's elements are restored below. */
   assert(C->width == 1);
   C->low_bitmask = C->high_bitmask = m4ri_ffff;
   word const mask = __M4RI_MIDDLE_BITMASK(B->ncols, B->offset);

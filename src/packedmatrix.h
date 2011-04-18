@@ -117,6 +117,15 @@ typedef struct mzd_t {
   wi_t rowstride;
 
   /**
+   * Offset in words from start of block to first word.
+   *
+   * rows[0] = blocks[0].begin + offset_vector;
+   * This, together with rowstride, makes the rows array obsolete.
+   */
+
+  wi_t offset_vector;
+
+  /**
    * Booleans to speed up things.
    *
    * The bits have the following meaning:
@@ -143,12 +152,14 @@ typedef struct mzd_t {
 
   int blockrows_log;
 
+#if 0	// Commented out in order to keep the size of mzd_t 64 bytes (one cache line). This could be added back if rows was ever removed.
   /**
    * blockrows_mask = blockrows - 1;
    * where blockrows is the number of rows in one block, which is a power of 2.
    */
 
   int blockrows_mask;
+#endif
 
   /**
    * Mask for valid bits in the word with the highest index (width - 1).
@@ -187,7 +198,8 @@ static int const mzd_flag_nonzero_offset = 0x1;
 static int const mzd_flag_nonzero_excess = 0x2;
 static int const mzd_flag_windowed_zerooffset = 0x4;
 static int const mzd_flag_windowed_zeroexcess = 0x8;
-static int const mzd_flag_multiple_blocks = 0x10;
+static int const mzd_flag_windowed_ownsblocks = 0x10;
+static int const mzd_flag_multiple_blocks = 0x20;
 
 /**
  * \brief Test if a matrix is windowed.
@@ -196,6 +208,15 @@ static int const mzd_flag_multiple_blocks = 0x10;
  */
 static inline int mzd_is_windowed(mzd_t const *M) {
   return M->flags & (mzd_flag_nonzero_offset | mzd_flag_windowed_zerooffset);
+}
+
+/**
+ * \brief Test if this mzd_t should free blocks.
+ *
+ * \return TRUE iff blocks is non-zero and should be freed upon a call to mzd_free.
+ */
+static inline int mzd_owns_blocks(mzd_t const *M) {
+  return M->blocks && (!mzd_is_windowed(M) || ((M->flags & mzd_flag_windowed_ownsblocks)));
 }
 
 /**

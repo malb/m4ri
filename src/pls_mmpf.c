@@ -66,6 +66,7 @@ int _mzd_pls_submatrix(mzd_t *A,
     A->flags &= mzd_flag_multiple_blocks;
     A->flags |= (mzd_flag_windowed_zerooffset | mzd_flag_windowed_zeroexcess);
     A->high_bitmask = A->low_bitmask = m4ri_ffff;
+    /* No need to set mzd_flag_windowed_ownsblocks, because we won't free A until it's elements are restored below. */
   }
 
   int curr_pos;
