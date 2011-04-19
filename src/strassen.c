@@ -1165,27 +1165,79 @@ mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t const *A, mzd_t const *B, int cut
 }
 
 mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
-  mzd_t *tmp = mzd_init (B->nrows, (rci_t)m4ri_radix);
+  assert(B->width == 1 && C->width == 1);
+  assert(mzd_is_windowed(B));	// Otherwise the whole copying makes no sense.
+  // D will contain the first 64 columns of B.
+  mzd_t *D = mzd_init(B->nrows, (rci_t)m4ri_radix);
+  // Make a backup of the shape of C.
   int const offset = C->offset;
   rci_t const cncols = C->ncols;
   int const flags = C->flags;
   word const bitmask = C->low_bitmask;
+  // Extend it's columns to the right to include the whole first word, and only the first word.
   C->offset = 0;
   C->ncols = m4ri_radix;
-  C->flags &= mzd_flag_multiple_blocks;
-  C->flags |= (mzd_flag_windowed_zerooffset | mzd_flag_windowed_zeroexcess);
-  /* No need to set mzd_flag_windowed_ownsblocks, because we won't free C until it's elements are restored below. */
-  assert(C->width == 1);
+  C->flags = (flags & (mzd_flag_multiple_blocks | mzd_flag_windowed_ownsblocks)) | (mzd_flag_windowed_zerooffset | mzd_flag_windowed_zeroexcess);
   C->low_bitmask = C->high_bitmask = m4ri_ffff;
-  word const mask = __M4RI_MIDDLE_BITMASK(B->ncols, B->offset);
-  for (rci_t i = 0; i < B->nrows; ++i)
-    tmp->rows[i][0] = B->rows[i][0] & mask;
-  _mzd_addmul_even (C, A, tmp, cutoff);
+  // Run Bw and Dw over all (now single word) rows of B and D respectively.
+  word* restrict Bw = mzd_first_row(B);
+  word* restrict Dw = mzd_first_row(D);
+  int Bblock = 0;
+  int Dblock = 0;
+  int Bcount = mzd_rows_in_block(B, 0);
+  int Dcount = mzd_rows_in_block(D, 0);
+  // This is true because D->row_offset == 0, and D contains much less columns
+  // (well, at least, it's rowstride is less than or equal B's rowstride).
+  // It can at most contain more rows in the first block than B.
+  assert(Bcount <= Dcount);
+  int count = Bcount;
+  // Already substract 'count' from Bcount and Dcount.
+  Dcount -= Bcount;
+  Bcount = 0;
+  wi_t const Browstride = B->rowstride;
+  word const mask = B->low_bitmask;
+  while(1) {
+    // Make count even.
+    if ((count & 1)) {
+      *Dw = *Bw & mask;
+      Bw += Browstride;
+      Dw += 1;
+    }
+    // Unroll the loop a factor of two.
+    count >>= 1;
+    while (count--) {
+      // Inner loop. Copy the first word of B to D, setting the extra columns to zero.
+      Dw[0] = *Bw & mask;
+      Bw += Browstride;
+      Dw[1] = *Bw & mask;
+      Bw += Browstride;
+      Dw += 2;			// D->rowstride == 1
+    }
+    // Unless we have more than one block, we're done.
+    // This is always the case the first time we get here, and almost always true subsequent times.
+    if (__M4RI_LIKELY(Bcount == 0)) {
+      // This is true if we just processed the last block; optimize for the case
+      // of a single block matrix and mark it as likely.
+      if (__M4RI_LIKELY((Bcount = mzd_rows_in_block(B, ++Bblock)) <= 0))
+	break;
+      // Put Bw at the start of the next block.
+      Bw = mzd_first_row_next_block(B, Bblock);
+    } else {
+      // then Dcount == 0. Do the same as above but for D.
+      if ((Dcount = mzd_rows_in_block(D, ++Dblock)) <= 0)
+	break;
+      Dw = mzd_first_row_next_block(D, Dblock);
+    }
+    count = MIN(Bcount, Dcount);
+    Bcount -= count;
+    Dcount -= count;
+  }
+  _mzd_addmul_even (C, A, D, cutoff);
   C->offset = offset;
   C->ncols = cncols;
   C->flags = flags;
   C->low_bitmask = C->high_bitmask = bitmask;
-  mzd_free (tmp);
+  mzd_free(D);
   return C;
 }
 
