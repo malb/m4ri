@@ -297,6 +297,7 @@ int global_options(int* argcp, char*** argvp)
     ++*argvp;
     --*argcp;
   }
+  return result;
 }
 
 void bench_print_global_options(FILE* out)
@@ -305,8 +306,8 @@ void bench_print_global_options(FILE* out)
   fprintf(out, "  -m <minimum>      Do at least <minimum> number of measurements. Default 2.\n");
   fprintf(out, "  -n <maximum>      Do at most <maximum> number of measurements. Default 1000.\n");
   fprintf(out, "  -t <max-time>     Stop after <max-time> seconds. Default 60.0 seconds.\n");
-  fprintf(out, "  -a <accuracy>     Stop after <accuracy> has been reached. Default 0.01 (= 1%).\n");
-  fprintf(out, "  -c <confidence>   Stop when accuracy has been reached with this confidence. Default 99 (%).\n");
+  fprintf(out, "  -a <accuracy>     Stop after <accuracy> has been reached. Default 0.01 (= 1%%).\n");
+  fprintf(out, "  -c <confidence>   Stop when accuracy has been reached with this confidence. Default 99 (%%).\n");
   fprintf(out, "  -s <counter>      Counter to perform statistic over (0: realtime, 1: cpuclocks. Default: 1).\n");
   fprintf(out, "  -x <loop-count>   Call function <loop-count> times in the inner most loop (calls per measurement).\n");
   fprintf(out, "  -d [<counter>]    Dump measurements. Dump all or only <counter> when given.\n");
@@ -802,7 +803,7 @@ void bench_randomize(mzd_t *A) {
 static uint64_t bench_random_M;
 static uint64_t bench_random_modulo;
 
-uint64_t bench_random_init(uint64_t modulo)
+void bench_random_init(uint64_t modulo)
 {
   // Set bench_random_M to the largest multiple of modulo, minus one, that fits in an uint64_t.
   // A modulo of zero is interpreted as 2^64, and thus returns 0xffffffffffffffff.

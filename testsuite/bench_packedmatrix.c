@@ -952,7 +952,7 @@ int decode_index(char idx, struct test_params* params, int* argcp, char*** argvp
 {
   if (*argcp < 1)
   {
-    int count;
+    int count = 0;
     switch(idx)
     {
       case 'r':
