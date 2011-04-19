@@ -29,11 +29,116 @@
 #include "parity.h"
 #include "mmc.h"
 
+typedef struct mzd_t_cache {
+  mzd_t mzd[64];
+  struct mzd_t_cache *prev;
+  struct mzd_t_cache *next;
+  uint64_t used;
+  unsigned char padding[sizeof(mzd_t) - 2 * sizeof(struct mzd_t_cache*) - sizeof(uint64_t)];
+} mzd_t_cache_t __attribute__ ((__aligned__ (64)));
+
+static mzd_t_cache_t mzd_cache;
+static mzd_t_cache_t* current_cache = &mzd_cache;
+
+static int log2_floor(uint64_t v) {
+  static uint64_t const b[] = { 0x2, 0xC, 0xF0, 0xFF00, 0xFFFF0000, 0xFFFFFFFF00000000 };
+  static unsigned int const S[] = { 1, 2, 4, 8, 16, 32 };
+  unsigned int r = 0;
+  for (int i = 5; i >= 0; --i)
+  {
+    if ((v & b[i]))
+    {
+      v >>= S[i];
+      r |= S[i];
+    }
+  }
+  return r;
+}
+
+/*
+ * Return a pointer to a new mzd_t structure.
+ * The structure will be 64 byte aligned.
+ * Call mzd_t_free to free the structure for next use.
+ */
+
+static mzd_t* mzd_t_malloc() {
+  if (current_cache->used == (uint64_t)-1)
+  {
+    mzd_t_cache_t *cache = &mzd_cache;
+    while (cache && cache->used == (uint64_t)-1) {
+      current_cache = cache;
+      cache = cache->next;
+    }
+    if (!cache)
+    {
+#if __M4RI_HAVE_OPENMP
+#pragma omp critical
+      {
+#endif
+
+#if __M4RI_USE_MM_MALLOC
+      cache = _mm_malloc(sizeof(mzd_t_cache_t), 64);
+#elif __M4RI_USE_POSIX_MEMALIGN
+      int error = posix_memalign(&cache, 64, sizeof(mzd_t_cache_t));
+      if (error) cache = NULL;
+#else
+      cache = malloc(sizeof(mzd_t_cache_t));
+#endif  
+
+#if __M4RI_HAVE_OPENMP
+      }
+#endif
+
+      if (cache == NULL)
+	m4ri_die("mzd_t_malloc: malloc returned NULL\n");
+
+      memset(cache, 0, sizeof(mzd_t_cache_t));
+
+      cache->prev = current_cache;
+      current_cache->next = cache;
+    }
+    current_cache = cache;
+  }
+  int free_entry = log2_floor(~current_cache->used);
+  current_cache->used |= ((uint64_t)1 << free_entry);
+  return &current_cache->mzd[free_entry];
+}
+
+static void mzd_t_free(mzd_t *M) {
+  mzd_t_cache_t *cache = &mzd_cache;
+  while(1) {
+    size_t entry = M - cache->mzd;
+    if (entry < 64) {
+      cache->used &= ~((uint64_t)1 << entry);
+      if (cache->used == 0) {
+	if (cache == &mzd_cache) {
+	  current_cache = cache;
+	} else {
+	  if (cache == current_cache) {
+	    current_cache = cache->prev;
+	  }
+	  cache->prev->next = cache->next;
+	  if (cache->next)
+	    cache->next->prev = cache->prev;
+#if __M4RI_USE_MM_MALLOC
+	  _mm_free(cache);
+#else
+	  free(cache);
+#endif
+	}
+      }
+      return;
+    }
+    cache = cache->next;
+  }
+  assert(FALSE);
+}
+
 #define SAFECHAR (m4ri_radix + m4ri_radix / 4 + 1)
 
 mzd_t *mzd_init(rci_t r, rci_t c) {
 
-  mzd_t *A = (mzd_t *)m4ri_mmc_malloc(sizeof(mzd_t));
+  mzd_t *A = mzd_t_malloc();
 
   A->nrows = r;
   A->ncols = c;
@@ -122,7 +227,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
 mzd_t *mzd_init_window (mzd_t *m, rci_t lowr, rci_t lowc, rci_t highr, rci_t highc) {
   rci_t nrows, ncols;
   mzd_t *window;
-  window = (mzd_t*)m4ri_mmc_malloc(sizeof(mzd_t));
+  window = mzd_t_malloc();
 
   nrows = MIN(highr - lowr, m->nrows - lowr);
   ncols = highc - lowc;
@@ -176,7 +281,7 @@ void mzd_free(mzd_t *A) {
     }
     m4ri_mmc_free(A->blocks, (i + 1) * sizeof(mzd_block_t));
   }
-  m4ri_mmc_free(A, sizeof(mzd_t));
+  mzd_t_free(A);
 }
 
 void mzd_print( mzd_t const *M ) {
