@@ -52,6 +52,7 @@ static inline word rotate_word(word w, int shift)
 static inline void consistency_check_row(mzd_t const *M, rci_t row)
 {
   assert(row >= 0 && row < M->nrows);
+  assert(M->rows[row] == mzd_row(M, row));
   if (mzd_is_windowed(M))
     return;
   // Check that the excess bits are zero.
@@ -78,8 +79,23 @@ static void consistency_check(mzd_t const *M)
   assert(((M->flags & mzd_flag_nonzero_excess) == 0) == ((M->ncols + M->offset) % m4ri_radix == 0));
   assert((M->flags & mzd_flag_windowed_zerooffset) == 0 || M->offset == 0);
   assert((M->flags & mzd_flag_windowed_zeroexcess) == 0 || ((M->ncols + M->offset) % m4ri_radix == 0));
-  assert(M->blocks != NULL || mzd_is_windowed(M));
-  assert(M->blocks == NULL || (((M->flags & mzd_flag_multiple_blocks) == 0) == (M->blocks[1].size == 0)));
+  assert((((M->flags & mzd_flag_multiple_blocks) == 0) == (mzd_row_to_block(M, M->nrows - 1) == 0)));
+  int n = 0;
+  rci_t counted = 0;
+  word* ptr = mzd_first_row(M);
+  int row_count = mzd_rows_in_block(M, 0);
+  while(1) {
+    while (row_count--) {
+      assert(ptr == M->rows[counted++]);
+      ptr += M->rowstride;
+    }
+    ++n;
+    row_count = mzd_rows_in_block(M, n);
+    if (row_count <= 0)
+      break;
+    ptr = mzd_first_row_next_block(M, n);
+  }
+  assert(M->ncols == 0 || counted == M->nrows);
   if (mzd_is_windowed(M))
     return;
   assert(M->rowstride == M->width || (M->rowstride == M->width + 1 && M->width >= mzd_paddingwidth));

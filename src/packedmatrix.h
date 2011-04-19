@@ -126,6 +126,18 @@ typedef struct mzd_t {
   wi_t offset_vector;
 
   /**
+   * Number of rows to the first row counting from the start of the first block.
+   */
+
+  wi_t row_offset;
+
+  /**
+   * column offset of the first column.
+   */
+
+  uint16_t offset;
+
+  /**
    * Booleans to speed up things.
    *
    * The bits have the following meaning:
@@ -137,20 +149,14 @@ typedef struct mzd_t {
    * 4: Spans more than 1 block.
    */
 
-  int flags;
-
-  /**
-   * column offset of the first column.
-   */
-
-  int offset;
+  uint8_t flags;
 
   /**
    * blockrows_log = log2(blockrows);
    * where blockrows is the number of rows in one block, which is a power of 2.
    */
 
-  int blockrows_log;
+  uint8_t blockrows_log;
 
 #if 0	// Commented out in order to keep the size of mzd_t 64 bytes (one cache line). This could be added back if rows was ever removed.
   /**
@@ -194,15 +200,17 @@ typedef struct mzd_t {
  */
 static wi_t const mzd_paddingwidth = 3;
 
-static int const mzd_flag_nonzero_offset = 0x1;
-static int const mzd_flag_nonzero_excess = 0x2;
-static int const mzd_flag_windowed_zerooffset = 0x4;
-static int const mzd_flag_windowed_zeroexcess = 0x8;
-static int const mzd_flag_windowed_ownsblocks = 0x10;
-static int const mzd_flag_multiple_blocks = 0x20;
+static uint8_t const mzd_flag_nonzero_offset = 0x1;
+static uint8_t const mzd_flag_nonzero_excess = 0x2;
+static uint8_t const mzd_flag_windowed_zerooffset = 0x4;
+static uint8_t const mzd_flag_windowed_zeroexcess = 0x8;
+static uint8_t const mzd_flag_windowed_ownsblocks = 0x10;
+static uint8_t const mzd_flag_multiple_blocks = 0x20;
 
 /**
  * \brief Test if a matrix is windowed.
+ *
+ * \param M Matrix
  *
  * \return a non-zero value if the matrix is windowed, otherwise return zero.
  */
@@ -213,10 +221,101 @@ static inline int mzd_is_windowed(mzd_t const *M) {
 /**
  * \brief Test if this mzd_t should free blocks.
  *
+ * \param M Matrix
+ *
  * \return TRUE iff blocks is non-zero and should be freed upon a call to mzd_free.
  */
 static inline int mzd_owns_blocks(mzd_t const *M) {
   return M->blocks && (!mzd_is_windowed(M) || ((M->flags & mzd_flag_windowed_ownsblocks)));
+}
+
+/**
+ * \brief Get a pointer the first word.
+ *
+ * \param M Matrix
+ *
+ * \return a pointer to the first word of the first row.
+ */
+
+static inline word* mzd_first_row(mzd_t const *M) {
+  word* result = M->blocks[0].begin + M->offset_vector;
+  assert(M->nrows == 0 || result == M->rows[0]);
+  return result;
+}
+
+/**
+ * \brief Get a pointer to the first word in block n.
+ *
+ * Use mzd_first_row for block number 0.
+ *
+ * \param M Matrix
+ * \param n The block number. Must be larger than 0.
+ *
+ * \return a pointer to the first word of the first row in block n.
+ */
+static inline word* mzd_first_row_next_block(mzd_t const* M, int n) {
+  assert(n > 0);
+  return M->blocks[n].begin + M->offset_vector - M->row_offset * M->rowstride;
+}
+
+/**
+ * \brief Convert row to blocks index.
+ *
+ * \param M Matrix.
+ * \param row The row to convert.
+ *
+ * \return the block number that contains this row.
+ */
+
+static inline int mzd_row_to_block(mzd_t const* M, rci_t row) {
+  return (M->row_offset + row) >> M->blockrows_log;
+}
+
+/**
+ * \brief Total number of rows in this block.
+ *
+ * Should be called with a constant n=0, or with
+ * n > 0 when n is a variable, for optimization
+ * reasons.
+ *
+ * \param M Matrix
+ * \param n The block number.
+ *
+ * \return the total number of rows in this block.
+ */
+
+static inline wi_t mzd_rows_in_block(mzd_t const* M, int n) {
+  if (__M4RI_UNLIKELY(M->flags & mzd_flag_multiple_blocks)) {
+    if (__M4RI_UNLIKELY(n == 0)) {
+      return (1 << M->blockrows_log) - M->row_offset;
+    } else {
+      int const last_block = mzd_row_to_block(M, M->nrows - 1); 
+      if (n < last_block)
+	return (1 << M->blockrows_log);
+      return M->nrows + M->row_offset - (n << M->blockrows_log);
+    }
+  }
+  return n ? 0 : M->nrows;
+}
+
+/**
+ * \brief Get pointer to first word of row.
+ *
+ * \param M Matrix
+ * \param row The row index.
+ *
+ * \return pointer to first word of the row.
+ */
+
+static inline word* mzd_row(mzd_t const* M, rci_t row) {
+  wi_t big_vector = M->offset_vector + row * M->rowstride;
+  word* result = M->blocks[0].begin + big_vector;
+  if (__M4RI_UNLIKELY(M->flags & mzd_flag_multiple_blocks)) {
+    int const n = (M->row_offset + row) >> M->blockrows_log;
+    result = M->blocks[n].begin + big_vector - n * (M->blocks[0].size / sizeof(word));
+  }
+  assert(result == M->rows[row]);
+  return result;
 }
 
 /**

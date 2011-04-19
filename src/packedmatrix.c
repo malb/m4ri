@@ -48,6 +48,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
   A->flags = (A->high_bitmask != m4ri_ffff) ? mzd_flag_nonzero_excess : 0;
   A->offset = 0;
   A->offset_vector = 0;
+  A->row_offset = 0;
 
   A->rows = (word**)m4ri_mmc_calloc(r + 1, sizeof(word*)); // We're overcomitting here.
 
@@ -86,21 +87,21 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
 }
 
 /*
-   Explanation of offset_vector (in words)
+   Explanation of offset_vector (in words), and row_offset.
 
    <------------------------------- row_stride (in words)--------------------->
    .---------------------------------------------------------------------------.  <-- m->blocks[0].begin   ^
-   |                                                                          /|                           |
-   |                                                        m->offset_vector_/ |                           |
-   |                                                                        /  |                           |
+   |                                 ^                                        /|                           |
+   |                    m->row_offset|                      m->offset_vector_/ |                           |
+   |                                 v                                      /  |                           |
    |  .--------------------------------------------------------------------v<--|---- m->rows[0]            |_ skipped_blocks (in blocks)
    |  |m (also a window)             ^                                     |   |                           |
    |  |                              |                                     |   |                           |
    `---------------------------------|-----------------------------------------'                           v
    .---------------------------------|----------------------------------------_.  <-- m->blocks[1].begin <-- windows.blocks[0].begin
-   |  |                          lowr|                                     |_^ |
-   |  |                              |            window->offset_vector _-^|   |
-   |  |                              v                               _-^   |   |                     
+   |  |                      ^   lowr|                                     |_^ |
+   |  |    window->row_offset|       |            window->offset_vector _-^|   |
+   |  |                      v       v                               _-^   |   |                     
    |  |  .----------------------------------------------------------v<--.  |<--|---- m->rows[lowr]
    |  |  |window                                                    |    `-|---|---- window->rows[0]
    |  |  |                                                          |      |   |
@@ -141,11 +142,13 @@ mzd_t *mzd_init_window (mzd_t *m, rci_t lowr, rci_t lowc, rci_t highr, rci_t hig
   window->flags |= ((ncols + window->offset) % m4ri_radix == 0) ? mzd_flag_windowed_zeroexcess : mzd_flag_nonzero_excess;
   window->blockrows_log = m->blockrows_log;
   //window->blockrows_mask = m->blockrows_mask;
-  int const skipped_blocks = (m->offset_vector + lowr * window->rowstride) / m->blocks[0].size;
+  wi_t const blockrows_mask = (1 << window->blockrows_log) - 1;
+  int const skipped_blocks = (m->row_offset + lowr) >> window->blockrows_log;
   assert(skipped_blocks == 0 || ((m->flags & mzd_flag_multiple_blocks)));
+  window->row_offset = (m->row_offset + lowr) & blockrows_mask;
   window->blocks = &m->blocks[skipped_blocks];
   wi_t const wrd_offset = (lowc + m->offset) / m4ri_radix;
-  window->offset_vector = (m->offset_vector + lowr * window->rowstride + wrd_offset) - skipped_blocks * m->blocks[0].size;
+  window->offset_vector = (m->offset_vector + wrd_offset) + (window->row_offset - m->row_offset) * window->rowstride;
   if(nrows)
     window->rows = (word**)m4ri_mmc_calloc(nrows + 1, sizeof(word*));
   else
@@ -153,7 +156,7 @@ mzd_t *mzd_init_window (mzd_t *m, rci_t lowr, rci_t lowc, rci_t highr, rci_t hig
   for(rci_t i = 0; i < nrows; ++i) {
     window->rows[i] = m->rows[lowr + i] + wrd_offset;
   }
-  if (window->blocks[1].size)
+  if (mzd_row_to_block(window, nrows - 1) > 0)
     window->flags |= m->flags & mzd_flag_multiple_blocks;
 
   /* offset_vector is the distance from the start of the first block to the first word of the first row. */

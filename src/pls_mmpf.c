@@ -127,7 +127,7 @@ int _mzd_pls_submatrix(mzd_t *A,
 
 /* create a table of all 2^k linear combinations */
 void mzd_make_table_pls(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *Le, rci_t *Lm) {
-  assert(T->blocks[1].size == 0);
+  assert(!(T->flags & mzd_flag_multiple_blocks));	// Note that this restricts the number of columns of any matrix to __M4RI_MAX_MZD_BLOCKSIZE * radix / twokay = 268 million.
   wi_t const blockoffset= c / m4ri_radix;
   int const twokay= __M4RI_TWOPOW(k);
   wi_t const wide = T->width - blockoffset;
