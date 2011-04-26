@@ -294,8 +294,8 @@ BENCHMARK_POSTFIX
 
 BENCHMARK_PREFIX(mzd_transpose)
 {
-  mzd_t* const A = mzd_init(p->m, p->m);
-  mzd_t* const B = mzd_init(p->m, p->m);
+  mzd_t* const A = mzd_init(p->m, p->n);
+  mzd_t* const B = mzd_init(p->n, p->m);
   mzd_randomize(A);
   uint64_t const loop_count = p->count;
 
@@ -890,7 +890,7 @@ static function_st function_mapper[] = {
   { "mzd_write_bit",        run_mzd_write_bit,        "Omn,ri,ci",       "",   100000000 },
   { "mzd_row_add_offset",   run_mzd_row_add_offset,   "Rmn,ri,ri,ci",    "C",  100000000 },
   { "mzd_row_add",          run_mzd_row_add,          "Rmn,ri,ri",       "n",  100000000 },
-  { "mzd_transpose",        run_mzd_transpose,        "Omm,Rmm",         "mm", 10000000 },
+  { "mzd_transpose",        run_mzd_transpose,        "Onm,Rmn",         "mn", 10000000 },
   { "mzd_mul_naive",        run_mzd_mul_naive,        "Omn,Rml,Rln",     "mnl",10000000 },
   { "mzd_addmul_naive",     run_mzd_addmul_naive,     "Omn,Rml,Rln",     "mnl",10000000 },
   { "_mzd_mul_naive",       run__mzd_mul_naive,       "Omn,Rml,Rnl,b",   "mnl",10000000 },
