@@ -57,12 +57,12 @@
 #endif
 
 /**
- * Maximum number of bytes allocated for one mzd_t block.
+ * Maximum number of words allocated for one mzd_t block.
  *
  * \note This value must fit in an int, even though it's type is size_t.
  */
 
-#define __M4RI_MAX_MZD_BLOCKSIZE (((size_t)1) << 30)
+#define __M4RI_MAX_MZD_BLOCKSIZE (((size_t)1) << 27)
 
 /**
  * \brief Matrix multiplication block-ing dimension.
@@ -146,7 +146,8 @@ typedef struct mzd_t {
    * 1: Has non-zero excess.
    * 2: Is windowed, but has zero offset.
    * 3: Is windowed, but has zero excess.
-   * 4: Spans more than 1 block.
+   * 4: Is windowed, but owns the blocks allocations.
+   * 5: Spans more than 1 block.
    */
 
   uint8_t flags;

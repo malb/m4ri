@@ -939,14 +939,23 @@ static inline void _mzd_copy_transpose_le16xle16(word* restrict dst, word const*
   int i = n;
   do {
     t[0] = wks[0];
-    if (--i == 0)
+    if (--i == 0) {
+      t[1] = 0;
+      t[2] = 0;
+      t[3] = 0;
       break;
+    }
     t[1] = wks[rowstride_src];
-    if (--i == 0)
+    if (--i == 0) {
+      t[2] = 0;
+      t[3] = 0;
       break;
+    }
     t[2] = wks[2 * rowstride_src];
-    if (--i == 0)
+    if (--i == 0) {
+      t[3] = 0;
       break;
+    }
     t[3] = wks[3 * rowstride_src];
     if (--i == 0)
       break;
@@ -1115,6 +1124,10 @@ static inline void _mzd_copy_transpose_le64xle64(word* restrict dst, word const*
 
 mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
   assert(!mzd_is_windowed(DST) && !mzd_is_windowed(A));
+  // We assume that there fit at least 64 rows in a block, if
+  // that is the case then each block will contain a multiple
+  // of 64 rows, since blockrows is a power of 2.
+  assert(A->blockrows_log >= 6 && DST->blockrows_log >= 6);
 
   rci_t nrows = A->nrows;
   rci_t ncols = A->ncols;
@@ -1125,23 +1138,29 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
 
   if (maxsize >= 64) {
 
-    if (nrows >= 64) {
+    int const multiple_blocks = (A->flags | DST->flags) & mzd_flag_multiple_blocks;
+    if (__M4RI_UNLIKELY(multiple_blocks)) {
+      assert(!multiple_blocks);
+      // FIXME: Implement function that supports matrices of more than one block.
+      //return _mzd_transpose_multiblock(DST, A);
+    }
 
-    /*
-     * This is an interesting #if ...
-     * I recommend to investigate the number of instructions, and the clocks per instruction,
-     * as function of various sizes of the matrix (most likely especially the number of columns
-     * (the size of a row) will have influence; also always use multiples of 64 or even 128),
-     * for both cases below.
-     *
-     * To measure this run for example:
-     *
-     * ./bench_packedmatrix -m 10 -x 10 -p PAPI_TOT_INS,PAPI_L1_TCM,PAPI_L2_TCM mzd_transpose 32000 32000
-     * ./bench_packedmatrix -m 10 -x 100 -p PAPI_TOT_INS,PAPI_L1_TCM,PAPI_L2_TCM mzd_transpose 128 10240
-     * etc (increase -x for smaller sizes to get better accuracy).
-     *
-     * --Carlo Wood
-     */
+    if (nrows >= 64) {
+      /*
+       * This is an interesting #if ...
+       * I recommend to investigate the number of instructions, and the clocks per instruction,
+       * as function of various sizes of the matrix (most likely especially the number of columns
+       * (the size of a row) will have influence; also always use multiples of 64 or even 128),
+       * for both cases below.
+       *
+       * To measure this run for example:
+       *
+       * ./bench_packedmatrix -m 10 -x 10 -p PAPI_TOT_INS,PAPI_L1_TCM,PAPI_L2_TCM mzd_transpose 32000 32000
+       * ./bench_packedmatrix -m 10 -x 100 -p PAPI_TOT_INS,PAPI_L1_TCM,PAPI_L2_TCM mzd_transpose 128 10240
+       * etc (increase -x for smaller sizes to get better accuracy).
+       *
+       * --Carlo Wood
+       */
 #if 1
       int js = ncols & nrows & 64;	// True if the total number of whole 64x64 matrices is odd.
       wi_t const rowstride_64_dst = 64 * DST->rowstride;
@@ -1150,7 +1169,7 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
       if (js) {
 	js = 1;
 	_mzd_copy_transpose_64x64(fwd, fws, DST->rowstride, A->rowstride);
-	if (nrows == 64 && ncols == 64) {
+	if ((nrows | ncols) == 64) {
 	  __M4RI_DD_MZD(DST);
 	  return DST;
 	}

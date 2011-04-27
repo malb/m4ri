@@ -1280,7 +1280,7 @@ int main(int argc, char** argv)
   printf("\n");
   for (int n = 1; n < data_len; ++n)
   {
-    printf("%s (%f) per bit (devided by ", papi_event_name(papi_events[n - 1]), (double)data[n] / params.count);
+    printf("%s (%f) per bit (divided by ", papi_event_name(papi_events[n - 1]), (double)data[n] / params.count);
     print_complexity_human(&params, function_mapper[f].complexity_code);
     printf("): %f\n", data[n] / (params.count * cost));
   }
