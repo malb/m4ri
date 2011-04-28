@@ -1514,32 +1514,30 @@ int mzd_equal(mzd_t const *A, mzd_t const *B) {
   if (A->ncols != B->ncols) return FALSE;
   if (A == B) return TRUE;
 
-  wi_t const width = A->width - 1;
+  wi_t Awidth = A->width - 1;
 
   if (A->offset == B->offset) {
     int const non_zero_offset = (A->offset != 0);
-    if (non_zero_offset < width) {
+    if (non_zero_offset < Awidth) {
       for (rci_t i = 0; i < A->nrows; ++i) {
-	for (wi_t j = non_zero_offset; j < width; ++j) {
+	for (wi_t j = non_zero_offset; j < Awidth; ++j) {
 	  if (A->rows[i][j] != B->rows[i][j])
 	    return FALSE;
 	}
       }
     }
-    word const mask_end = __M4RI_LEFT_BITMASK(A->ncols % m4ri_radix);
     if (non_zero_offset) {
-      word mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - A->offset);
-      if (!width)
-	mask_begin &= mask_end;
+      word mask_begin = A->low_bitmask;
       for (rci_t i = 0; i < A->nrows; ++i) {
 	if (((A->rows[i][0] ^ B->rows[i][0]) & mask_begin))
 	  return FALSE;
       }
-      if (!width)
+      if (!Awidth)
 	return TRUE;
     }
+    word const mask_end = A->high_bitmask;
     for (rci_t i = 0; i < A->nrows; ++i) {
-      if (((A->rows[i][width] ^ B->rows[i][width]) & mask_end))
+      if (((A->rows[i][Awidth] ^ B->rows[i][Awidth]) & mask_end))
 	return FALSE;
     }
   } else {
@@ -1549,22 +1547,20 @@ int mzd_equal(mzd_t const *A, mzd_t const *B) {
       A = B;
       B = tmp;
       shift = -shift;
+      Awidth = A->width - 1;
     }
     int const non_zero_offset = (A->offset != 0);
-    if (non_zero_offset < width) {
+    if (non_zero_offset < Awidth) {
       for (rci_t i = 0; i < A->nrows; ++i) {
-	for (wi_t j = non_zero_offset; j < width; ++j) {
+	for (wi_t j = non_zero_offset; j < Awidth; ++j) {
 	  word Bval = (B->rows[i][j] >> shift) | (B->rows[i][j + 1] << (m4ri_radix - shift));
 	  if (A->rows[i][j] != Bval)
 	    return FALSE;
 	}
       }
     }
-    word const mask_end = __M4RI_LEFT_BITMASK(A->ncols % m4ri_radix);
     if (non_zero_offset) {
-      word mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - A->offset);
-      if (!width)
-	mask_begin &= mask_end;
+      word mask_begin = A->low_bitmask;
       if (1 < B->width) {
 	for (rci_t i = 0; i < A->nrows; ++i) {
 	  word Bval = (B->rows[i][0] >> shift) | (B->rows[i][1] << (m4ri_radix - shift));
@@ -1578,20 +1574,21 @@ int mzd_equal(mzd_t const *A, mzd_t const *B) {
 	    return FALSE;
 	}
       }
-      if (!width)
+      if (!Awidth)
 	return TRUE;
     }
-    if (width + 1 < B->width)
+    word const mask_end = A->high_bitmask;
+    if (Awidth + 1 < B->width)
     {
       for (rci_t i = 0; i < A->nrows; ++i) {
-	word Bval = (B->rows[i][width] >> shift) | (B->rows[i][width + 1] << (m4ri_radix - shift));
-	if (((A->rows[i][width] ^ Bval) & mask_end))
+	word Bval = (B->rows[i][Awidth] >> shift) | (B->rows[i][Awidth + 1] << (m4ri_radix - shift));
+	if (((A->rows[i][Awidth] ^ Bval) & mask_end))
 	  return FALSE;
       }
     } else {
       for (rci_t i = 0; i < A->nrows; ++i) {
-	word Bval = B->rows[i][width] >> shift;
-	if (((A->rows[i][width] ^ Bval) & mask_end))
+	word Bval = B->rows[i][Awidth] >> shift;
+	if (((A->rows[i][Awidth] ^ Bval) & mask_end))
 	  return FALSE;
       }
     }
