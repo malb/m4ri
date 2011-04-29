@@ -1960,50 +1960,85 @@ void mzd_col_swap(mzd_t *M, rci_t const cola, rci_t const colb) {
 
   wi_t const a_word = _cola / m4ri_radix;
   wi_t const b_word = _colb / m4ri_radix;
+
   int const a_bit = _cola % m4ri_radix;
   int const b_bit = _colb % m4ri_radix;
 
-  if(a_word == b_word) {
-    for (rci_t i = 0; i < M->nrows; ++i) {
-      word *base = (M->rows[i] + a_word);
-      register word b = *base;
-      register word x = ((b >> a_bit) ^ (b >> b_bit)) & m4ri_one; // XOR temporary
-      *base = b ^ ((x << a_bit) | (x << b_bit));
-    }
-    __M4RI_DD_MZD(M);
-    return;
-  }
+  word* restrict ptr = mzd_first_row(M);
+  int max_bit = MAX(a_bit, b_bit);
+  int count = mzd_rows_in_block(M, 0);
+  assert(count > 0);
+  int min_bit = a_bit + b_bit - max_bit;
+  int block = 0;
+  int offset = max_bit - min_bit;
+  word mask = m4ri_one << min_bit;
 
-  word const a_bm = m4ri_one << a_bit;
-  word const b_bm = m4ri_one << b_bit;
-
-  if(a_bit > b_bit) {
-    int const offset = a_bit - b_bit;
-
-    for (rci_t i = 0; i < M->nrows; ++i) {
-      word *base = M->rows[i];
-      word a = *(base + a_word);
-      word b = *(base + b_word);
-
-      a ^= (b & b_bm) << offset;
-      b ^= (a & a_bm) >> offset;
-      a ^= (b & b_bm) << offset;
-
-      *(base + a_word) = a;
-      *(base + b_word) = b;
+  if (a_word == b_word) {
+    while(1) {
+      ptr += a_word;
+      int fast_count = count / 4;
+      int rest_count = count - 4 * fast_count;
+      word xor[4];
+      wi_t const rowstride = M->rowstride;
+      while (fast_count--) {
+	xor[0] = ptr[0];
+	xor[1] = ptr[rowstride];
+	xor[2] = ptr[2 * rowstride];
+	xor[3] = ptr[3 * rowstride];
+	xor[0] ^= xor[0] >> offset;
+	xor[1] ^= xor[1] >> offset;
+	xor[2] ^= xor[2] >> offset;
+	xor[3] ^= xor[3] >> offset;
+	xor[0] &= mask;
+	xor[1] &= mask;
+	xor[2] &= mask;
+	xor[3] &= mask;
+	xor[0] |= xor[0] << offset;
+	xor[1] |= xor[1] << offset;
+	xor[2] |= xor[2] << offset;
+	xor[3] |= xor[3] << offset;
+	ptr[0] ^= xor[0];
+	ptr[rowstride] ^= xor[1];
+	ptr[2 * rowstride] ^= xor[2];
+	ptr[3 * rowstride] ^= xor[3];
+	ptr += 4 * rowstride;
+      }
+      while (rest_count--) {
+	word xor = *ptr;
+	xor ^= xor >> offset;
+	xor &= mask;
+	*ptr ^= xor | (xor << offset);
+	ptr += rowstride;
+      }
+      if ((count = mzd_rows_in_block(M, ++block)) <= 0)
+	break;
+      ptr = mzd_first_row_next_block(M, block);
     }
   } else {
-    int const offset = b_bit - a_bit;
-    for (rci_t i = 0; i < M->nrows; ++i) {
-      word *base = M->rows[i];
-      word a = *(base + a_word);
-      word b = *(base + b_word);
-
-      a ^= (b & b_bm) >> offset;
-      b ^= (a & a_bm) << offset;
-      a ^= (b & b_bm) >> offset;
-      *(base + a_word) = a;
-      *(base + b_word) = b;
+    word* restrict min_ptr;
+    wi_t max_offset;
+    if (min_bit == a_bit) {
+      min_ptr = ptr + a_word;
+      max_offset = b_word - a_word;
+    } else {
+      min_ptr = ptr + b_word;
+      max_offset = a_word - b_word;
+    }
+    while(1) {
+      wi_t const rowstride = M->rowstride;
+      while(count--) {
+	word xor = (min_ptr[0] ^ (min_ptr[max_offset] >> offset)) & mask;
+	min_ptr[0] ^= xor;
+	min_ptr[max_offset] ^= xor << offset;
+	min_ptr += rowstride;
+      }
+      if ((count = mzd_rows_in_block(M, ++block)) <= 0)
+	break;
+      ptr = mzd_first_row_next_block(M, block);
+      if (min_bit == a_bit)
+	min_ptr = ptr + a_word;
+      else
+	min_ptr = ptr + b_word;
     }
   }
 

@@ -16,7 +16,7 @@ nodist_pkgincludesub_HEADERS = src/m4ri_config.h
 libm4ri_la_LDFLAGS = -release 0.0.20110501 -no-undefined
 libm4ri_la_LIBADD = -lm
 
-check_PROGRAMS=test_multiplication test_elimination test_trsm test_pls test_solve test_kernel test_random test_smallops test_transpose
+check_PROGRAMS=test_multiplication test_elimination test_trsm test_pls test_solve test_kernel test_random test_smallops test_transpose test_colswap
 test_multiplication_SOURCES=testsuite/test_multiplication.c
 test_multiplication_LDFLAGS=-lm4ri -lm
 test_multiplication_CFLAGS=-I$(srcdir)/src
@@ -53,4 +53,8 @@ test_transpose_SOURCES=testsuite/test_transpose.c
 test_transpose_LDFLAGS=-lm4ri -lm
 test_transpose_CFLAGS=-I$(srcdir)/src
 
-TESTS = test_multiplication test_elimination test_trsm test_pls test_solve test_kernel test_random test_smallops test_transpose
+test_colswap_SOURCES=testsuite/test_colswap.c
+test_colswap_LDFLAGS=-lm4ri -lm
+test_colswap_CFLAGS=-I$(srcdir)/src
+
+TESTS = test_multiplication test_elimination test_trsm test_pls test_solve test_kernel test_random test_smallops test_transpose test_colswap
