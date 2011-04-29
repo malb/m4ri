@@ -44,12 +44,18 @@ AC_DEFUN([AX_GUESS_PATH_LIB],
       fi
     }
 
+    have_realpath=`which realpath`
+
     cw_libname_uppercase="m4_toupper([$1])"
     AC_CACHE_CHECK([if we can find lib[$1].so], [cw_cv_lib"$[]cw_libname_uppercase"_path],
     [
       cw_library_path=`eval cw_search_library_path [$1] $LDFLAGS`
       if test -n "$cw_library_path"; then
-        eval cw_cv_lib"$cw_libname_uppercase"_path=`realpath -s "$cw_library_path"`
+        if test "x$have_realpath" != "x"; then
+           eval cw_cv_lib"$cw_libname_uppercase"_path=`realpath -s "$cw_library_path"`
+         else
+           eval cw_cv_lib"$cw_libname_uppercase"_path="$cw_library_path"
+        fi
       else
         eval cw_cv_lib"$cw_libname_uppercase"_path="no"
       fi

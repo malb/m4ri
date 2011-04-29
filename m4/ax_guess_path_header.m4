@@ -44,12 +44,18 @@ AC_DEFUN([AX_GUESS_PATH_HEADER],
       fi
     }
 
+    have_realpath=`which realpath`
+
     cw_headername_uppercase=`echo "m4_toupper([$1])" | sed -e 's/[[^A-Z]]/_/g'`
     AC_CACHE_CHECK([if we can find [$1]], [cw_cv_"$[]cw_headername_uppercase"_path],
     [
       cw_header_path=`eval cw_search_header_path [$1] $CPPFLAGS $CFLAGS`
       if test -n "$cw_header_path"; then
-        eval cw_cv_"$cw_headername_uppercase"_path=`realpath -s "$cw_header_path"`
+        if test "x$have_realpath" != "x"; then
+            eval cw_cv_"$cw_headername_uppercase"_path=`realpath -s "$cw_header_path"`
+        else
+            eval cw_cv_"$cw_headername_uppercase"_path="$cw_header_path"
+        fi
       else
         eval cw_cv_"$cw_headername_uppercase"_path="no"
       fi
