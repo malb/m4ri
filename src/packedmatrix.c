@@ -1179,8 +1179,8 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
       rci_t const whole_64cols = ncols / 64;
       // The use of delayed and even, is to avoid calling _mzd_copy_transpose_64x64_2 twice.
       // This way it can be inlined without duplicating the amount of code that has to be loaded.
-      word* restrict fwd_delayed;
-      word const* restrict fws_delayed;
+      word* restrict fwd_delayed = NULL;
+      word const* restrict fws_delayed = NULL;
       int even = 0;
       while (1)
       {
