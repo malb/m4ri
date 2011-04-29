@@ -181,6 +181,8 @@ size_t cache_size(const size_t *candidates, const size_t n, size_t trials) {
   ax_l2_size=`echo $ax_cv_cache_sizes | $SED 's/.*\://g'`
   AC_MSG_RESULT( $ax_l2_size Bytes)
 
-  AC_DEFINE_UNQUOTED([__M4RI_CPU_L1_CACHE], ${ax_l1_size}, [L1 cache size (in Bytes)])
-  AC_DEFINE_UNQUOTED([__M4RI_CPU_L2_CACHE], ${ax_l2_size}, [L2 cache size (in Bytes)])
+  M4RI_CPU_L1_CACHE=${ax_l1_size}
+  M4RI_CPU_L2_CACHE=${ax_l2_size}
+  AC_SUBST(M4RI_CPU_L1_CACHE)
+  AC_SUBST(M4RI_CPU_L2_CACHE)
 ])
