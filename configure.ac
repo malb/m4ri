@@ -151,6 +151,7 @@ if test -z "$m4ri_config_papi"; then
     fi
     if test -n "$PAPI_H_PATH"; then
        PAPI_CFLAGS="-I$PAPI_H_PATH"
+       AC_DEFINE_UNQUOTED([HAVE_LIBPAPI], 1, [Define when libpapi is available.])
     else
       AC_MSG_WARN([
 
@@ -159,7 +160,6 @@ if test -z "$m4ri_config_papi"; then
     or turn off papi all together by configuring with --without-papi.
 ])
     fi
-    AC_DEFINE_UNQUOTED([HAVE_LIBPAPI], 1, [Define when libpapi is available.])
 ])
 fi
 
