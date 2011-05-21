@@ -1180,8 +1180,8 @@ mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t const *A, mzd_t const *B, int cut
   C->flags = (flags & (mzd_flag_multiple_blocks | mzd_flag_windowed_ownsblocks)) | (mzd_flag_windowed_zerooffset | mzd_flag_windowed_zeroexcess);
   C->low_bitmask = C->high_bitmask = m4ri_ffff;
   // Run Bw and Dw over all (now single word) rows of B and D respectively.
-  word* restrict Bw = mzd_first_row(B);
-  word* restrict Dw = mzd_first_row(D);
+  word* RESTRICT Bw = mzd_first_row(B);
+  word* RESTRICT Dw = mzd_first_row(D);
   int Bblock = 0;
   int Dblock = 0;
   int Bcount = mzd_rows_in_block(B, 0);

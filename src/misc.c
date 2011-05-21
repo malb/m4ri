@@ -56,11 +56,20 @@ void m4ri_word_to_str(char *destination, word data, int colon) {
 }
 
 word m4ri_random_word() {
+#ifdef _MSC_VER
+  word a = 0;
+  int i;
+  for(i=0; i< m4ri_radix; i+=8) {
+    a ^= (((word)rand())<<i);
+  };
+  return a;
+#else
   // random() only returns 31 bits, so we need three calls.
   word a0 = random();
   word a1 = random();
   word a2 = random();
   return a0 ^ (a1 << 24) ^ a2 << 48;
+#endif
 }
 
 #ifdef __GNUC__

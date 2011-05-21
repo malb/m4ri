@@ -35,7 +35,11 @@ typedef struct mzd_t_cache {
   struct mzd_t_cache *next;
   uint64_t used;
   unsigned char padding[sizeof(mzd_t) - 2 * sizeof(struct mzd_t_cache*) - sizeof(uint64_t)];
+#ifdef __GNUC__
 } mzd_t_cache_t __attribute__ ((__aligned__ (64)));
+#else
+} mzd_t_cache_t;
+#endif
 
 static mzd_t_cache_t mzd_cache;
 static mzd_t_cache_t* current_cache = &mzd_cache;
@@ -77,12 +81,12 @@ static mzd_t* mzd_t_malloc() {
 #endif
 
 #if __M4RI_USE_MM_MALLOC
-      cache = _mm_malloc(sizeof(mzd_t_cache_t), 64);
+      cache = (mzd_t_cache_t*)_mm_malloc(sizeof(mzd_t_cache_t), 64);
 #elif __M4RI_USE_POSIX_MEMALIGN
       int error = posix_memalign(&cache, 64, sizeof(mzd_t_cache_t));
       if (error) cache = NULL;
 #else
-      cache = malloc(sizeof(mzd_t_cache_t));
+      cache = (mzd_t_cache_t*)malloc(sizeof(mzd_t_cache_t));
 #endif  
 
 #if __M4RI_HAVE_OPENMP
@@ -172,7 +176,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
     size_t block_words = (r - (nblocks - 1) * blockrows) * A->rowstride;
     for(int i = nblocks - 1; i >= 0; --i) {
       A->blocks[i].size = block_words * sizeof(word);
-      A->blocks[i].begin = m4ri_mmc_calloc(1, A->blocks[i].size);
+      A->blocks[i].begin = (word*)m4ri_mmc_calloc(1, A->blocks[i].size);
       A->blocks[i].end = A->blocks[i].begin + block_words;
       block_words = blockrows * A->rowstride;
     }
@@ -390,7 +394,7 @@ rci_t mzd_echelonize_naive(mzd_t *M, int full) {
  * \note This function also works when dst == src.
  */
 
-static inline void _mzd_copy_transpose_64x64(word* restrict dst, word const* restrict src, wi_t rowstride_dst, wi_t rowstride_src)
+static inline void _mzd_copy_transpose_64x64(word* RESTRICT dst, word const* RESTRICT src, wi_t rowstride_dst, wi_t rowstride_src)
 {
   /*
    * m runs over the values:
@@ -427,8 +431,8 @@ static inline void _mzd_copy_transpose_64x64(word* restrict dst, word const* res
   // the two 32x32 corner matrices.
   int j = 32;
   j_rowstride_dst >>= 1;
-  word* restrict wk = dst;
-  for (word const* restrict wks = src; wk < end; wk += j_rowstride_dst, wks += j_rowstride_src) {
+  word* RESTRICT wk = dst;
+  for (word const* RESTRICT wks = src; wk < end; wk += j_rowstride_dst, wks += j_rowstride_src) {
     for (int k = 0; k < j; ++k, wk += rowstride_dst, wks += rowstride_src) {
       word xor = ((*wks >> j) ^ *(wks + j_rowstride_src)) & m;
       *wk = *wks ^ (xor << j);
@@ -467,15 +471,15 @@ static inline void _mzd_copy_transpose_64x64(word* restrict dst, word const* res
  * \note This function also works to transpose in-place.
  */
 
-static inline void _mzd_copy_transpose_64x64_2(word* restrict dst1, word* restrict dst2, word const* restrict src1, word const* restrict src2, wi_t rowstride_dst, wi_t rowstride_src)
+static inline void _mzd_copy_transpose_64x64_2(word* RESTRICT dst1, word* RESTRICT dst2, word const* RESTRICT src1, word const* RESTRICT src2, wi_t rowstride_dst, wi_t rowstride_src)
 {
   word m = __M4RI_CONVERT_TO_WORD(0xFFFFFFFF);
   wi_t j_rowstride_dst = rowstride_dst * 64;
   wi_t j_rowstride_src = rowstride_src * 32;
   word* const end = dst1 + j_rowstride_dst;
   int j = 32;
-  word* restrict wk[2];
-  word const* restrict wks[2];
+  word* RESTRICT wk[2];
+  word const* RESTRICT wks[2];
   word xor[2];
 
   j_rowstride_dst >>= 1;
@@ -572,7 +576,7 @@ static word const transpose_mask[6] = {
  * \return log2(j)
  */
 
-static inline int _mzd_transpose_Nxjx64(word* restrict t, int n)
+static inline int _mzd_transpose_Nxjx64(word* RESTRICT t, int n)
 {
   int j = 1;
   int mi = 0;		// Index into the transpose_mask array.
@@ -624,11 +628,11 @@ static inline int _mzd_transpose_Nxjx64(word* restrict t, int n)
  * \note This function also works to transpose in-place.
  */
 
-static inline void _mzd_copy_transpose_lt64x64(word* restrict dst, word const* restrict src, wi_t rowstride_dst, wi_t rowstride_src, int n)
+static inline void _mzd_copy_transpose_lt64x64(word* RESTRICT dst, word const* RESTRICT src, wi_t rowstride_dst, wi_t rowstride_src, int n)
 {
   // Preload the n input rows into level 1, using a minimum of cache lines (compact storage).
   word t[64];
-  word const* restrict wks = src;
+  word const* RESTRICT wks = src;
   int k;
   for (k = 0; k < n; ++k) {
     t[k] = *wks;
@@ -650,7 +654,7 @@ static inline void _mzd_copy_transpose_lt64x64(word* restrict dst, word const* r
   // ...
   // [Al]
   word const m = __M4RI_LEFT_BITMASK(n);
-  word* restrict wk = dst;
+  word* RESTRICT wk = dst;
   switch (log2j) {
     case 5:
     {
@@ -694,7 +698,7 @@ static inline void _mzd_copy_transpose_lt64x64(word* restrict dst, word const* r
     {
       wi_t const j_rowstride_dst = 4 * rowstride_dst;
       for (int k = 0; k < 4; ++k) {
-	word* restrict wk2 = wk;
+	word* RESTRICT wk2 = wk;
 	word tk = t[k];
 	for (int i = 0; i < 2; ++i) {
 	  wk2[0] = tk & m;
@@ -716,7 +720,7 @@ static inline void _mzd_copy_transpose_lt64x64(word* restrict dst, word const* r
     {
       wi_t const j_rowstride_dst = 2 * rowstride_dst;
       for (int k = 0; k < 2; ++k) {
-	word* restrict wk2 = wk;
+	word* RESTRICT wk2 = wk;
 	word tk = t[k];
 	for (int i = 0; i < 8; ++i) {
 	  wk2[0] = tk & m;
@@ -732,7 +736,7 @@ static inline void _mzd_copy_transpose_lt64x64(word* restrict dst, word const* r
     }
     case 0:
     {
-      word* restrict wk2 = wk;
+      word* RESTRICT wk2 = wk;
       word tk = t[0];
       for (int i = 0; i < 16; ++i) {
 	wk2[0] = tk & m;
@@ -762,16 +766,16 @@ static inline void _mzd_copy_transpose_lt64x64(word* restrict dst, word const* r
  * \note This function also works to transpose in-place.
  */
 
-static inline void _mzd_copy_transpose_64xlt64(word* restrict dst, word const* restrict src, wi_t rowstride_dst, wi_t rowstride_src, int n)
+static inline void _mzd_copy_transpose_64xlt64(word* RESTRICT dst, word const* RESTRICT src, wi_t rowstride_dst, wi_t rowstride_src, int n)
 {
   word t[64];
   int log2j = log2_ceil(n);
-  word const* restrict wks = src;
+  word const* RESTRICT wks = src;
   switch (log2j) {
     case 6:
     {
       _mzd_copy_transpose_64x64(t, src, 1, rowstride_src);
-      word* restrict wk = dst;
+      word* RESTRICT wk = dst;
       for (int k = 0; k < n; ++k) {
 	*wk = t[k];
 	wk += rowstride_dst;
@@ -813,7 +817,7 @@ static inline void _mzd_copy_transpose_64xlt64(word* restrict dst, word const* r
     }
     case 2:
     {
-      word const* restrict wks2 = wks + 60 * rowstride_src;
+      word const* RESTRICT wks2 = wks + 60 * rowstride_src;
       t[0] = wks2[0];
       t[1] = wks2[rowstride_src];
       t[2] = wks2[2 * rowstride_src];
@@ -861,7 +865,7 @@ static inline void _mzd_copy_transpose_64xlt64(word* restrict dst, word const* r
   }
   int j  = 1 << log2j;
   _mzd_transpose_Nxjx64(t, j);
-  word* restrict wk = dst;
+  word* RESTRICT wk = dst;
   for (int k = 0; k < n; ++k) {
     *wk = t[k];
     wk += rowstride_dst;
@@ -884,10 +888,10 @@ static inline void _mzd_copy_transpose_64xlt64(word* restrict dst, word const* r
  * \note This function also works to transpose in-place.
  */
 
-static inline void _mzd_copy_transpose_le8xle8(word* restrict dst, word const* restrict src, wi_t rowstride_dst, wi_t rowstride_src, int n, int m, int maxsize)
+static inline void _mzd_copy_transpose_le8xle8(word* RESTRICT dst, word const* RESTRICT src, wi_t rowstride_dst, wi_t rowstride_src, int n, int m, int maxsize)
 {
   int end = maxsize * 7;
-  word const* restrict wks = src;
+  word const* RESTRICT wks = src;
   word w = *wks;
   int shift = 0;
   for (int i = 1; i < n; ++i) {
@@ -907,7 +911,7 @@ static inline void _mzd_copy_transpose_le8xle8(word* restrict dst, word const* r
     w7 >>= 7;
     w ^= xor;
   } while(shift < end);
-  word* restrict wk = dst + m * rowstride_dst;
+  word* RESTRICT wk = dst + m * rowstride_dst;
   for (int shift = 8 * m; shift > 0; shift -= 8) {
     *wk = (unsigned char)(w >> shift);
     wk -= rowstride_dst;
@@ -931,10 +935,10 @@ static inline void _mzd_copy_transpose_le8xle8(word* restrict dst, word const* r
  * \note This function also works to transpose in-place.
  */
 
-static inline void _mzd_copy_transpose_le16xle16(word* restrict dst, word const* restrict src, wi_t rowstride_dst, wi_t rowstride_src, int n, int m, int maxsize)
+static inline void _mzd_copy_transpose_le16xle16(word* RESTRICT dst, word const* RESTRICT src, wi_t rowstride_dst, wi_t rowstride_src, int n, int m, int maxsize)
 {
   int end = maxsize * 3;
-  word const* restrict wks = src;
+  word const* RESTRICT wks = src;
   word t[4];
   int i = n;
   do {
@@ -997,7 +1001,7 @@ static inline void _mzd_copy_transpose_le16xle16(word* restrict dst, word const*
   } while(shift < end);
   _mzd_transpose_Nxjx64(t, 4);
   i = m;
-  word* restrict wk = dst;
+  word* RESTRICT wk = dst;
   do {
     wk[0] = (uint16_t)t[0];
     if (--i == 0)
@@ -1046,9 +1050,9 @@ static inline void _mzd_copy_transpose_le16xle16(word* restrict dst, word const*
  * \note This function also works to transpose in-place.
  */
 
-static inline void _mzd_copy_transpose_le32xle32(word* restrict dst, word const* restrict src, wi_t rowstride_dst, wi_t rowstride_src, int n, int m)
+static inline void _mzd_copy_transpose_le32xle32(word* RESTRICT dst, word const* RESTRICT src, wi_t rowstride_dst, wi_t rowstride_src, int n, int m)
 {
-  word const* restrict wks = src;
+  word const* RESTRICT wks = src;
   word t[16];
   int i = n;
   if (n > 16) {
@@ -1074,7 +1078,7 @@ static inline void _mzd_copy_transpose_le32xle32(word* restrict dst, word const*
   _mzd_transpose_Nxjx64(t, 16);
   i = m;
   int one_more = (m & 1);
-  word* restrict wk = dst;
+  word* RESTRICT wk = dst;
   if (m > 16) {
     m -= 16;
     for (int j = 0; j < 16; j += 2) {
@@ -1102,9 +1106,9 @@ static inline void _mzd_copy_transpose_le32xle32(word* restrict dst, word const*
   }
 }
 
-static inline void _mzd_copy_transpose_le64xle64(word* restrict dst, word const* restrict src, wi_t rowstride_dst, wi_t rowstride_src, int n, int m)
+static inline void _mzd_copy_transpose_le64xle64(word* RESTRICT dst, word const* RESTRICT src, wi_t rowstride_dst, wi_t rowstride_src, int n, int m)
 {
-  word const* restrict wks = src;
+  word const* RESTRICT wks = src;
   word t[64];
   int k;
   for (k = 0; k < n; ++k) {
@@ -1114,7 +1118,7 @@ static inline void _mzd_copy_transpose_le64xle64(word* restrict dst, word const*
   while(k < 64)
     t[k++] = 0;
   _mzd_copy_transpose_64x64(t, t, 1, 1);
-  word* restrict wk = dst;
+  word* RESTRICT wk = dst;
   for (int k = 0; k < m; ++k) {
     *wk = t[k];
     wk += rowstride_dst;
@@ -1122,7 +1126,7 @@ static inline void _mzd_copy_transpose_le64xle64(word* restrict dst, word const*
   return;
 }
 
-void _mzd_transpose_multiblock(mzd_t *DST, mzd_t const *A, word* restrict* fwdp, word const* restrict* fwsp, rci_t* nrowsp, rci_t* ncolsp);
+void _mzd_transpose_multiblock(mzd_t *DST, mzd_t const *A, word* RESTRICT* fwdp, word const* RESTRICT* fwsp, rci_t* nrowsp, rci_t* ncolsp);
 
 mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
   assert(!mzd_is_windowed(DST) && !mzd_is_windowed(A));
@@ -1135,8 +1139,8 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
   rci_t ncols = A->ncols;
   rci_t maxsize = MAX(nrows, ncols);
 
-  word* restrict fwd = mzd_first_row(DST);
-  word const* restrict fws = mzd_first_row(A);
+  word* RESTRICT fwd = mzd_first_row(DST);
+  word const* RESTRICT fws = mzd_first_row(A);
 
   if (maxsize >= 64) {
 
@@ -1145,8 +1149,8 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
     // reduce the speed for small matrices (up to 64x64) by 5 to 10%.
     int const multiple_blocks = (A->flags | DST->flags) & mzd_flag_multiple_blocks;
     if (__M4RI_UNLIKELY(multiple_blocks)) {
-      word* restrict non_register_fwd;
-      word const* restrict non_register_fws;
+      word* RESTRICT non_register_fwd;
+      word const* RESTRICT non_register_fws;
       rci_t non_register_nrows;
       rci_t non_register_ncols;
       _mzd_transpose_multiblock(DST, A, &non_register_fwd, &non_register_fws, &non_register_nrows, &non_register_ncols);
@@ -1175,8 +1179,8 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
 #if 1
       int js = ncols & nrows & 64;	// True if the total number of whole 64x64 matrices is odd.
       wi_t const rowstride_64_dst = 64 * DST->rowstride;
-      word* restrict fwd_current = fwd;
-      word const* restrict fws_current = fws;
+      word* RESTRICT fwd_current = fwd;
+      word const* RESTRICT fws_current = fws;
       if (js) {
 	js = 1;
 	_mzd_copy_transpose_64x64(fwd, fws, DST->rowstride, A->rowstride);
@@ -1190,8 +1194,8 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
       rci_t const whole_64cols = ncols / 64;
       // The use of delayed and even, is to avoid calling _mzd_copy_transpose_64x64_2 twice.
       // This way it can be inlined without duplicating the amount of code that has to be loaded.
-      word* restrict fwd_delayed = NULL;
-      word const* restrict fws_delayed = NULL;
+      word* RESTRICT fwd_delayed = NULL;
+      word const* RESTRICT fws_delayed = NULL;
       int even = 0;
       while (1)
       {
@@ -1279,7 +1283,7 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
   return DST;
 }
 
-void _mzd_transpose_multiblock(mzd_t *DST, mzd_t const *A, word* restrict* fwdp, word const* restrict* fwsp, rci_t* nrowsp, rci_t* ncolsp) {
+void _mzd_transpose_multiblock(mzd_t *DST, mzd_t const *A, word* RESTRICT* fwdp, word const* RESTRICT* fwsp, rci_t* nrowsp, rci_t* ncolsp) {
 
   rci_t nrows = A->nrows;
   rci_t ncols = A->ncols;
@@ -1348,16 +1352,16 @@ void _mzd_transpose_multiblock(mzd_t *DST, mzd_t const *A, word* restrict* fwdp,
 
       rci_t nrowsb = (row < R_top) ? blockrows_src : (nrows - R_top);
       rci_t ncolsb = (col < R_right) ? blockrows_dst : (ncols - R_right);
-      word const* restrict fws = mzd_row(A, row) + col / m4ri_radix;
-      word* restrict fwd = mzd_row(DST, col) + row / m4ri_radix;
+      word const* RESTRICT fws = mzd_row(A, row) + col / m4ri_radix;
+      word* RESTRICT fwd = mzd_row(DST, col) + row / m4ri_radix;
 
       // The following code is (almost) duplicated from _mzd_transpose.
       if (nrowsb >= 64) {
 
 	int js = ncolsb & nrowsb & 64;	// True if the total number of whole 64x64 matrices is odd.
 	wi_t const rowstride_64_dst = 64 * DST->rowstride;
-	word* restrict fwd_current = fwd;
-	word const* restrict fws_current = fws;
+	word* RESTRICT fwd_current = fwd;
+	word const* RESTRICT fws_current = fws;
 	if (js) {
 	  js = 1;
 	  _mzd_copy_transpose_64x64(fwd, fws, DST->rowstride, A->rowstride);
@@ -1367,8 +1371,8 @@ void _mzd_transpose_multiblock(mzd_t *DST, mzd_t const *A, word* restrict* fwdp,
 	rci_t const whole_64cols = ncolsb / 64;
 	// The use of delayed and even, is to avoid calling _mzd_copy_transpose_64x64_2 twice.
 	// This way it can be inlined without duplicating the amount of code that has to be loaded.
-	word* restrict fwd_delayed = NULL;
-	word const* restrict fws_delayed = NULL;
+	word* RESTRICT fwd_delayed = NULL;
+	word const* RESTRICT fws_delayed = NULL;
 	int even = 0;
 	while (1)
 	{
@@ -2119,7 +2123,7 @@ void mzd_col_swap(mzd_t *M, rci_t const cola, rci_t const colb) {
   int const a_bit = _cola % m4ri_radix;
   int const b_bit = _colb % m4ri_radix;
 
-  word* restrict ptr = mzd_first_row(M);
+  word* RESTRICT ptr = mzd_first_row(M);
   int max_bit = MAX(a_bit, b_bit);
   int count = mzd_rows_in_block(M, 0);
   assert(count > 0);
@@ -2170,7 +2174,7 @@ void mzd_col_swap(mzd_t *M, rci_t const cola, rci_t const colb) {
       ptr = mzd_first_row_next_block(M, block);
     }
   } else {
-    word* restrict min_ptr;
+    word* RESTRICT min_ptr;
     wi_t max_offset;
     if (min_bit == a_bit) {
       min_ptr = ptr + a_word;

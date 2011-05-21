@@ -510,7 +510,7 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
   int const a_bit = _cola % m4ri_radix;
   int const b_bit = _colb % m4ri_radix;
 
-  word* restrict ptr = mzd_row(M, start_row);
+  word* RESTRICT ptr = mzd_row(M, start_row);
   int max_bit = MAX(a_bit, b_bit);
   int count_remaining = stop_row - start_row;
   int min_bit = a_bit + b_bit - max_bit;
@@ -565,7 +565,7 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
       ptr = mzd_first_row_next_block(M, block);
     }
   } else {
-    word* restrict min_ptr;
+    word* RESTRICT min_ptr;
     wi_t max_offset;
     if (min_bit == a_bit) {
       min_ptr = ptr + a_word;
