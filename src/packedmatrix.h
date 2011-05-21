@@ -504,42 +504,93 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
   rci_t const _cola = cola + M->offset;
   rci_t const _colb = colb + M->offset;
 
-  /* Make sure that a_spill >= b_spill (larger if a_word == b_word) */
-  int const swap_a_b = _cola % m4ri_radix < _colb % m4ri_radix;
-  int const a_spill = swap_a_b ? _colb % m4ri_radix : _cola % m4ri_radix;
-  int const b_spill = swap_a_b ? _cola % m4ri_radix : _colb % m4ri_radix;
-  wi_t const a_word = swap_a_b ? _colb / m4ri_radix : _cola / m4ri_radix;
-  wi_t const b_word = swap_a_b ? _cola / m4ri_radix : _colb / m4ri_radix;
+  wi_t const a_word = _cola / m4ri_radix;
+  wi_t const b_word = _colb / m4ri_radix;
 
-  word const b_bm = m4ri_one << b_spill;
-  int const coldiff = a_spill - b_spill;
+  int const a_bit = _cola % m4ri_radix;
+  int const b_bit = _colb % m4ri_radix;
 
-  if (a_word == b_word)
-  {
-    for (rci_t i = start_row; i < stop_row; ++i)
-    {
-      word *vp = (M->rows[i] + a_word);
-      word v = *vp;
-      word x = ((v >> coldiff) ^ v) & b_bm;	/* Move column a on top of column b, and calcuate XOR. */
-      x |= x << coldiff;			/* Duplicate this bit at both column positions. */
-      *vp = v ^ x;				/* Swap column bits and store result. */
-    }
-    __M4RI_DD_MZD(M);
+  word* restrict ptr = mzd_row(M, start_row);
+  int max_bit = MAX(a_bit, b_bit);
+  int count_remaining = stop_row - start_row;
+  int min_bit = a_bit + b_bit - max_bit;
+  int block = mzd_row_to_block(M, start_row);
+  int offset = max_bit - min_bit;
+  word mask = m4ri_one << min_bit;
+  int count = MIN(mzd_rows_in_block(M, 0), count_remaining);
+  // Apparently we're calling with start_row == stop_row sometimes (seems a bug to me).
+  if (count <= 0)
     return;
-  }
 
-  for (rci_t i = start_row; i < stop_row; ++i)
-  {
-    word *base = M->rows[i];
-    word a = *(base + a_word);
-    word b = *(base + b_word);
-
-    word x = ((a >> coldiff) ^ b) & b_bm;	/* Move column a on top of column b, and calculate XOR (in place of column b). */
-    b ^= x;					/* Assign bit from column a to b */
-    a ^= x << coldiff;				/* Move the XOR bit to the place of column a and assign bit from column b to a */
-
-    *(base + a_word) = a;
-    *(base + b_word) = b;
+  if (a_word == b_word) {
+    while(1) {
+      count_remaining -= count;
+      ptr += a_word;
+      int fast_count = count / 4;
+      int rest_count = count - 4 * fast_count;
+      word xor[4];
+      wi_t const rowstride = M->rowstride;
+      while (fast_count--) {
+	xor[0] = ptr[0];
+	xor[1] = ptr[rowstride];
+	xor[2] = ptr[2 * rowstride];
+	xor[3] = ptr[3 * rowstride];
+	xor[0] ^= xor[0] >> offset;
+	xor[1] ^= xor[1] >> offset;
+	xor[2] ^= xor[2] >> offset;
+	xor[3] ^= xor[3] >> offset;
+	xor[0] &= mask;
+	xor[1] &= mask;
+	xor[2] &= mask;
+	xor[3] &= mask;
+	xor[0] |= xor[0] << offset;
+	xor[1] |= xor[1] << offset;
+	xor[2] |= xor[2] << offset;
+	xor[3] |= xor[3] << offset;
+	ptr[0] ^= xor[0];
+	ptr[rowstride] ^= xor[1];
+	ptr[2 * rowstride] ^= xor[2];
+	ptr[3 * rowstride] ^= xor[3];
+	ptr += 4 * rowstride;
+      }
+      while (rest_count--) {
+	word xor = *ptr;
+	xor ^= xor >> offset;
+	xor &= mask;
+	*ptr ^= xor | (xor << offset);
+	ptr += rowstride;
+      }
+      if ((count = MIN(mzd_rows_in_block(M, ++block), count_remaining)) <= 0)
+	break;
+      ptr = mzd_first_row_next_block(M, block);
+    }
+  } else {
+    word* restrict min_ptr;
+    wi_t max_offset;
+    if (min_bit == a_bit) {
+      min_ptr = ptr + a_word;
+      max_offset = b_word - a_word;
+    } else {
+      min_ptr = ptr + b_word;
+      max_offset = a_word - b_word;
+    }
+    while(1) {
+      count_remaining -= count;
+      wi_t const rowstride = M->rowstride;
+      while(count--) {
+	word xor = (min_ptr[0] ^ (min_ptr[max_offset] >> offset)) & mask;
+	min_ptr[0] ^= xor;
+	min_ptr[max_offset] ^= xor << offset;
+	min_ptr += rowstride;
+      }
+      if ((count = MIN(mzd_rows_in_block(M, ++block), count_remaining)) <= 0)
+	break;
+      ptr = mzd_first_row_next_block(M, block);
+      if (min_bit == a_bit)
+	min_ptr = ptr + a_word;
+      else
+	min_ptr = ptr + b_word;
+    }
   }
 
   __M4RI_DD_MZD(M);

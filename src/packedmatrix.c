@@ -1122,6 +1122,8 @@ static inline void _mzd_copy_transpose_le64xle64(word* restrict dst, word const*
   return;
 }
 
+void _mzd_transpose_multiblock(mzd_t *DST, mzd_t const *A, word* restrict* fwdp, word const* restrict* fwsp, rci_t* nrowsp, rci_t* ncolsp);
+
 mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
   assert(!mzd_is_windowed(DST) && !mzd_is_windowed(A));
   // We assume that there fit at least 64 rows in a block, if
@@ -1138,11 +1140,20 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
 
   if (maxsize >= 64) {
 
+    // This is the most non-intrusive way to deal with the case of multiple blocks.
+    // Note that this code is VERY sensitive. ANY change to _mzd_transpose can easily
+    // reduce the speed for small matrices (up to 64x64) by 5 to 10%.
     int const multiple_blocks = (A->flags | DST->flags) & mzd_flag_multiple_blocks;
     if (__M4RI_UNLIKELY(multiple_blocks)) {
-      assert(!multiple_blocks);
-      // FIXME: Implement function that supports matrices of more than one block.
-      //return _mzd_transpose_multiblock(DST, A);
+      word* restrict non_register_fwd;
+      word const* restrict non_register_fws;
+      rci_t non_register_nrows;
+      rci_t non_register_ncols;
+      _mzd_transpose_multiblock(DST, A, &non_register_fwd, &non_register_fws, &non_register_nrows, &non_register_ncols);
+      fwd = non_register_fwd;
+      fws = non_register_fws;
+      nrows = non_register_nrows;
+      ncols = non_register_ncols;
     }
 
     if (nrows >= 64) {
@@ -1266,6 +1277,150 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
 
   __M4RI_DD_MZD(DST);
   return DST;
+}
+
+void _mzd_transpose_multiblock(mzd_t *DST, mzd_t const *A, word* restrict* fwdp, word const* restrict* fwsp, rci_t* nrowsp, rci_t* ncolsp) {
+
+  rci_t nrows = A->nrows;
+  rci_t ncols = A->ncols;
+
+  rci_t blockrows_dst = 1 << DST->blockrows_log;	// The maximum number of rows in a block of DST.
+  rci_t blockrows_src = 1 << A->blockrows_log;		// The maximum number of rows in a block of A.
+
+  /* We're deviding the source matrix into blocks of multiples of 64x64, such that each
+   * block fits entirely inside a single memory allocation block, both in the source
+   * as well as the corresponding destination.
+   *
+   *                      <-------------------ncols----------------->
+   *                                  <---------blockrows_dst------->
+   * .---------------------------------------------------------------.
+   * |P      ^  Matrix A:|   .       |Q      .       .       .       |<-^---- A->blocks[0].begin
+   * |       |           |   .       |       .       .       .       |  |
+   * |       |           |   .       |       .       .       .       |  |
+   * |       |           |- - - - - -|- - - - - - - - - - - - - - - -|  |
+   * |       |           |   .       |       .   ^   .       .       |  |
+   * |       |           |   .       |       .<64x64>.       .       |  |
+   * |       |           |   .       |       .   v   .       .       |  |
+   * |       |           |- - - - - -|- - - - - - - - - - - - - - - -|  |- blockrows_src
+   * |       |           |   .       |       .       .       .       |  |
+   * |       |           |   .       |       .       .       .       |  |
+   * |       |           |   .       |       .       .       .       |  |
+   * |       |nrows      |- - - - - -|- - - - - - - - - - - - - - - -|  |
+   * |       |           |   .       |       .       .       .       |  |
+   * |       |           |   .       |       .       .       .       |  |
+   * |       |           |   .       |       .       .       .       |  v
+   * |===================+===========================================|
+   * |R      |           |   .       |S      .       .       .       |<------ A->blocks[1].begin
+   * |       |           |   .       |       .       .       .       |
+   * |       |           |   .       |       .       .       .       |
+   * |       |           |- - - - - -|- - - - - - - - - - - - - - - -|
+   * |       |           |   .       |       .       .       .       |
+   * |       |           |   .       |       .       .       .       |
+   * |       |           |   .       |       .       .       .       |
+   * |       |           |- - - - - -|- - - - - - - - - - - - - - - -|
+   * |       v           |   .       |       .       .       .       |
+   * |                   `-------------------------------------------|
+   * |                               |                               |
+   * |                               |                               |
+   * |                               |                               |
+   * |                               |                               |
+   * |                               |                               |
+   * `---------------------------------------------------------------'
+   *
+   * Imagine this also to be the memory map of DST, which then would be
+   * mirrored in the diagonal line from the top/right to the bottom/left.
+   * Then each of the squares P, Q, R and S lay entirely inside one
+   * memory block in both the source as well as the destination matrix.
+   * P and Q are really the same block for matrix A (as are R and S),
+   * while P and R (and Q and S) are really the same block for DST.
+   *
+   * We're going to run over the top/right corners of each of these
+   * memory "blocks" and then transpose it, one by one, running
+   * from right to left and top to bottom. The last one (R) will be
+   * done by the calling function, so we just return when we get there.
+   */
+
+  rci_t R_top = (nrows >> A->blockrows_log) << A->blockrows_log;
+  rci_t R_right = (ncols >> DST->blockrows_log) << DST->blockrows_log;
+  for (rci_t col = 0; col < ncols; col += blockrows_dst) {
+    rci_t end = (col == R_right) ? R_top : nrows;
+    for (rci_t row = 0; row < end; row += blockrows_src) {
+
+      rci_t nrowsb = (row < R_top) ? blockrows_src : (nrows - R_top);
+      rci_t ncolsb = (col < R_right) ? blockrows_dst : (ncols - R_right);
+      word const* restrict fws = mzd_row(A, row) + col / m4ri_radix;
+      word* restrict fwd = mzd_row(DST, col) + row / m4ri_radix;
+
+      // The following code is (almost) duplicated from _mzd_transpose.
+      if (nrowsb >= 64) {
+
+	int js = ncolsb & nrowsb & 64;	// True if the total number of whole 64x64 matrices is odd.
+	wi_t const rowstride_64_dst = 64 * DST->rowstride;
+	word* restrict fwd_current = fwd;
+	word const* restrict fws_current = fws;
+	if (js) {
+	  js = 1;
+	  _mzd_copy_transpose_64x64(fwd, fws, DST->rowstride, A->rowstride);
+	  fwd_current += rowstride_64_dst;
+	  ++fws_current;
+	}
+	rci_t const whole_64cols = ncolsb / 64;
+	// The use of delayed and even, is to avoid calling _mzd_copy_transpose_64x64_2 twice.
+	// This way it can be inlined without duplicating the amount of code that has to be loaded.
+	word* restrict fwd_delayed = NULL;
+	word const* restrict fws_delayed = NULL;
+	int even = 0;
+	while (1)
+	{
+	  for (int j = js; j < whole_64cols; ++j) {
+	    if (!even) {
+	      fwd_delayed = fwd_current;
+	      fws_delayed = fws_current;
+	    } else {
+	      _mzd_copy_transpose_64x64_2(fwd_delayed, fwd_current, fws_delayed, fws_current, DST->rowstride, A->rowstride);
+	    }
+	    fwd_current += rowstride_64_dst;
+	    ++fws_current;
+	    even = !even;
+	  }
+	  nrowsb -= 64;
+	  if (ncolsb % 64) {
+	    _mzd_copy_transpose_64xlt64(fwd + whole_64cols * rowstride_64_dst, fws + whole_64cols, DST->rowstride, A->rowstride, ncolsb % 64);
+	  }
+	  fwd += 1;
+	  fws += 64 * A->rowstride;
+	  if (nrowsb < 64)
+	    break;
+	  js = 0;
+	  fws_current = fws;
+	  fwd_current = fwd;
+	}
+      }
+
+      if (nrowsb == 0)
+	continue;
+
+      // Transpose the remaining top rows. Now 0 < nrowsb < 64.
+
+      while (ncolsb >= 64)
+      {
+	_mzd_copy_transpose_lt64x64(fwd, fws, DST->rowstride, A->rowstride, nrowsb);
+	ncolsb -= 64;
+	fwd += 64 * DST->rowstride;
+	fws += 1;
+      }
+
+      // This is true because if it wasn't then nrowsb has to be 0 and we continued before already.
+      assert(ncolsb == 0);
+    }
+  }
+
+  *nrowsp = nrows - R_top;
+  *ncolsp = ncols - R_right;
+  if (R_top < nrows)
+    *fwsp = mzd_row(A, R_top) + R_right / m4ri_radix;
+  if (R_right < ncols)
+    *fwdp = mzd_row(DST, R_right) + R_top / m4ri_radix;
 }
 
 mzd_t *mzd_transpose(mzd_t *DST, mzd_t const *A) {
