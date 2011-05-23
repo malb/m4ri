@@ -43,7 +43,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#if defined(__cplusplus) && !defined(M4RI_WRAPWORD) && !defined _MSC_VER)
+#if defined(__cplusplus) && !defined(M4RI_WRAPWORD) && !defined (_MSC_VER)
 extern "C" {
 #endif
 
@@ -59,7 +59,7 @@ extern "C" {
 #include "solve.h"
 #include "echelonform.h"
 
-#if defined(__cplusplus) && !defined(M4RI_WRAPWORD) && !defined _MSC_VER)
+#if defined(__cplusplus) && !defined(M4RI_WRAPWORD) && !defined (_MSC_VER)
 }
 #endif
 
