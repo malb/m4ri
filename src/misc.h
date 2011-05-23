@@ -597,8 +597,8 @@ static inline void m4ri_mm_free(void *condemned, ...) {
  * MSVC does not understand the restrict keyword 
  */
 
-#ifdef __GNUC__
-#define RESTRICT restrict
+#if defined (__GNUC__)
+#define RESTRICT __restrict__
 #else
 #define RESTRICT
 #endif

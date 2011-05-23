@@ -528,36 +528,36 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
       ptr += a_word;
       int fast_count = count / 4;
       int rest_count = count - 4 * fast_count;
-      word xor[4];
+      word xor_v[4];
       wi_t const rowstride = M->rowstride;
       while (fast_count--) {
-	xor[0] = ptr[0];
-	xor[1] = ptr[rowstride];
-	xor[2] = ptr[2 * rowstride];
-	xor[3] = ptr[3 * rowstride];
-	xor[0] ^= xor[0] >> offset;
-	xor[1] ^= xor[1] >> offset;
-	xor[2] ^= xor[2] >> offset;
-	xor[3] ^= xor[3] >> offset;
-	xor[0] &= mask;
-	xor[1] &= mask;
-	xor[2] &= mask;
-	xor[3] &= mask;
-	xor[0] |= xor[0] << offset;
-	xor[1] |= xor[1] << offset;
-	xor[2] |= xor[2] << offset;
-	xor[3] |= xor[3] << offset;
-	ptr[0] ^= xor[0];
-	ptr[rowstride] ^= xor[1];
-	ptr[2 * rowstride] ^= xor[2];
-	ptr[3 * rowstride] ^= xor[3];
+	xor_v[0] = ptr[0];
+	xor_v[1] = ptr[rowstride];
+	xor_v[2] = ptr[2 * rowstride];
+	xor_v[3] = ptr[3 * rowstride];
+	xor_v[0] ^= xor_v[0] >> offset;
+	xor_v[1] ^= xor_v[1] >> offset;
+	xor_v[2] ^= xor_v[2] >> offset;
+	xor_v[3] ^= xor_v[3] >> offset;
+	xor_v[0] &= mask;
+	xor_v[1] &= mask;
+	xor_v[2] &= mask;
+	xor_v[3] &= mask;
+	xor_v[0] |= xor_v[0] << offset;
+	xor_v[1] |= xor_v[1] << offset;
+	xor_v[2] |= xor_v[2] << offset;
+	xor_v[3] |= xor_v[3] << offset;
+	ptr[0] ^= xor_v[0];
+	ptr[rowstride] ^= xor_v[1];
+	ptr[2 * rowstride] ^= xor_v[2];
+	ptr[3 * rowstride] ^= xor_v[3];
 	ptr += 4 * rowstride;
       }
       while (rest_count--) {
-	word xor = *ptr;
-	xor ^= xor >> offset;
-	xor &= mask;
-	*ptr ^= xor | (xor << offset);
+	word xor_v = *ptr;
+	xor_v ^= xor_v >> offset;
+	xor_v &= mask;
+	*ptr ^= xor_v | (xor_v << offset);
 	ptr += rowstride;
       }
       if ((count = MIN(mzd_rows_in_block(M, ++block), count_remaining)) <= 0)
@@ -578,9 +578,9 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
       count_remaining -= count;
       wi_t const rowstride = M->rowstride;
       while(count--) {
-	word xor = (min_ptr[0] ^ (min_ptr[max_offset] >> offset)) & mask;
-	min_ptr[0] ^= xor;
-	min_ptr[max_offset] ^= xor << offset;
+	word xor_v = (min_ptr[0] ^ (min_ptr[max_offset] >> offset)) & mask;
+	min_ptr[0] ^= xor_v;
+	min_ptr[max_offset] ^= xor_v << offset;
 	min_ptr += rowstride;
       }
       if ((count = MIN(mzd_rows_in_block(M, ++block), count_remaining)) <= 0)
