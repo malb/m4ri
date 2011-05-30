@@ -1,32 +1,37 @@
- * Tim Abbott: Debian-isation & advice on correct libtool versioning,
+ * Tim Abbott: Debian-isation & advice on correct libtool versioning;
 
- * Martin Albrecht <M.R.Albrecht@rhul.ac.uk>: release manager,
-   peformance tuning (M4RM, M4RI, MMPF, PLUQ, Strassen), MMPF
-   algorithm and implementation, initial M4RM implementation,
-   Strassen-Winograd implementation, parallelisation, PLUQ
-   factorisation
+ * Martin Albrecht: maintainer, release manager, peformance tuning
+   (M4RM, M4RI, Strassen, PLE), initial M4RM implementation,
+   parallelisation, PLE factorisation (MMPF algorithm);
 
- * Gregory Bard <bard@fordham.edu>: initial author, M4RI algorithm and
-   initial implementation.
+ * Gregory Bard: initial author, M4RI algorithm and initial
+   implementation;
 
  * Marco Bodrato: new Strassen-like sequence for matrix multiplication
-   and squaring which improves performance for squaring
+   and squaring which improves performance for squaring;
 
  * Michael Brickenstein: PolyBoRi author, standard conformity
    contributions for ANSIC, test data, discussion/suggestion of
-   performance improvements, fast vector-matrix products.
+   performance improvements, fast vector-matrix products;
 
  * Alexander Dreyer: PolyBoRi author, standard conformity
-   contributions for ANSIC.
+   contributions for ANSIC;
 
- * Jean-Guillaume Dumas: linear system resolution.
-
+ * Jean-Guillaume Dumas: linear system resolution;
+ 
  * William Hart: many performance improvements for matrix
-   multiplication and in general.
+   multiplication and in general;
 
  * David Harvey: parallel parity function used in classical
-   multiplication.
+   multiplication;
 
- * Clément Pernet: PLUQ factorisation, triangular system solving (TRSM).
-
+ * David Kirkby: portability issues (Solaris, HP Unix);
  
+ * Clément Pernet: PLS factorisation, triangular system solving
+   (TRSM);
+
+ * Wael Said: test cases, feedback;
+
+ * Carlo Wood: bit-level optimisation (transpose, column swaps),
+   refactoring, benchmark(et)ing framework, test code, build system
+   clean-up;
