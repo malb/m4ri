@@ -53,5 +53,7 @@ int main(int argc, char **argv) {
   unsigned long long data[2];
   run_bench(run, (void*)&p, data, 2);
 
-  printf("n: %5d, cutoff: %5d, cpu cycles: %llu, wall time: %lf\n", p.n, p.cutoff, data[1], data[0] / 1000000.0);
+  double cc_per_op = ((double)data[1])/ powl((double)p.n,2.807);
+
+  printf("n: %5d, cutoff: %5d, cpu cycles: %llu, cc/n^2.807: %.5lf, wall time: %lf\n", p.n, p.cutoff, cc_per_op, data[1], data[0] / 1000000.0);
 }
