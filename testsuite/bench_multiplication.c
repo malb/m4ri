@@ -55,5 +55,5 @@ int main(int argc, char **argv) {
 
   double cc_per_op = ((double)data[1])/ powl((double)p.n,2.807);
 
-  printf("n: %5d, cutoff: %5d, cpu cycles: %llu, cc/n^2.807: %.5lf, wall time: %lf\n", p.n, p.cutoff, cc_per_op, data[1], data[0] / 1000000.0);
+  printf("n: %5d, cutoff: %5d, cpu cycles: %llu, cc/n^2.807: %.5lf, wall time: %lf\n", p.n, p.cutoff, data[1], cc_per_op, data[0] / 1000000.0);
 }

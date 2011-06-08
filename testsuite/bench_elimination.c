@@ -83,5 +83,5 @@ int main(int argc, char **argv) {
 
   double cc_per_op = ((double)data[1])/ ( (double)params.m * (double)params.n * powl((double)params.r,0.807) );
 
-  printf("m: %5d, n: %5d, last r: %5d, cpu cycles: %10llu, cc/(mnr^0.807): %.5lf, wall time: %lf\n", params.m, params.n, params.r, cc_per_op, data[1], data[0] / 1000000.0);
+  printf("m: %5d, n: %5d, last r: %5d, cpu cycles: %10llu, cc/(mnr^0.807): %.5lf, wall time: %lf\n", params.m, params.n, params.r, data[1], cc_per_op, data[0] / 1000000.0);
 }
