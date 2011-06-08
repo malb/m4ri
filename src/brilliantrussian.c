@@ -363,10 +363,12 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   int const ka = k / 2;
   int const kb = k - k / 2;
 
+  rci_t r;
+
 #ifdef HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) // MAX((__M4RI_CPU_L1_CACHE >> 3) / wide,
 #endif
-  for(rci_t r = startrow; r < stoprow; ++r) {
+  for(r = startrow; r < stoprow; ++r) {
     rci_t const x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
     rci_t const x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
     if((x0 | x1) == 0)	// x0 == 0 && x1 == 0
@@ -405,10 +407,12 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   int const kb = k / 3 + ((rem >= 1) ? 1 : 0);
   int const kc = k / 3;
 
+  rci_t r;
+
 #ifdef HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
-  for(rci_t r = startrow; r < stoprow; ++r) {
+  for(r= startrow; r < stoprow; ++r) {
     rci_t const x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
     rci_t const x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
     rci_t const x2 = L2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc)];
@@ -451,10 +455,12 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   int const kc = k / 4 + ((rem >= 1) ? 1 : 0);
   int const kd = k / 4;
 
+  rci_t r;
+
 #ifdef HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
-  for(rci_t r = startrow; r < stoprow; ++r) {
+  for(r = startrow; r < stoprow; ++r) {
     rci_t const x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
     rci_t const x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
     rci_t const x2 = L2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc)];
@@ -500,10 +506,12 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   int const kd = k / 5 + ((rem >= 1) ? 1 : 0);
   int const ke = k / 5;
 
+  rci_t r;
+
 #ifdef HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
-  for(rci_t r = startrow; r < stoprow; ++r) {
+  for(r = startrow; r < stoprow; ++r) {
     
     rci_t const x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
     rci_t const x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
@@ -556,10 +564,12 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   int const ke = k / 6 + ((rem >= 1) ? 1 : 0);;
   int const kf = k / 6;
 
+  rci_t r;
+
 #ifdef HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
-  for(rci_t r = startrow; r < stoprow; ++r) {
+  for(r = startrow; r < stoprow; ++r) {
     rci_t const x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
     rci_t const x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
     rci_t const x2 = L2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc)];

@@ -32,9 +32,15 @@ int run(void *_p, unsigned long long *data, int *data_len) {
 }
 
 int main(int argc, char **argv) {
-  global_options(&argc, &argv);
+  int opts = global_options(&argc, &argv);
+
+  if (opts < 0) {
+    bench_print_global_options(stderr);
+    exit(-1);
+  }
 
   if (argc != 3) {
+    bench_print_global_options(stderr);
     m4ri_die("Parameters n and cutoff expected.\n");
   }
 

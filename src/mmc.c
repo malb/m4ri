@@ -97,7 +97,7 @@ void m4ri_mmc_free(void *condemned, size_t size) {
       if(mm[i].size == 0) {
         mm[i].size = size;
         mm[i].data = condemned;
-        return;
+        goto done;
       }
     }
     m4ri_mm_free(mm[j].data);
@@ -107,6 +107,8 @@ void m4ri_mmc_free(void *condemned, size_t size) {
   } else {
     m4ri_mm_free(condemned);
   }
+ done:
+  ;
 #ifdef HAVE_OPENMP
  }
 #endif

@@ -526,15 +526,15 @@ mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff)
   rci_t bnr = anc;
   rci_t bnc = ((c / m4ri_radix) >> 1) * m4ri_radix;
 
-  mzd_t *A00 = mzd_init_window(A,   0,   0,   anr,   anc);
-  mzd_t *A01 = mzd_init_window(A,   0, anc,   anr, 2*anc);
-  mzd_t *A10 = mzd_init_window(A, anr,   0, 2*anr,   anc);
-  mzd_t *A11 = mzd_init_window(A, anr, anc, 2*anr, 2*anc);
+  mzd_t const *A00 = mzd_init_window_const(A,   0,   0,   anr,   anc);
+  mzd_t const *A01 = mzd_init_window_const(A,   0, anc,   anr, 2*anc);
+  mzd_t const *A10 = mzd_init_window_const(A, anr,   0, 2*anr,   anc);
+  mzd_t const *A11 = mzd_init_window_const(A, anr, anc, 2*anr, 2*anc);
 
-  mzd_t *B00 = mzd_init_window(B,   0,   0,   bnr,   bnc);
-  mzd_t *B01 = mzd_init_window(B,   0, bnc,   bnr, 2*bnc);
-  mzd_t *B10 = mzd_init_window(B, bnr,   0, 2*bnr,   bnc);
-  mzd_t *B11 = mzd_init_window(B, bnr, bnc, 2*bnr, 2*bnc);
+  mzd_t const *B00 = mzd_init_window_const(B,   0,   0,   bnr,   bnc);
+  mzd_t const *B01 = mzd_init_window_const(B,   0, bnc,   bnr, 2*bnc);
+  mzd_t const *B10 = mzd_init_window_const(B, bnr,   0, 2*bnr,   bnc);
+  mzd_t const *B11 = mzd_init_window_const(B, bnr, bnc, 2*bnr, 2*bnc);
 
   mzd_t *C00 = mzd_init_window(C,   0,   0,   anr,   bnc);
   mzd_t *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc);
@@ -567,37 +567,37 @@ mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff)
 
   /* deal with rest */
   if (B->ncols > 2 * bnc) {
-    mzd_t *B_last_col = mzd_init_window(B, 0, 2*bnc, A->ncols, B->ncols); 
+    mzd_t const *B_last_col = mzd_init_window_const(B, 0, 2*bnc, A->ncols, B->ncols); 
     mzd_t *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
     mzd_addmul_m4rm(C_last_col, A, B_last_col, 0);
-    mzd_free_window(B_last_col);
+    mzd_free_window((mzd_t*)B_last_col);
     mzd_free_window(C_last_col);
   }
   if (A->nrows > 2 * anr) {
-    mzd_t *A_last_row = mzd_init_window(A, 2*anr, 0, A->nrows, A->ncols);
-    mzd_t *B_bulk = mzd_init_window(B, 0, 0, B->nrows, 2*bnc);
+    mzd_t const *A_last_row = mzd_init_window_const(A, 2*anr, 0, A->nrows, A->ncols);
+    mzd_t const *B_bulk = mzd_init_window_const(B, 0, 0, B->nrows, 2*bnc);
     mzd_t *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, 2*bnc);
     mzd_addmul_m4rm(C_last_row, A_last_row, B_bulk, 0);
-    mzd_free_window(A_last_row);
-    mzd_free_window(B_bulk);
+    mzd_free_window((mzd_t*)A_last_row);
+    mzd_free_window((mzd_t*)B_bulk);
     mzd_free_window(C_last_row);
   }
   if (A->ncols > 2 * anc) {
-    mzd_t *A_last_col = mzd_init_window(A,     0, 2*anc, 2*anr, A->ncols);
-    mzd_t *B_last_row = mzd_init_window(B, 2*bnr,     0, B->nrows, 2*bnc);
+    mzd_t const *A_last_col = mzd_init_window_const(A,     0, 2*anc, 2*anr, A->ncols);
+    mzd_t const *B_last_row = mzd_init_window_const(B, 2*bnr,     0, B->nrows, 2*bnc);
     mzd_t *C_bulk = mzd_init_window(C, 0, 0, 2*anr, 2*bnc);
     mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0);
-    mzd_free_window(A_last_col);
-    mzd_free_window(B_last_row);
+    mzd_free_window((mzd_t*)A_last_col);
+    mzd_free_window((mzd_t*)B_last_row);
     mzd_free_window(C_bulk);
   }
 
   /* clean up */
-  mzd_free_window(A00); mzd_free_window(A01);
-  mzd_free_window(A10); mzd_free_window(A11);
+  mzd_free_window((mzd_t*)A00); mzd_free_window((mzd_t*)A01);
+  mzd_free_window((mzd_t*)A10); mzd_free_window((mzd_t*)A11);
 
-  mzd_free_window(B00); mzd_free_window(B01);
-  mzd_free_window(B10); mzd_free_window(B11);
+  mzd_free_window((mzd_t*)B00); mzd_free_window((mzd_t*)B01);
+  mzd_free_window((mzd_t*)B10); mzd_free_window((mzd_t*)B11);
 
   mzd_free_window(C00); mzd_free_window(C01);
   mzd_free_window(C10); mzd_free_window(C11);

@@ -66,6 +66,13 @@ static int log2_floor(uint64_t v) {
  */
 
 static mzd_t* mzd_t_malloc() {
+  mzd_t *ret;
+
+#if __M4RI_HAVE_OPENMP
+#pragma omp critical
+  {
+#endif
+
   if (current_cache->used == (uint64_t)-1)
   {
     mzd_t_cache_t *cache = &mzd_cache;
@@ -75,10 +82,6 @@ static mzd_t* mzd_t_malloc() {
     }
     if (!cache)
     {
-#if __M4RI_HAVE_OPENMP
-#pragma omp critical
-      {
-#endif
 
 #if __M4RI_USE_MM_MALLOC
       cache = (mzd_t_cache_t*)_mm_malloc(sizeof(mzd_t_cache_t), 64);
@@ -88,10 +91,6 @@ static mzd_t* mzd_t_malloc() {
 #else
       cache = (mzd_t_cache_t*)malloc(sizeof(mzd_t_cache_t));
 #endif  
-
-#if __M4RI_HAVE_OPENMP
-      }
-#endif
 
       if (cache == NULL)
 	m4ri_die("mzd_t_malloc: malloc returned NULL\n");
@@ -105,10 +104,22 @@ static mzd_t* mzd_t_malloc() {
   }
   int free_entry = log2_floor(~current_cache->used);
   current_cache->used |= ((uint64_t)1 << free_entry);
-  return &current_cache->mzd[free_entry];
+
+
+  ret = &current_cache->mzd[free_entry];
+#if __M4RI_HAVE_OPENMP
+  }
+#endif
+  return ret;
 }
 
 static void mzd_t_free(mzd_t *M) {
+  int found = 0;
+
+#if __M4RI_HAVE_OPENMP
+#pragma omp critical
+  {
+#endif
   mzd_t_cache_t *cache = &mzd_cache;
   while(1) {
     size_t entry = M - cache->mzd;
@@ -131,11 +142,14 @@ static void mzd_t_free(mzd_t *M) {
 #endif
 	}
       }
-      return;
+      found = 1;
+      break;
     }
     cache = cache->next;
   }
-  assert(FALSE);
+#if __M4RI_HAVE_OPENMP
+  }
+#endif
 }
 
 #define SAFECHAR (m4ri_radix + m4ri_radix / 4 + 1)

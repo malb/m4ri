@@ -197,11 +197,13 @@ void mzd_process_rows2_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
     return;
   }
 
+  rci_t r;
+
   wide -= 2;
 #ifdef HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
 #endif
-  for(rci_t r = startrow; r < stoprow; ++r) {
+  for(r = startrow; r < stoprow; ++r) {
     rci_t const x0 = E0[ mzd_read_bits_int(M, r, startcol, ka) ];
     word const *t0 = T0->rows[x0] + blocknuma;
     word *m0 = M->rows[r+0] + blocknuma;
@@ -244,11 +246,13 @@ void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
     return;
   }
 
+  rci_t r;
+
   wide -= 3;
 #ifdef HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
 #endif
-  for(rci_t r = startrow; r < stoprow; ++r) {
+  for(r = startrow; r < stoprow; ++r) {
     rci_t const x0 = E0[ mzd_read_bits_int(M, r, startcol, ka) ];
     word const *t0 = T0->rows[x0] + blocknuma;
     word *m0 = M->rows[r] + blocknuma;
@@ -305,10 +309,13 @@ void mzd_process_rows4_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
     return;
   }
   wide -= 4;
+
+  rci_t r;
+
 #ifdef HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
 #endif
-  for(rci_t r = startrow; r < stoprow; ++r) {
+  for(r = startrow; r < stoprow; ++r) {
     rci_t const x0 = E0[mzd_read_bits_int(M, r, startcol, ka)];
     word *t0 = T0->rows[x0] + blocknuma;
     word *m0 = M->rows[r] + blocknuma;
