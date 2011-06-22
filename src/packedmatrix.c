@@ -1446,7 +1446,10 @@ mzd_t *mzd_transpose(mzd_t *DST, mzd_t const *A) {
     DST = mzd_init( A->ncols, A->nrows );
   } else if (__M4RI_UNLIKELY(DST->nrows != A->ncols || DST->ncols != A->nrows)) {
     m4ri_die("mzd_transpose: Wrong size for return matrix.\n");
+  } else {
+    mzd_set_ui(DST,0);
   }
+ 
   if (__M4RI_LIKELY(!mzd_is_windowed(DST) && !mzd_is_windowed(A)))
     return _mzd_transpose(DST, A);
   int A_windowed = mzd_is_windowed(A);
