@@ -536,7 +536,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
       kk = ncols - curr_col;
 
     /**
-     * 1. compute PLS factorisation for the kbar x kbar submatrix A00
+     * 1. compute PLE factorisation for the kbar x kbar submatrix A00
 \verbatim
        m4ri_radix * splitblock
 --------------------------------------
@@ -546,7 +546,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
 | A01  |  A11                        |
 |      |                             | 
 -------------------------------------- done_row
-| A02  | A21                         |
+| A02  |  A12                        |
 |      |                             |
 |      |                             |
 |      |                             |
@@ -574,22 +574,36 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
     if(kbar > 3 * k) {
       int const rem = kbar % 4;
   
-      int const ka = kbar / 4 + ((rem >= 3) ? 1 : 0);
-      int const kb = kbar / 4 + ((rem >= 2) ? 1 : 0);
-      int const kc = kbar / 4 + ((rem >= 1) ? 1 : 0);
-      int const kd = kbar / 4;
+      int const k0 = kbar / 4 + ((rem >= 3) ? 1 : 0);
+      int const k1 = kbar / 4 + ((rem >= 2) ? 1 : 0);
+      int const k2 = kbar / 4 + ((rem >= 1) ? 1 : 0);
+      int const k3 = kbar / 4;
 
-      rci_t const first_col = 0;
-      mzd_make_table_pls(U, first_col,          curr_col,          ka, T0, E0, M0);
-      mzd_make_table_pls(U, first_col+ka,       curr_col+ka,       kb, T1, E1, M1);
-      mzd_make_table_pls(U, first_col+ka+kb,    curr_col+ka+kb,    kc, T2, E2, M2);
-      mzd_make_table_pls(U, first_col+ka+kb+kc, curr_col+ka+kb+kc, kd, T3, E3, M3);
+
+      /**
+       * 4. generate multiplication and inversion tables T amd E from U 
+       */
+
+      mzd_make_table_pls(U, 0,          curr_col,          k0, T0, E0, M0);
+      mzd_make_table_pls(U, 0+k0,       curr_col+k0,       k1, T1, E1, M1);
+      mzd_make_table_pls(U, 0+k0+k1,    curr_col+k0+k1,    k2, T2, E2, M2);
+      mzd_make_table_pls(U, 0+k0+k1+k2, curr_col+k0+k1+k2, k3, T3, E3, M3);
+
+
+      /**
+       * 5. update A1 = (A01 | A11)
+       */
 
       _mzd_finish_pls_done_rest4(A, curr_row, done_row+1, curr_col, splitblock,
-                                 ka, T0, M0,
-                                 kb, T1, M1,
-                                 kc, T2, M2,
-                                 kd, T3, M3);
+                                 k0, T0, M0,
+                                 k1, T1, M1,
+                                 k2, T2, M2,
+                                 k3, T3, M3);
+
+
+      /**
+       * 6. update A2 = (A02 | A12)
+       */
 
       if (kbar == kk) {
         mzd_process_rows4_pls(A, done_row + 1, nrows, curr_col, kbar, T0, E0, T1, E1, T2, E2, T3, E3);
@@ -600,19 +614,18 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
     } else if(kbar > 2 * k) {
       int const rem = kbar % 3;
 
-      int const ka = kbar / 3 + ((rem >= 2) ? 1 : 0);
-      int const kb = kbar / 3 + ((rem >= 1) ? 1 : 0);
-      int const kc = kbar / 3;
+      int const k0 = kbar / 3 + ((rem >= 2) ? 1 : 0);
+      int const k1 = kbar / 3 + ((rem >= 1) ? 1 : 0);
+      int const k2 = kbar / 3;
 
-      rci_t const first_col = 0;
-      mzd_make_table_pls(U, first_col,       curr_col,       ka, T0, E0, M0);
-      mzd_make_table_pls(U, first_col+ka,    curr_col+ka,    kb, T1, E1, M1);
-      mzd_make_table_pls(U, first_col+ka+kb, curr_col+ka+kb, kc, T2, E2, M2);
+      mzd_make_table_pls(U, 0,       curr_col,       k0, T0, E0, M0);
+      mzd_make_table_pls(U, 0+k0,    curr_col+k0,    k1, T1, E1, M1);
+      mzd_make_table_pls(U, 0+k0+k1, curr_col+k0+k1, k2, T2, E2, M2);
 
       _mzd_finish_pls_done_rest3(A, curr_row, done_row+1, curr_col, splitblock,
-                                 ka, T0, M0,
-                                 kb, T1, M1,
-                                 kc, T2, M2);
+                                 k0, T0, M0,
+                                 k1, T1, M1,
+                                 k2, T2, M2);
 
 
       if (kbar == kk) {
@@ -622,16 +635,15 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
       }
 
     } else if(kbar > k) {
-      int const ka = kbar / 2;
-      int const kb = kbar - ka;
+      int const k0 = kbar / 2;
+      int const k1 = kbar - k0;
 
-      rci_t const first_col = 0;
-      mzd_make_table_pls(U, first_col,    curr_col,    ka, T0, E0, M0);
-      mzd_make_table_pls(U, first_col+ka, curr_col+ka, kb, T1, E1, M1);
+      mzd_make_table_pls(U, 0,    curr_col,    k0, T0, E0, M0);
+      mzd_make_table_pls(U, 0+k0, curr_col+k0, k1, T1, E1, M1);
 
       _mzd_finish_pls_done_rest2(A, curr_row, done_row+1, curr_col, splitblock,
-                                 ka, T0, M0,
-                                 kb, T1, M1);
+                                 k0, T0, M0,
+                                 k1, T1, M1);
 
       if(kbar == kk) {
         mzd_process_rows2_pls(A, done_row + 1, nrows, curr_col, kbar, T0, E0, T1, E1);
@@ -641,22 +653,12 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
 
     } else if(kbar > 0) {
 
-      /**
-       * 4. generate multiplication and inversion tables T amd Tm from A0 
-       */
-      rci_t const first_col = 0;
-      mzd_make_table_pls(U, first_col, curr_col, kbar, T0, E0, M0);
+      mzd_make_table_pls(U, 0, curr_col, kbar, T0, E0, M0);
 
-      /**
-       * 5. update A11 using A10 and the multiplication table M
-       */
       _mzd_finish_pls_done_rest1(A, curr_row, done_row+1, curr_col, splitblock, kbar, T0, M0);
 
 
       if(done_row < nrows) {
-        /**
-         * 6. update A2 = (A20 | A21) using the elimination table E
-         */        
         mzd_process_rows(A, done_row + 1, nrows, curr_col, kbar, T0, E0);
       } else {
         curr_col += 1; 
