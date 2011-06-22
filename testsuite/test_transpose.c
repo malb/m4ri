@@ -46,7 +46,9 @@ int test_transpose(int i)
       mzd_randomize(A);
       mzd_randomize(B);
       mzd_t* C = mzd_add(NULL, A, B);
-      mzd_t* AT = mzd_transpose(NULL, A);
+      mzd_t* AT = mzd_init(n, m);
+      mzd_randomize(AT);
+      mzd_transpose(AT, A);
       mzd_t* BT = mzd_transpose(NULL, B);
       mzd_t* CT = mzd_add(NULL, AT, BT);
       mzd_t* CTT = mzd_transpose(NULL, CT);
