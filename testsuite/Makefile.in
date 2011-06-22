@@ -38,7 +38,8 @@ TEST_PRGS = \
 	test_random \
 	test_smallops \
 	test_transpose \
-	test_colswap
+	test_colswap \
+	test_misc
 
 BENCH_PRGS = \
 	bench_elimination \
