@@ -352,6 +352,7 @@ vector vector_create(size_t s)
 void vector_destruct(vector v)
 {
   free(v->data);
+  free(v);
 }
 
 void vector_resize(vector v, size_t s)
