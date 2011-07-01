@@ -112,6 +112,7 @@ int test_pluq_half_rank(rci_t m, rci_t n) {
 
   mzd_apply_p_left(Acopy, Pt);
   mzd_apply_p_right_trans(Acopy, Q);
+
   mzd_addmul(Acopy,L2,U2,0);
 
   int status = 0;

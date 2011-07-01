@@ -24,9 +24,9 @@
 
 #define b(n) (m4ri_one<<(n))
 
-int test_spread_and_shrink(const word to, const size_t length, ...) {
+int test_spread_and_shrink(const word to, const int length, ...) {
   word from = 0xFF;
-  size_t *Q = (size_t*)calloc(sizeof(size_t),length);
+  rci_t *Q = (rci_t*)calloc(sizeof(rci_t),length);
   va_list l;
   va_start(l,length);
   for(size_t i=0; i<length; i++) {

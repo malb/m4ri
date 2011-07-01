@@ -331,34 +331,34 @@ static inline word m4ri_swap_bits(word v) {
  * \brief pack bits (inverse of m4ri_spread_bits)
  *
  * \param from bitstring
- * \param Q table with bit positions
+ * \param Q array with bit positions
  * \param length bitsize of the output
- * \param offset offset of values in Q
- * 
+ * \param base subtracted from every value in Q 
+ *
  * \output inverse of m4ri_spread_bits)
  *
  * \seealso m4ri_spread_bits
  */
 
-static inline size_t m4ri_shrink_bits(word const from, size_t* const Q, size_t const length, size_t const offset) {
+static inline word m4ri_shrink_bits(word const from, rci_t* const Q, int const length, int const base) {
   word to = 0;
   switch(length-1) {
-  case 15: to |= (from & (m4ri_one << (Q[15]-offset))) >> (Q[15] - 15 - offset);
-  case 14: to |= (from & (m4ri_one << (Q[14]-offset))) >> (Q[14] - 14 - offset);
-  case 13: to |= (from & (m4ri_one << (Q[13]-offset))) >> (Q[13] - 13 - offset);
-  case 12: to |= (from & (m4ri_one << (Q[12]-offset))) >> (Q[12] - 12 - offset);
-  case 11: to |= (from & (m4ri_one << (Q[11]-offset))) >> (Q[11] - 11 - offset);
-  case 10: to |= (from & (m4ri_one << (Q[10]-offset))) >> (Q[10] - 10 - offset);
-  case  9: to |= (from & (m4ri_one << (Q[ 9]-offset))) >> (Q[ 9] -  9 - offset);
-  case  8: to |= (from & (m4ri_one << (Q[ 8]-offset))) >> (Q[ 8] -  8 - offset);
-  case  7: to |= (from & (m4ri_one << (Q[ 7]-offset))) >> (Q[ 7] -  7 - offset);
-  case  6: to |= (from & (m4ri_one << (Q[ 6]-offset))) >> (Q[ 6] -  6 - offset);
-  case  5: to |= (from & (m4ri_one << (Q[ 5]-offset))) >> (Q[ 5] -  5 - offset);
-  case  4: to |= (from & (m4ri_one << (Q[ 4]-offset))) >> (Q[ 4] -  4 - offset);
-  case  3: to |= (from & (m4ri_one << (Q[ 3]-offset))) >> (Q[ 3] -  3 - offset);
-  case  2: to |= (from & (m4ri_one << (Q[ 2]-offset))) >> (Q[ 2] -  2 - offset); 
-  case  1: to |= (from & (m4ri_one << (Q[ 1]-offset))) >> (Q[ 1] -  1 - offset);
-  case  0: to |= (from & (m4ri_one << (Q[ 0]-offset))) >> (Q[ 0] -  0 - offset);
+  case 15: to |= (from & (m4ri_one << (Q[15] - base))) >> (Q[15] - 15 - base);
+  case 14: to |= (from & (m4ri_one << (Q[14] - base))) >> (Q[14] - 14 - base);
+  case 13: to |= (from & (m4ri_one << (Q[13] - base))) >> (Q[13] - 13 - base);
+  case 12: to |= (from & (m4ri_one << (Q[12] - base))) >> (Q[12] - 12 - base);
+  case 11: to |= (from & (m4ri_one << (Q[11] - base))) >> (Q[11] - 11 - base);
+  case 10: to |= (from & (m4ri_one << (Q[10] - base))) >> (Q[10] - 10 - base);
+  case  9: to |= (from & (m4ri_one << (Q[ 9] - base))) >> (Q[ 9] -  9 - base);
+  case  8: to |= (from & (m4ri_one << (Q[ 8] - base))) >> (Q[ 8] -  8 - base);
+  case  7: to |= (from & (m4ri_one << (Q[ 7] - base))) >> (Q[ 7] -  7 - base);
+  case  6: to |= (from & (m4ri_one << (Q[ 6] - base))) >> (Q[ 6] -  6 - base);
+  case  5: to |= (from & (m4ri_one << (Q[ 5] - base))) >> (Q[ 5] -  5 - base);
+  case  4: to |= (from & (m4ri_one << (Q[ 4] - base))) >> (Q[ 4] -  4 - base);
+  case  3: to |= (from & (m4ri_one << (Q[ 3] - base))) >> (Q[ 3] -  3 - base);
+  case  2: to |= (from & (m4ri_one << (Q[ 2] - base))) >> (Q[ 2] -  2 - base); 
+  case  1: to |= (from & (m4ri_one << (Q[ 1] - base))) >> (Q[ 1] -  1 - base);
+  case  0: to |= (from & (m4ri_one << (Q[ 0] - base))) >> (Q[ 0] -  0 - base);
     break;
   default:
     exit(-1);
@@ -376,32 +376,32 @@ static inline size_t m4ri_shrink_bits(word const from, size_t* const Q, size_t c
  * \param from bitstring of length 'length' stored in a word
  * \param Q table with new bit positions
  * \param length bitsize of input
- * \param offset offset of values in Q
+ * \param base subtracted from every value in Q 
  * 
  * \output bitstring having the same bits as from but spread using Q
  * 
  * \seealso m4ri_shrink_bits
  */
 
-static inline size_t m4ri_spread_bits(word const from, size_t* const Q, size_t const length, size_t const offset) {
+static inline word m4ri_spread_bits(word const from, rci_t* const Q, int const length, int const base) {
   word to = 0;
   switch(length-1) {
-  case 15: to |= (from & (m4ri_one << (15))) << (Q[15]-15 - offset);
-  case 14: to |= (from & (m4ri_one << (14))) << (Q[14]-14 - offset);
-  case 13: to |= (from & (m4ri_one << (13))) << (Q[13]-13 - offset);
-  case 12: to |= (from & (m4ri_one << (12))) << (Q[12]-12 - offset);
-  case 11: to |= (from & (m4ri_one << (11))) << (Q[11]-11 - offset);
-  case 10: to |= (from & (m4ri_one << (10))) << (Q[10]-10 - offset);
-  case  9: to |= (from & (m4ri_one << ( 9))) << (Q[ 9]- 9 - offset);
-  case  8: to |= (from & (m4ri_one << ( 8))) << (Q[ 8]- 8 - offset);
-  case  7: to |= (from & (m4ri_one << ( 7))) << (Q[ 7]- 7 - offset);
-  case  6: to |= (from & (m4ri_one << ( 6))) << (Q[ 6]- 6 - offset);
-  case  5: to |= (from & (m4ri_one << ( 5))) << (Q[ 5]- 5 - offset);
-  case  4: to |= (from & (m4ri_one << ( 4))) << (Q[ 4]- 4 - offset);
-  case  3: to |= (from & (m4ri_one << ( 3))) << (Q[ 3]- 3 - offset);
-  case  2: to |= (from & (m4ri_one << ( 2))) << (Q[ 2]- 2 - offset);
-  case  1: to |= (from & (m4ri_one << ( 1))) << (Q[ 1]- 1 - offset);
-  case  0: to |= (from & (m4ri_one << ( 0))) << (Q[ 0]- 0 - offset);
+  case 15: to |= (from & (m4ri_one << (15))) << (Q[15]-15-base);
+  case 14: to |= (from & (m4ri_one << (14))) << (Q[14]-14-base);
+  case 13: to |= (from & (m4ri_one << (13))) << (Q[13]-13-base);
+  case 12: to |= (from & (m4ri_one << (12))) << (Q[12]-12-base);
+  case 11: to |= (from & (m4ri_one << (11))) << (Q[11]-11-base);
+  case 10: to |= (from & (m4ri_one << (10))) << (Q[10]-10-base);
+  case  9: to |= (from & (m4ri_one << ( 9))) << (Q[ 9]- 9-base);
+  case  8: to |= (from & (m4ri_one << ( 8))) << (Q[ 8]- 8-base);
+  case  7: to |= (from & (m4ri_one << ( 7))) << (Q[ 7]- 7-base);
+  case  6: to |= (from & (m4ri_one << ( 6))) << (Q[ 6]- 6-base);
+  case  5: to |= (from & (m4ri_one << ( 5))) << (Q[ 5]- 5-base);
+  case  4: to |= (from & (m4ri_one << ( 4))) << (Q[ 4]- 4-base);
+  case  3: to |= (from & (m4ri_one << ( 3))) << (Q[ 3]- 3-base);
+  case  2: to |= (from & (m4ri_one << ( 2))) << (Q[ 2]- 2-base);
+  case  1: to |= (from & (m4ri_one << ( 1))) << (Q[ 1]- 1-base);
+  case  0: to |= (from & (m4ri_one << ( 0))) << (Q[ 0]- 0-base);
     break;
   default:
     exit(-1);

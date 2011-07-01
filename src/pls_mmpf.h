@@ -76,7 +76,7 @@ rci_t _mzd_pluq_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k);
 
 
 /**
- * \brief PLS matrix decomposition of a submatrix for up to k columns
+ * \brief PLE matrix decomposition of a submatrix for up to k columns
  * starting at (r,c).
  *
  * Updates P and Q and modifies A in place. The buffer done afterwards
@@ -89,17 +89,18 @@ rci_t _mzd_pluq_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k);
  * \param k Size of Gray code tables.
  * \param P Preallocated row permutation.
  * \param Q Preallocated column permutation.
+ * \param pivots which column holds the i-th pivot
  * \param done Preallocated temporary buffer.
  * \param done_row Stores the last row which is already reduced processed after function execution.
  * \param splitblock First block which is not considered by this function.
  *
- * \retval kbar Maximum k for which a pivot could be found.
+ * \retval knar rank of the considered submatrix
  */
 
 int _mzd_pls_submatrix(mzd_t *A, 
-                          rci_t const start_row, rci_t const stop_row, 
-                          rci_t const start_col, int const k, 
-                          mzp_t *P, mzp_t *Q, rci_t *done, rci_t *done_row,
-                          wi_t const splitblock);
+                       rci_t const start_row, rci_t const stop_row, 
+                       rci_t const start_col, int const k, 
+                       mzp_t *P, mzp_t *Q, rci_t *pivots, rci_t *done, rci_t *done_row,
+                       wi_t const splitblock);
 
 #endif // M4RI_PLS_MMPF_H
