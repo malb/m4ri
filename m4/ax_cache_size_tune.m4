@@ -98,7 +98,7 @@ double run_experiment(size_t size, size_t trials) {
 }
 
 
-#define NUMBER_OF_EXPERIMENTS 5
+#define NUMBER_OF_EXPERIMENTS 8
 
 size_t cache_size(const size_t *candidates, const size_t n, size_t trials) {
   double times[NUMBER_OF_EXPERIMENTS][n];
@@ -161,8 +161,8 @@ size_t cache_size(const size_t *candidates, const size_t n, size_t trials) {
 
   FILE *f;
   printf("\n");
-  size_t _l1 = cache_size(c1,  8, 1ULL<<16);
-  size_t _l2 = cache_size(c2, 10, 1ULL<<12);
+  size_t _l1 = cache_size(c1,  8, 1ULL<<15);
+  size_t _l2 = cache_size(c2, 10, 1ULL<<8);
 
   /*printf("%lu:%lu\n",(unsigned long)(_l1*1024),(unsigned long)(_l2*1024));*/
 
