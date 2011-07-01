@@ -116,6 +116,7 @@ size_t cache_size(const size_t *candidates, const size_t n, size_t trials) {
     wt = walltime(wt);
     dtimes[j][0] = 1.0;
     printf("s: %5zu, rx: %6.2f, x: %6.2f, wt: %6.2f, dx:    NaN\n",candidates[0],times[j][0],times[j][0],wt);
+    fflush(NULL);
 
     for(i=1;i<n;i++) {
       run_experiment(candidates[i]*1024,_trials);
@@ -126,6 +127,7 @@ size_t cache_size(const size_t *candidates, const size_t n, size_t trials) {
       dtimes[j][i] = candidates[i-1]*times[j][i]/times[j][i-1]/candidates[i];
       
       printf("s: %5zu, rx: %6.2f, x: %6.2f, wt: %6.2f, dx: %6.2f\n",candidates[i],result,times[j][i],wt,dtimes[j][i]);
+      fflush(NULL);
       
       while(wt > 0.25) {
         _trials = _trials/2;
