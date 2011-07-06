@@ -68,6 +68,9 @@ AC_ARG_WITH(papi,
     AS_HELP_STRING([--with-papi@<:@=PATH@:>@], [The PAPI install prefix, if configure can't find it.]),
     [m4ri_config_papi=$withval])
 
+AC_ARG_WITH(cachesize,
+        AS_HELP_STRING([--with-cachesize@<:@=VALUE@:>@], [Manual cache sizes, separated by a colon. Overrides cache tuning.]),[m4ri_config_cachesize=$withval])
+
 AC_CHECK_HEADER([mm_malloc.h],AC_DEFINE(HAVE_MM_MALLOC,,[Support aligned allocations]),)
 if test "$ac_cv_header_mm_malloc_h" = "yes"; then
   M4RI_HAVE_MM_MALLOC=1
@@ -153,12 +156,8 @@ if test -z "$m4ri_config_papi"; then
        PAPI_CFLAGS="-I$PAPI_H_PATH"
        AC_DEFINE_UNQUOTED([HAVE_LIBPAPI], 1, [Define when libpapi is available.])
     else
-      AC_MSG_WARN([
-
-*** Could not find papi.h; compiling the benchmark applications will likely fail.
-    Use --with-papi=<install_prefix> or add -I<install_prefix>/include to either CPPFLAGS or CFLAGS,
-    or turn off papi all together by configuring with --without-papi.
-])
+      AC_MSG_WARN([Could not find papi.h; Use --with-papi=<install_prefix> or add -I<install_prefix>/include to either CPPFLAGS 
+                    or CFLAGS, or turn off papi all together by configuring with --without-papi.])
     fi
 ])
 fi
@@ -176,13 +175,26 @@ AC_SUBST(PAPI_LIBS)
 AC_SUBST(PAPI_LDFLAGS)
 AC_SUBST(PAPI_CFLAGS)
 
-# L1 and L2 Cache Size
-AX_CACHE_SIZE()
 AC_ARG_ENABLE([cachetune], 
-        AS_HELP_STRING([--enable-cachetune],[calculate cache size from timing information.]))
-AS_IF([test "x$enable_cachetune" = "xyes"], [
-    AX_CACHE_SIZE_TUNE()
-])
+     AS_HELP_STRING([--enable-cachetune],[calculate cache size from timing information.]))      
+
+# L1 and L2 Cache Size
+if test -z $m4ri_config_cachesize; then
+   AX_CACHE_SIZE()
+   AS_IF([test "x$enable_cachetune" = "xyes"], [AX_CACHE_SIZE_TUNE()]) 
+else
+  AS_IF([test "x$enable_cachetune" = "xyes"], [AC_MSG_WARN(Ignoring cache tuning since --with-cachesize was given.)]) 
+
+  ax_l1_size=`echo $m4ri_config_cachesize | $SED 's/\:.*//g'`
+  ax_l2_size=`echo $m4ri_config_cachesize | $SED 's/.*\://g'`
+
+  M4RI_CPU_L1_CACHE=${ax_l1_size}
+  M4RI_CPU_L2_CACHE=${ax_l2_size}
+  AC_SUBST(M4RI_CPU_L1_CACHE)
+  AC_SUBST(M4RI_CPU_L2_CACHE)
+
+fi
+
 
 AC_PROG_MAKE_SET
 

@@ -162,7 +162,7 @@ size_t cache_size(const size_t *candidates, const size_t n, size_t trials) {
   FILE *f;
   printf("\n");
   size_t _l1 = cache_size(c1,  8, 1ULL<<15);
-  size_t _l2 = cache_size(c2, 10, 1ULL<<8);
+  size_t _l2 = cache_size(c2, 10, 1ULL<<10);
 
   /*printf("%lu:%lu\n",(unsigned long)(_l1*1024),(unsigned long)(_l2*1024));*/
 
