@@ -18,13 +18,10 @@
 *
 ********************************************************************/
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
+#include "m4ri_config.h"
 #include <assert.h>
 
-#ifdef HAVE_SSE2
+#if __M4RI_HAVE_SSE2
 #include <emmintrin.h>
 #endif
 
