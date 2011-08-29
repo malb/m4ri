@@ -43,6 +43,12 @@
 #include <stdlib.h>
 #include <math.h>
 
+#if defined(__M4RI_HAVE_SSE2) && __M4RI_HAVE_SSE2
+#   if !defined(__SSE2__) || !__SSE2__
+#       error "Your current compiler and / or CFLAGS setting doesn't allow SSE2 code. Please change that or these to the setting(s) you used when compiling M4RI."
+#   endif
+#endif
+
 #if defined(__cplusplus) && !defined(M4RI_WRAPWORD) && !defined (_MSC_VER)
 extern "C" {
 #endif

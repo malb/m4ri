@@ -11,6 +11,9 @@
 #define __M4RI_DEBUG_DUMP		(@M4RI_DEBUG_DUMP@ || @M4RI_DEBUG_MZD@)
 #define __M4RI_DEBUG_MZD		@M4RI_DEBUG_MZD@
 
+#define __M4RI_CC                       "@CC@"
+#define __M4RI_CFLAGS                   "@SIMD_FLAGS@ @OPENMP_CFLAGS@ @CFLAGS@"
+
 // Helper macros.
 #define __M4RI_USE_MM_MALLOC		(__M4RI_HAVE_MM_MALLOC && __M4RI_HAVE_SSE2)
 #define __M4RI_USE_POSIX_MEMALIGN	(__M4RI_HAVE_POSIX_MEMALIGN && __M4RI_HAVE_SSE2)

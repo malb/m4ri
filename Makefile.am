@@ -12,6 +12,9 @@ pkgincludesubdir = $(includedir)/m4ri
 pkgincludesub_HEADERS = src/m4ri.h src/brilliantrussian.h src/misc.h src/packedmatrix.h src/grayflex.h src/strassen.h src/parity.h src/permutation.h src/trsm.h src/pls.h src/solve.h src/pls_mmpf.h src/echelonform.h src/xor.h src/mmc.h src/debug_dump.h
 nodist_pkgincludesub_HEADERS = src/m4ri_config.h
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = m4ri.pc
+
 #libm4ri_la_LDFLAGS = -version-info 0:0:0
 libm4ri_la_LDFLAGS = -release 0.0.20110715 -no-undefined
 libm4ri_la_LIBADD = -lm

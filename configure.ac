@@ -198,6 +198,6 @@ fi
 
 AC_PROG_MAKE_SET
 
-AC_CONFIG_FILES([Makefile testsuite/Makefile src/m4ri_config.h])
+AC_CONFIG_FILES([Makefile testsuite/Makefile src/m4ri_config.h m4ri.pc])
 AC_OUTPUT
 
