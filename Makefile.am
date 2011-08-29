@@ -16,7 +16,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = m4ri.pc
 
 #libm4ri_la_LDFLAGS = -version-info 0:0:0
-libm4ri_la_LDFLAGS = -release 0.0.20110715 -no-undefined
+libm4ri_la_LDFLAGS = -release 0.0.20110901 -no-undefined
 libm4ri_la_LIBADD = -lm
 
 check_PROGRAMS=test_multiplication test_elimination test_trsm test_pls test_solve test_kernel test_random test_smallops test_transpose test_colswap
