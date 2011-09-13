@@ -114,8 +114,6 @@ static mzd_t* mzd_t_malloc() {
 }
 
 static void mzd_t_free(mzd_t *M) {
-  int found = 0;
-
 #if __M4RI_HAVE_OPENMP
 #pragma omp critical
   {
@@ -142,7 +140,6 @@ static void mzd_t_free(mzd_t *M) {
 #endif
 	}
       }
-      found = 1;
       break;
     }
     cache = cache->next;
@@ -1782,14 +1779,38 @@ int mzd_cmp(mzd_t const *A, mzd_t const *B) {
   if(A->ncols < B->ncols) return -1;
   if(B->ncols < A->ncols) return 1;
 
-  /* Columns with large index are "larger", but rows with small
-     index are more important than with large index. */
-  for(rci_t i = 0; i < A->nrows; ++i) {
-    for(wi_t j = A->width - 1; j >= 0; --j) {
-      if (__M4RI_CONVERT_TO_UINT64_T(A->rows[i][j]) < __M4RI_CONVERT_TO_UINT64_T(B->rows[i][j]))
-	return -1;
-      else if (__M4RI_CONVERT_TO_UINT64_T(A->rows[i][j]) > __M4RI_CONVERT_TO_UINT64_T(B->rows[i][j]))
-	return 1;
+  const word mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - A->offset);
+  const word mask_end   = __M4RI_LEFT_BITMASK((A->offset + A->ncols)%m4ri_radix);
+  const wi_t n = A->width-1;
+
+  /* Columns with large index are "larger", but rows with small index
+     are more important than with large index. */
+
+  if(A->width > 1) {
+    for(rci_t i=0; i<A->nrows; i++) {
+      if ((A->rows[i][n]&mask_end) < (B->rows[i][n]&mask_end))
+        return -1;
+      else if ((A->rows[i][n]&mask_end) > (B->rows[i][n]&mask_end))
+        return 1;
+
+      for(wi_t j=n-1; j>=1; j--) {
+        if (A->rows[i][j] < B->rows[i][j])
+          return -1;
+        else if (A->rows[i][j] > B->rows[i][j])
+          return 1;
+      }
+
+      if ((A->rows[i][0]&mask_begin) < (B->rows[i][0]&mask_begin))
+        return -1;
+      else if ((A->rows[i][0]&mask_begin) > (B->rows[i][0]&mask_begin))
+        return 1;     
+    }
+  } else {
+    for(rci_t i=0; i<A->nrows; i++) {
+      if ( (A->rows[i][0] & mask_begin & mask_end) < (B->rows[i][0] & mask_begin & mask_end) ) 
+        return -1;
+      else if ( (A->rows[i][0] & mask_begin & mask_end) > (B->rows[i][0] & mask_begin & mask_end) ) 
+        return 1;
     }
   }
   return 0;
