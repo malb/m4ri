@@ -111,7 +111,7 @@ typedef struct mzd_t {
    * Offset in words between rows.
    *
    * rowstride = (width < mzd_paddingwidth || (width & 1) == 0) ? width : width + 1;
-   * where width is the width of the underlaying non-windowed matrix.
+   * where width is the width of the underlying non-windowed matrix.
    */
 
   wi_t rowstride;

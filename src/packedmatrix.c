@@ -73,15 +73,13 @@ static mzd_t* mzd_t_malloc() {
   {
 #endif
 
-  if (current_cache->used == (uint64_t)-1)
-  {
+  if (current_cache->used == (uint64_t)-1) {
     mzd_t_cache_t *cache = &mzd_cache;
     while (cache && cache->used == (uint64_t)-1) {
       current_cache = cache;
       cache = cache->next;
     }
-    if (!cache)
-    {
+    if (!cache) {
 
 #if __M4RI_USE_MM_MALLOC
       cache = (mzd_t_cache_t*)_mm_malloc(sizeof(mzd_t_cache_t), 64);
@@ -104,7 +102,6 @@ static mzd_t* mzd_t_malloc() {
   }
   int free_entry = log2_floor(~current_cache->used);
   current_cache->used |= ((uint64_t)1 << free_entry);
-
 
   ret = &current_cache->mzd[free_entry];
 #if __M4RI_HAVE_OPENMP
