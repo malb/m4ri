@@ -2250,14 +2250,14 @@ int mzd_is_zero(mzd_t const *A) {
   if (nb + Aoffset >= m4ri_radix) {
     // Large A
     word mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix-Aoffset);
-    if (Aoffset == 0)
-      mask_begin = ~mask_begin;
     word mask_end = __M4RI_LEFT_BITMASK(nbrest);
     for (rci_t i = 0; i < mb; ++i) {
         status |= A->rows[i][0] & mask_begin;
         for (wi_t j = 1; j < A->width - 1; ++j)
             status |= A->rows[i][j];
         status |= A->rows[i][A->width - 1] & mask_end;
+        if(status)
+          return 0;
     }
   } else {
     // Small A
