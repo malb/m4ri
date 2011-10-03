@@ -12,7 +12,9 @@
 #define __M4RI_DEBUG_MZD		@M4RI_DEBUG_MZD@
 
 #define __M4RI_CC                       "@CC@"
-#define __M4RI_CFLAGS                   "@SIMD_FLAGS@ @OPENMP_CFLAGS@ @CFLAGS@"
+#define __M4RI_CFLAGS                   "@SIMD_CFLAGS@ @OPENMP_CFLAGS@ @CFLAGS@"
+#define __M4RI_SIMD_CFLAGS              "@SIMD_CFLAGS@"
+#define __M4RI_OPENMP_CFLAGS            "@OPENMP_CFLAGS@"
 
 // Helper macros.
 #define __M4RI_USE_MM_MALLOC		(__M4RI_HAVE_MM_MALLOC && __M4RI_HAVE_SSE2)

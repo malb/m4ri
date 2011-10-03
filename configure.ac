@@ -64,6 +64,7 @@ else
 fi
 AC_SUBST(M4RI_HAVE_SSE2)
 
+
 AC_ARG_WITH(papi,
     AS_HELP_STRING([--with-papi@<:@=PATH@:>@], [The PAPI install prefix, if configure can't find it.]),
     [m4ri_config_papi=$withval])
