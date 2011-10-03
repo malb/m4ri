@@ -7,4 +7,4 @@ Name: M4RI
 Description: Dense linear algebra over GF(2).
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lm4ri -lm
-Cflags: -I${includedir}/m4ri @CFLAGS@ @SIMD_FLAGS@ @OPENMP_CFLAGS@
+Cflags: -I${includedir}/m4ri @CFLAGS@ @SIMD_CFLAGS@ @OPENMP_CFLAGS@
