@@ -23,6 +23,10 @@
 #include "config.h"
 #endif
 
+#ifdef __M4RI_HAVE_LIBPNG
+#include <png.h>
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include "packedmatrix.h"
@@ -145,8 +149,6 @@ static void mzd_t_free(mzd_t *M) {
   }
 #endif
 }
-
-#define SAFECHAR (m4ri_radix + m4ri_radix / 4 + 1)
 
 mzd_t *mzd_init(rci_t r, rci_t c) {
 
@@ -294,61 +296,6 @@ void mzd_free(mzd_t *A) {
     m4ri_mmc_free(A->blocks, (i + 1) * sizeof(mzd_block_t));
   }
   mzd_t_free(A);
-}
-
-void mzd_print( mzd_t const *M ) {
-  char temp[SAFECHAR];
-  for (rci_t i = 0; i < M->nrows; ++i) {
-    printf("[");
-    word *row = M->rows[i];
-    if(M->offset == 0) {
-      for (wi_t j = 0; j < M->width - 1; ++j) {
-        m4ri_word_to_str(temp, row[j], 1);
-        printf("%s|", temp);
-      }
-      row = row + M->width - 1;
-      int const wide = (M->ncols % m4ri_radix) ? M->ncols % m4ri_radix : m4ri_radix;
-      for (int j = 0; j < wide; ++j) {
-        if(j != 0 && (j % 4) == 0)
-          printf(":");
-        if (__M4RI_GET_BIT(*row, j)) 
-          printf("1");
-        else
-          printf(" ");
-      }
-    } else {
-      for (rci_t j = 0; j < M->ncols; ++j) {
-        if(j != 0 && (j % 4) == 0)
-          printf(((j % m4ri_radix) == 0) ? "|" : ":");
-        if(mzd_read_bit(M, i, j))
-          printf("1");
-        else
-          printf(" ");
-      }
-    }
-    printf("]\n");
-  }
-}
-
-void mzd_print_tight(mzd_t const *M) {
-  assert(M->offset == 0);
-
-  char temp[SAFECHAR];
-  word *row;
-
-  for (rci_t i = 0; i < M->nrows; ++i) {
-    printf("[");
-    row = M->rows[i];
-    for (wi_t j = 0; j < M->ncols / m4ri_radix; ++j) {
-      m4ri_word_to_str(temp, row[j], 0);
-      printf("%s", temp);
-    }
-    row = row + M->width - 1;
-    for (int j = 0; j < (M->ncols % m4ri_radix); ++j) {
-      printf("%d", __M4RI_GET_BIT(*row, j));
-    }
-    printf("]\n");
-  }
 }
 
 void mzd_row_add(mzd_t *M, rci_t sourcerow, rci_t destrow) {
@@ -2533,3 +2480,4 @@ rci_t mzd_first_zero_row(mzd_t const *A) {
   __M4RI_DD_INT(0);
   return 0;
 }
+

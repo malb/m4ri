@@ -36,19 +36,6 @@ static void entry(char const* function, char const* file, int line)
   ++dd_sequence_number;
 }
 
-static word calculate_hash(word const* rowptr, wi_t wide)
-{
-  unsigned long long hash = 0;
-  for (word const* ptr = rowptr; ptr < rowptr + wide; ++ptr)
-    hash ^= *ptr;
-  return hash;
-}
-
-static inline word rotate_word(word w, int shift)
-{
-  return (w << shift) | (w >> (m4ri_radix - w));
-}
-
 static inline void consistency_check_row(mzd_t const *M, rci_t row)
 {
   assert(row >= 0 && row < M->nrows);

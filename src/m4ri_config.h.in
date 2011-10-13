@@ -10,6 +10,7 @@
 #define __M4RI_CPU_L2_CACHE		@M4RI_CPU_L2_CACHE@
 #define __M4RI_DEBUG_DUMP		(@M4RI_DEBUG_DUMP@ || @M4RI_DEBUG_MZD@)
 #define __M4RI_DEBUG_MZD		@M4RI_DEBUG_MZD@
+#define __M4RI_HAVE_LIBPNG              @M4RI_HAVE_LIBPNG@
 
 #define __M4RI_CC                       "@CC@"
 #define __M4RI_CFLAGS                   "@SIMD_CFLAGS@ @OPENMP_CFLAGS@ @CFLAGS@"

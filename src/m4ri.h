@@ -64,6 +64,7 @@ extern "C" {
 #include "pls_mmpf.h"
 #include "solve.h"
 #include "echelonform.h"
+#include "io.h"
 
 #if defined(__cplusplus) && !defined(M4RI_WRAPWORD) && !defined (_MSC_VER)
 }

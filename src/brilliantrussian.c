@@ -644,7 +644,6 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
    * switch to PLUQ based echelon form computation once the density
    * reaches the threshold.
    */
-
   rci_t const ncols = A->ncols; 
 
   if (k == 0) {

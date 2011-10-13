@@ -689,24 +689,6 @@ static inline void mzd_clear_bits(mzd_t const *M, rci_t const x, rci_t const y, 
 }
 
 /**
- * \brief Print a matrix to stdout. 
- *
- * The output will contain colons between every 4-th column.
- *
- * \param M Matrix
- */
-
-void mzd_print(mzd_t const *M);
-
-/**
- * \brief Print the matrix to stdout.
- *
- * \param M Matrix
- */
-
-void mzd_print_tight(mzd_t const *M);
-
-/**
  * \brief Add the rows sourcerow and destrow and stores the total in the row
  * destrow, but only begins at the column coloffset.
  *
@@ -1402,5 +1384,19 @@ double _mzd_density(mzd_t const *A, wi_t res, rci_t r, rci_t c);
  */
 
 rci_t mzd_first_zero_row(mzd_t const *A);
+
+/**
+ * \brief Return hash value for matrix.
+ *
+ * \param A Matrix
+ */
+
+static inline unsigned long long mzd_hash(mzd_t const *A) {
+  unsigned long long hash = 0;
+  for (rci_t r = 0; r < A->nrows; ++r)
+    hash ^= rotate_word(calculate_hash(A->rows[r], A->width), r % m4ri_radix);
+  return hash;
+}
+
 
 #endif // M4RI_PACKEDMATRIX_H
