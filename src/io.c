@@ -171,7 +171,7 @@ mzd_t * mzd_from_png(const char *fn, int verbose) {
       A->rows[i][j] = tmp;
     }
     tmp = 0;
-    switch((n/8)%8) {
+    switch((n/8 + ((n%8) ? 1 : 0))%8) {
     case 7: tmp |= ((word)row[8*j+7])<<56;
     case 6: tmp |= ((word)row[8*j+6])<<48; 
     case 5: tmp |= ((word)row[8*j+5])<<40;
@@ -288,7 +288,7 @@ int mzd_to_png(const mzd_t *A, const char *fn, int compression_level, const char
       row[8*j+7] = (png_byte)((tmp>>56) & 0xff);
     }
     tmp = rowptr[j];
-    switch( (A->ncols/8) %8 ) {
+    switch( (A->ncols/8 + ((A->ncols%8) ? 1 : 0)) %8 ) {
     case 0: row[8*j+7] = (png_byte)((tmp>>56) & 0xff);
     case 7: row[8*j+6] = (png_byte)((tmp>>48) & 0xff);
     case 6: row[8*j+5] = (png_byte)((tmp>>40) & 0xff); 
