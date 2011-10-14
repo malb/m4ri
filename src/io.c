@@ -159,7 +159,7 @@ mzd_t * mzd_from_png(const char *fn, int verbose) {
   wi_t j;
 
   png_set_packswap(png_ptr);
-  png_set_invert_mono(png_ptr);
+  //png_set_invert_mono(png_ptr);
 
   for(rci_t i=0; i<m; i++) {
     png_read_row(png_ptr, row, NULL);
@@ -168,7 +168,7 @@ mzd_t * mzd_from_png(const char *fn, int verbose) {
         |   ((word)row[8*j+5])<<40 | ((word)row[8*j+4])<<32 \
         |   ((word)row[8*j+3])<<24 | ((word)row[8*j+2])<<16 \
         |   ((word)row[8*j+1])<< 8 | ((word)row[8*j+0])<< 0;
-      A->rows[i][j] = tmp;
+      A->rows[i][j] = ~tmp;
     }
     tmp = 0;
     switch((n/8 + ((n%8) ? 1 : 0))%8) {
@@ -181,7 +181,7 @@ mzd_t * mzd_from_png(const char *fn, int verbose) {
     case 1: tmp |= ((word)row[8*j+1])<< 8;
     case 0: tmp |= ((word)row[8*j+0])<< 0;
     };
-    A->rows[i][j] |= (tmp & bitmask_end);
+    A->rows[i][j] |= (~tmp & bitmask_end);
   }
 
   free(row);
