@@ -5,7 +5,6 @@
  *
  * \author Jean-Guillaume Dumas <Jean-Guillaume.Dumas@imag.fr>
  *
- * \attention This file is currently broken.
  */
 
 #ifndef M4RI_SOLVE_H
