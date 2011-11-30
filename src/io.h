@@ -52,7 +52,7 @@ void mzd_print(mzd_t const *M);
 
 void mzd_info(const mzd_t *A, int do_rank);
 
-#ifdef __M4RI_HAVE_LIBPNG
+#if __M4RI_HAVE_LIBPNG
 
 /**
  * \brief Read matrix from 1-bit PNG image.

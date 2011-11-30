@@ -245,6 +245,9 @@ if test "x${have_libpng}" = "xyes" ; then
    AC_SUBST(M4RI_HAVE_LIBPNG)
    LIBPNG_LIBADD="-lpng"
    AC_SUBST(LIBPNG_LIBADD)
+else
+   M4RI_HAVE_LIBPNG=0
+   AC_SUBST(M4RI_HAVE_LIBPNG)
 fi
 
 AC_PROG_MAKE_SET

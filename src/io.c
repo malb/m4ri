@@ -20,7 +20,7 @@
 
 #include "m4ri_config.h"
 
-#ifdef __M4RI_HAVE_LIBPNG
+#if __M4RI_HAVE_LIBPNG
 #include <png.h>
 #endif //__M4RI_HAVE_LIBPNG
 
@@ -75,7 +75,7 @@ void mzd_print( mzd_t const *M ) {
   }
 }
 
-#ifdef __M4RI_HAVE_LIBPNG
+#if __M4RI_HAVE_LIBPNG
 #define PNGSIGSIZE 8
 
 mzd_t * mzd_from_png(const char *fn, int verbose) {
