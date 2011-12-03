@@ -47,8 +47,7 @@ nodist_pkgincludesub_HEADERS = src/m4ri_config.h
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = m4ri.pc
 
-#libm4ri_la_LDFLAGS = -version-info 0:0:0
-libm4ri_la_LDFLAGS = -release 0.0.20111004 -no-undefined
+libm4ri_la_LDFLAGS = -release 0.0.20111203 -no-undefined
 libm4ri_la_LIBADD = -lm $(LIBPNG_LIBADD)
 
 check_PROGRAMS=test_multiplication test_elimination test_trsm test_pls test_solve test_kernel test_random test_smallops test_transpose test_colswap
