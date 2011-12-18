@@ -241,6 +241,8 @@ int global_options(int* argcp, char*** argvp)
 	++*argvp;
 	--*argcp;
 	bench_maximum = atoi((*argvp)[1]);
+        if (bench_maximum < bench_minimum)
+          bench_minimum = bench_maximum;
 	break;
       case 't':
 	++*argvp;
@@ -400,9 +402,11 @@ int normal_calculate(vector v, normal* dist, double multiplier)
 {
   dist->size = vector_size(v);
 
-  if (dist->size < 2)
-    return -1;
-
+  if (dist->size < 2) {
+    dist->mean = vector_get(v, 0) * multiplier;
+    dist->sigma = 0.0;
+    return 0;
+  }
   // Calculate the sum of all data.
   double sum = 0;
   for (int i = 0; i < dist->size; ++i)
