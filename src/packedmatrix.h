@@ -696,6 +696,8 @@ static inline void mzd_clear_bits(mzd_t const *M, rci_t const x, rci_t const y, 
  * \param dstrow Index of target row
  * \param srcrow Index of source row
  * \param coloffset Start column (0 <= coloffset < M->ncols)
+ *
+ * \warning This function expects that there is at least one word worth of work.
  */
 
 static inline void mzd_row_add_offset(mzd_t *M, rci_t dstrow, rci_t srcrow, rci_t coloffset) {

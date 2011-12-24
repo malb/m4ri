@@ -809,3 +809,26 @@ void _mzd_trsm_upper_left_even(mzd_t const *U, mzd_t *B, const int cutoff) {
 
   __M4RI_DD_MZD(B);
 }
+
+mzd_t *mzd_inv_upper(mzd_t *U) {
+  if (U->nrows*U->ncols < __M4RI_CPU_L1_CACHE<<3) {
+    mzd_inv_upper_m4ri(U,0);
+  } else {
+    rci_t const n = U->nrows;
+    rci_t const n2 = (((n - 1) / m4ri_radix + 1) >> 1) * m4ri_radix;
+
+    mzd_t *U00 = mzd_init_window(U,  0,  0, n2, n2);
+    mzd_t *U01 = mzd_init_window(U,  0, n2, n2, n );
+    mzd_t *U11 = mzd_init_window(U, n2, n2 , n , n );
+
+    _mzd_trsm_upper_left_even( U00, U01, 0);
+    _mzd_trsm_upper_right_even(U11, U01, 0);
+    mzd_inv_upper(U00);
+    mzd_inv_upper(U11);
+
+    mzd_free_window((mzd_t*)U00);
+    mzd_free_window((mzd_t*)U01);
+    mzd_free_window((mzd_t*)U11);
+  }
+  return U;
+}

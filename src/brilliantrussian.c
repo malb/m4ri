@@ -1513,7 +1513,7 @@ mzd_t *mzd_inv_upper_m4ri(mzd_t *A, int k) {
 
     for(rci_t i=0; i<k; i++)
       for(rci_t j=0; j<i; j++)
-        if(mzd_read_bit(A,r+j,r+i))
+        if(mzd_read_bit(A,r+j,r+i) && (r+i+1)<A->ncols )
           mzd_row_add_offset(A, r+j, r+i, r+i+1);
 
     mzd_make_table_trtri(A, r, k, T, L);
@@ -1526,23 +1526,23 @@ mzd_t *mzd_inv_upper_m4ri(mzd_t *A, int k) {
       for(rci_t i=0; i<r; i++) {
         word *a = A->rows[i];
         word *t = T->rows[L[mzd_read_bits_int(A,i,r,k)]];
-        a[homeblock] = (a[homeblock] & ~mask) | ( (a[homeblock] ^ t[homeblock]) & (mask) );
+        a[homeblock] ^= t[homeblock] & mask;
       }
 
     } else {
-      const word mask_begin = __M4RI_LEFT_BITMASK(((r)%m4ri_radix));
+      const word mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix-r%m4ri_radix);
       const word mask_end = __M4RI_LEFT_BITMASK(A->ncols%m4ri_radix);
 
       for(rci_t i=0; i<r; i++) {
         word *a = A->rows[i];
         word *t = T->rows[L[mzd_read_bits_int(A,i,r,k)]];
 
-        a[homeblock] = (a[homeblock] & mask_begin) | ( (a[homeblock] ^ t[homeblock]) & ~mask_begin);
+        a[homeblock] ^= t[homeblock] & mask_begin;
 
         for(j=homeblock+1; j<A->width-1; j++)
           a[j] ^= t[j];
 
-        a[j] = ((a[j] ^ t[j]) & mask_end) | (a[j] & ~mask_end);
+        a[A->width-1] ^= t[A->width-1] & mask_end;
       }
     }
     r += k;
