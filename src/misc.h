@@ -647,7 +647,7 @@ static inline void *m4ri_mm_malloc(size_t size) {
   if (error) newthing = NULL;
 #else
   newthing = malloc( size );
-#endif  
+#endif
 #if __M4RI_HAVE_OPENMP
  }
 #endif

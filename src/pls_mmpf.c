@@ -4,7 +4,7 @@
 *
 *    Copyright (C) 2008-2011 Martin Albrecht <martinralbrecht@googlemail.com>
 *
-*  Distributed under the terms of the GNU General Public License (GPL) 
+*  Distributed under the terms of the GNU General Public License (GPL)
 *  version 2 or higher.
 *
 *    This code is distributed in the hope that it will be useful,
@@ -65,7 +65,7 @@ static inline void _kk_setup(int const kk, int const knar, int *k_, int *knar_, 
     lb[1] = lb[0]+k_[0];
     lb[2] = lb[1]+k_[1];
     lb[3] = lb[2]+k_[2];
-    
+
     ub[0] =     0+k_[0];
     ub[1] = ub[0]+k_[1];
     ub[2] = ub[1]+k_[2];
@@ -87,7 +87,7 @@ static inline void _kk_setup(int const kk, int const knar, int *k_, int *knar_, 
     lb[0] = 0;
     lb[1] = lb[0]+k_[0];
     lb[2] = lb[1]+k_[1];
-    
+
     ub[0] =     0+k_[0];
     ub[1] = ub[0]+k_[1];
     ub[2] = ub[1]+k_[2];
@@ -95,7 +95,7 @@ static inline void _kk_setup(int const kk, int const knar, int *k_, int *knar_, 
     assert((k_[0] > 0) && (k_[1] > 0) && (k_[2] > 0));
     break;
 
-  case 2: 
+  case 2:
     k_[0] = kk / 2;
     k_[1] = kk - k_[0];
 
@@ -104,7 +104,7 @@ static inline void _kk_setup(int const kk, int const knar, int *k_, int *knar_, 
 
     lb[0] = 0;
     lb[1] = lb[0]+k_[0];
-    
+
     ub[0] =     0+k_[0];
     ub[1] = ub[0]+k_[1];
 
@@ -131,11 +131,11 @@ static inline void _kk_setup(int const kk, int const knar, int *k_, int *knar_, 
   }
 }
 
-int _mzd_pls_submatrix(mzd_t *A, 
-                       rci_t const start_row, rci_t const stop_row, 
-                       rci_t const start_col, int const k, 
-                       mzp_t *P, mzp_t *Q, rci_t *pivots, 
-                       rci_t *done, rci_t *done_row, wi_t const splitblock)  {
+int _mzd_pls_submatrix(mzd_t *A,
+                       rci_t const start_row, rci_t const stop_row,
+                       rci_t const start_col, int const k,
+                       mzp_t *P, mzp_t *Q, rci_t *pivots,
+                       rci_t *done, rci_t *done_row, wi_t const splitblock) {
   word bm[__M4RI_PLS_NTABLES * __M4RI_MAXKAY];
   wi_t os[__M4RI_PLS_NTABLES * __M4RI_MAXKAY];
 
@@ -191,7 +191,7 @@ int _mzd_pls_submatrix(mzd_t *A,
       rank++;
     }
   }
-  
+
   /* finish submatrix */
   *done_row = _max_value(done, rank);
   for(rci_t c2 = 0; c2 < rank && start_col + pivots[c2] < A->ncols -1; ++c2)
@@ -258,7 +258,7 @@ void mzd_make_table_pls(mzd_t const *M, rci_t r, rci_t c, int k, int knar, mzd_t
        element we just created from T */
     Le[mzd_read_bits_int(T,i,c,k)] = i;
     Lm[m4ri_spread_bits(m4ri_codebook[k]->ord[i],offsets,knar,base)] = i;
-    
+
   }
   /* We need fix the table to update the transformation matrix
      correctly; e.g. if the first row has [1 0 1] and we clear a row
@@ -274,8 +274,8 @@ void mzd_make_table_pls(mzd_t const *M, rci_t r, rci_t c, int k, int knar, mzd_t
   __M4RI_DD_RCI_ARRAY(Lm, twokay);
 }
 
-void mzd_process_rows2_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
-                           int const k0, mzd_t const *T0, rci_t const *E0, 
+void mzd_process_rows2_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
+                           int const k0, mzd_t const *T0, rci_t const *E0,
                            int const k1, mzd_t const *T1, rci_t const *E1) {
 
   wi_t const blocknuma = startcol / m4ri_radix;
@@ -317,8 +317,8 @@ void mzd_process_rows2_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
   __M4RI_DD_MZD(M);
 }
 
-void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
-                           int const k0, mzd_t const *T0, rci_t const *E0, 
+void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
+                           int const k0, mzd_t const *T0, rci_t const *E0,
                            int const k1, mzd_t const *T1, rci_t const *E1,
 			   int const k2, mzd_t const *T2, rci_t const *E2) {
 
@@ -374,10 +374,10 @@ void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
   __M4RI_DD_MZD(M);
 }
 
-void mzd_process_rows4_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
-                           int const k0, mzd_t const *T0, rci_t const *E0, 
-                           int const k1, mzd_t const *T1, rci_t const *E1, 
-                           int const k2, mzd_t const *T2, rci_t const *E2, 
+void mzd_process_rows4_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
+                           int const k0, mzd_t const *T0, rci_t const *E0,
+                           int const k1, mzd_t const *T1, rci_t const *E1,
+                           int const k2, mzd_t const *T2, rci_t const *E2,
                            int const k3, mzd_t const *T3, rci_t const *E3) {
 
   wi_t const blocknuma = startcol / m4ri_radix;
@@ -443,7 +443,7 @@ void mzd_process_rows4_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
   __M4RI_DD_MZD(M);
 }
 
-void _mzd_pls_a10(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const start_col, 
+void _mzd_pls_a10(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const start_col,
                   wi_t const addblock, int const k, rci_t *pivots) {
   /* perform needed row swaps */
   for(rci_t i = start_row; i < start_row + k; ++i) {
@@ -467,14 +467,14 @@ void _mzd_pls_a10(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const s
   __M4RI_DD_MZP(P);
 }
 
-void _mzd_pls_a11_1(mzd_t *A, 
-                    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
+void _mzd_pls_a11_1(mzd_t *A,
+                    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock,
                     int const k, int const knar, mzd_t const *T0, rci_t const *M0) {
 
   wi_t const wide = A->width - addblock;
   if (wide <= 0)
     return;
-  
+
   for(rci_t i = start_row + knar; i < stop_row; ++i) {
     rci_t x0 = M0[mzd_read_bits_int(A,i,start_col, k)];
     word const *s0 = T0->rows[x0] + addblock;
@@ -487,14 +487,14 @@ void _mzd_pls_a11_1(mzd_t *A,
 
 
 void _mzd_pls_a11_2(mzd_t *A,
-                    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
-                    int const k0, int const knar0, mzd_t const *T0, rci_t const *M0, 
+                    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock,
+                    int const k0, int const knar0, mzd_t const *T0, rci_t const *M0,
                     int const k1, int const knar1, mzd_t const *T1, rci_t const *M1) {
 
   wi_t const wide = A->width - addblock;
   if (wide <= 0)
     return;
-  
+
   for(rci_t i = start_row + knar0 + knar1; i < stop_row; ++i) {
     rci_t x0 = M0[mzd_read_bits_int(A,i,start_col,k0)];
     rci_t x1 = M1[mzd_read_bits_int(A,i,start_col+k0,k1)];
@@ -509,10 +509,10 @@ void _mzd_pls_a11_2(mzd_t *A,
 
 
 void _mzd_pls_a11_3(mzd_t *A,
-                    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
-                    int const k0, int const knar0, mzd_t const *T0, rci_t const *M0, 
-                    int const k1, int const knar1, mzd_t const *T1, rci_t const *M1, 
-                    int const k2, int const knar2, mzd_t const *T2, rci_t const *M2) { 
+                    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock,
+                    int const k0, int const knar0, mzd_t const *T0, rci_t const *M0,
+                    int const k1, int const knar1, mzd_t const *T1, rci_t const *M1,
+                    int const k2, int const knar2, mzd_t const *T2, rci_t const *M2) {
   wi_t const wide = A->width - addblock;
   if (wide <= 0)
     return;
@@ -533,11 +533,11 @@ void _mzd_pls_a11_3(mzd_t *A,
 
 
 void _mzd_pls_a11_4(mzd_t *A,
-                    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock, 
-                    int const k0, int const knar0, mzd_t const *T0, rci_t const *M0, 
-                    int const k1, int const knar1, mzd_t const *T1, rci_t const *M1, 
+                    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock,
+                    int const k0, int const knar0, mzd_t const *T0, rci_t const *M0,
+                    int const k1, int const knar1, mzd_t const *T1, rci_t const *M1,
                     int const k2, int const knar2, mzd_t const *T2, rci_t const *M2,
-                    int const k3, int const knar3, mzd_t const *T3, rci_t const *M3) { 
+                    int const k3, int const knar3, mzd_t const *T3, rci_t const *M3) {
 
   wi_t const wide = A->width - addblock;
   if(wide <= 0)
@@ -569,7 +569,7 @@ mzd_t *_mzd_pls_to_u(mzd_t *U, mzd_t const *A, rci_t r, rci_t c, int k, rci_t *o
   mzd_submatrix(U, A, r, 0, r+k, A->ncols);
 
   for(rci_t i = 0; i < k; ++i)
-    for(rci_t j = startcol; j < c + offsets[i]; ++j) 
+    for(rci_t j = startcol; j < c + offsets[i]; ++j)
       mzd_write_bit(U, i, j,  0);
 
   __M4RI_DD_MZD(U);
@@ -581,7 +581,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
   assert(A->offset == 0);
 
   rci_t const nrows = A->nrows;
-  rci_t const ncols = A->ncols; 
+  rci_t const ncols = A->ncols;
   rci_t curr_row = 0;
   rci_t curr_col = 0;
   rci_t done_row = 0;
@@ -602,7 +602,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
 
   /** initialise permutations as identity **/
 
-  for(rci_t i = 0; i < ncols; ++i) 
+  for(rci_t i = 0; i < ncols; ++i)
     Q->values[i] = i;
 
   for(rci_t i = 0; i < nrows; ++i)
@@ -633,7 +633,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
   rci_t *pivots = (rci_t*)m4ri_mm_malloc(kk * sizeof(rci_t));
 
   /**
-   * The algorithm proceeds as follows 
+   * The algorithm proceeds as follows
    */
 
   while(curr_col < ncols && curr_row < nrows) {
@@ -649,7 +649,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
 |      |                             |
 -------------------------------------- knar
 | A01  |  A11                        |
-|      |                             | 
+|      |                             |
 -------------------------------------- done_row
 | A02  |  A12                        |
 |      |                             |
@@ -665,13 +665,13 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
     knar = _mzd_pls_submatrix(A, curr_row, nrows, curr_col, kk, P, Q, pivots, done, &done_row, splitblock);
 
     /**
-     * 2. update A10 
+     * 2. update A10
      */
 
     _mzd_pls_a10(A, P, curr_row, curr_col, splitblock, knar, pivots);
 
     /**
-     * 3. extract U from A0 = (A00 | A10) 
+     * 3. extract U from A0 = (A00 | A10)
      */
 
     _mzd_pls_to_u(U, A, curr_row, curr_col, knar, pivots);
@@ -709,36 +709,36 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
       _kk_setup(kk, knar, k_, knar_, pivots, 4);
 
       /**
-       * 4. generate multiplication and inversion tables T amd E from U 
+       * 4. generate multiplication and inversion tables T amd E from U
        */
-    
+
       mzd_make_table_pls(U, 0,                            curr_col,                   k_[0], knar_[0], T0, E0, M0, pivots, 0);
       mzd_make_table_pls(U, 0+knar_[0],                   curr_col+k_[0],             k_[1], knar_[1], T1, E1, M1, pivots+knar_[0], k_[0]);
       mzd_make_table_pls(U, 0+knar_[0]+knar_[1],          curr_col+k_[0]+k_[1],       k_[2], knar_[2], T2, E2, M2, pivots+knar_[0]+knar_[1], k_[0]+k_[1]);
       mzd_make_table_pls(U, 0+knar_[0]+knar_[1]+knar_[2], curr_col+k_[0]+k_[1]+k_[2], k_[3], knar_[3], T3, E3, M3, pivots+knar_[0]+knar_[1]+knar_[2], k_[0]+k_[1]+k_[2]);
-      
+
       /**
        * 5. update A1 = (A01 | A11)
        */
-    
+
       _mzd_pls_a11_4(A, curr_row, done_row+1, curr_col, splitblock,
-                     k_[0], knar_[0], T0, M0, 
-                     k_[1], knar_[1], T1, M1, 
+                     k_[0], knar_[0], T0, M0,
+                     k_[1], knar_[1], T1, M1,
                      k_[2], knar_[2], T2, M2,
                      k_[3], knar_[3], T3, M3);
-      
+
       /**
        * 6. update A2 = (A02 | A12)
        */
 
       if (done_row < nrows) {
-        mzd_process_rows4_pls(A, done_row + 1, nrows, curr_col, 
-                              k_[0], T0, E0, 
-                              k_[1], T1, E1, 
+        mzd_process_rows4_pls(A, done_row + 1, nrows, curr_col,
+                              k_[0], T0, E0,
+                              k_[1], T1, E1,
                               k_[2], T2, E2,
                               k_[3], T3, E3);
       }
-          
+
     } else if (kk >= 2*k && kk >= 3) {
 
       int k_[3], knar_[3];
@@ -747,17 +747,17 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
       mzd_make_table_pls(U, 0,                   curr_col,             k_[0], knar_[0], T0, E0, M0, pivots, 0);
       mzd_make_table_pls(U, 0+knar_[0],          curr_col+k_[0],       k_[1], knar_[1], T1, E1, M1, pivots+knar_[0], k_[0]);
       mzd_make_table_pls(U, 0+knar_[0]+knar_[1], curr_col+k_[0]+k_[1], k_[2], knar_[2], T2, E2, M2, pivots+knar_[0]+knar_[1], k_[0]+k_[1]);
- 
+
       _mzd_pls_a11_3(A, curr_row, done_row+1, curr_col, splitblock,
-                     k_[0], knar_[0], T0, M0, 
-                     k_[1], knar_[1], T1, M1, 
+                     k_[0], knar_[0], T0, M0,
+                     k_[1], knar_[1], T1, M1,
                      k_[2], knar_[2], T2, M2);
-      
-    
+
+
       if (done_row < nrows) {
-        mzd_process_rows3_pls(A, done_row + 1, nrows, curr_col, 
-                              k_[0], T0, E0, 
-                              k_[1], T1, E1, 
+        mzd_process_rows3_pls(A, done_row + 1, nrows, curr_col,
+                              k_[0], T0, E0,
+                              k_[1], T1, E1,
                               k_[2], T2, E2);
       }
 
@@ -768,7 +768,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
 
       mzd_make_table_pls(U, 0,          curr_col,       k_[0], knar_[0], T0, E0, M0, pivots, 0);
       mzd_make_table_pls(U, 0+knar_[0], curr_col+k_[0], k_[1], knar_[1], T1, E1, M1, pivots+knar_[0], k_[0]);
-      
+
       _mzd_pls_a11_2(A, curr_row, done_row+1, curr_col, splitblock,
                      k_[0], knar_[0], T0, M0, k_[1], knar_[1], T1, M1);
 
@@ -780,7 +780,7 @@ rci_t _mzd_pls_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
     } else {
       mzd_make_table_pls(U, 0, curr_col, kk, knar, T0, E0, M0, pivots, 0);
       _mzd_pls_a11_1(A, curr_row, done_row+1, curr_col, splitblock, kk, knar, T0, M0);
-      
+
       if(done_row < nrows) {
         mzd_process_rows(A, done_row + 1, nrows, curr_col, kk, T0, E0);
       }
@@ -826,3 +826,4 @@ rci_t _mzd_pluq_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int const k) {
   mzd_apply_p_right_trans_tri(A, Q);
   return r;
 }
+
