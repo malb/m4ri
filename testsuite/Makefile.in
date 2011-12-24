@@ -39,7 +39,8 @@ TEST_PRGS = \
 	test_smallops \
 	test_transpose \
 	test_colswap \
-	test_misc
+	test_misc \
+	test_invert
 
 BENCH_PRGS = \
 	bench_elimination \
@@ -50,7 +51,8 @@ BENCH_PRGS = \
 	bench_trsm_lowerright \
 	bench_trsm_upperright \
 	bench_elimination_sparse \
-	bench_packedmatrix
+	bench_packedmatrix \
+	bench_invert
 
 M4RI_HEADERS = \
         ../src/config.h \
