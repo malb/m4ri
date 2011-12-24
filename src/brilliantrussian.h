@@ -259,24 +259,31 @@ void mzd_top_echelonize_m4ri(mzd_t *M, int k);
 rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r);
 
 /**
- * \brief Invert the matrix M using Konrod's method. 
- * 
- * To avoid recomputing the identity matrix over and over again, I may
- * be passed in as identity parameter.
+ * \brief Invert the matrix src using Konrod's method.
  *
- * \param M Matrix to be reduced.
- * \param I Identity matrix.
- * \param k M4RI parameter, may be 0 for auto-choose.
+ * \param dst Matrix to hold the inverse (may be NULL)
+ * \param src Matrix to be inverted.
+ * \param k Table size parameter, may be 0 for automatic choice.
  *
  * \wordoffset
  *
- * \return Inverse of M
- *
- * \note This function allocates a new matrix for the inverse which
- * must be free'd using mzd_free() once it is not needed anymore.
+ * \return Inverse of src or throws an error
  */
 
-mzd_t *mzd_invert_m4ri(mzd_t const *M, mzd_t const *I, int k);
+mzd_t *mzd_inv_m4ri(mzd_t *dst, const mzd_t* src, int k);
+
+/**
+ * \brief Invert the upper triangular matrix A using Konrod's method.
+ *
+ * \param A Matrix to be inverted (overwritten).
+ * \param k Table size parameter, may be 0 for automatic choice.
+ *
+ * \wordoffset
+ *
+ * \return Inverse of A or throws an error
+ */
+
+mzd_t *mzd_inv_upper_m4ri(mzd_t *A, int k);
 
 /**
  * \brief Matrix multiplication using Konrod's method, i.e. compute C

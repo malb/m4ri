@@ -5,7 +5,7 @@
 *    Copyright (C) 2007, 2008 Gregory Bard <bard@fordham.edu>
 *    Copyright (C) 2008-2010 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
 *
-*  Distributed under the terms of the GNU General Public License (GPL) 
+*  Distributed under the terms of the GNU General Public License (GPL)
 *  version 2 or higher.
 *
 *    This code is distributed in the hope that it will be useful,
@@ -33,7 +33,7 @@
 /**
  * \brief Perform Gaussian reduction to reduced row echelon form on a
  * submatrix.
- * 
+ *
  * The submatrix has dimension at most k starting at r x c of A. Checks
  * for pivot rows up to row endrow (exclusive). Terminates as soon as
  * finding a pivot column fails.
@@ -59,7 +59,7 @@ static inline int _mzd_gauss_submatrix_full(mzd_t *A, rci_t r, rci_t c, rci_t en
         for (int l = 0; l < j - c; ++l)
           if (__M4RI_GET_BIT(tmp, l))
             mzd_row_add_offset(A, i, r+l, c+l);
-      
+
         /* pivot? */
         if (mzd_read_bit(A, i, j)) {
           mzd_row_swap(A, i, start_row);
@@ -87,7 +87,7 @@ static inline int _mzd_gauss_submatrix_full(mzd_t *A, rci_t r, rci_t c, rci_t en
 /**
  * \brief Perform Gaussian reduction to upper triangular matrix on a
  * submatrix.
- * 
+ *
  * The submatrix has dimension at most k starting at r x c of A. Checks
  * for pivot rows up to row end_row (exclusive). Terminates as soon as
  * finding a pivot column fails.
@@ -111,7 +111,7 @@ static inline int _mzd_gauss_submatrix(mzd_t *A, rci_t r, rci_t c, rci_t end_row
       for (int l = 0; l < j - c; ++l)
         if (mzd_read_bit(A, i, c+l))
           mzd_row_add_offset(A, i, r+l, c+l);
-      
+
       /* pivot? */
       if (mzd_read_bit(A, i, j)) {
         mzd_row_swap(A, i, start_row);
@@ -132,7 +132,7 @@ static inline int _mzd_gauss_submatrix(mzd_t *A, rci_t r, rci_t c, rci_t end_row
 /**
  * \brief Given a submatrix in upper triangular form compute the
  * reduced row echelon form.
- * 
+ *
  * The submatrix has dimension at most k starting at r x c of A. Checks
  * for pivot rows up to row end_row (exclusive). Terminates as soon as
  * finding a pivot column fails.
@@ -185,7 +185,7 @@ void mzd_make_table(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L)
   L[0] = 0;
   for (rci_t i = 1; i < twokay; ++i) {
     word *ti = T->rows[i] + homeblock;
-    word *ti1 = T->rows[i-1] + homeblock;   
+    word *ti1 = T->rows[i-1] + homeblock;
 
     rci_t const rowneeded = r + m4ri_codebook[k]->inc[i - 1];
     int const id = m4ri_codebook[k]->ord[i];
@@ -197,7 +197,7 @@ void mzd_make_table(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L)
     word *m = M->rows[rowneeded] + homeblock;
 
     *ti++ = (*m++ ^ *ti1++) & mask_begin;
-    
+
     wi_t j;
     for(j = 1; j + 8 <= wide - 1; j += 8) {
       *ti++ = *m++ ^ *ti1++;
@@ -310,7 +310,7 @@ void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, i
   for (r = startrow; r + 2 <= stoprow; r += 2) {
     rci_t const x0 = L[ mzd_read_bits_int(M, r+0, startcol, k) ];
     rci_t const x1 = L[ mzd_read_bits_int(M, r+1, startcol, k) ];
-    
+
     word *m0 = M->rows[r+0] + block;
     word *t0 = T->rows[x0] + block;
 
@@ -402,7 +402,7 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   int const entry_point = wide % 8;	/* Unrolled loop entry point */
 
   int rem = k % 3;
-  
+
   int const ka = k / 3 + ((rem >= 2) ? 1 : 0);
   int const kb = k / 3 + ((rem >= 1) ? 1 : 0);
   int const kc = k / 3;
@@ -441,7 +441,7 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   __M4RI_DD_MZD(M);
 }
 
-void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, 
+void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
                        mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1, mzd_t const *T2, rci_t const *L2, mzd_t const *T3, rci_t const *L3) {
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
@@ -449,7 +449,7 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   int const entry_point = wide % 8;	/* Unrolled loop entry point */
 
   int const rem = k % 4;
-  
+
   int const ka = k / 4 + ((rem >= 3) ? 1 : 0);
   int const kb = k / 4 + ((rem >= 2) ? 1 : 0);
   int const kc = k / 4 + ((rem >= 1) ? 1 : 0);
@@ -473,7 +473,7 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
     word const *t1 = T1->rows[x1] + blocknum;
     word const *t2 = T2->rows[x2] + blocknum;
     word const *t3 = T3->rows[x3] + blocknum;
-    
+
     wi_t n = count;
     switch (entry_point) {
     case 0: do { *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
@@ -491,7 +491,7 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   __M4RI_DD_MZD(M);
 }
 
-void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, 
+void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
                        mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1, mzd_t const *T2, rci_t const *L2,
 		       mzd_t const *T3, rci_t const *L3, mzd_t const *T4, rci_t const *L4) {
   wi_t const blocknum = startcol / m4ri_radix;
@@ -499,7 +499,7 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
   int const entry_point = wide % 8;	/* Unrolled loop entry point */
   int rem = k % 5;
-  
+
   int const ka = k / 5 + ((rem >= 4) ? 1 : 0);
   int const kb = k / 5 + ((rem >= 3) ? 1 : 0);
   int const kc = k / 5 + ((rem >= 2) ? 1 : 0);
@@ -512,7 +512,7 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r = startrow; r < stoprow; ++r) {
-    
+
     rci_t const x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
     rci_t const x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
     rci_t const x2 = L2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc)];
@@ -528,7 +528,7 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
     word const *t2 = T2->rows[x2] + blocknum;
     word const *t3 = T3->rows[x3] + blocknum;
     word const *t4 = T4->rows[x4] + blocknum;
-    
+
     wi_t n = count;
     switch (entry_point) {
     case 0: do { *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
@@ -546,7 +546,7 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   __M4RI_DD_MZD(M);
 }
 
-void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, 
+void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
                        mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1, mzd_t const *T2,
 		       rci_t const *L2, mzd_t const *T3, rci_t const *L3, mzd_t const *T4, rci_t const *L4,
 		       mzd_t const *T5, rci_t const *L5) {
@@ -556,7 +556,7 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   int const entry_point = wide % 8;	/* Unrolled loop entry point */
 
   int const rem = k % 6;
-  
+
   int const ka = k / 6 + ((rem >= 5) ? 1 : 0);
   int const kb = k / 6 + ((rem >= 4) ? 1 : 0);
   int const kc = k / 6 + ((rem >= 3) ? 1 : 0);
@@ -576,7 +576,7 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
     rci_t const x3 = L3[ mzd_read_bits_int(M, r, startcol+ka+kb+kc, kd)];
     rci_t const x4 = L4[ mzd_read_bits_int(M, r, startcol+ka+kb+kc+kd, ke)];
     rci_t const x5 = L5[ mzd_read_bits_int(M, r, startcol+ka+kb+kc+kd+ke, kf)];
-    
+
     /* Waste three clocks on OR-ing (modern CPU can do three in
      * parallel) to avoid possible multiple conditional jumps. */
     if(((x0 | x1) | (x2 | x3) | (x4 | x5)) == 0) // x0 == 0 && x1 == 0 && x2 == 0 && x3 == 0 && x4 == 0 && x5 == 0
@@ -644,7 +644,7 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
    * switch to PLUQ based echelon form computation once the density
    * reaches the threshold.
    */
-  rci_t const ncols = A->ncols; 
+  rci_t const ncols = A->ncols;
 
   if (k == 0) {
     k = m4ri_opt_k(A->nrows, ncols, 0);
@@ -738,7 +738,7 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
       if(full)
         mzd_process_rows6(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4, T5, L5);
 
-  } else if (kbar > 4 * k) { 
+  } else if (kbar > 4 * k) {
       int const rem = kbar % 5;
       int const ka = kbar / 5 + ((rem >= 4) ? 1 : 0);
       int const kb = kbar / 5 + ((rem >= 3) ? 1 : 0);
@@ -756,7 +756,7 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
         mzd_process_rows5(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4);
       if(full)
         mzd_process_rows5(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4);
-      
+
     } else if (kbar > 3 * k) {
       int const rem = kbar % 4;
       int const ka = kbar / 4 + ((rem >= 3) ? 1 : 0);
@@ -773,7 +773,7 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
         mzd_process_rows4(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
       if(full)
         mzd_process_rows4(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
-      
+
     } else if (kbar > 2 * k) {
       int const rem = kbar % 3;
       int const ka = kbar / 3 + ((rem >= 2) ? 1 : 0);
@@ -788,7 +788,7 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
         mzd_process_rows3(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1, T2, L2);
       if(full)
         mzd_process_rows3(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2);
-      
+
     } else if (kbar > k) {
       int const ka = kbar / 2;
       int const kb = kbar - ka;
@@ -800,7 +800,7 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
         mzd_process_rows2(A, r+kbar, A->nrows, c, kbar, T0, L0, T1, L1);
       if(full)
         mzd_process_rows2(A, 0, r, c, kbar, T0, L0, T1, L1);
-      
+
     } else if(kbar > 0) {
       if(full || kbar == kk) {
         mzd_make_table(A, r, c, kbar, T0, L0);
@@ -850,7 +850,7 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
 }
 
 rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r) {
-  rci_t const ncols = A->ncols; 
+  rci_t const ncols = A->ncols;
   int kbar = 0;
 
   if (k == 0) {
@@ -899,7 +899,7 @@ rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r) {
       mzd_make_table(A, r+ka+kb+kc+kd+ke, c, kf, T5, L5);
       mzd_process_rows6(A, 0, MIN(r, max_r), c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4, T5, L5);
 
-  } else if (kbar > 4 * k) { 
+  } else if (kbar > 4 * k) {
       int const rem = kbar % 5;
       int const ka = kbar / 5 + ((rem >= 4) ? 1 : 0);
       int const kb = kbar / 5 + ((rem >= 3) ? 1 : 0);
@@ -913,7 +913,7 @@ rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r) {
       mzd_make_table(A, r+ka+kb+kc, c, kd, T3, L3);
       mzd_make_table(A, r+ka+kb+kc+kd, c, ke, T4, L4);
       mzd_process_rows5(A, 0, MIN(r, max_r), c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4);
-      
+
     } else if (kbar > 3 * k) {
       const int rem = kbar%4;
       const int ka = kbar/4 + ((rem >= 3) ? 1 : 0);
@@ -926,7 +926,7 @@ rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r) {
       mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
       mzd_make_table(A, r+ka+kb+kc, c, kd, T3, L3);
       mzd_process_rows4(A, 0, MIN(r, max_r), c, kbar, T0, L0, T1, L1, T2, L2, T3, L3);
-      
+
     } else if (kbar > 2 * k) {
       const int rem = kbar%3;
       const int ka = kbar/3 + ((rem >= 2) ? 1 : 0);
@@ -937,14 +937,14 @@ rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r) {
       mzd_make_table(A, r+ka, c, kb, T1, L1);
       mzd_make_table(A, r+ka+kb, c, kc, T2, L2);
       mzd_process_rows3(A, 0, MIN(r, max_r), c, kbar, T0, L0, T1, L1, T2, L2);
-      
+
     } else if (kbar > k) {
       const int ka = kbar/2;
       const int kb = kbar - ka;
       mzd_make_table(A, r, c, ka, T0, L0);
       mzd_make_table(A, r+ka, c, kb, T1, L1);
       mzd_process_rows2(A, 0, MIN(r, max_r), c, kbar, T0, L0, T1, L1);
-      
+
     } else if(kbar > 0) {
       mzd_make_table(A, r, c, kbar, T0, L0);
       mzd_process_rows(A, 0, MIN(r, max_r), c, kbar, T0, L0);
@@ -980,36 +980,35 @@ void mzd_top_echelonize_m4ri(mzd_t *M, int k) {
   _mzd_top_echelonize_m4ri(M,k,0,0,M->nrows);
 }
 
-mzd_t *mzd_invert_m4ri(mzd_t const *m, mzd_t const *I, int k) {
-  mzd_t *big = mzd_concat(NULL, m, I);
-  rci_t size = m->ncols;
-  if (k == 0)
-    k = m4ri_opt_k(m->nrows, m->ncols, 0);
-  
-  mzd_echelonize_m4ri(big, TRUE, k);
-  
-  mzd_t *answer;
-  rci_t i;
-  for(i = 0; i < size; ++i) {
-    if (!mzd_read_bit(big, i,i )) {
-      answer = NULL;
-      break;
-    }
+mzd_t *mzd_inv_m4ri(mzd_t *dst, mzd_t const* src, int k) {
+  assert(src->nrows == src->ncols && src->offset == 0);
+  if(dst == NULL) {
+    dst = mzd_init(src->nrows, src->ncols);
+  } else {
+    assert(dst->ncols == src->ncols && dst->nrows && src->ncols && dst->offset == 0);
   }
-  if (i == size)
-    answer = mzd_submatrix(NULL, big, 0, size, size, 2 * size);
-  
-  mzd_free(big);
-  
-  __M4RI_DD_MZD(answer);
-  return answer;
+  mzd_set_ui(dst, 1);
+
+  mzd_t *A = mzd_concat(NULL, src, dst);
+  rci_t r = mzd_echelonize_m4ri(A, TRUE, 0);
+
+  if(r != src->nrows) {
+    mzd_free(A);
+    m4ri_die("mzd_inv_m4ri: input matrix does not have full rank.");
+  }
+
+  dst = mzd_submatrix(dst, A, 0, r, r, 2*r);
+  mzd_free(A);
+  __M4RI_DD_MZD(dst);
+  return dst;
 }
+
 
 mzd_t *mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k) {
   rci_t a = A->nrows;
   rci_t c = B->ncols;
 
-  if(A->ncols != B->nrows) 
+  if(A->ncols != B->nrows)
     m4ri_die("mzd_mul_m4rm: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
   if (C == NULL) {
     C = mzd_init(a, c);
@@ -1027,7 +1026,7 @@ mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k) {
   if(C->ncols == 0 || C->nrows == 0)
     return C;
 
-  if(A->ncols != B->nrows) 
+  if(A->ncols != B->nrows)
     m4ri_die("mzd_mul_m4rm A ncols (%d) need to match B nrows (%d) .\n", A->ncols, B->nrows);
   if (C == NULL) {
     C = mzd_init(a, c);
@@ -1041,12 +1040,12 @@ mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k) {
 mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear) {
   /**
    * The algorithm proceeds as follows:
-   * 
+   *
    * Step 1. Make a Gray code table of all the \f$2^k\f$ linear combinations
    * of the \f$k\f$ rows of \f$B_i\f$.  Call the \f$x\f$-th row
    * \f$T_x\f$.
    *
-   * Step 2. Read the entries 
+   * Step 2. Read the entries
    *    \f$a_{j,(i-1)k+1}, a_{j,(i-1)k+2} , ... , a_{j,(i-1)k+k}.\f$
    *
    * Let \f$x\f$ be the \f$k\f$ bit binary number formed by the
@@ -1149,7 +1148,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
       mzd_make_table( B, kk*i+k+k+k+k+k, 0, k, T6, L6);
       mzd_make_table( B, kk*i+k+k+k+k+k+k, 0, k, T7, L7);
       mzd_make_table( B, kk*i+k+k+k+k+k+k+k, 0, k, T8, L8);
-#endif   
+#endif
 
       for(int babystep = 0; babystep < blocksize; ++babystep) {
         rci_t j = giantstep + babystep;
@@ -1178,7 +1177,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
       }
     }
   }
-  
+
   for(rci_t i = 0; i < end; ++i) {
     mzd_make_table( B, kk*i, 0, k, T1, L1);
     mzd_make_table( B, kk*i+k, 0, k, T2, L2);
@@ -1270,7 +1269,7 @@ void _mzd_trsm_upper_left_even_submatrix(mzd_t const *U, mzd_t *B, rci_t const s
         word *a = B->rows[start_row+(k-i-1)];
         word *b = B->rows[start_row+(k-i)+j];
 
-        *a++ ^= *b++ & mask_begin; 
+        *a++ ^= *b++ & mask_begin;
 	wi_t ii;
         for(ii = 1; ii + 8 <= B->width - 1; ii += 8) {
           *a++ ^= *b++;
@@ -1307,7 +1306,7 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t const *U, mzd_t *B, int k) {
 
   word mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - B->offset);
   word mask_end = __M4RI_LEFT_BITMASK((B->ncols + B->offset) % m4ri_radix);
-  
+
   if (B->width == 1)
     mask_begin = mask_begin & mask_end;
 
@@ -1402,7 +1401,7 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t const *U, mzd_t *B, int k) {
       _mzd_combine4(b, t0, t1, t2, t3, wide);
       //b[wide-1] ^= (t0[wide-1] ^ t1[wide-1] ^ t2[wide-1] ^ t3[wide-1]) & mask_end;
 #endif
-      
+
     }
   }
 
@@ -1425,7 +1424,7 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t const *U, mzd_t *B, int k) {
         b[ii] ^= t0[ii];
     }
   }
-  
+
   mzd_free(T0);
   mzd_free(T1);
   mzd_free(T2);
@@ -1449,4 +1448,108 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t const *U, mzd_t *B, int k) {
 #endif
 
   __M4RI_DD_MZD(B);
+}
+
+void mzd_make_table_trtri(mzd_t const *M, rci_t r, int k, mzd_t *T, rci_t *L) {
+  assert(!(T->flags & mzd_flag_multiple_blocks));
+  wi_t const blockoffset= r / m4ri_radix;
+  int const twokay= __M4RI_TWOPOW(k);
+  wi_t const wide = T->width - blockoffset;
+  wi_t const count = (wide + 7) / 8;
+  int const entry_point = wide % 8;
+  wi_t const next_row_offset = blockoffset + T->rowstride - T->width;
+
+  word *ti, *ti1, *m;
+
+  ti1 = T->rows[0] + blockoffset;
+  ti = ti1 + T->rowstride;
+
+  L[0] = 0;
+  for (int i = 1; i < twokay; ++i) {
+    rci_t rowneeded = r + m4ri_codebook[k]->inc[i - 1];
+    m = M->rows[rowneeded] + blockoffset;
+
+    wi_t n = count;
+    switch (entry_point) {
+    case 0: do { *(ti++) = *(m++) ^ *(ti1++);
+    case 7:      *(ti++) = *(m++) ^ *(ti1++);
+    case 6:      *(ti++) = *(m++) ^ *(ti1++);
+    case 5:      *(ti++) = *(m++) ^ *(ti1++);
+    case 4:      *(ti++) = *(m++) ^ *(ti1++);
+    case 3:      *(ti++) = *(m++) ^ *(ti1++);
+    case 2:      *(ti++) = *(m++) ^ *(ti1++);
+    case 1:      *(ti++) = *(m++) ^ *(ti1++);
+      } while (--n > 0);
+    }
+    ti += next_row_offset;
+    ti1 += next_row_offset;
+
+    L[m4ri_codebook[k]->ord[i]] = i;
+  }
+
+  for(int i=1; i<twokay; ++i)
+    mzd_xor_bits(T, i, r, k, (word)m4ri_codebook[k]->ord[i]);
+}
+
+mzd_t *mzd_inv_upper_m4ri(mzd_t *A, int k) {
+  assert(A->nrows == A->ncols && A->offset == 0);
+
+  if (k == 0) {
+    k = m4ri_opt_k(A->nrows, A->ncols, 0);
+    if (k >= 7)
+      k = 7;
+    if (0.75 * __M4RI_TWOPOW(k) *A->ncols > __M4RI_CPU_L2_CACHE / 2.0)
+      k -= 1;
+  }
+
+  mzd_t *T = mzd_init(__M4RI_TWOPOW(k), A->ncols);
+  rci_t *L = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t r = 0;
+  rci_t j;
+
+  while(r < A->nrows) {
+    if (r+k >= A->nrows)
+      k = A->nrows - r;
+
+    for(rci_t i=0; i<k; i++)
+      for(rci_t j=0; j<i; j++)
+        if(mzd_read_bit(A,r+j,r+i))
+          mzd_row_add_offset(A, r+j, r+i, r+i+1);
+
+    mzd_make_table_trtri(A, r, k, T, L);
+
+    const wi_t homeblock = r/m4ri_radix;
+
+    if(A->width - homeblock == 1) {
+      const word mask = __M4RI_MIDDLE_BITMASK(A->ncols%m4ri_radix, r%m4ri_radix);
+
+      for(rci_t i=0; i<r; i++) {
+        word *a = A->rows[i];
+        word *t = T->rows[L[mzd_read_bits_int(A,i,r,k)]];
+        a[homeblock] = (a[homeblock] & ~mask) | ( (a[homeblock] ^ t[homeblock]) & (mask) );
+      }
+
+    } else {
+      const word mask_begin = __M4RI_LEFT_BITMASK(((r)%m4ri_radix));
+      const word mask_end = __M4RI_LEFT_BITMASK(A->ncols%m4ri_radix);
+
+      for(rci_t i=0; i<r; i++) {
+        word *a = A->rows[i];
+        word *t = T->rows[L[mzd_read_bits_int(A,i,r,k)]];
+
+        a[homeblock] = (a[homeblock] & mask_begin) | ( (a[homeblock] ^ t[homeblock]) & ~mask_begin);
+
+        for(j=homeblock+1; j<A->width-1; j++)
+          a[j] ^= t[j];
+
+        a[j] = ((a[j] ^ t[j]) & mask_end) | (a[j] & ~mask_end);
+      }
+    }
+    r += k;
+  }
+
+  mzd_free(T);
+  m4ri_mm_free(L);
+  __M4RI_DD_MZD(A);
+  return A;
 }
