@@ -64,6 +64,9 @@ int run(void *_p, unsigned long long *data, int *data_len) {
     if(strcmp(p->algorithm, "m4ri") == 0) {
       mzd_inv_upper_m4ri(A, 0);
       B = mzd_copy(NULL, A);
+    } else if (strcmp(p->algorithm, "mm") == 0) {
+      mzd_inv_upper(A);
+      B = mzd_copy(NULL, A);
     } else
       m4ri_die("unknown algorithm: '%s'",p->algorithm);
     break;
@@ -90,7 +93,7 @@ int main(int argc, char **argv) {
     printf("Parameters n,direction,alg expected.\n");
     printf(" n         -- integer > 0\n");
     printf(" direction -- lower triangular (-1), full (0) or upper triangular (1).\n");
-    printf(" algorithm -- 'm4ri'\n");
+    printf(" algorithm -- 'm4ri' or 'mm' (for direction 1)\n");
     printf("\n");
     bench_print_global_options(stderr);
     m4ri_die("");
