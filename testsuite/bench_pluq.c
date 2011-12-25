@@ -9,6 +9,7 @@ struct pluq_params {
   rci_t m;
   rci_t n;
   rci_t r;
+  char *what;
 };
 
 int run(void *_p, unsigned long long *data, int *data_len) {
@@ -19,7 +20,7 @@ int run(void *_p, unsigned long long *data, int *data_len) {
   mzd_t *U;
   mzd_t *L;
 
-  int halfrank = 1;
+  int halfrank = 0;
   if(halfrank) {
     U = mzd_init(p->m, p->n);
     L = mzd_init(p->m, p->m);
@@ -60,7 +61,12 @@ int run(void *_p, unsigned long long *data, int *data_len) {
 
   data[0] = walltime(0);
   data[1] = cpucycles();
-  p->r = mzd_pluq(A, P, Q, 0);
+  if(strcmp(p->what,"pluq"))
+    p->r = mzd_pluq(A, P, Q, 0);
+  else if (strcmp(p->what,"pls")) 
+    p->r = mzd_pls(A, P, Q, 0);
+  else
+    m4ri_die("Unknown task '%s'",p->what);
   data[0] = walltime(data[0]);
   data[1]= cpucycles() - data[1];
 
@@ -76,20 +82,32 @@ int run(void *_p, unsigned long long *data, int *data_len) {
 }
 
 int main(int argc, char **argv) {
-  global_options(&argc, &argv);
+  int opts = global_options(&argc, &argv);
 
-  if (argc != 3) {
-    m4ri_die("Parameters m, n expected.\n");
+  if (opts < 0) {
+    bench_print_global_options(stderr);
+    exit(-1);
+  }
+
+  if (argc != 4) {
+    printf("Parameters m,n,what expected.\n");
+    printf(" m    -- integer > 0\n");
+    printf(" n    -- integer > 0\n");
+    printf(" what -- PLUQ or PLE.\n");
+    printf("\n");
+    bench_print_global_options(stderr);
+    m4ri_die("");
   }
 
   struct pluq_params p;
   p.m = atoi(argv[1]);
   p.n = atoi(argv[2]);
+  p.what = argv[3];
 
   srandom(17);
   unsigned long long data[2];
   run_bench(run, (void*)&p, data, 2);
 
-  printf("m: %5d, n: %5d, r: %5d, cpu cycles: %12llu, wall time: %6.3lf\n", p.m, p.n, p.r, data[1], data[0] / 1000000.0);
+  printf("m: %5d, n: %5d, what: %s, r: %5d, cpu cycles: %12llu, wall time: %6.3lf\n", p.m, p.n, p.what, p.r, data[1], data[0] / 1000000.0);
 }
 
