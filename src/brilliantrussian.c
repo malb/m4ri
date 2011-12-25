@@ -29,6 +29,7 @@
 #include "xor.h"
 #include "grayflex.h"
 #include "echelonform.h"
+#include "pls_mmpf.h"
 
 /**
  * \brief Perform Gaussian reduction to reduced row echelon form on a
@@ -1450,9 +1451,9 @@ void _mzd_trsm_upper_left_even_m4r(mzd_t const *U, mzd_t *B, int k) {
   __M4RI_DD_MZD(B);
 }
 
-void mzd_make_table_trtri(mzd_t const *M, rci_t r, int k, mzd_t *T, rci_t *L) {
+void mzd_make_table_trtri(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L) {
   assert(!(T->flags & mzd_flag_multiple_blocks));
-  wi_t const blockoffset= r / m4ri_radix;
+  wi_t const blockoffset= c / m4ri_radix;
   int const twokay= __M4RI_TWOPOW(k);
   wi_t const wide = T->width - blockoffset;
   wi_t const count = (wide + 7) / 8;
@@ -1488,10 +1489,20 @@ void mzd_make_table_trtri(mzd_t const *M, rci_t r, int k, mzd_t *T, rci_t *L) {
   }
 
   for(int i=1; i<twokay; ++i)
-    mzd_xor_bits(T, i, r, k, (word)m4ri_codebook[k]->ord[i]);
+    mzd_xor_bits(T, i, c, k, (word)m4ri_codebook[k]->ord[i]);
 }
 
-mzd_t *mzd_inv_upper_m4ri(mzd_t *A, int k) {
+#define __M4RI_TRTRI_NTABLES 4
+
+static inline void _mzd_trtri_upper_submatrix(mzd_t *A, rci_t pivot_r, rci_t elim_r, const int k) {
+  for(rci_t i=pivot_r; i<pivot_r+k; i++)
+    for(rci_t j=elim_r; j<i; j++)
+      if(mzd_read_bit(A,j,i) && (i+1)<A->ncols )
+        mzd_row_add_offset(A, j, i, i+1);
+}
+
+
+mzd_t *mzd_trtri_upper_m4ri(mzd_t *A, int k) {
   assert(A->nrows == A->ncols && A->offset == 0);
 
   if (k == 0) {
@@ -1502,54 +1513,86 @@ mzd_t *mzd_inv_upper_m4ri(mzd_t *A, int k) {
       k -= 1;
   }
 
-  mzd_t *T = mzd_init(__M4RI_TWOPOW(k), A->ncols);
-  rci_t *L = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  const int kk = __M4RI_TRTRI_NTABLES*k;
+
+  mzd_t *T[__M4RI_TRTRI_NTABLES];
+  rci_t *L[__M4RI_TRTRI_NTABLES];
+  mzd_t *U[__M4RI_TRTRI_NTABLES];
+  for(int i=0; i<__M4RI_TRTRI_NTABLES; i++) {
+    T[i] = mzd_init(__M4RI_TWOPOW(k), A->ncols);
+    L[i] = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+    U[i] = mzd_init(k, A->ncols);
+  }
+
+  /** dummy offsets table for make_table_pls**/
+  rci_t id[m4ri_radix];
+  for(int i=0; i<m4ri_radix; i++) id[i] = i;
+
   rci_t r = 0;
-  rci_t j;
+  while(r+kk <= A->nrows) {
 
+    /***
+     * ----------------------------
+     * [  ....................... ]
+     * [  ... U00 U01 U02 U03 ... ]
+     * [  ...     U10 U12 U13 ... ]
+     * ---------------------------- r
+     * [  ...         U22 U23 ... ]
+     * [  ...             U33 ... ]
+     * ----------------------------
+     *
+     * Assume [ U00 U01 ] was already inverted and multiplied with [ U02 U03 ... ]
+     *        [     U10 ]                                          [ U12 U13 ... ]
+     *
+     * We then invert U22 and construct a table for [U22 U23 ... ], then we
+     * invert [U33] and multiply it with [U23]. Then we construct a table for [U23 ... ]
+     **/
+
+    _mzd_trtri_upper_submatrix(A, r, r, k);
+    _mzd_pls_to_u(U[0], A, r, r, k, id);
+    mzd_make_table_trtri(U[0], 0, r,   k, T[0], L[0]);
+
+    _mzd_trtri_upper_submatrix(A, r+k, r, k);
+    _mzd_pls_to_u(U[1], A, r+k, r+k, k, id);
+    mzd_make_table_trtri(U[1], 0, r+k, k, T[1], L[1]);
+
+    _mzd_trtri_upper_submatrix(A, r+2*k, r, k);
+    _mzd_pls_to_u(U[2], A, r+2*k, r+2*k, k, id);
+    mzd_make_table_trtri(U[2], 0, r+2*k, k, T[2], L[2]);
+
+    _mzd_trtri_upper_submatrix(A, r+3*k, r, k);
+    _mzd_pls_to_u(U[3], A, r+3*k, r+3*k, k, id);
+    mzd_make_table_trtri(U[3], 0, r+3*k, k, T[3], L[3]);
+
+    mzd_process_rows4_pls(A, 0, r, r,
+                          k, T[0], L[0],
+                          k, T[1], L[1],
+                          k, T[2], L[2],
+                          k, T[3], L[3]);
+    r += kk;
+  }
+
+  /** deal with the rest **/
   while(r < A->nrows) {
-    if (r+k >= A->nrows)
+    if (A->nrows - r < k)
       k = A->nrows - r;
-
     for(rci_t i=0; i<k; i++)
       for(rci_t j=0; j<i; j++)
         if(mzd_read_bit(A,r+j,r+i) && (r+i+1)<A->ncols )
           mzd_row_add_offset(A, r+j, r+i, r+i+1);
 
-    mzd_make_table_trtri(A, r, k, T, L);
+    _mzd_pls_to_u(U[0], A, r, r, k, id);
+    mzd_make_table_trtri(U[0], 0, r, k, T[0], L[0]);
 
-    const wi_t homeblock = r/m4ri_radix;
-
-    if(A->width - homeblock == 1) {
-      const word mask = __M4RI_MIDDLE_BITMASK(A->ncols%m4ri_radix, r%m4ri_radix);
-
-      for(rci_t i=0; i<r; i++) {
-        word *a = A->rows[i];
-        word *t = T->rows[L[mzd_read_bits_int(A,i,r,k)]];
-        a[homeblock] ^= t[homeblock] & mask;
-      }
-
-    } else {
-      const word mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix-r%m4ri_radix);
-      const word mask_end = __M4RI_LEFT_BITMASK(A->ncols%m4ri_radix);
-
-      for(rci_t i=0; i<r; i++) {
-        word *a = A->rows[i];
-        word *t = T->rows[L[mzd_read_bits_int(A,i,r,k)]];
-
-        a[homeblock] ^= t[homeblock] & mask_begin;
-
-        for(j=homeblock+1; j<A->width-1; j++)
-          a[j] ^= t[j];
-
-        a[A->width-1] ^= t[A->width-1] & mask_end;
-      }
-    }
+    mzd_process_rows(A, 0, r, r, k, T[0], L[0]);
     r += k;
   }
 
-  mzd_free(T);
-  m4ri_mm_free(L);
+  for(int i=0; i<__M4RI_TRTRI_NTABLES; i++) {
+    mzd_free(T[i]);
+    m4ri_mm_free(L[i]);
+    mzd_free(U[i]);
+  }
   __M4RI_DD_MZD(A);
   return A;
 }

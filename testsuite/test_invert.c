@@ -28,7 +28,7 @@ int invert_test(rci_t n, int k) {
   }
 
   mzd_t *B = mzd_copy(NULL, U);
-  mzd_inv_upper(B);
+  mzd_trtri_upper(B);
 
   mzd_t *I1 = mzd_mul(NULL, U, B, 0);
 

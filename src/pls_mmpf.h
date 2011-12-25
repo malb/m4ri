@@ -97,10 +97,27 @@ rci_t _mzd_pluq_mmpf(mzd_t *A, mzp_t *P, mzp_t *Q, int k);
  * \retval knar rank of the considered submatrix
  */
 
-int _mzd_pls_submatrix(mzd_t *A, 
-                       rci_t const start_row, rci_t const stop_row, 
-                       rci_t const start_col, int const k, 
+int _mzd_pls_submatrix(mzd_t *A,
+                       rci_t const start_row, rci_t const stop_row,
+                       rci_t const start_col, int const k,
                        mzp_t *P, mzp_t *Q, rci_t *pivots, rci_t *done, rci_t *done_row,
                        wi_t const splitblock);
+
+void mzd_process_rows2_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
+                           int const k0, mzd_t const *T0, rci_t const *E0,
+                           int const k1, mzd_t const *T1, rci_t const *E1);
+
+void mzd_process_rows3_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
+                           int const k0, mzd_t const *T0, rci_t const *E0,
+                           int const k1, mzd_t const *T1, rci_t const *E1,
+			   int const k2, mzd_t const *T2, rci_t const *E2);
+
+void mzd_process_rows4_pls(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
+                           int const k0, mzd_t const *T0, rci_t const *E0,
+                           int const k1, mzd_t const *T1, rci_t const *E1,
+                           int const k2, mzd_t const *T2, rci_t const *E2,
+                           int const k3, mzd_t const *T3, rci_t const *E3);
+
+mzd_t *_mzd_pls_to_u(mzd_t *U, mzd_t const *A, rci_t r, rci_t c, int k, rci_t *offsets);
 
 #endif // M4RI_PLS_MMPF_H

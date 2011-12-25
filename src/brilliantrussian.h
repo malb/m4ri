@@ -283,7 +283,7 @@ mzd_t *mzd_inv_m4ri(mzd_t *dst, const mzd_t* src, int k);
  * \return Inverse of A or throws an error
  */
 
-mzd_t *mzd_inv_upper_m4ri(mzd_t *A, int k);
+mzd_t *mzd_trtri_upper_m4ri(mzd_t *A, int k);
 
 /**
  * \brief Matrix multiplication using Konrod's method, i.e. compute C
