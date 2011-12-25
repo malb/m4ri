@@ -1,5 +1,5 @@
 /**
- * \file packedmatrix.h
+ * \file mzd.h
  * \brief Dense matrices over GF(2) represented as a bit field.
  *
  * \author Gregory Bard <bard@fordham.edu>
@@ -7,8 +7,8 @@
  * \author Carlo Wood <carlo@alinoe.com>
  */
 
-#ifndef M4RI_PACKEDMATRIX_H
-#define M4RI_PACKEDMATRIX_H
+#ifndef M4RI_MZD
+#define M4RI_MZD
 
 /*******************************************************************
 *
@@ -395,7 +395,7 @@ static inline void _mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb, w
   if ((rowa == rowb) || (startblock >= M->width))
     return;
 
-  /* This is the case since we're only called from _mzd_pls_mmpf,
+  /* This is the case since we're only called from _mzd_ple_mmpf,
    * which makes the same assumption. Therefore we don't need
    * to take a mask_begin into account. */
   assert(M->offset == 0);
@@ -1401,4 +1401,4 @@ static inline unsigned long long mzd_hash(mzd_t const *A) {
 }
 
 
-#endif // M4RI_PACKEDMATRIX_H
+#endif // M4RI_MZD

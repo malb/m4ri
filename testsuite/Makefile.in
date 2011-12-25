@@ -25,7 +25,7 @@ DEFINES =
 TOPSRCDIR = ..
 CFLAGS = -I$(TOPSRCDIR)/m4ri -D_XOPEN_SOURCE=600 @CFLAGS@ $(DEFINES) @OPENMP_CFLAGS@
 STAGEDIR := $(realpath -s $(TOPSRCDIR)/.libs)
-LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri 
+LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri
 PAPI_FLAGS = @PAPI_LDFLAGS@ @PAPI_LIBS@
 PAPI_CFLAGS = @PAPI_CFLAGS@
 DEBUG = -ggdb
@@ -33,8 +33,10 @@ DEBUG = -ggdb
 TEST_PRGS = \
 	test_elimination \
 	test_multiplication \
-	test_trsm test_pluq \
-	test_solve test_kernel \
+	test_trsm \
+	test_ple \
+	test_solve \
+	test_kernel \
 	test_random \
 	test_smallops \
 	test_transpose \
@@ -45,13 +47,13 @@ TEST_PRGS = \
 BENCH_PRGS = \
 	bench_elimination \
 	bench_multiplication \
-	bench_pluq \
+	bench_ple \
 	bench_trsm_lowerleft \
 	bench_trsm_upperleft \
 	bench_trsm_lowerright \
 	bench_trsm_upperright \
 	bench_elimination_sparse \
-	bench_packedmatrix \
+	bench_mzd \
 	bench_invert
 
 M4RI_HEADERS = \
@@ -59,17 +61,18 @@ M4RI_HEADERS = \
 	../src/m4ri.h \
 	../src/brilliantrussian.h \
         ../src/echelonform.h \
-        ../src/grayflex.h \
+        ../src/graycode.h \
         ../src/misc.h \
         ../src/mmc.h \
         ../src/parity.h \
-        ../src/pls.h \
+        ../src/ple.h \
+        ../src/ple_russian.h \
         ../src/solve.h \
         ../src/strassen.h \
-        ../src/trsm.h \
-        ../src/packedmatrix.h \
-        ../src/permutation.h \
-        ../src/pls_mmpf.h \
+        ../src/triangular.h \
+        ../src/triangular_russian.h \
+        ../src/mzd.h \
+        ../src/mzp.h \
         ../src/xor.h
 
 CPUCYCLES_DIR = ./cpucycles-20060326
@@ -99,7 +102,7 @@ cpucycles.h: cpucycles.o
 cpucycles.o:
 	(cd $(CPUCYCLES_DIR); sh do; cp cpucycles.o ..; cp cpucycles.h ..)
 
-testing.o: testing.c testing.h ../src/misc.h ../src/packedmatrix.h
+testing.o: testing.c testing.h ../src/misc.h ../src/mzd.h
 	$(CC) $(DEBUG) $(CFLAGS) -c testing.c $(LDFLAGS) -o $@
 
 benchmarking.o: benchmarking.c benchmarking.h ../src/config.h ../src/misc.h

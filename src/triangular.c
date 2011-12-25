@@ -21,11 +21,14 @@
 #include "config.h"
 #endif
 
-#include "trsm.h"
+#include <stdio.h>
+
+#include "triangular.h"
+#include "triangular_russian.h"
 #include "strassen.h"
-#include "packedmatrix.h"
+#include "mzd.h"
 #include "parity.h"
-#include "stdio.h"
+
 
 #define TRSM_THRESHOLD m4ri_radix
 
@@ -783,7 +786,7 @@ void _mzd_trsm_upper_left_even(mzd_t const *U, mzd_t *B, const int cutoff) {
       }
     }
   } else if(mb <= __M4RI_MUL_BLOCKSIZE) {
-    _mzd_trsm_upper_left_even_m4r(U, B, 0);
+    _mzd_trsm_upper_left_russian(U, B, 0);
   } else {
     rci_t const mb1 = (((mb-1) / m4ri_radix + 1) >> 1) * m4ri_radix;
 
@@ -812,7 +815,7 @@ void _mzd_trsm_upper_left_even(mzd_t const *U, mzd_t *B, const int cutoff) {
 
 mzd_t *mzd_trtri_upper(mzd_t *U) {
   if (U->nrows*U->ncols < __M4RI_CPU_L2_CACHE<<1) {
-    mzd_trtri_upper_m4ri(U,0);
+    mzd_trtri_upper_russian(U,0);
   } else {
     rci_t const n = U->nrows;
     rci_t const n2 = (((n - 1) / m4ri_radix + 1) >> 1) * m4ri_radix;

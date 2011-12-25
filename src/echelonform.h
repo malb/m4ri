@@ -28,10 +28,10 @@
 *
 ********************************************************************/
 
-#include "packedmatrix.h"
+#include "mzd.h"
 
 /**
- * Density at which we switch to PLS decomposition.
+ * Density at which we switch to PLE decomposition.
  */
 
 #define __M4RI_ECHELONFORM_CROSSOVER_DENSITY 0.15

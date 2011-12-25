@@ -21,8 +21,8 @@
 #include "config.h"
 #endif
 
-#include "permutation.h"
-#include "packedmatrix.h"
+#include "mzp.h"
+#include "mzd.h"
 
 mzp_t *mzp_init(rci_t length) {
   mzp_t *P = (mzp_t*)m4ri_mm_malloc(sizeof(mzp_t));

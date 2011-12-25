@@ -62,7 +62,7 @@ int run(void *_p, unsigned long long *data, int *data_len) {
     break;
   case 1:
     if(strcmp(p->algorithm, "m4ri") == 0) {
-      mzd_trtri_upper_m4ri(A, 0);
+      mzd_trtri_upper_russian(A, 0);
       B = mzd_copy(NULL, A);
     } else if (strcmp(p->algorithm, "mm") == 0) {
       mzd_trtri_upper(A);

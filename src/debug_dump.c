@@ -21,8 +21,8 @@
 #include "config.h"
 #endif
 
-#include "packedmatrix.h"
-#include "permutation.h"
+#include "mzd.h"
+#include "mzp.h"
 
 #if __M4RI_DEBUG_DUMP
 

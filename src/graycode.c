@@ -24,7 +24,7 @@
 
 #include <stdio.h>
 #include "misc.h"
-#include "grayflex.h"
+#include "graycode.h"
 
 code **m4ri_codebook = NULL;
 

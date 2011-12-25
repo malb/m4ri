@@ -23,9 +23,9 @@
 
 #include "solve.h"
 #include "strassen.h"
-#include "pls.h"
-#include "trsm.h"
-#include "permutation.h"
+#include "ple.h"
+#include "triangular.h"
+#include "mzp.h"
 
 int mzd_solve_left(mzd_t *A, mzd_t *B, int const cutoff, int const inconsistency_check) {    
   if(A->ncols > B->nrows)

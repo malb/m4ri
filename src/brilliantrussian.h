@@ -38,8 +38,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "packedmatrix.h"
-#include "permutation.h"
+#include "mzd.h"
+#include "mzp.h"
 
 /**
  * \brief Constructs all possible \f$2^k\f$ row combinations using the gray
@@ -273,19 +273,6 @@ rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r);
 mzd_t *mzd_inv_m4ri(mzd_t *dst, const mzd_t* src, int k);
 
 /**
- * \brief Invert the upper triangular matrix A using Konrod's method.
- *
- * \param A Matrix to be inverted (overwritten).
- * \param k Table size parameter, may be 0 for automatic choice.
- *
- * \wordoffset
- *
- * \return Inverse of A or throws an error
- */
-
-mzd_t *mzd_trtri_upper_m4ri(mzd_t *A, int k);
-
-/**
  * \brief Matrix multiplication using Konrod's method, i.e. compute C
  * such that C == AB. 
  * 
@@ -327,7 +314,7 @@ mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k);
  * \brief Matrix multiplication using Konrod's method, i.e. compute C such
  * that C == AB.
  * 
- * This is the actual implementation. 
+ * This is the actual implementation.
  * 
  * This function is described in Martin Albrecht, Gregory Bard and
  * William Hart; Efficient Multiplication of Dense Matrices over
@@ -356,6 +343,5 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
 
 #define __M4RI_M4RM_GRAY8
 
-void _mzd_trsm_upper_left_even_m4r(mzd_t const *U, mzd_t *B, int k);
 
 #endif // M4RI_BRILLIANTRUSSIAN_H

@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include "grayflex.h"
+#include "graycode.h"
 #include "misc.h"
 #include "mmc.h"
 

@@ -53,15 +53,16 @@
 extern "C" {
 #endif
 
-#include "permutation.h"
-#include "packedmatrix.h"
+#include "mzp.h"
+#include "mzd.h"
 #include "brilliantrussian.h"
 #include "strassen.h"
-#include "grayflex.h"
+#include "graycode.h"
 #include "parity.h"
-#include "trsm.h"
-#include "pls.h"
-#include "pls_mmpf.h"
+#include "triangular.h"
+#include "triangular_russian.h"
+#include "ple.h"
+#include "ple_russian.h"
 #include "solve.h"
 #include "echelonform.h"
 #include "io.h"

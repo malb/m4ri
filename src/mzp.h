@@ -1,5 +1,5 @@
 /**
- * \file permutation.h
+ * \file mzp.h
  *
  * \brief Permutation matrices.
  * 
@@ -25,10 +25,10 @@
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
 
-#ifndef M4RI_PERMUTATION_H
-#define M4RI_PERMUTATION_H
+#ifndef M4RI_MZP
+#define M4RI_MZP
 
-#include "packedmatrix.h"
+#include "mzd.h"
 
 /**
  * \brief Permutations.
@@ -204,7 +204,7 @@ void  mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t const *Q);
 void mzp_print(mzp_t const *P);
 
 /**
- * Compresses the matrix L in a step in blockwise-recursive PLS
+ * Compresses the matrix L in a step in blockwise-recursive PLE
  * decomposition.
  *
  * \param A Matrix.
@@ -215,4 +215,4 @@ void mzp_print(mzp_t const *P);
 
 void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2);
 
-#endif // M4RI_PERMUTATION_H
+#endif // M4RI_MZP

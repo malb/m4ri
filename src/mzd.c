@@ -29,7 +29,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "packedmatrix.h"
+#include "mzd.h"
 #include "parity.h"
 #include "mmc.h"
 

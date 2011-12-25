@@ -22,19 +22,19 @@
 #endif
 
 #include <stdio.h>
-#include "packedmatrix.h"
-#include "trsm.h"
+#include "mzd.h"
+#include "triangular.h"
 #include "parity.h"
-#include "pls_mmpf.h"
+#include "ple_russian.h"
 #include "strassen.h"
-#include "pls.h"
+#include "ple.h"
 
-rci_t mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
+rci_t mzd_ple(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
   if (P->length != A->nrows)
-    m4ri_die("mzd_pls: Permutation P length (%d) must match A nrows (%d)\n", P->length, A->nrows);
+    m4ri_die("mzd_ple: Permutation P length (%d) must match A nrows (%d)\n", P->length, A->nrows);
   if (Q->length != A->ncols)
-    m4ri_die("mzd_pls: Permutation Q length (%d) must match A ncols (%d)\n", Q->length, A->ncols);
-  return _mzd_pls(A, P, Q, cutoff);
+    m4ri_die("mzd_ple: Permutation Q length (%d) must match A ncols (%d)\n", Q->length, A->ncols);
+  return _mzd_ple(A, P, Q, cutoff);
 }
 
 
@@ -49,7 +49,7 @@ rci_t mzd_pluq (mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
 
 
 rci_t _mzd_pluq(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
-  rci_t r = _mzd_pls(A, P, Q, cutoff);
+  rci_t r = _mzd_ple(A, P, Q, cutoff);
   if(r && r < A->nrows) {
     mzd_t *A0 = mzd_init_window(A, 0, 0, r, A->ncols);
     mzd_apply_p_right_trans_tri(A0, Q);
@@ -60,7 +60,7 @@ rci_t _mzd_pluq(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
   return r;
 }
 
-rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
+rci_t _mzd_ple(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
   assert(A->offset == 0);
   rci_t ncols = A->ncols;
 
@@ -77,12 +77,12 @@ rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
   rci_t nrows = A->nrows;
 #endif
 
-  if (ncols <= m4ri_radix || A->width * A->nrows <= __M4RI_PLS_CUTOFF) {
+  if (ncols <= m4ri_radix || A->width * A->nrows <= __M4RI_PLE_CUTOFF) {
 /*   if(ncols <= __M4RI_PLUQ_CUTOFF) { */
     /* this improves data locality and runtime considerably */
     mzd_t *Abar = mzd_copy(NULL, A);				// FIXME: Why is A copied to Abar
-    rci_t r = _mzd_pls_mmpf(Abar, P, Q, 0);			// changed
-    //rci_t r = _mzd_pls_naive(Abar, P, Q);
+    rci_t r = _mzd_ple_russian(Abar, P, Q, 0);			// changed
+    //rci_t r = _mzd_ple_naive(Abar, P, Q);
     mzd_copy(A, Abar);						// and copied back to A? Can't we work on A directly?
     mzd_free(Abar);
     return r;
@@ -109,7 +109,7 @@ rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
 
     mzp_t *P1 = mzp_init_window(P, 0, nrows);
     mzp_t *Q1 = mzp_init_window(Q, 0, A0->ncols);
-    rci_t r1 = _mzd_pls(A0, P1, Q1, cutoff);
+    rci_t r1 = _mzd_ple(A0, P1, Q1, cutoff);
 
     /*           r1           n1
      *   ------------------------------------------
@@ -141,7 +141,7 @@ rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
     mzp_t *P2 = mzp_init_window(P, r1, nrows);
     mzp_t *Q2 = mzp_init_window(Q, n1, ncols);
 
-    rci_t r2 = _mzd_pls(A11, P2, Q2, cutoff);
+    rci_t r2 = _mzd_ple(A11, P2, Q2, cutoff);
 
     /*           n
      *   -------------------
@@ -237,7 +237,7 @@ rci_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
   return curr_pos;
 }
  
-rci_t _mzd_pls_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
+rci_t _mzd_ple_naive(mzd_t *A, mzp_t *P, mzp_t *Q)  {
   rci_t col_pos = 0;
   rci_t row_pos = 0;
   /* search for some pivot */

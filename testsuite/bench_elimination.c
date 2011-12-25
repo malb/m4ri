@@ -45,7 +45,7 @@ int run(void *_p, unsigned long long *data, int *data_len) {
   else if(strcmp(p->algorithm, "pluq") == 0)
     p->r = mzd_echelonize_pluq(A, 1);
   else if(strcmp(p->algorithm, "mmpf") == 0)
-    p->r = _mzd_pluq_mmpf(A, mzp_init(A->nrows), mzp_init(A->ncols), 0);
+    p->r = _mzd_pluq_russian(A, mzp_init(A->nrows), mzp_init(A->ncols), 0);
   else if(strcmp(p->algorithm, "naive") == 0)
     p->r = mzd_echelonize_naive(A, 1);
   data[1] = cpucycles() - data[1];

@@ -24,8 +24,8 @@
 
 #include "echelonform.h"
 #include "brilliantrussian.h"
-#include "pls.h"
-#include "trsm.h"
+#include "ple.h"
+#include "triangular.h"
 
 rci_t mzd_echelonize(mzd_t *A, int full) {
   return _mzd_echelonize_m4ri(A, full, 0, 1, __M4RI_ECHELONFORM_CROSSOVER_DENSITY);
@@ -62,7 +62,7 @@ rci_t mzd_echelonize_pluq(mzd_t *A, int full) {
     }
 
   } else {
-    r = mzd_pls(A, P, Q, 0);
+    r = mzd_ple(A, P, Q, 0);
     for(rci_t i = 0; i < r; ++i) {
       for(rci_t j = 0; j <= i; j += m4ri_radix) {
         int const length = MIN(m4ri_radix, i - j + 1);

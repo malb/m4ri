@@ -24,7 +24,7 @@
 #include "config.h"
 #endif
 
-#include "grayflex.h"
+#include "graycode.h"
 #include "strassen.h"
 #include "parity.h"
 #ifndef MIN

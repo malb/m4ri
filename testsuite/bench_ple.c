@@ -63,8 +63,8 @@ int run(void *_p, unsigned long long *data, int *data_len) {
   data[1] = cpucycles();
   if(strcmp(p->what,"pluq"))
     p->r = mzd_pluq(A, P, Q, 0);
-  else if (strcmp(p->what,"pls")) 
-    p->r = mzd_pls(A, P, Q, 0);
+  else if (strcmp(p->what,"ple")) 
+    p->r = mzd_ple(A, P, Q, 0);
   else
     m4ri_die("Unknown task '%s'",p->what);
   data[0] = walltime(data[0]);

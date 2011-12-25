@@ -2,7 +2,7 @@
 #define TESTING_H
 
 #include "misc.h"
-#include "packedmatrix.h"
+#include "mzd.h"
 
 mzd_t *mzd_init_test_matrix_random(rci_t M, rci_t N, rci_t m, rci_t n, rci_t offset, word pattern, mzd_t **A);
 void mzd_free_test_matrix_random(mzd_t *A, mzd_t *a);

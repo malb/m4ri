@@ -29,8 +29,8 @@
  *
  ********************************************************************/
 
-#include "permutation.h"
-#include "packedmatrix.h"
+#include "mzp.h"
+#include "mzd.h"
 
 /**
  * \brief Solves A X = B with A and B matrices. 

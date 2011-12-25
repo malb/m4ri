@@ -29,7 +29,7 @@
 ********************************************************************/
 
 #include "m4ri_config.h"
-#include "packedmatrix.h"
+#include "mzd.h"
 
 /**
  * \brief Print a matrix to stdout. 

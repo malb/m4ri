@@ -1,7 +1,7 @@
 /**
- * \file pls.h
+ * \file ple.h
  *
- * \brief PLS and PLUQ matrix decomposition routines.
+ * \brief PLE and PLUQ matrix decomposition routines.
  *
  * \author Clement Pernet <clement.pernet@gmail.com>
  * 
@@ -30,14 +30,14 @@
 *
 ********************************************************************/
 
-#include "packedmatrix.h"
-#include "permutation.h"
+#include "mzd.h"
+#include "mzp.h"
 
 /**
  * Crossover point for PLUQ factorization.
  */
 
-#define __M4RI_PLS_CUTOFF MIN(524288, __M4RI_CPU_L2_CACHE >> 3)
+#define __M4RI_PLE_CUTOFF MIN(524288, __M4RI_CPU_L2_CACHE >> 3)
 
 /**
  * \brief PLUQ matrix decomposition.
@@ -73,12 +73,12 @@ rci_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t *Q, const int cutoff);
 
 
 /**
- * \brief PLS matrix decomposition.
+ * \brief PLE matrix decomposition.
  *
- * Computes the PLS matrix decomposition using a block recursive
+ * Computes the PLE matrix decomposition using a block recursive
  * algorithm.
  *
- * Returns (P,L,S,Q) satisfying PLS = A where P is a permutation matrix
+ * Returns (P,L,S,Q) satisfying PLE = A where P is a permutation matrix
  * of dimension m x m, L is m x r unit lower triangular and S is an r
  * x n matrix which is upper triangular except that its columns are
  * permuted, that is S = UQ for U r x n upper triangular and Q is a n
@@ -91,21 +91,21 @@ rci_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t *Q, const int cutoff);
  * applications.
  *
  * This is the wrapper function including bounds checks. See
- * _mzd_pls() for implementation details.
+ * _mzd_ple() for implementation details.
  *
  * \param A Input m x n matrix
  * \param P Output row permutation of length m
  * \param Q Output column permutation matrix of length n
  * \param cutoff Minimal dimension for Strassen recursion.
  *
- * \sa _mzd_pls() _mzd_pluq() _mzd_pluq_mmpf() mzd_echelonize_pluq()
+ * \sa _mzd_ple() _mzd_pluq() _mzd_pluq_mmpf() mzd_echelonize_pluq()
  *
  * \wordoffset
  *
  * \return Rank of A.
  */
 
-rci_t mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, const int cutoff);
+rci_t mzd_ple(mzd_t *A, mzp_t *P, mzp_t *Q, const int cutoff);
 
 /**
  * \brief PLUQ matrix decomposition.
@@ -126,22 +126,22 @@ rci_t mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Q, const int cutoff);
 rci_t _mzd_pluq(mzd_t *A, mzp_t *P, mzp_t *Q, const int cutoff);
 
 /**
- * \brief PLS matrix decomposition.
+ * \brief PLE matrix decomposition.
  *
- * See mzd_pls() for details.
+ * See mzd_ple() for details.
  *
  * \param A Input matrix
  * \param P Output row mzp_t matrix
  * \param Qt Output column mzp_t matrix
  * \param cutoff Minimal dimension for Strassen recursion.
  *
- * \sa mzd_pls()
+ * \sa mzd_ple()
  *
  * \wordoffset
  * \return Rank of A.
  */
 
-rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Qt, const int cutoff);
+rci_t _mzd_ple(mzd_t *A, mzp_t *P, mzp_t *Qt, const int cutoff);
 
 /**
  * \brief PLUQ matrix decomposition (naive base case).
@@ -161,20 +161,20 @@ rci_t _mzd_pls(mzd_t *A, mzp_t *P, mzp_t *Qt, const int cutoff);
 rci_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q);
 
 /**
- * \brief PLS matrix decomposition (naive base case).
+ * \brief PLE matrix decomposition (naive base case).
  *
- * See mzd_pls() for details.
+ * See mzd_ple() for details.
  * 
  * \param A Input matrix
  * \param P Output row mzp_t matrix
  * \param Qt Output column mzp_t matrix
  *
- * \sa mzd_pls()
+ * \sa mzd_ple()
  *
  * \wordoffset
  * \return Rank of A.
  */
 
-rci_t _mzd_pls_naive(mzd_t *A, mzp_t *P, mzp_t *Qt);
+rci_t _mzd_ple_naive(mzd_t *A, mzp_t *P, mzp_t *Qt);
 
 #endif // M4RI_PLUQ_H

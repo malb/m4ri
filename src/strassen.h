@@ -33,7 +33,7 @@
 ********************************************************************/
 
 #include <math.h>
-#include "packedmatrix.h"
+#include "mzd.h"
 #include "brilliantrussian.h"
 
 /**

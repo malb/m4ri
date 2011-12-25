@@ -739,7 +739,7 @@ word bench_random_word() {
 }
 
 // Needed for mzd_t.
-#include "packedmatrix.h"
+#include "mzd.h"
 
 // The same as m4ri_randomize. Duplicated here because it's
 // not available in older revisions that we want to benchmark against.
