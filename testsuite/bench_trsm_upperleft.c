@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
   struct trsm_params p;
   p.m = atoi(argv[1]);
   p.n = atoi(argv[2]);
-  
+
   srandom(17);
   unsigned long long data[2];
   run_bench(run, (void*)&p, data, 2);
