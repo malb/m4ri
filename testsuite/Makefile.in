@@ -49,10 +49,6 @@ BENCH_PRGS = \
 	bench_multiplication \
 	bench_ple \
 	bench_trsm \
-	bench_trsm_lowerleft \
-	bench_trsm_upperleft \
-	bench_trsm_lowerright \
-	bench_trsm_upperright \
 	bench_elimination_sparse \
 	bench_mzd \
 	bench_invert
