@@ -16,9 +16,9 @@ struct trsm_params {
 mzd_t *mzd_random_lower(const rci_t n) {
   mzd_t *A = mzd_init(n,n);
   mzd_randomize(A);
-  mzd_t *L = mzd_extract_l(A);
   for(rci_t i=0; i<n; i++)
-    mzd_write_bit(L, i, i, 1);
+    mzd_write_bit(A, i, i, 1);
+  mzd_t *L = mzd_extract_l(NULL, A);
   mzd_free(A);
   return L;
 }
@@ -26,9 +26,9 @@ mzd_t *mzd_random_lower(const rci_t n) {
 mzd_t *mzd_random_upper(const rci_t n) {
   mzd_t *A = mzd_init(n,n);
   mzd_randomize(A);
-  mzd_t *U = mzd_extract_u(A);
   for(rci_t i=0; i<n; i++)
-    mzd_write_bit(U, i, i, 1);
+    mzd_write_bit(A, i, i, 1);
+  mzd_t *U = mzd_extract_u(NULL, A);
   mzd_free(A);
   return U;
 }

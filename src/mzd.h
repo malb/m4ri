@@ -679,6 +679,7 @@ static inline void mzd_and_bits(mzd_t const *M, rci_t const x, rci_t const y, in
  */
 
 static inline void mzd_clear_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n) {
+  assert(n>0 && n <= m4ri_radix);
   word values = m4ri_ffff >> (m4ri_radix - n);
   int const spot = (y + M->offset) % m4ri_radix;
   wi_t const block = (y + M->offset) / m4ri_radix;
@@ -1400,5 +1401,26 @@ static inline unsigned long long mzd_hash(mzd_t const *A) {
   return hash;
 }
 
+/**
+ * Return upper triangular submatrix of A
+ *
+ * \param U Output matrix, if NULL a new matrix will be returned
+ * \param A Source matrix
+ *
+ * \return U
+ */
+
+mzd_t *mzd_extract_u(mzd_t *U, mzd_t const *A);
+
+/**
+ * Return lower triangular submatrix of A
+ *
+ * \param L Output matrix, if NULL a new matrix will be returned
+ * \param A Source matrix
+ *
+ * \return L
+ */
+
+mzd_t *mzd_extract_l(mzd_t *L, mzd_t const *A);
 
 #endif // M4RI_MZD

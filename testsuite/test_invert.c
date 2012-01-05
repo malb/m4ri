@@ -75,7 +75,7 @@ int main() {
   int status = 0;
   srandom(17);
 
-  for(int k=0; k<7; k++) {
+  for(int k=0; k<5; k++) {
     status += invert_test(   1,k);
     status += invert_test(   2,k);
     status += invert_test(   3,k);
@@ -84,12 +84,11 @@ int main() {
     status += invert_test( 128,k);
     status += invert_test( 193,k);
     status += invert_test(1000,k);
+    status += invert_test(1024,k);
     status += invert_test(1025,k);
     status += invert_test(1290,k);
     status += invert_test(1710,k);
     status += invert_test(2048,k);
-    status += invert_test(4096,k);
-    status += invert_test(1024,k);
   }
   if (status == 0) {
     printf("All tests passed.\n");

@@ -18,14 +18,14 @@ mzd_t *mzd_init_test_matrix_random(rci_t M, rci_t N, rci_t m, rci_t n, rci_t off
 void mzd_free_test_matrix_random(mzd_t *A, mzd_t *a) {
   mzd_free(a);
   mzd_free(A);
-};
+}
 
 int mzd_check_pattern(mzd_t *A, rci_t m, rci_t n, rci_t offset, word pattern) {
 
   for(rci_t i=0; i<A->nrows; i++) {
     if (i<offset || i >= m+offset) {
 
-      for(rci_t j=0; j<A->width; j++) 
+      for(rci_t j=0; j<A->width; j++)
         if(A->rows[i][j] ^ pattern) {
           return 1;
         }
@@ -52,15 +52,15 @@ int mzd_check_pattern(mzd_t *A, rci_t m, rci_t n, rci_t offset, word pattern) {
         }
 
         if( (A->rows[i][(offset+n)/m4ri_radix] ^ pattern) & mask_end ) {
-          return 1;       
+          return 1;
         }
       }
-      
-      for(rci_t j=(offset+n)/m4ri_radix+1; j<A->width; j++) 
+
+      for(rci_t j=(offset+n)/m4ri_radix+1; j<A->width; j++)
         if(A->rows[i][j] ^ pattern) {
           return 1;
         }
-    } 
+    }
 
   }
   return 0;
