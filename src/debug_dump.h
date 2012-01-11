@@ -26,7 +26,8 @@
 *                  http://www.gnu.org/licenses/
 ******************************************************************************/
 
-#ifndef M4RI_DOXYGEN
+#ifndef M4RI_DEBUG_DUMP
+#define M4RI_DEBUG_DUMP
 
 static inline word calculate_hash(word const* rowptr, wi_t wide) {
   unsigned long long hash = 0;
@@ -72,4 +73,4 @@ extern void m4ri_dd_mzp(char const* function, char const* file, int line, struct
 
 #endif // __M4RI_DEBUG_DUMP
 
-#endif // M4RI_DOXYGEN
+#endif // M4RI_DEBUG_DUMP
