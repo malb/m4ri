@@ -1125,8 +1125,8 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
        *
        * To measure this run for example:
        *
-       * ./bench_packedmatrix -m 10 -x 10 -p PAPI_TOT_INS,PAPI_L1_TCM,PAPI_L2_TCM mzd_transpose 32000 32000
-       * ./bench_packedmatrix -m 10 -x 100 -p PAPI_TOT_INS,PAPI_L1_TCM,PAPI_L2_TCM mzd_transpose 128 10240
+       * ./bench_mzd -m 10 -x 10 -p PAPI_TOT_INS,PAPI_L1_TCM,PAPI_L2_TCM mzd_transpose 32000 32000
+       * ./bench_mzd -m 10 -x 100 -p PAPI_TOT_INS,PAPI_L1_TCM,PAPI_L2_TCM mzd_transpose 128 10240
        * etc (increase -x for smaller sizes to get better accuracy).
        *
        * --Carlo Wood
