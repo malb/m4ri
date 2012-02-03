@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#define __STDC_LIMIT_MACROS
 #include <stdint.h>
 
 /*
