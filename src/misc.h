@@ -362,7 +362,7 @@ static inline word m4ri_shrink_bits(word const from, rci_t* const Q, int const l
   case  0: to |= (from & (m4ri_one << (Q[ 0] - base))) >> (Q[ 0] -  0 - base);
     break;
   default:
-    exit(-1);
+    abort();
   }
   return to;
 }
@@ -405,7 +405,7 @@ static inline word m4ri_spread_bits(word const from, rci_t* const Q, int const l
   case  0: to |= (from & (m4ri_one << ( 0))) << (Q[ 0]- 0-base);
     break;
   default:
-    exit(-1);
+    abort();
   }
   return to;
 }
