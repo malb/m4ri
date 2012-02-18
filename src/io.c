@@ -172,14 +172,14 @@ mzd_t * mzd_from_png(const char *fn, int verbose) {
     }
     tmp = 0;
     switch((n/8 + ((n%8) ? 1 : 0))%8) {
-    case 7: tmp |= ((word)row[8*j+7])<<56;
-    case 6: tmp |= ((word)row[8*j+6])<<48; 
-    case 5: tmp |= ((word)row[8*j+5])<<40;
-    case 4: tmp |= ((word)row[8*j+4])<<32;
-    case 3: tmp |= ((word)row[8*j+3])<<24;
-    case 2: tmp |= ((word)row[8*j+2])<<16;
-    case 1: tmp |= ((word)row[8*j+1])<< 8;
-    case 0: tmp |= ((word)row[8*j+0])<< 0;
+    case 0: tmp |= ((word)row[8*j+7])<<56;
+    case 7: tmp |= ((word)row[8*j+6])<<48;
+    case 6: tmp |= ((word)row[8*j+5])<<40;
+    case 5: tmp |= ((word)row[8*j+4])<<32;
+    case 4: tmp |= ((word)row[8*j+3])<<24;
+    case 3: tmp |= ((word)row[8*j+2])<<16;
+    case 2: tmp |= ((word)row[8*j+1])<< 8;
+    case 1: tmp |= ((word)row[8*j+0])<< 0;
     };
     A->rows[i][j] |= (~tmp & bitmask_end);
   }

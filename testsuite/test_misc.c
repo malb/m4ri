@@ -48,6 +48,32 @@ int test_spread_and_shrink(const word to, const int length, ...) {
   return 0;
 }
 
+int test_png(rci_t m, rci_t n) {
+  int ret = 0;
+#if __M4RI_HAVE_LIBPNG
+  printf("png: m: %4d, n: %4d", m, n);
+
+  const char *fn = "test_misc__test_png.png";
+
+  mzd_t *A = mzd_init(m,n);
+  mzd_randomize(A);
+  mzd_to_png(A, fn, 0, NULL, 0);
+  mzd_t *B = mzd_from_png(fn, 0);
+
+  ret += mzd_cmp(A,B);
+
+  remove(fn);
+  mzd_free(B);
+  mzd_free(A);
+
+  if(ret==0) {
+    printf(" ... passed\n");
+  } else {
+    printf(" ... FAILED\n");
+  }
+#endif
+  return ret;
+}
 
 
 int main(int argc, char *argv[]) {
@@ -61,6 +87,16 @@ int main(int argc, char *argv[]) {
   status += test_spread_and_shrink( b(3)|b(2)|b(0), 3, 0,2,3);
   status += test_spread_and_shrink( b(4)|b(3)|b(1), 3, 1,3,4);
   status += test_spread_and_shrink( b(5)|b(3)|b(2), 3, 2,3,5);
+
+  status += test_png(1,1);
+  status += test_png(16,15);
+  status += test_png(32,32);
+  status += test_png(63,63);
+  status += test_png(64,64);
+  status += test_png(113,114);
+  status += test_png(125,102);
+  status += test_png(126,12);
+  status += test_png(128,200);
 
   if (!status) {
     printf("All tests passed.\n");

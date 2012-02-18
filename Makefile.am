@@ -52,7 +52,7 @@ pkgconfig_DATA = m4ri.pc
 libm4ri_la_LDFLAGS = -release 0.0.20111203 -no-undefined
 libm4ri_la_LIBADD = -lm $(LIBPNG_LIBADD)
 
-check_PROGRAMS=test_multiplication test_elimination test_trsm test_ple test_solve test_kernel test_random test_smallops test_transpose test_colswap test_invert
+check_PROGRAMS=test_multiplication test_elimination test_trsm test_ple test_solve test_kernel test_random test_smallops test_transpose test_colswap test_invert test_misc
 test_multiplication_SOURCES=testsuite/test_multiplication.c
 test_multiplication_LDFLAGS=-lm4ri -lm
 test_multiplication_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
@@ -97,4 +97,8 @@ test_invert_SOURCES=testsuite/test_invert.c
 test_invert_LDFLAGS=-lm4ri -lm
 test_invert_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
 
-TESTS = test_multiplication test_elimination test_trsm test_ple test_solve test_kernel test_random test_smallops test_transpose test_colswap test_invert
+test_misc_SOURCES=testsuite/test_misc.c
+test_misc_LDFLAGS=-lm4ri -lm
+test_misc_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
+
+TESTS = test_multiplication test_elimination test_trsm test_ple test_solve test_kernel test_random test_smallops test_transpose test_colswap test_invert test_misc
