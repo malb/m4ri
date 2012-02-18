@@ -113,6 +113,7 @@ mzd_t * mzd_from_png(const char *fn, int verbose) {
     retval = 3;
     goto from_png_close_fh;
   }
+  png_set_user_limits(png_ptr, 0x7fffffffL,  0x7fffffffL);
 
   png_infop info_ptr = png_create_info_struct(png_ptr);
 
@@ -209,8 +210,8 @@ int mzd_to_png(const mzd_t *A, const char *fn, int compression_level, const char
       printf("Could not open file '%s' for writing\n",fn);
     return 1;
   }
-    
-  png_structp png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+  png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
   if (!png_ptr) {
     if(verbose)
@@ -218,6 +219,7 @@ int mzd_to_png(const mzd_t *A, const char *fn, int compression_level, const char
     fclose(fh);
     return 3;
   }
+  png_set_user_limits(png_ptr, 0x7fffffffL,  0x7fffffffL);
 
   png_infop info_ptr = png_create_info_struct(png_ptr);
 
