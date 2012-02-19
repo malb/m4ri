@@ -366,7 +366,7 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 
   rci_t r;
 
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) // MAX((__M4RI_CPU_L1_CACHE >> 3) / wide,
 #endif
   for(r = startrow; r < stoprow; ++r) {
@@ -410,7 +410,7 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 
   rci_t r;
 
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r= startrow; r < stoprow; ++r) {
@@ -458,7 +458,7 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 
   rci_t r;
 
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r = startrow; r < stoprow; ++r) {
@@ -509,7 +509,7 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 
   rci_t r;
 
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r = startrow; r < stoprow; ++r) {
@@ -567,7 +567,7 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 
   rci_t r;
 
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r = startrow; r < stoprow; ++r) {

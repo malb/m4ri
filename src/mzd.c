@@ -92,7 +92,7 @@ static mzd_t* mzd_t_malloc() {
       if (error) cache = NULL;
 #else
       cache = (mzd_t_cache_t*)malloc(sizeof(mzd_t_cache_t));
-#endif  
+#endif
 
       if (cache == NULL)
 	m4ri_die("mzd_t_malloc: malloc returned NULL\n");

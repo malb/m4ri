@@ -44,7 +44,7 @@ void *m4ri_mmc_malloc(size_t size) {
 #ifdef __M4RI_ENABLE_MMC
   void *ret = NULL;
 
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
 #pragma omp critical
 {
 #endif
@@ -59,7 +59,7 @@ void *m4ri_mmc_malloc(size_t size) {
       }
     }
   }
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
  }
 #endif
 
@@ -86,7 +86,7 @@ void *m4ri_mmc_malloc(size_t size) {
 void m4ri_mmc_free(void *condemned, size_t size) {
 #ifdef __M4RI_ENABLE_MMC
 
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
 #pragma omp critical
 {
 #endif
@@ -109,7 +109,7 @@ void m4ri_mmc_free(void *condemned, size_t size) {
   }
  done:
   ;
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
  }
 #endif
 
@@ -130,7 +130,7 @@ void m4ri_mmc_free(void *condemned, size_t size) {
 void m4ri_mmc_cleanup(void) {
 #ifdef __M4RI_ENABLE_MMC
 
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
 #pragma omp critical
 {
 #endif
@@ -140,7 +140,7 @@ void m4ri_mmc_cleanup(void) {
       m4ri_mm_free(mm[i].data);
     mm[i].size = 0;
   }
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
  }
 #endif
 

@@ -31,7 +31,7 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #endif
 
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
 #include <omp.h>
 #endif
 
@@ -217,7 +217,7 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
     return C;
   }
 
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
   if (omp_get_num_threads() < omp_get_max_threads()) {
     mzd_set_ui(C, 0);
     return _mzd_addmul_mp_even(C, A, B, cutoff);
@@ -487,7 +487,7 @@ mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
 }
 
 
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
 mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
   /**
    * \todo make sure not to overwrite crap after ncols and before width * m4ri_radix
@@ -803,7 +803,7 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
     return C;
   }
 
-#ifdef HAVE_OPENMP
+#if __M4RI_HAVE_OPENMP
   if (omp_get_num_threads() < omp_get_max_threads()) {
     return _mzd_addmul_mp_even(C, A, B, cutoff);
   }
