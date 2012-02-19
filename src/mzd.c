@@ -1383,6 +1383,9 @@ mzd_t *mzd_transpose(mzd_t *DST, mzd_t const *A) {
     /** it seems this is taken care of in the subroutines, re-enable if running into problems **/
     //mzd_set_ui(DST,0);
   }
+
+  if(A->nrows == 0 || A->ncols == 0)
+    return mzd_copy(DST, A);
  
   if (__M4RI_LIKELY(!mzd_is_windowed(DST) && !mzd_is_windowed(A)))
     return _mzd_transpose(DST, A);
