@@ -154,7 +154,7 @@ mzd_t * mzd_from_png(const char *fn, int verbose) {
     
   A = mzd_init(m, n);
   const word bitmask_end = A->high_bitmask;
-  png_bytep row = calloc(sizeof(char),n/8+1);
+  png_bytep row = m4ri_mm_calloc(sizeof(char),n/8+1);
 
   word tmp;
   wi_t j;
@@ -185,7 +185,7 @@ mzd_t * mzd_from_png(const char *fn, int verbose) {
     A->rows[i][j] |= (~tmp & bitmask_end);
   }
 
-  free(row);
+  m4ri_mm_free(row);
   png_read_end(png_ptr, NULL);
 
  from_png_destroy_read_struct: 
@@ -272,7 +272,7 @@ int mzd_to_png(const mzd_t *A, const char *fn, int compression_level, const char
   png_set_packswap(png_ptr);
   png_set_invert_mono(png_ptr);
   
-  png_bytep row = calloc(sizeof(char),A->ncols/8+8);
+  png_bytep row = m4ri_mm_calloc(sizeof(char),A->ncols/8+8);
 
   wi_t j=0;
   word tmp = 0;
@@ -302,7 +302,7 @@ int mzd_to_png(const mzd_t *A, const char *fn, int compression_level, const char
     };
     png_write_row(png_ptr, row);
   }
-  free(row);
+  m4ri_mm_free(row);
 
   png_write_end(png_ptr, info_ptr);
   png_destroy_write_struct(&png_ptr, &info_ptr);

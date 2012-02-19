@@ -595,11 +595,6 @@ void m4ri_fini(void);
 
 static inline void *m4ri_mm_calloc(size_t count, size_t size) {
   void *newthing;
-#if __M4RI_HAVE_OPENMP
-#pragma omp critical
-{
-#endif
-
 #if __M4RI_USE_MM_MALLOC
   newthing = _mm_malloc(count * size, 16);
 #elif __M4RI_USE_POSIX_MEMALIGN
@@ -609,11 +604,7 @@ static inline void *m4ri_mm_calloc(size_t count, size_t size) {
   newthing = calloc(count, size);
 #endif
 
-#if __M4RI_HAVE_OPENMP
- }
-#endif
-
-  if (newthing==NULL) {
+  if (newthing == NULL) {
     m4ri_die("m4ri_mm_calloc: calloc returned NULL\n");
     return NULL; /* unreachable. */
   }
@@ -622,6 +613,40 @@ static inline void *m4ri_mm_calloc(size_t count, size_t size) {
   memset(b, 0, count * size);
 #endif
   return newthing;
+}
+
+/**
+ * \brief Aligned malloc wrapper.
+ *
+ * This function will attempt to align memory, but does not guarantee
+ * success in case neither _mm_malloc nor posix_memalign are available.
+ *
+ * \param size Size in bytes.
+ * \param alignment Alignment (16,64,...).
+ *
+ * \return pointer to allocated memory block.
+ *
+ * \todo Allow user to register malloc function.
+ */
+
+static inline void *m4ri_mm_malloc_aligned(size_t size, size_t alignment) {
+  void *newthing;
+
+#if __M4RI_USE_MM_MALLOC
+  newthing = _mm_malloc(size, alignment);
+#elif __M4RI_USE_POSIX_MEMALIGN
+  int error = posix_memalign(&newthing, alignment, size);
+  if (error)
+    newthing = NULL;
+#else
+  newthing = malloc(size);
+#endif
+
+ if (newthing==NULL && (size>0)) {
+   m4ri_die("m4ri_mm_malloc: malloc returned NULL\n");
+   return NULL; /* unreachable */
+ }
+ else return newthing;
 }
 
 /**
@@ -636,22 +661,14 @@ static inline void *m4ri_mm_calloc(size_t count, size_t size) {
 
 static inline void *m4ri_mm_malloc(size_t size) {
   void *newthing;
-#if __M4RI_HAVE_OPENMP
-#pragma omp critical
-{
-#endif
-
 #if __M4RI_USE_MM_MALLOC
-  newthing = _mm_malloc(size, 16);
+    newthing = _mm_malloc(size, 16);
 #elif __M4RI_USE_POSIX_MEMALIGN
-  int error = posix_memalign(&newthing, 16, size);
-  if (error) newthing = NULL;
+    int error = posix_memalign(&newthing, 16, size);
+    if (error) newthing = NULL;
 #else
-  newthing = malloc( size );
-#endif
-#if __M4RI_HAVE_OPENMP
- }
-#endif
+    newthing = malloc(size);
+#endif //__M4RI_USE_MM_MALLOC
   if (newthing==NULL && (size>0)) {
     m4ri_die("m4ri_mm_malloc: malloc returned NULL\n");
     return NULL; /* unreachable */
@@ -670,9 +687,9 @@ static inline void *m4ri_mm_malloc(size_t size) {
 /* void m4ri_mm_free(void *condemned, ...); */
 static inline void m4ri_mm_free(void *condemned, ...) { 
 #if __M4RI_USE_MM_MALLOC
-  _mm_free(condemned); 
+    _mm_free(condemned);
 #else
-  free(condemned);
+    free(condemned);
 #endif
 }
 

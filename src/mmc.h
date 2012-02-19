@@ -76,16 +76,10 @@ typedef struct _mm_block {
  * \return Pointer to allocated memory block.
  */
 static inline void *m4ri_mmc_calloc(size_t count, size_t size) {
-#ifdef __M4RI_ENABLE_MMC
   size_t total_size = count * size;
-  if (total_size <= __M4RI_MMC_THRESHOLD)
-  {
-    void *ret = m4ri_mmc_malloc(total_size);
-    memset((char*)ret, 0, total_size);
-    return ret;
-  }
-#endif
-  return m4ri_mm_calloc(count, size);
+  void *ret = m4ri_mmc_malloc(total_size);
+  memset((char*)ret, 0, total_size);
+  return ret;
 }
 
 #endif // M4RI_MMC_H
