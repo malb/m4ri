@@ -83,7 +83,7 @@ mzd_t * mzd_from_png(const char *fn, int verbose) {
   mzd_t *A = NULL;
   png_byte pngsig[PNGSIGSIZE];
 
-  FILE *fh = fopen(fn,"r");
+  FILE *fh = fopen(fn,"rb");
 
   if (!fh) {
     if (verbose)
