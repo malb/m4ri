@@ -217,12 +217,12 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
     return C;
   }
 
-#if __M4RI_HAVE_OPENMP
-  if (omp_get_num_threads() < omp_get_max_threads()) {
-    mzd_set_ui(C, 0);
-    return _mzd_addmul_mp_even(C, A, B, cutoff);
-  }
-#endif
+/* #if __M4RI_HAVE_OPENMP */
+/*   if (omp_get_num_threads() < omp_get_max_threads()) { */
+/*     mzd_set_ui(C, 0); */
+/*     return _mzd_addmul_mp_even(C, A, B, cutoff); */
+/*   } */
+/* #endif */
 
   /* adjust cutting numbers to work on words */
   {
@@ -803,11 +803,11 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
     return C;
   }
 
-#if __M4RI_HAVE_OPENMP
-  if (omp_get_num_threads() < omp_get_max_threads()) {
-    return _mzd_addmul_mp_even(C, A, B, cutoff);
-  }
-#endif
+/* #if __M4RI_HAVE_OPENMP */
+/*   if (omp_get_num_threads() < omp_get_max_threads()) { */
+/*     return _mzd_addmul_mp_even(C, A, B, cutoff); */
+/*   } */
+/* #endif */
 
   /* adjust cutting numbers to work on words */
   rci_t mmm, kkk, nnn;

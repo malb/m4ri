@@ -739,7 +739,7 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
       if(full)
         mzd_process_rows6(A, 0, r, c, kbar, T0, L0, T1, L1, T2, L2, T3, L3, T4, L4, T5, L5);
 
-  } else if (kbar > 4 * k) {
+    } else if (kbar > 4 * k) {
       int const rem = kbar % 5;
       int const ka = kbar / 5 + ((rem >= 4) ? 1 : 0);
       int const kb = kbar / 5 + ((rem >= 3) ? 1 : 0);
@@ -1151,6 +1151,9 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
       mzd_make_table( B, kk*i+k+k+k+k+k+k+k, 0, k, T8, L8);
 #endif
 
+#if __M4RI_HAVE_OPENMP
+#pragma omp parallel for private(x1,x2,x3,x4,x5,x6,x7,x8,c,t1,t2,t3,t4,t5,t6,t7,t8) schedule(static,16)
+#endif
       for(int babystep = 0; babystep < blocksize; ++babystep) {
         rci_t j = giantstep + babystep;
         x1 = L1[ mzd_read_bits_int(A, j, kk*i, k) ];
@@ -1189,6 +1192,10 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
     mzd_make_table( B, kk*i+k+k+k+k+k, 0, k, T6, L6);
     mzd_make_table( B, kk*i+k+k+k+k+k+k, 0, k, T7, L7);
     mzd_make_table( B, kk*i+k+k+k+k+k+k+k, 0, k, T8, L8);
+#endif
+
+#if __M4RI_HAVE_OPENMP
+#pragma omp parallel for private(x1,x2,x3,x4,x5,x6,x7,x8,c,t1,t2,t3,t4,t5,t6,t7,t8) schedule(static,16)
 #endif
     for(int babystep = 0; babystep < a_nr - giantstep; ++babystep) {
       rci_t j = giantstep + babystep;
