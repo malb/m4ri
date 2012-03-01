@@ -48,6 +48,7 @@ static inline void _kk_setup(int const kk, int const knar, int *k_, int *knar_, 
   int i,j, rem;
   int lb[4], ub[4];
 
+  assert(ntables <= 4 && ntables > 0);
   switch(ntables) {
   case 4:
     rem = kk % 4;
@@ -62,7 +63,7 @@ static inline void _kk_setup(int const kk, int const knar, int *k_, int *knar_, 
     knar_[3] = 0;
 
     lb[0] = 0;
-    lb[1] = lb[0]+k_[0];
+    lb[1] = k_[0];
     lb[2] = lb[1]+k_[1];
     lb[3] = lb[2]+k_[2];
 
@@ -85,7 +86,7 @@ static inline void _kk_setup(int const kk, int const knar, int *k_, int *knar_, 
     knar_[2] = 0;
 
     lb[0] = 0;
-    lb[1] = lb[0]+k_[0];
+    lb[1] = k_[0];
     lb[2] = lb[1]+k_[1];
 
     ub[0] =     0+k_[0];
@@ -103,7 +104,7 @@ static inline void _kk_setup(int const kk, int const knar, int *k_, int *knar_, 
     knar_[1] = 0;
 
     lb[0] = 0;
-    lb[1] = lb[0]+k_[0];
+    lb[1] = k_[0];
 
     ub[0] =     0+k_[0];
     ub[1] = ub[0]+k_[1];
@@ -115,12 +116,12 @@ static inline void _kk_setup(int const kk, int const knar, int *k_, int *knar_, 
     k_[0] = kk;
     knar_[0] = knar;
     lb[0] = 0;
-    ub[0] =     0+k_[0];
+    ub[0] = 0+k_[0];
 
     break;
 
   default:
-    break;
+    m4ri_die("Only 4 tables are supported at the moment.");
   }
 
   for(i=0; i<knar; i++) {

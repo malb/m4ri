@@ -1023,7 +1023,6 @@ static inline void _mzd_copy_transpose_le32xle32(word* RESTRICT dst, word const*
       t[j] = 0;
   }
   _mzd_transpose_Nxjx64(t, 16);
-  i = m;
   int one_more = (m & 1);
   word* RESTRICT wk = dst;
   if (m > 16) {

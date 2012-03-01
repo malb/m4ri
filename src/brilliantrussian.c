@@ -699,7 +699,6 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
           r += r2;
         }
         mzd_free(Abar);
-        c = ncols;
         break;
       }
     }
