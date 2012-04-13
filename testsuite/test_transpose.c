@@ -76,9 +76,34 @@ int main()
 {
   int status = 0;
 
-  for (int i = 0; i < 18; ++i) {
-      status += test_transpose(i);
-  }
+  int m=3;
+  int n=64;
+
+  mzd_t* A = mzd_init(m, n);
+  mzd_t* B = mzd_init(m, n);
+  mzd_randomize(A);
+  mzd_randomize(B);
+  mzd_t* C = mzd_add(NULL, A, B);
+  mzd_t* AT = mzd_init(n, m);
+  mzd_randomize(AT);
+  mzd_transpose(AT, A);
+  mzd_t* BT = mzd_transpose(NULL, B);
+  mzd_t* CT = mzd_add(NULL, AT, BT);
+  mzd_t* CTT = mzd_transpose(NULL, CT);
+  if (!mzd_equal(C, CTT))
+    ++status;
+  mzd_free(A);
+  mzd_free(B);
+  mzd_free(C);
+  mzd_free(AT);
+  mzd_free(BT);
+  mzd_free(CT);
+  mzd_free(CTT);
+
+
+  /* for (int i = 0; i < 18; ++i) { */
+  /*     status += test_transpose(i); */
+  /* } */
 
   if (!status) {
     printf("All tests passed.\n");

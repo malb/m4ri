@@ -76,18 +76,16 @@ static mzd_t* mzd_t_malloc() {
   return (mzd_t*)m4ri_mm_malloc(sizeof(mzd_t));
 #else
   mzd_t *ret = NULL;
-  mzd_t_cache_t *cache;
   int i=0;
 
   if (current_cache->used == (uint64_t)-1) {
-    cache = &mzd_cache;
+    mzd_t_cache_t *cache = &mzd_cache;
     while (cache && cache->used == (uint64_t)-1) {
       current_cache = cache;
       cache = cache->next;
       i++;
     }
     if (!cache && i< __M4RI_MZD_T_CACHE_MAX) {
-      /* We have reached the upper limit on the number of caches */
       cache = (mzd_t_cache_t*)m4ri_mm_malloc_aligned(sizeof(mzd_t_cache_t), 64);
       memset((char*)cache, 0, sizeof(mzd_t_cache_t));
 
@@ -95,11 +93,14 @@ static mzd_t* mzd_t_malloc() {
       current_cache->next = cache;
       current_cache = cache;
     } else if (!cache && i>= __M4RI_MZD_T_CACHE_MAX) {
+      /* We have reached the upper limit on the number of caches */
       ret = (mzd_t*)m4ri_mm_malloc(sizeof(mzd_t));
+    } else {
+      current_cache = cache;
     }
   }
   if (ret == NULL) {
-    int free_entry = log2_floor(~current_cache->used);
+    int free_entry =log2_floor(~current_cache->used);
     current_cache->used |= ((uint64_t)1 << free_entry);
     ret = &current_cache->mzd[free_entry];
   }
