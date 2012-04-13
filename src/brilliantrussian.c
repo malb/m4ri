@@ -987,17 +987,13 @@ mzd_t *mzd_inv_m4ri(mzd_t *dst, mzd_t const* src, int k) {
   } else {
     assert(dst->ncols == src->ncols && dst->nrows && src->ncols && dst->offset == 0);
   }
+
   mzd_set_ui(dst, 1);
 
   mzd_t *A = mzd_concat(NULL, src, dst);
-  rci_t r = mzd_echelonize_m4ri(A, TRUE, 0);
+  mzd_echelonize_m4ri(A, TRUE, 0);
 
-  if(r != src->nrows) {
-    mzd_free(A);
-    m4ri_die("mzd_inv_m4ri: input matrix does not have full rank.");
-  }
-
-  dst = mzd_submatrix(dst, A, 0, r, r, 2*r);
+  dst = mzd_submatrix(dst, A, 0, src->ncols, A->nrows, A->ncols);
   mzd_free(A);
   __M4RI_DD_MZD(dst);
   return dst;

@@ -267,7 +267,7 @@ rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r);
  *
  * \wordoffset
  *
- * \return Inverse of src or throws an error
+ * \return Inverse of src if src has full rank
  */
 
 mzd_t *mzd_inv_m4ri(mzd_t *dst, const mzd_t* src, int k);
