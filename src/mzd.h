@@ -1394,8 +1394,8 @@ rci_t mzd_first_zero_row(mzd_t const *A);
  * \param A Matrix
  */
 
-static inline unsigned long long mzd_hash(mzd_t const *A) {
-  unsigned long long hash = 0;
+static inline word mzd_hash(mzd_t const *A) {
+  word hash = 0;
   for (rci_t r = 0; r < A->nrows; ++r)
     hash ^= rotate_word(calculate_hash(A->rows[r], A->width), r % m4ri_radix);
   return hash;

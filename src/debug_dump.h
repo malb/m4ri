@@ -30,7 +30,7 @@
 #define M4RI_DEBUG_DUMP
 
 static inline word calculate_hash(word const* rowptr, wi_t wide) {
-  unsigned long long hash = 0;
+  word hash = 0;
   for (word const* ptr = rowptr; ptr < rowptr + wide; ++ptr)
     hash ^= *ptr;
   return hash;

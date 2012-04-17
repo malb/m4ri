@@ -111,7 +111,7 @@ void m4ri_dd_rci_array(char const* function, char const* file, int line, rci_t *
 {
   entry(function, file, line);
 #if !__M4RI_DD_QUIET
-  unsigned long long hash = 0;
+  word hash = 0;
   for (int i = 0; i < len; ++i)
     hash ^= rotate_word(rciptr[i], i % m4ri_radix);
   printf("rci array (size %d) hash: %llx\n", len, hash);
@@ -122,7 +122,7 @@ void m4ri_dd_rawrow(char const* function, char const* file, int line, word const
 {
   entry(function, file, line);
 #if !__M4RI_DD_QUIET
-  unsigned long long hash = calculate_hash(rowptr, wide);
+  word hash = calculate_hash(rowptr, wide);
   printf("raw row (%d words) hash: %llx\n", wide, hash);
 #endif
 }
@@ -132,7 +132,7 @@ void m4ri_dd_row(char const* function, char const* file, int line, mzd_t const* 
   entry(function, file, line);
   consistency_check_row(M, row);
 #if !__M4RI_DD_QUIET
-  unsigned long long hash = calculate_hash(M->rows[row], M->width);
+  word hash = calculate_hash(M->rows[row], M->width);
   printf("row %d hash: %llx\n", row, hash);
 #endif
 }
@@ -142,7 +142,7 @@ void m4ri_dd_mzd(char const* function, char const* file, int line, mzd_t const* 
   entry(function, file, line);
   consistency_check(M);
 #if !__M4RI_DD_QUIET
-  unsigned long long hash = 0;
+  word hash = 0;
   for (rci_t r = 0; r < M->nrows; ++r)
     hash ^= rotate_word(calculate_hash(M->rows[r], M->width), r % m4ri_radix);
   printf("mzd hash: %llx\n", hash);
@@ -153,7 +153,7 @@ void m4ri_dd_mzp(char const* function, char const* file, int line, mzp_t const* 
 {
   entry(function, file, line);
 #if !__M4RI_DD_QUIET
-  unsigned long long hash = 0;
+  word hash = 0;
   for (rci_t i = 0; i < P->length; ++i)
     hash ^= rotate_word(P->values[i], i % m4ri_radix);
   printf("mzp hash: %llx\n", hash);
