@@ -1108,19 +1108,16 @@ void mzd_combine(mzd_t *DST, rci_t const row3, wi_t const startblock3,
  *
  * \param C destination matrix
  * \param c_row destination row for matrix C
- * \param c_startblock starting block to work on in matrix C
  * \param A source matrix
  * \param a_row source row for matrix A
- * \param a_startblock starting block to work on in matrix A
  * \param B source matrix
  * \param b_row source row for matrix B
- * \param b_startblock starting block to work on in matrix B
  *
  */
 
-static inline void mzd_combine_weird(mzd_t *C,       rci_t const c_row, wi_t const c_startblock,
-                                     mzd_t const *A, rci_t const a_row, wi_t const a_startblock, 
-                                     mzd_t const *B, rci_t const b_row, wi_t const b_startblock) {
+static inline void mzd_combine_weird(mzd_t *C,       rci_t const c_row,
+                                     mzd_t const *A, rci_t const a_row,
+                                     mzd_t const *B, rci_t const b_row) {
   word tmp;
   rci_t i = 0;
 

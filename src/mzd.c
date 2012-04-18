@@ -1923,7 +1923,7 @@ mzd_t *_mzd_add(mzd_t *C, mzd_t const *A, mzd_t const *B) {
 
   if (C->offset | A->offset | B->offset) {
     for(rci_t i = 0; i < nrows; ++i) {
-      mzd_combine_weird(C,i,0, A,i,0, B,i,0);
+      mzd_combine_weird(C,i, A,i, B,i);
     }
     __M4RI_DD_MZD(C);
     return C;
@@ -2074,7 +2074,7 @@ void mzd_combine(mzd_t *C,       rci_t const c_row, wi_t const c_startblock,
    */
 
   if(C->offset | A->offset | B->offset) {
-    mzd_combine_weird(C, c_row, c_startblock, A, a_row, a_startblock, B, b_row, b_startblock);
+    mzd_combine_weird(C, c_row, A, a_row, B, b_row);
     return;
   }
 
