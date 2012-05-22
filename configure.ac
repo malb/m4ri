@@ -214,17 +214,17 @@ AC_MSG_CHECKING([whether to build with PNG support])
 AC_MSG_RESULT([${want_png}])
 
 if test "x${want_png}" = "xyes" ; then
-   PKG_CHECK_MODULES([PNG], [libpng14],
-      [have_libpng="yes"],
+   PKG_CHECK_MODULES([PNG], [libpng],
+      [have_libpng="yes"; LIBPNG_LIBADD="-lpng"],
       [
-       PKG_CHECK_MODULES([PNG], [libpng12],
-          [have_libpng="yes"],
+       PKG_CHECK_MODULES([PNG], [libpng14],
+          [have_libpng="yes"; LIBPNG_LIBADD="-lpng14"],
           [
-           PKG_CHECK_MODULES([PNG], [libpng10],
-              [have_libpng="yes"],
+           PKG_CHECK_MODULES([PNG], [libpng12],
+              [have_libpng="yes"; LIBPNG_LIBADD="-lpng12"],
               [
-               PKG_CHECK_MODULES([PNG], [libpng],
-                  [have_libpng="yes"],
+               PKG_CHECK_MODULES([PNG], [libpng10],
+                  [have_libpng="yes"; LIBPNG_LIBADD="-lpng10"],
                   [have_libpng="no"])
               ])
           ])
@@ -232,7 +232,7 @@ if test "x${want_png}" = "xyes" ; then
    if ! test "x${have_libpng}" = "xyes" ; then
       AC_CHECK_LIB([png],
          [png_create_write_struct],
-         [have_libpng="yes"],
+         [have_libpng="yes"; LIBPNG_LIBADD="-lpng"],
          [have_libpng="no"])
    fi
    if test "x${have_libpng}" = "xno" ; then
@@ -243,7 +243,6 @@ fi
 if test "x${have_libpng}" = "xyes" ; then
    M4RI_HAVE_LIBPNG=1
    AC_SUBST(M4RI_HAVE_LIBPNG)
-   LIBPNG_LIBADD="-lpng"
    AC_SUBST(LIBPNG_LIBADD)
 else
    M4RI_HAVE_LIBPNG=0
