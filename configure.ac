@@ -215,25 +215,25 @@ AC_MSG_RESULT([${want_png}])
 
 if test "x${want_png}" = "xyes" ; then
    PKG_CHECK_MODULES([PNG], [libpng],
-      [have_libpng="yes"; LIBPNG_LIBADD="-lpng"],
-      [
-       PKG_CHECK_MODULES([PNG], [libpng14],
-          [have_libpng="yes"; LIBPNG_LIBADD="-lpng14"],
-          [
-           PKG_CHECK_MODULES([PNG], [libpng12],
-              [have_libpng="yes"; LIBPNG_LIBADD="-lpng12"],
-              [
-               PKG_CHECK_MODULES([PNG], [libpng10],
-                  [have_libpng="yes"; LIBPNG_LIBADD="-lpng10"],
-                  [have_libpng="no"])
-              ])
-          ])
-      ])
+      [have_libpng="yes"; LIBPNG_LIBADD=`pkg-config --libs libpng`],
+      [have_libpng="no"])
    if ! test "x${have_libpng}" = "xyes" ; then
       AC_CHECK_LIB([png],
          [png_create_write_struct],
          [have_libpng="yes"; LIBPNG_LIBADD="-lpng"],
-         [have_libpng="no"])
+         [AC_CHECK_LIB([png14],
+            [png_create_write_struct],
+            [have_libpng="yes"; LIBPNG_LIBADD="-lpng14"],
+            [AC_CHECK_LIB([png12],
+               [png_create_write_struct],
+               [have_libpng="yes"; LIBPNG_LIBADD="-lpng12"],
+               [AC_CHECK_LIB([png10],
+                  [png_create_write_struct],
+                  [have_libpng="yes"; LIBPNG_LIBADD="-lpng10"],
+                  [have_libpng="no"])
+               ])
+            ])
+        ])
    fi
    if test "x${have_libpng}" = "xno" ; then
       AC_MSG_WARN([Can not find a usuable PNG library. Make sure that CPPFLAGS and LDFLAGS are correctly set.])
