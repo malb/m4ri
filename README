@@ -52,12 +52,6 @@ multi-core AMD CPUs than on multi-core Intel CPUs. This is because the
 later has a shared L2 cache which is already almost fully utilised in
 the single-core implementation.
 
-Overall, the speed-up is considerably but sublinear. See
-
-  http://m4ri.sagemath.org/performance.html
-
-for details.
-
 INSTALL
 =======
 
