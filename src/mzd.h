@@ -300,6 +300,31 @@ static inline wi_t mzd_rows_in_block(mzd_t const* M, int n) {
 }
 
 /**
+ * \brief Number of rows in this block including r
+ *
+ * \param M Matrix
+ * \param rci_t row
+ *
+ * \return the number of rows with index >= r in this block
+ */
+
+static inline wi_t mzd_remaining_rows_in_block(mzd_t const* M, rci_t r) {
+  const int n = mzd_row_to_block(M, r);
+  r = (r  - (n << M->blockrows_log));
+  if (__M4RI_UNLIKELY(M->flags & mzd_flag_multiple_blocks)) {
+    if (__M4RI_UNLIKELY(n == 0)) {
+      return (1 << M->blockrows_log) - M->row_offset - r;
+    } else {
+      int const last_block = mzd_row_to_block(M, M->nrows - 1);
+      if (n < last_block)
+	return (1 << M->blockrows_log) - r;
+      return M->nrows + M->row_offset - (n << M->blockrows_log) - r;
+    }
+  }
+  return n ? 0 : M->nrows - r;
+}
+
+/**
  * \brief Get pointer to first word of row.
  *
  * \param M Matrix
@@ -517,7 +542,8 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
   int block = mzd_row_to_block(M, start_row);
   int offset = max_bit - min_bit;
   word mask = m4ri_one << min_bit;
-  int count = MIN(mzd_rows_in_block(M, 0), count_remaining);
+  int count = MIN(mzd_remaining_rows_in_block(M, start_row), count_remaining);
+
   // Apparently we're calling with start_row == stop_row sometimes (seems a bug to me).
   if (count <= 0)
     return;
@@ -560,7 +586,8 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
 	*ptr ^= xor_v | (xor_v << offset);
 	ptr += rowstride;
       }
-      if ((count = MIN(mzd_rows_in_block(M, ++block), count_remaining)) <= 0)
+      block++;
+      if ((count = MIN(mzd_rows_in_block(M, block), count_remaining)) <= 0)
 	break;
       ptr = mzd_first_row_next_block(M, block);
     }
@@ -583,7 +610,8 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
 	min_ptr[max_offset] ^= xor_v << offset;
 	min_ptr += rowstride;
       }
-      if ((count = MIN(mzd_rows_in_block(M, ++block), count_remaining)) <= 0)
+      block++;
+      if ((count = MIN(mzd_rows_in_block(M,+block), count_remaining)) <= 0)
 	break;
       ptr = mzd_first_row_next_block(M, block);
       if (min_bit == a_bit)

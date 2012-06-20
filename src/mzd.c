@@ -213,7 +213,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
    .---------------------------------|----------------------------------------_.  <-- m->blocks[1].begin <-- windows.blocks[0].begin
    |  |                      ^   lowr|                                     |_^ |
    |  |    window->row_offset|       |            window->offset_vector _-^|   |
-   |  |                      v       v                               _-^   |   |                     
+   |  |                      v       v                               _-^   |   |
    |  |  .----------------------------------------------------------v<--.  |<--|---- m->rows[lowr]
    |  |  |window                                                    |    `-|---|---- window->rows[0]
    |  |  |                                                          |      |   |

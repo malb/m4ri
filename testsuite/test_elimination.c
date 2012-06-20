@@ -17,7 +17,6 @@ int elim_test_equality(rci_t nr, rci_t nc) {
   mzd_t *G = mzd_copy(NULL, A);
 
   /* M4RI k=auto */
-
   rci_t ra = mzd_echelonize_m4ri(A, 1, 0);
 
   /* M4RI k=8 */
