@@ -302,12 +302,12 @@ int main() {
 
   printf("\n");
 
-  status += test_trsm_upper_left(  63,  63,  0,  0,"     word boundaries, even");
-  status += test_trsm_upper_left(  64,  64,  0,  0,"     word boundaries, even");
-  status += test_trsm_upper_left(  65,  65,  0,  0,"     word boundaries, even");
-  status += test_trsm_upper_left(  53,  53, 10, 10,"   word boundaries, offset");
-  status += test_trsm_upper_left(  54,  54, 10, 10,"   word boundaries, offset");
-  status += test_trsm_upper_left(  55,  55, 10, 10,"   word boundaries, offset");
+  status += test_trsm_upper_left(  63,  63,  0,  0,"    word boundaries, even");
+  status += test_trsm_upper_left(  64,  64,  0,  0,"    word boundaries, even");
+  status += test_trsm_upper_left(  65,  65,  0,  0,"    word boundaries, even");
+  status += test_trsm_upper_left(  53,  53, 10, 10,"  word boundaries, offset");
+  status += test_trsm_upper_left(  54,  54, 10, 10,"  word boundaries, offset");
+  status += test_trsm_upper_left(  55,  55, 10, 10,"  word boundaries, offset");
   status += test_trsm_upper_left(  10,  20,  0,  0,"small  even, small B even");
   status += test_trsm_upper_left(  10,  80,  0,  0,"small  even, large B even");
   status += test_trsm_upper_left(  10,  20,  0, 15," small  even, small B odd");
@@ -317,7 +317,7 @@ int main() {
   status += test_trsm_upper_left(  10,  20, 15, 20,"  small  odd, small B odd");
   status += test_trsm_upper_left(  10,  80, 15, 20,"  small  odd, large B odd");
   status += test_trsm_upper_left(  70,  20,  0,  0,"large  even, small B even");
-  status += test_trsm_upper_left(  63,   1,  0,  0,"                          ");
+  status += test_trsm_upper_left(  63,   1,  0,  0,"                         ");
   status += test_trsm_upper_left(  70,  80,  0,  0,"large  even, large B even");
   status += test_trsm_upper_left(  70,  10,  0, 15," large  even, small B odd");
   status += test_trsm_upper_left(  70,  80,  0, 15," large  even, large B odd");
