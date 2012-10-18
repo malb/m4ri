@@ -46,157 +46,9 @@ static inline int CLOSER(rci_t a, int cutoff)
  */
 mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff);
 
-
-mzd_t *_mzd_mul_even_orig(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
-  rci_t a = A->nrows;
-  rci_t b = A->ncols;
-  rci_t c = B->ncols;
-
-  if(C->nrows == 0 || C->ncols == 0)
-    return C;
-
-  /* handle case first, where the input matrices are too small already */
-  if (CLOSER(A->nrows, cutoff) || CLOSER(A->ncols, cutoff) || CLOSER(B->ncols, cutoff)) {
-    /* we copy the matrix first since it is only constant memory
-       overhead and improves data locality, if you remove it make sure
-       there are no speed regressions */
-    /* C = _mzd_mul_m4rm(C, A, B, 0, TRUE); */
-    /* return C; */
-    mzd_t *Cbar = mzd_init(C->nrows, C->ncols);
-    Cbar = _mzd_mul_m4rm(Cbar, A, B, 0, FALSE);
-    mzd_copy(C, Cbar);
-    mzd_free(Cbar);
-    return C;
-  }
-
-  /* adjust cutting numbers to work on words */
-  rci_t mult = m4ri_radix;
-  rci_t width = MIN(MIN(a,b),c);
-  while (width > 2 * cutoff) {
-    width /= 2;
-    mult *= 2;
-  }
-  a -= a % mult;
-  b -= b % mult;
-  c -= c % mult;
-
-  rci_t anr = ((a / m4ri_radix) >> 1) * m4ri_radix;
-  rci_t anc = ((b / m4ri_radix) >> 1) * m4ri_radix;
-  rci_t bnr = anc;
-  rci_t bnc = ((c / m4ri_radix) >> 1) * m4ri_radix;
-
-  mzd_t const *A00 = mzd_init_window_const(A,   0,   0,   anr,   anc);
-  mzd_t const *A01 = mzd_init_window_const(A,   0, anc,   anr, 2*anc);
-  mzd_t const *A10 = mzd_init_window_const(A, anr,   0, 2*anr,   anc);
-  mzd_t const *A11 = mzd_init_window_const(A, anr, anc, 2*anr, 2*anc);
-
-  mzd_t const *B00 = mzd_init_window_const(B,   0,   0,   bnr,   bnc);
-  mzd_t const *B01 = mzd_init_window_const(B,   0, bnc,   bnr, 2*bnc);
-  mzd_t const *B10 = mzd_init_window_const(B, bnr,   0, 2*bnr,   bnc);
-  mzd_t const *B11 = mzd_init_window_const(B, bnr, bnc, 2*bnr, 2*bnc);
-
-  mzd_t *C00 = mzd_init_window(C,   0,   0,   anr,   bnc);
-  mzd_t *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc);
-  mzd_t *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
-  mzd_t *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
-  
-  /**
-   * \note See Jean-Guillaume Dumas, Clement Pernet, Wei Zhou; "Memory
-   * efficient scheduling of Strassen-Winograd's matrix multiplication
-   * algorithm"; http://arxiv.org/pdf/0707.2347v3 for reference on the
-   * used operation scheduling.
-   */
-
-  /* change this to mzd_init(anr, MAX(bnc,anc)) to fix the todo below */
-  mzd_t *X0 = mzd_init(anr, anc);
-  mzd_t *X1 = mzd_init(bnr, bnc);
-  
-  _mzd_add(X0, A00, A10);              /*1    X0 = A00 + A10 */
-  _mzd_add(X1, B11, B01);              /*2    X1 = B11 + B01 */
-  _mzd_mul_even_orig(C10, X0, X1, cutoff);  /*3   C10 = X0*X1 */
-
-  _mzd_add(X0, A10, A11);              /*4    X0 = A10 + A11 */
-  _mzd_add(X1, B01, B00);              /*5    X1 = B01 + B00 */
-  _mzd_mul_even_orig(C11, X0, X1, cutoff);  /*6   C11 = X0*X1 */
-
-  _mzd_add(X0, X0, A00);               /*7    X0 = X0 + A00 */
-  _mzd_add(X1, X1, B11);               /*8    X1 = B11 + X1 */
-  _mzd_mul_even_orig(C01, X0, X1, cutoff);  /*9   C01 = X0*X1 */
-
-  _mzd_add(X0, X0, A01);               /*10   X0 = A01 + X0 */
-  _mzd_mul_even_orig(C00, X0, B11, cutoff); /*11  C00 = X0*B11 */
-
-  /**
-   * \todo ideally we would use the same X0 throughout the function
-   * but some called function doesn't like that and we end up with a
-   * wrong result if we use virtual X0 matrices. Ideally, this should
-   * be fixed not worked around. The check whether the bug has been
-   * fixed, use only one X0 and check if mzd_mul(4096, 3528, 4096,
-   * 1024) still returns the correct answer.
-   */
-
-  mzd_free(X0);
-  X0 = mzd_mul(NULL, A00, B00, cutoff);/*12  X0 = A00*B00 */
-
-  _mzd_add(C01, X0, C01);              /*13  C01 =  X0 + C01 */
-  _mzd_add(C10, C01, C10);             /*14  C10 = C01 + C10 */
-  _mzd_add(C01, C01, C11);             /*15  C01 = C01 + C11 */
-  _mzd_add(C11, C10, C11);             /*16  C11 = C10 + C11 */
-  _mzd_add(C01, C01, C00);             /*17  C01 = C01 + C00 */
-  _mzd_add(X1, X1, B10);               /*18   X1 = X1 + B10 */
-  _mzd_mul_even_orig(C00, A11, X1, cutoff); /*19  C00 = A11*X1 */
-
-  _mzd_add(C10, C10, C00);             /*20  C10 = C10 + C00 */
-  _mzd_mul_even_orig(C00, A01, B10, cutoff);/*21  C00 = A01*B10 */
-
-  _mzd_add(C00, C00, X0);              /*22  C00 = X0 + C00 */
-
-  /* deal with rest */
-  if (B->ncols > 2 * bnc) {
-    mzd_t const *B_last_col = mzd_init_window_const(B, 0, 2*bnc, A->ncols, B->ncols); 
-    mzd_t *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
-    _mzd_mul_m4rm(C_last_col, A, B_last_col, 0, TRUE);
-    mzd_free_window((mzd_t*)B_last_col);
-    mzd_free_window(C_last_col);
-  }
-  if (A->nrows > 2 * anr) {
-    mzd_t const *A_last_row = mzd_init_window_const(A, 2*anr, 0, A->nrows, A->ncols);
-    mzd_t *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, C->ncols);
-    _mzd_mul_m4rm(C_last_row, A_last_row, B, 0, TRUE);
-    mzd_free_window((mzd_t*)A_last_row);
-    mzd_free_window(C_last_row);
-  }
-  if (A->ncols > 2 * anc) {
-    mzd_t const *A_last_col = mzd_init_window_const(A,     0, 2*anc, 2*anr, A->ncols);
-    mzd_t const *B_last_row = mzd_init_window_const(B, 2*bnr,     0, B->nrows, 2*bnc);
-    mzd_t *C_bulk = mzd_init_window(C, 0, 0, 2*anr, 2*bnc);
-    mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0);
-    mzd_free_window((mzd_t*)A_last_col);
-    mzd_free_window((mzd_t*)B_last_row);
-    mzd_free_window(C_bulk);
-  }
-
-  /* clean up */
-  mzd_free_window((mzd_t*)A00); mzd_free_window((mzd_t*)A01);
-  mzd_free_window((mzd_t*)A10); mzd_free_window((mzd_t*)A11);
-
-  mzd_free_window((mzd_t*)B00); mzd_free_window((mzd_t*)B01);
-  mzd_free_window((mzd_t*)B10); mzd_free_window((mzd_t*)B11);
-
-  mzd_free_window(C00); mzd_free_window(C01);
-  mzd_free_window(C10); mzd_free_window(C11);
-  
-  mzd_free(X0);
-  mzd_free(X1);
-
-  __M4RI_DD_MZD(C);
-  return C;
-}
-
-
 mzd_t *_mzd_mul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
   rci_t mmm, kkk, nnn;
-  
+
   if(C->nrows == 0 || C->ncols == 0)
     return C;
 
@@ -254,7 +106,7 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
     mzd_t *C12 = mzd_init_window(C,   0, nnn,   mmm, 2*nnn);
     mzd_t *C21 = mzd_init_window(C, mmm,   0, 2*mmm,   nnn);
     mzd_t *C22 = mzd_init_window(C, mmm, nnn, 2*mmm, 2*nnn);
-  
+
     /**
      * \note See Marco Bodrato; "A Strassen-like Matrix Multiplication
      * Suited for Squaring and Highest Power Computation";
@@ -324,7 +176,7 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
   if (n > nnn) {
     /*         |AA|   | B|   | C|
      * Compute |AA| x | B| = | C| */
-    mzd_t const *B_last_col = mzd_init_window_const(B, 0, nnn, k, n); 
+    mzd_t const *B_last_col = mzd_init_window_const(B, 0, nnn, k, n);
     mzd_t *C_last_col = mzd_init_window(C, 0, nnn, m, n);
     _mzd_mul_m4rm(C_last_col, A, B_last_col, 0, TRUE);
     mzd_free_window((mzd_t*)B_last_col);
@@ -361,7 +213,7 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
 
 mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
   rci_t m;
-  
+
   m = A->nrows;
   /* handle case first, where the input matrices are too small already */
   if (CLOSER(m, cutoff)) {
@@ -399,7 +251,7 @@ mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
     mzd_t *C12 = mzd_init_window(C,   0, mmm,   mmm, 2*mmm);
     mzd_t *C21 = mzd_init_window(C, mmm,   0, 2*mmm,   mmm);
     mzd_t *C22 = mzd_init_window(C, mmm, mmm, 2*mmm, 2*mmm);
-  
+
     /**
      * \note See Marco Bodrato; "A Strassen-like Matrix Multiplication
      * Suited for Squaring and Highest Power Computation";
@@ -540,7 +392,7 @@ mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff)
   mzd_t *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc);
   mzd_t *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
   mzd_t *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
-  
+
 #pragma omp parallel sections num_threads(4)
   {
 #pragma omp section
@@ -548,7 +400,7 @@ mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff)
       _mzd_addmul_even(C00, A00, B00, cutoff);
       _mzd_addmul_even(C00, A01, B10, cutoff);
     }
-#pragma omp section 
+#pragma omp section
     {
       _mzd_addmul_even(C01, A00, B01, cutoff);
       _mzd_addmul_even(C01, A01, B11, cutoff);
@@ -567,7 +419,7 @@ mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff)
 
   /* deal with rest */
   if (B->ncols > 2 * bnc) {
-    mzd_t const *B_last_col = mzd_init_window_const(B, 0, 2*bnc, A->ncols, B->ncols); 
+    mzd_t const *B_last_col = mzd_init_window_const(B, 0, 2*bnc, A->ncols, B->ncols);
     mzd_t *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
     mzd_addmul_m4rm(C_last_col, A, B_last_col, 0);
     mzd_free_window((mzd_t*)B_last_col);
@@ -601,7 +453,7 @@ mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff)
 
   mzd_free_window(C00); mzd_free_window(C01);
   mzd_free_window(C10); mzd_free_window(C11);
-  
+
   __M4RI_DD_MZD(C);
   return C;
 }
@@ -610,7 +462,7 @@ mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff)
 mzd_t *mzd_mul(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
   if(A->ncols != B->nrows)
     m4ri_die("mzd_mul: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
-  
+
   if (cutoff < 0)
     m4ri_die("mzd_mul: cutoff must be >= 0.\n");
 
@@ -637,146 +489,6 @@ mzd_t *mzd_mul(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
   }
 
   C = (A == B) ? _mzd_sqr_even(C, A, cutoff) : _mzd_mul_even(C, A, B, cutoff);
-  return C;
-}
-
-mzd_t *_mzd_addmul_even_orig(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
-  /**
-   * \todo make sure not to overwrite crap after ncols and before width * m4ri_radix
-   */
-  if(C->nrows == 0 || C->ncols == 0)
-    return C;
-
-  rci_t a = A->nrows;
-  rci_t b = A->ncols;
-  rci_t c = B->ncols;
-  /* handle case first, where the input matrices are too small already */
-  if (CLOSER(A->nrows, cutoff) || CLOSER(A->ncols, cutoff) || CLOSER(B->ncols, cutoff)) {
-    /* we copy the matrix first since it is only constant memory
-       overhead and improves data locality, if you remove it make sure
-       there are no speed regressions */
-    mzd_t *Cbar = mzd_copy(NULL, C);
-    mzd_addmul_m4rm(Cbar, A, B, 0);
-    mzd_copy(C, Cbar);
-    mzd_free(Cbar);
-    return C;
-  }
-
-  /* adjust cutting numbers to work on words */
-  {
-    rci_t mult = m4ri_radix;
-    rci_t width = MIN(MIN(a,b),c);
-    while (width > 2 * cutoff) {
-      width /= 2;
-      mult *= 2;
-    }
-    a -= a % mult;
-    b -= b % mult;
-    c -= c % mult;
-  }
-
-  rci_t anr = ((a/m4ri_radix) >> 1) * m4ri_radix;
-  rci_t anc = ((b/m4ri_radix) >> 1) * m4ri_radix;
-  rci_t bnr = anc;
-  rci_t bnc = ((c/m4ri_radix) >> 1) * m4ri_radix;
-
-  mzd_t const *A00 = mzd_init_window_const(A,   0,   0,   anr,   anc);
-  mzd_t const *A01 = mzd_init_window_const(A,   0, anc,   anr, 2*anc);
-  mzd_t const *A10 = mzd_init_window_const(A, anr,   0, 2*anr,   anc);
-  mzd_t const *A11 = mzd_init_window_const(A, anr, anc, 2*anr, 2*anc);
-
-  mzd_t const *B00 = mzd_init_window_const(B,   0,   0,   bnr,   bnc);
-  mzd_t const *B01 = mzd_init_window_const(B,   0, bnc,   bnr, 2*bnc);
-  mzd_t const *B10 = mzd_init_window_const(B, bnr,   0, 2*bnr,   bnc);
-  mzd_t const *B11 = mzd_init_window_const(B, bnr, bnc, 2*bnr, 2*bnc);
-
-  mzd_t *C00 = mzd_init_window(C,   0,   0,   anr,   bnc);
-  mzd_t *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc);
-  mzd_t *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
-  mzd_t *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
-
-  /**
-   * \note See Jean-Guillaume Dumas, Clement Pernet, Wei Zhou; "Memory
-   * efficient scheduling of Strassen-Winograd's matrix multiplication
-   * algorithm"; http://arxiv.org/pdf/0707.2347v3 for reference on the
-   * used operation scheduling.
-   */
-
-  mzd_t *X0 = mzd_init(anr, anc);
-  mzd_t *X1 = mzd_init(bnr, bnc);
-  mzd_t *X2 = mzd_init(anr, bnc);
-  
-  _mzd_add(X0, A10, A11);                       /* 1  S1 = A21 + A22        X1 */
-  _mzd_add(X1, B01, B00);                       /* 2  T1 = B12 - B11        X2 */
-  _mzd_mul_even_orig(X2, X0, X1, cutoff);       /* 3  P5 = S1 T1            X3 */
-  
-  _mzd_add(C11, X2, C11);                       /* 4  C22 = P5 + C22       C22 */
-  _mzd_add(C01, X2, C01);                       /* 5  C12 = P5 + C12       C12 */
-  _mzd_add(X0, X0, A00);                        /* 6  S2 = S1 - A11         X1 */
-  _mzd_add(X1, B11, X1);                        /* 7  T2 = B22 - T1         X2 */
-  _mzd_mul_even_orig(X2, A00, B00, cutoff);     /* 8  P1 = A11 B11          X3 */
-  
-  _mzd_add(C00, X2, C00);                       /* 9  C11 = P1 + C11       C11 */
-  _mzd_addmul_even_orig(X2, X0, X1, cutoff);    /* 10 U2 = S2 T2 + P1       X3 */
-
-  _mzd_addmul_even_orig(C00, A01, B10, cutoff); /* 11 U1 = A12 B21 + C11   C11 */
-  
-  _mzd_add(X0, A01, X0);                        /* 12 S4 = A12 - S2         X1 */
-  _mzd_add(X1, X1, B10);                        /* 13 T4 = T2 - B21         X2 */
-  _mzd_addmul_even_orig(C01, X0, B11, cutoff);  /* 14 C12 = S4 B22 + C12   C12 */
-  
-  _mzd_add(C01, X2, C01);                       /* 15 U5 = U2 + C12        C12 */
-  _mzd_addmul_even_orig(C10, A11, X1, cutoff);  /* 16 P4 = A22 T4 - C21    C21 */
-  
-  _mzd_add(X0, A00, A10);                       /* 17 S3 = A11 - A21        X1 */
-  _mzd_add(X1, B11, B01);                       /* 18 T3 = B22 - B12        X2 */
-  _mzd_addmul_even_orig(X2, X0, X1, cutoff);    /* 19 U3 = S3 T3 + U2       X3 */
-  
-  _mzd_add(C11, X2, C11);                       /* 20 U7 = U3 + C22        C22 */
-  _mzd_add(C10, X2, C10);                       /* 21 U6 = U3 - C21        C21 */
-
-  /* deal with rest */
-  if (B->ncols > 2 * bnc) {
-    mzd_t const *B_last_col = mzd_init_window_const(B, 0, 2*bnc, A->ncols, B->ncols); 
-    mzd_t *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
-    mzd_addmul_m4rm(C_last_col, A, B_last_col, 0);
-    mzd_free_window((mzd_t*)B_last_col);
-    mzd_free_window(C_last_col);
-  }
-  if (A->nrows > 2 * anr) {
-    mzd_t const *A_last_row = mzd_init_window_const(A, 2*anr, 0, A->nrows, A->ncols);
-    mzd_t const *B_bulk = mzd_init_window_const(B, 0, 0, B->nrows, 2*bnc);
-    mzd_t *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, 2*bnc);
-    mzd_addmul_m4rm(C_last_row, A_last_row, B_bulk, 0);
-    mzd_free_window((mzd_t*)A_last_row);
-    mzd_free_window((mzd_t*)B_bulk);
-    mzd_free_window(C_last_row);
-  }
-  if (A->ncols > 2 * anc) {
-    mzd_t const *A_last_col = mzd_init_window_const(A,     0, 2*anc, 2*anr, A->ncols);
-    mzd_t const *B_last_row = mzd_init_window_const(B, 2*bnr,     0, B->nrows, 2*bnc);
-    mzd_t *C_bulk = mzd_init_window(C, 0, 0, 2*anr, 2*bnc);
-    mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0);
-    mzd_free_window((mzd_t*)A_last_col);
-    mzd_free_window((mzd_t*)B_last_row);
-    mzd_free_window(C_bulk);
-  }
-
-  /* clean up */
-  mzd_free_window((mzd_t*)A00); mzd_free_window((mzd_t*)A01);
-  mzd_free_window((mzd_t*)A10); mzd_free_window((mzd_t*)A11);
-
-  mzd_free_window((mzd_t*)B00); mzd_free_window((mzd_t*)B01);
-  mzd_free_window((mzd_t*)B10); mzd_free_window((mzd_t*)B11);
-
-  mzd_free_window(C00); mzd_free_window(C01);
-  mzd_free_window(C10); mzd_free_window(C11);
-  
-  mzd_free(X0);
-  mzd_free(X1);
-  mzd_free(X2);
-
-  __M4RI_DD_MZD(C);
   return C;
 }
 
@@ -824,7 +536,7 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
     nnn = (((n - n % mult) / m4ri_radix) >> 1) * m4ri_radix;
   }
 
-  /*         |C |    |A |   |B | 
+  /*         |C |    |A |   |B |
    * Compute |  | += |  | x |  |  */
   {
     mzd_t const *A11 = mzd_init_window_const(A,   0,   0,   mmm,   kkk);
@@ -841,7 +553,7 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
     mzd_t *C12 = mzd_init_window(C,   0, nnn,   mmm, 2*nnn);
     mzd_t *C21 = mzd_init_window(C, mmm,   0, 2*mmm,   nnn);
     mzd_t *C22 = mzd_init_window(C, mmm, nnn, 2*mmm, 2*nnn);
-  
+
     /**
      * \note See Marco Bodrato; "A Strassen-like Matrix Multiplication
      * Suited for Squaring and Highest Power Computation";
@@ -900,7 +612,7 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
   if (n > nnn) {
     /*         | C|    |AA|   | B|
      * Compute | C| += |AA| x | B| */
-    mzd_t const *B_last_col = mzd_init_window_const(B, 0, nnn, k, n); 
+    mzd_t const *B_last_col = mzd_init_window_const(B, 0, nnn, k, n);
     mzd_t *C_last_col = mzd_init_window(C, 0, nnn, m, n);
     mzd_addmul_m4rm(C_last_col, A, B_last_col, 0);
     mzd_free_window((mzd_t*)B_last_col);
@@ -969,7 +681,7 @@ mzd_t *_mzd_addsqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
     mmm = (((m - m % mult) / m4ri_radix) >> 1) * m4ri_radix;
   }
 
-  /*         |C |    |A |   |B | 
+  /*         |C |    |A |   |B |
    * Compute |  | += |  | x |  |  */
   {
     mzd_t const *A11 = mzd_init_window_const(A,   0,   0,   mmm,   mmm);
@@ -981,7 +693,7 @@ mzd_t *_mzd_addsqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
     mzd_t *C12 = mzd_init_window(C,   0, mmm,   mmm, 2*mmm);
     mzd_t *C21 = mzd_init_window(C, mmm,   0, 2*mmm,   mmm);
     mzd_t *C22 = mzd_init_window(C, mmm, mmm, 2*mmm, 2*mmm);
-  
+
     /**
      * \note See Marco Bodrato; "A Strassen-like Matrix Multiplication
      * Suited for Squaring and Highest Power Computation"; on-line v.
@@ -1032,7 +744,7 @@ mzd_t *_mzd_addsqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
     /*         | C|    |AA|   | B|
      * Compute | C| += |AA| x | B| */
     {
-      mzd_t const *A_last_col = mzd_init_window_const(A, 0, mmm, m, m); 
+      mzd_t const *A_last_col = mzd_init_window_const(A, 0, mmm, m, m);
       mzd_t *C_last_col = mzd_init_window(C, 0, mmm, m, m);
       mzd_addmul_m4rm(C_last_col, A, A_last_col, 0);
       mzd_free_window((mzd_t*)A_last_col);
@@ -1070,7 +782,7 @@ mzd_t *_mzd_addmul(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
   /**
    * Assumes that B and C are aligned in the same manner (as in a Schur complement)
    */
-  
+
   if (!A->offset){
     if (!B->offset) /* A even, B even */
       return (A == B) ? _mzd_addsqr_even(C, A, cutoff) : _mzd_addmul_even(C, A, B, cutoff);
@@ -1123,7 +835,7 @@ mzd_t *_mzd_addmul(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
       mzd_t const *B11 = mzd_init_window_const (B, anc, bnc, B->nrows, B->ncols);
       mzd_t *C0 = mzd_init_window (C, 0, 0, C->nrows, bnc);
       mzd_t *C1 = mzd_init_window (C, 0, bnc, C->nrows, C->ncols);
-      
+
       _mzd_addmul_weird_weird (C0, A0, B00);
       _mzd_addmul_even_weird  (C0,  A1, B10, cutoff);
       _mzd_addmul_weird_even  (C1,  A0, B01, cutoff);
@@ -1243,7 +955,7 @@ mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t const *A, mzd_t const *B, int cut
 
 mzd_t *_mzd_addmul_weird_weird (mzd_t *C, mzd_t const *A, mzd_t const *B) {
   mzd_t *BT = mzd_init( B->ncols, B->nrows );
-   
+
   for (rci_t i = 0; i < B->ncols; ++i) {
     word *dstp = BT->rows[i];
     wi_t const ii = (i + B->offset) / m4ri_radix;
@@ -1262,7 +974,7 @@ mzd_t *_mzd_addmul_weird_weird (mzd_t *C, mzd_t const *A, mzd_t const *B) {
       --k;
     }
   }
-  
+
   assert(C->offset + C->ncols - 1 < 64);
   word parity[64];
   memset(parity, 0, sizeof(parity));
@@ -1288,14 +1000,14 @@ mzd_t *_mzd_addmul_weird_weird (mzd_t *C, mzd_t const *A, mzd_t const *B) {
 mzd_t *mzd_addmul(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
   if(A->ncols != B->nrows)
     m4ri_die("mzd_addmul: A ncols (%d) need to match B nrows (%d).\n", A->ncols, B->nrows);
-  
+
   if (cutoff < 0)
     m4ri_die("mzd_addmul: cutoff must be >= 0.\n");
 
   if(cutoff == 0) {
     cutoff = __M4RI_STRASSEN_MUL_CUTOFF;
   }
-  
+
   cutoff = cutoff / m4ri_radix * m4ri_radix;
   if (cutoff < m4ri_radix) {
     cutoff = m4ri_radix;
