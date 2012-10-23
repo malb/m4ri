@@ -355,7 +355,9 @@ void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, i
   __M4RI_DD_MZD(M);
 }
 
-void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k, mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1) {
+void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
+                       mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1) {
+  assert(k <= m4ri_radix);
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
@@ -366,12 +368,16 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 
   rci_t r;
 
+  word const ka_bm = __M4RI_LEFT_BITMASK(ka);
+  word const kb_bm = __M4RI_LEFT_BITMASK(kb);
+
 #if __M4RI_HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) // MAX((__M4RI_CPU_L1_CACHE >> 3) / wide,
 #endif
   for(r = startrow; r < stoprow; ++r) {
-    rci_t const x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
-    rci_t const x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
+    word bits = mzd_read_bits(M, r, startcol, k);
+    rci_t const x0 = L0[ bits & ka_bm ]; bits>>=ka;
+    rci_t const x1 = L1[ bits & kb_bm ];
     if((x0 | x1) == 0)	// x0 == 0 && x1 == 0
       continue;
     word *m0 = M->rows[r] + blocknum;
@@ -397,6 +403,7 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 
 void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
                        mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1, mzd_t const *T2, rci_t const *L2) {
+  assert(k <= m4ri_radix);
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
@@ -410,13 +417,18 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 
   rci_t r;
 
+  word const ka_bm = __M4RI_LEFT_BITMASK(ka);
+  word const kb_bm = __M4RI_LEFT_BITMASK(kb);
+  word const kc_bm = __M4RI_LEFT_BITMASK(kc);
+
 #if __M4RI_HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r= startrow; r < stoprow; ++r) {
-    rci_t const x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
-    rci_t const x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
-    rci_t const x2 = L2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc)];
+    word bits = mzd_read_bits(M, r, startcol, k);
+    rci_t const x0 = L0[ bits & ka_bm ]; bits>>=ka;
+    rci_t const x1 = L1[ bits & kb_bm ]; bits>>=kb;
+    rci_t const x2 = L2[ bits & kc_bm ];
     if((x0 | x1 | x2) == 0) // x0 == 0 && x1 == 0 && x2 == 0
       continue;
 
@@ -443,7 +455,9 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 }
 
 void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
-                       mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1, mzd_t const *T2, rci_t const *L2, mzd_t const *T3, rci_t const *L3) {
+                       mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1, mzd_t const *T2, rci_t const *L2, 
+                       mzd_t const *T3, rci_t const *L3) {
+  assert(k <= m4ri_radix);
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
@@ -458,14 +472,20 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 
   rci_t r;
 
+  word const ka_bm = __M4RI_LEFT_BITMASK(ka);
+  word const kb_bm = __M4RI_LEFT_BITMASK(kb);
+  word const kc_bm = __M4RI_LEFT_BITMASK(kc);
+  word const kd_bm = __M4RI_LEFT_BITMASK(kd);
+
 #if __M4RI_HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r = startrow; r < stoprow; ++r) {
-    rci_t const x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
-    rci_t const x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
-    rci_t const x2 = L2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc)];
-    rci_t const x3 = L3[ mzd_read_bits_int(M, r, startcol+ka+kb+kc, kd)];
+    word bits = mzd_read_bits(M, r, startcol, k);
+    rci_t const x0 = L0[ bits & ka_bm ]; bits>>=ka;
+    rci_t const x1 = L1[ bits & kb_bm ]; bits>>=kb;
+    rci_t const x2 = L2[ bits & kc_bm ]; bits>>=kc;
+    rci_t const x3 = L3[ bits & kd_bm ];
     if(((x0 | x1) | (x2 | x3)) == 0) // x0 == 0 && x1 == 0 && x2 == 0 && x3 == 0
       continue;
 
@@ -495,6 +515,7 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int k,
                        mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1, mzd_t const *T2, rci_t const *L2,
 		       mzd_t const *T3, rci_t const *L3, mzd_t const *T4, rci_t const *L4) {
+  assert(k <= m4ri_radix);
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
@@ -509,16 +530,22 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 
   rci_t r;
 
+  word const ka_bm = __M4RI_LEFT_BITMASK(ka);
+  word const kb_bm = __M4RI_LEFT_BITMASK(kb);
+  word const kc_bm = __M4RI_LEFT_BITMASK(kc);
+  word const kd_bm = __M4RI_LEFT_BITMASK(kd);
+  word const ke_bm = __M4RI_LEFT_BITMASK(ke);
+
 #if __M4RI_HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r = startrow; r < stoprow; ++r) {
-
-    rci_t const x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
-    rci_t const x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
-    rci_t const x2 = L2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc)];
-    rci_t const x3 = L3[ mzd_read_bits_int(M, r, startcol+ka+kb+kc, kd)];
-    rci_t const x4 = L4[ mzd_read_bits_int(M, r, startcol+ka+kb+kc+kd, ke)];
+    word bits = mzd_read_bits(M, r, startcol, k);
+    rci_t const x0 = L0[ bits & ka_bm ]; bits>>=ka;
+    rci_t const x1 = L1[ bits & kb_bm ]; bits>>=kb;
+    rci_t const x2 = L2[ bits & kc_bm ]; bits>>=kc;
+    rci_t const x3 = L3[ bits & kd_bm ]; bits>>=kd;
+    rci_t const x4 = L4[ bits & ke_bm ];
 
     if(((x0 | x1 | x2) | (x3 | x4)) == 0) // x0 == 0 && x1 == 0 && x2 == 0 && x3 == 0 && x4 == 0
       continue;
@@ -551,6 +578,7 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
                        mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1, mzd_t const *T2,
 		       rci_t const *L2, mzd_t const *T3, rci_t const *L3, mzd_t const *T4, rci_t const *L4,
 		       mzd_t const *T5, rci_t const *L5) {
+  assert(k <= m4ri_radix);
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
   wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
@@ -567,16 +595,24 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
 
   rci_t r;
 
+  word const ka_bm = __M4RI_LEFT_BITMASK(ka);
+  word const kb_bm = __M4RI_LEFT_BITMASK(kb);
+  word const kc_bm = __M4RI_LEFT_BITMASK(kc);
+  word const kd_bm = __M4RI_LEFT_BITMASK(kd);
+  word const ke_bm = __M4RI_LEFT_BITMASK(ke);
+  word const kf_bm = __M4RI_LEFT_BITMASK(kf);
+
 #if __M4RI_HAVE_OPENMP
 #pragma omp parallel for private(r) shared(startrow, stoprow) schedule(static,512) //if(stoprow-startrow > 128)
 #endif
   for(r = startrow; r < stoprow; ++r) {
-    rci_t const x0 = L0[ mzd_read_bits_int(M, r, startcol, ka)];
-    rci_t const x1 = L1[ mzd_read_bits_int(M, r, startcol+ka, kb)];
-    rci_t const x2 = L2[ mzd_read_bits_int(M, r, startcol+ka+kb, kc)];
-    rci_t const x3 = L3[ mzd_read_bits_int(M, r, startcol+ka+kb+kc, kd)];
-    rci_t const x4 = L4[ mzd_read_bits_int(M, r, startcol+ka+kb+kc+kd, ke)];
-    rci_t const x5 = L5[ mzd_read_bits_int(M, r, startcol+ka+kb+kc+kd+ke, kf)];
+    word bits = mzd_read_bits(M, r, startcol, k);
+    rci_t const x0 = L0[ bits & ka_bm ]; bits>>=ka;
+    rci_t const x1 = L1[ bits & kb_bm ]; bits>>=kb;
+    rci_t const x2 = L2[ bits & kc_bm ]; bits>>=kc;
+    rci_t const x3 = L3[ bits & kd_bm ]; bits>>=kd;
+    rci_t const x4 = L4[ bits & ke_bm ]; bits>>=ke;
+    rci_t const x5 = L5[ bits & kf_bm ];
 
     /* Waste three clocks on OR-ing (modern CPU can do three in
      * parallel) to avoid possible multiple conditional jumps. */
