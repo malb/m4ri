@@ -860,16 +860,6 @@ void print_complexity_human(struct test_params *p, char const* cp)
     printf("^%d", power);
 }
 
-void print_wall_time(double seconds)
-{
-  if (seconds >= 0.01)
-    printf("wall time: %f s", seconds);
-  else if (seconds >= 0.00001)
-    printf("wall time: %f ms", 1000.0 * seconds);
-  else
-    printf("wall time: %f us", 1000000.0 * seconds);
-}
-
 struct function_st {
   char const* funcname;
   run_type run_func;

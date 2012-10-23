@@ -33,4 +33,6 @@ extern int papi_array_len;
 char* papi_event_name(int event);
 #endif
 
+void print_wall_time(double seconds);
+
 #endif //BENCHMARKETING_H

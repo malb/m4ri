@@ -828,3 +828,12 @@ uint64_t bench_random()
   }
 }
 
+
+void print_wall_time(double seconds) {
+  if (seconds >= 0.01)
+    printf("wall time: %10.5f s", seconds);
+  else if (seconds >= 0.00001)
+    printf("wall time: %10.5f ms", 1000.0 * seconds);
+  else
+    printf("wall time: %10.5f us", 1000000.0 * seconds);
+}
