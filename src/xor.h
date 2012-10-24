@@ -102,34 +102,42 @@ static inline void _mzd_combine4(word *c, word const *t1, word const *t2, word c
   wi_t wide = wide_in;
 #if __M4RI_HAVE_SSE2
   /* assuming t1 ... t4 are aligned, but c might not be */
-  if (__M4RI_ALIGNMENT(c,16)==0) {
-    __m128i *__c = (__m128i*)c;
-    __m128i *__t1 = (__m128i*)t1;
-    __m128i *__t2 = (__m128i*)t2;
-    __m128i *__t3 = (__m128i*)t3;
-    __m128i *__t4 = (__m128i*)t4;
-    const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xFUL);
-    __m128i xmm1;
-    
-    while(__c < eof) {
-      xmm1 = _mm_xor_si128(*__c, *__t1++);
-      xmm1 = _mm_xor_si128(xmm1, *__t2++);
-      xmm1 = _mm_xor_si128(xmm1, *__t3++);
-      xmm1 = _mm_xor_si128(xmm1, *__t4++);
-      *__c++ = xmm1;
-    }
-    c  = (word*)__c;
-    t1 = (word*)__t1;
-    t2 = (word*)__t2;
-    t3 = (word*)__t3;
-    t4 = (word*)__t4;
-    wide = ((sizeof(word) * wide) % 16) / sizeof(word);
+  assert(__M4RI_ALIGNMENT(c,16) == 8 || __M4RI_ALIGNMENT(c,16) == 0);
+  assert(__M4RI_ALIGNMENT(c,16) == __M4RI_ALIGNMENT(t1,16));
+
+  if (__M4RI_ALIGNMENT(c,16) == 8) {
+    *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
+    wide--;
   }
-  if(!wide) {
-    __M4RI_DD_RAWROW(c, wide_in);
-    return;
+
+  __m128i *__c = (__m128i*)c;
+  __m128i *__t1 = (__m128i*)t1;
+  __m128i *__t2 = (__m128i*)t2;
+  __m128i *__t3 = (__m128i*)t3;
+  __m128i *__t4 = (__m128i*)t4;
+  const __m128i *eof = (__m128i*)((unsigned long)(c + wide) & ~0xFUL);
+  __m128i xmm1;
+
+  while(__c < eof) {
+    xmm1 = _mm_xor_si128(*__c, *__t1++);
+    xmm1 = _mm_xor_si128(xmm1, *__t2++);
+    xmm1 = _mm_xor_si128(xmm1, *__t3++);
+    xmm1 = _mm_xor_si128(xmm1, *__t4++);
+    *__c++ = xmm1;
   }
-#endif // __M4RI_HAVE_SSE2
+  c  = (word*)__c;
+  t1 = (word*)__t1;
+  t2 = (word*)__t2;
+  t3 = (word*)__t3;
+  t4 = (word*)__t4;
+  wide = ((sizeof(word) * wide) % 16) / sizeof(word);
+
+  if(wide) {
+    *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
+  }
+  __M4RI_DD_RAWROW(c, wide_in);
+  return;
+#else
   wi_t n = (wide + 7) / 8;
   switch (wide % 8) {
   case 0: do { *c++ ^= *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
@@ -143,6 +151,8 @@ static inline void _mzd_combine4(word *c, word const *t1, word const *t2, word c
     } while (--n > 0);
   }
   __M4RI_DD_RAWROW(c, wide_in);
+  return;
+#endif // __M4RI_HAVE_SSE2
 }
 
 /**
