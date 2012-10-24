@@ -275,44 +275,54 @@ void mzd_make_table_ple(mzd_t const *M, rci_t r, rci_t c, int k, int knar, mzd_t
   __M4RI_DD_RCI_ARRAY(Lm, twokay);
 }
 
+static inline int _mzd_read_bits_int_raw(word *row, int const spot, wi_t const block, int const spill, int const n) {
+  word temp = (spill <= 0) ? row[block] << -spill : (row[block + 1] << (m4ri_radix - spill)) | (row[block] >> spill);
+  return temp >> (m4ri_radix - n);
+}
+
 void mzd_process_rows2_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
                            int const k0, mzd_t const *T0, rci_t const *E0,
                            int const k1, mzd_t const *T1, rci_t const *E1) {
+  assert(k0+k1 <= m4ri_radix);
 
-  wi_t const blocknuma = startcol / m4ri_radix;
-  wi_t const blocknumb = (startcol + k0) / m4ri_radix;
-  wi_t const blockoffset = blocknumb - blocknuma;
-  wi_t wide = M->width - blocknuma;
+  int const spot0 = (startcol) % m4ri_radix;
+  int const spot1 = (startcol + k0) % m4ri_radix;
+
+  wi_t const block0 = startcol / m4ri_radix;
+  wi_t const block1 = (startcol + k0) / m4ri_radix;
+
+
+  int const spill0 = spot0 + k0 - m4ri_radix;
+  int const spill1 = spot1 + k1 - m4ri_radix;
+
+  wi_t const blockdiff1 = block1 - block0;
+  wi_t wide = M->width - block0;
 
   if(wide < 3) {
-    mzd_process_rows(M, startrow, stoprow, startcol, k0, T0, E0);
+    mzd_process_rows(M, startrow, stoprow, startcol,      k0, T0, E0);
     mzd_process_rows(M, startrow, stoprow, startcol + k0, k1, T1, E1);
     return;
   }
 
-  rci_t r;
-
-  wide -= 2;
-#if __M4RI_HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
-#endif
-  for(r = startrow; r < stoprow; ++r) {
-    rci_t const x0 = E0[ mzd_read_bits_int(M, r, startcol, k0) ];
-    word const *t0 = T0->rows[x0] + blocknuma;
-    word *m0 = M->rows[r+0] + blocknuma;
+  for(rci_t r = startrow; r < stoprow; ++r) {
+    word *m0 = M->rows[r+0] + block0;
+    rci_t const x0 = E0[ _mzd_read_bits_int_raw(m0, spot0,          0, spill0, k0) ];
+    word const *t0 = T0->rows[x0] + block0;
     m0[0] ^= t0[0];
     m0[1] ^= t0[1];
-    rci_t const x1 = E1[ mzd_read_bits_int(M, r, startcol+k0, k1) ];
-    word const *t1 = T1->rows[x1] + blocknumb;
-    for(wi_t i = blockoffset; i < 2; ++i) {
-      m0[i] ^= t1[i - blockoffset];
+    t0 += 2;
+
+    rci_t const x1 = E1[ _mzd_read_bits_int_raw(m0, spot1, blockdiff1, spill1, k1) ];
+    word const *t1 = T1->rows[x1] + block1;
+    switch(blockdiff1) {
+    case 0: m0[0] ^= t1[0 - blockdiff1];
+    case 1: m0[1] ^= t1[1 - blockdiff1];
+      break;
     }
 
-    t0 += 2;
-    t1 += 2 - blockoffset;
-    m0 += 2;
+    t1 += 2 - blockdiff1;
 
-    _mzd_combine2(m0,t0,t1,wide);
+    _mzd_combine2(m0+2, t0, t1, wide-2);
   }
 
   __M4RI_DD_MZD(M);
@@ -323,53 +333,57 @@ void mzd_process_rows3_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
                            int const k1, mzd_t const *T1, rci_t const *E1,
 			   int const k2, mzd_t const *T2, rci_t const *E2) {
 
-  wi_t const blocknuma = startcol / m4ri_radix;
-  wi_t const blocknumb = (startcol + k0) / m4ri_radix;
-  wi_t const blocknumc = (startcol + k0 + k1) / m4ri_radix;
-  wi_t const blockoffsetb = blocknumb - blocknuma;
-  wi_t const blockoffsetc = blocknumc - blocknuma;
-  wi_t wide = M->width - blocknuma;
+  int const spot0 = (startcol) % m4ri_radix;
+  int const spot1 = (startcol + k0) % m4ri_radix;
+  int const spot2 = (startcol + k0 + k1) % m4ri_radix;
 
-  if(wide < 4) {
-    mzd_process_rows(M, startrow, stoprow, startcol, k0, T0, E0);
-    mzd_process_rows(M, startrow, stoprow, startcol + k0, k1, T1, E1);
+  wi_t const block0 = startcol / m4ri_radix;
+  wi_t const block1 = (startcol + k0) / m4ri_radix;
+  wi_t const block2 = (startcol + k0 + k1) / m4ri_radix;
+
+  int const spill0 = spot0 + k0 - m4ri_radix;
+  int const spill1 = spot1 + k1 - m4ri_radix;
+  int const spill2 = spot2 + k2 - m4ri_radix;
+
+  wi_t const blockdiff1 = block1 - block0;
+  wi_t const blockdiff2 = block2 - block0;
+  wi_t wide = M->width - block0;
+
+  if(wide < 3) {
+    mzd_process_rows(M, startrow, stoprow, startcol,           k0, T0, E0);
+    mzd_process_rows(M, startrow, stoprow, startcol + k0,      k1, T1, E1);
     mzd_process_rows(M, startrow, stoprow, startcol + k0 + k1, k2, T2, E2);
     return;
   }
 
-  rci_t r;
-
-  wide -= 3;
-#if __M4RI_HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
-#endif
-  for(r = startrow; r < stoprow; ++r) {
-    rci_t const x0 = E0[ mzd_read_bits_int(M, r, startcol, k0) ];
-    word const *t0 = T0->rows[x0] + blocknuma;
-    word *m0 = M->rows[r] + blocknuma;
+  for(rci_t r = startrow; r < stoprow; ++r) {
+    word *m0 = M->rows[r] + block0;
+    rci_t const x0 = E0[_mzd_read_bits_int_raw(m0, spot0,           0, spill0, k0)];
+    word const *t0 = T0->rows[x0] + block0;
     m0[0] ^= t0[0];
     m0[1] ^= t0[1];
-    m0[2] ^= t0[2];
 
-    t0 += 3;
+    t0 += 2;
 
-    rci_t const x1 = E1[ mzd_read_bits_int(M, r, startcol+k0, k1) ];
-    word const *t1 = T1->rows[x1] + blocknumb;
-    for(wi_t i = blockoffsetb; i < 3; ++i) {
-      m0[i] ^= t1[i-blockoffsetb];
+    rci_t const x1 = E1[ _mzd_read_bits_int_raw(m0, spot1, blockdiff1, spill1, k1) ];
+    word *t1 = T1->rows[x1] + block1;
+    switch(blockdiff1) {
+    case 0: m0[0] ^= t1[0 - blockdiff1];
+    case 1: m0[1] ^= t1[1 - blockdiff1];
+      break;
     }
-    t1 += 3 - blockoffsetb;
+    t1 += 2 - blockdiff1;
 
-    rci_t const x2 = E2[ mzd_read_bits_int(M, r, startcol+k0+k1, k2) ];
-    word const *t2 = T2->rows[x2] + blocknumc;
-    for(wi_t i = blockoffsetc; i < 3; ++i) {
-      m0[i] ^= t2[i-blockoffsetc];
+    rci_t const x2 = E2[ _mzd_read_bits_int_raw(m0, spot2, blockdiff2, spill2, k2) ];
+    word *t2 = T2->rows[x2] + block2;
+    switch(blockdiff2) {
+    case 0: m0[0] ^= t2[0 - blockdiff2];
+    case 1: m0[1] ^= t2[1 - blockdiff2];
+      break;
     }
-    t2 += 3 - blockoffsetc;
+    t2 += 2 - blockdiff2;
 
-    m0 += 3;
-
-    _mzd_combine3(m0,t0,t1,t2,wide);
+    _mzd_combine3(m0+2,t0,t1,t2,wide-2);
   }
 
   __M4RI_DD_MZD(M);
@@ -381,14 +395,26 @@ void mzd_process_rows4_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
                            int const k2, mzd_t const *T2, rci_t const *E2,
                            int const k3, mzd_t const *T3, rci_t const *E3) {
   assert(k0+k1+k2+k3 <= m4ri_radix);
-  wi_t const blocknuma = startcol / m4ri_radix;
-  wi_t const blocknumb = (startcol + k0) / m4ri_radix;
-  wi_t const blocknumc = (startcol + k0 + k1) / m4ri_radix;
-  wi_t const blocknumd = (startcol + k0 + k1 + k2) / m4ri_radix;
-  wi_t const blockoffsetb = blocknumb - blocknuma;
-  wi_t const blockoffsetc = blocknumc - blocknuma;
-  wi_t const blockoffsetd = blocknumd - blocknuma;
-  wi_t wide = M->width - blocknuma;
+
+  int const spot0 = (startcol) % m4ri_radix;
+  int const spot1 = (startcol + k0) % m4ri_radix;
+  int const spot2 = (startcol + k0 + k1) % m4ri_radix;
+  int const spot3 = (startcol + k0 + k1 + k2) % m4ri_radix;
+
+  wi_t const block0 = startcol / m4ri_radix;
+  wi_t const block1 = (startcol + k0) / m4ri_radix;
+  wi_t const block2 = (startcol + k0 + k1) / m4ri_radix;
+  wi_t const block3 = (startcol + k0 + k1 + k2) / m4ri_radix;
+
+  int const spill0 = spot0 + k0 - m4ri_radix;
+  int const spill1 = spot1 + k1 - m4ri_radix;
+  int const spill2 = spot2 + k2 - m4ri_radix;
+  int const spill3 = spot3 + k3 - m4ri_radix;
+
+  wi_t const blockdiff1 = block1 - block0;
+  wi_t const blockdiff2 = block2 - block0;
+  wi_t const blockdiff3 = block3 - block0;
+  wi_t wide = M->width - block0;
 
   if(wide < 3) {
     mzd_process_rows(M, startrow, stoprow, startcol,  k0, T0, E0);
@@ -397,52 +423,44 @@ void mzd_process_rows4_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
     mzd_process_rows(M, startrow, stoprow, startcol + k0 + k1 + k2, k3, T3, E3);
     return;
   }
-  wide -= 2;
 
-  rci_t r;
-
-#if __M4RI_HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow) schedule(dynamic,32) if(stoprow-startrow > 128)
-#endif
-  for(r = startrow; r < stoprow; ++r) {
-    rci_t const x0 = E0[mzd_read_bits_int(M, r, startcol, k0)];
-    word *t0 = T0->rows[x0] + blocknuma;
-    word *m0 = M->rows[r] + blocknuma;
+  for(rci_t r = startrow; r < stoprow; ++r) {
+    word *m0 = M->rows[r] + block0;
+    rci_t const x0 = E0[_mzd_read_bits_int_raw(m0, spot0,           0, spill0, k0)];
+    word *t0 = T0->rows[x0] + block0;
     m0[0] ^= t0[0];
     m0[1] ^= t0[1];
 
     t0 += 2;
 
-    rci_t const x1 = E1[ mzd_read_bits_int(M, r, startcol+k0, k1) ];
-    word *t1 = T1->rows[x1] + blocknumb;
-    switch(blockoffsetb) {
-    case 0: m0[0] ^= t1[0 - blockoffsetb];
-    case 1: m0[1] ^= t1[1 - blockoffsetb];
+    rci_t const x1 = E1[ _mzd_read_bits_int_raw(m0, spot1, blockdiff1, spill1, k1) ];
+    word *t1 = T1->rows[x1] + block1;
+    switch(blockdiff1) {
+    case 0: m0[0] ^= t1[0 - blockdiff1];
+    case 1: m0[1] ^= t1[1 - blockdiff1];
       break;
     }
-    t1 += 2 - blockoffsetb;
+    t1 += 2 - blockdiff1;
 
-    rci_t const x2 = E2[ mzd_read_bits_int(M, r, startcol+k0+k1, k2) ];
-    word *t2 = T2->rows[x2] + blocknumc;
-    switch(blockoffsetc) {
-    case 0: m0[0] ^= t2[0 - blockoffsetc];
-    case 1: m0[1] ^= t2[1 - blockoffsetc];
+    rci_t const x2 = E2[ _mzd_read_bits_int_raw(m0, spot2, blockdiff2, spill2, k2) ];
+    word *t2 = T2->rows[x2] + block2;
+    switch(blockdiff2) {
+    case 0: m0[0] ^= t2[0 - blockdiff2];
+    case 1: m0[1] ^= t2[1 - blockdiff2];
       break;
     }
-    t2 += 2 - blockoffsetc;
+    t2 += 2 - blockdiff2;
 
-    rci_t const x3 = E3[ mzd_read_bits_int(M, r, startcol+k0+k1+k2, k3) ];
-    word *t3 = T3->rows[x3] + blocknumd;
-    switch(blockoffsetd) {
-    case 0: m0[0] ^= t3[0 - blockoffsetd];
-    case 1: m0[1] ^= t3[1 - blockoffsetd];
+    rci_t const x3 = E3[ _mzd_read_bits_int_raw(m0, spot3, blockdiff3, spill3, k3) ];
+    word *t3 = T3->rows[x3] + block3;
+    switch(blockdiff3) {
+    case 0: m0[0] ^= t3[0 - blockdiff3];
+    case 1: m0[1] ^= t3[1 - blockdiff3];
       break;
     }
-    t3 += 2 - blockoffsetd;
+    t3 += 2 - blockdiff3;
 
-    m0 += 2;
-
-    _mzd_combine4(m0, t0, t1, t2, t3, wide);
+    _mzd_combine4(m0+2, t0, t1, t2, t3, wide-2);
   }
 
   __M4RI_DD_MZD(M);
