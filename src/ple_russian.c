@@ -380,7 +380,7 @@ void mzd_process_rows4_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
                            int const k1, mzd_t const *T1, rci_t const *E1,
                            int const k2, mzd_t const *T2, rci_t const *E2,
                            int const k3, mzd_t const *T3, rci_t const *E3) {
-
+  assert(k0+k1+k2+k3 <= m4ri_radix);
   wi_t const blocknuma = startcol / m4ri_radix;
   wi_t const blocknumb = (startcol + k0) / m4ri_radix;
   wi_t const blocknumc = (startcol + k0 + k1) / m4ri_radix;
@@ -390,14 +390,14 @@ void mzd_process_rows4_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
   wi_t const blockoffsetd = blocknumd - blocknuma;
   wi_t wide = M->width - blocknuma;
 
-  if(wide < 5) {
+  if(wide < 3) {
     mzd_process_rows(M, startrow, stoprow, startcol,  k0, T0, E0);
     mzd_process_rows(M, startrow, stoprow, startcol + k0,  k1, T1, E1);
     mzd_process_rows(M, startrow, stoprow, startcol + k0 + k1,  k2, T2, E2);
     mzd_process_rows(M, startrow, stoprow, startcol + k0 + k1 + k2, k3, T3, E3);
     return;
   }
-  wide -= 4;
+  wide -= 2;
 
   rci_t r;
 
@@ -410,33 +410,37 @@ void mzd_process_rows4_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
     word *m0 = M->rows[r] + blocknuma;
     m0[0] ^= t0[0];
     m0[1] ^= t0[1];
-    m0[2] ^= t0[2];
-    m0[3] ^= t0[3];
 
-    t0 += 4;
+    t0 += 2;
 
     rci_t const x1 = E1[ mzd_read_bits_int(M, r, startcol+k0, k1) ];
     word *t1 = T1->rows[x1] + blocknumb;
-    for(wi_t i = blockoffsetb; i < 4; ++i) {
-      m0[i] ^= t1[i - blockoffsetb];
+    switch(blockoffsetb) {
+    case 0: m0[0] ^= t1[0 - blockoffsetb];
+    case 1: m0[1] ^= t1[1 - blockoffsetb];
+      break;
     }
-    t1 += 4 - blockoffsetb;
+    t1 += 2 - blockoffsetb;
 
     rci_t const x2 = E2[ mzd_read_bits_int(M, r, startcol+k0+k1, k2) ];
     word *t2 = T2->rows[x2] + blocknumc;
-    for(wi_t i = blockoffsetc; i < 4; ++i) {
-      m0[i] ^= t2[i - blockoffsetc];
+    switch(blockoffsetc) {
+    case 0: m0[0] ^= t2[0 - blockoffsetc];
+    case 1: m0[1] ^= t2[1 - blockoffsetc];
+      break;
     }
-    t2 += 4 - blockoffsetc;
+    t2 += 2 - blockoffsetc;
 
     rci_t const x3 = E3[ mzd_read_bits_int(M, r, startcol+k0+k1+k2, k3) ];
     word *t3 = T3->rows[x3] + blocknumd;
-    for(wi_t i = blockoffsetd; i < 4; ++i) {
-      m0[i] ^= t3[i - blockoffsetd];
+    switch(blockoffsetd) {
+    case 0: m0[0] ^= t3[0 - blockoffsetd];
+    case 1: m0[1] ^= t3[1 - blockoffsetd];
+      break;
     }
-    t3 += 4 - blockoffsetd;
+    t3 += 2 - blockoffsetd;
 
-    m0 += 4;
+    m0 += 2;
 
     _mzd_combine4(m0, t0, t1, t2, t3, wide);
   }
