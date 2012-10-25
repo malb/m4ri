@@ -34,7 +34,7 @@
 #endif
 
 /** the number of tables used in PLE decomposition **/
-#define __M4RI_PLE_NTABLES 4
+#define __M4RI_PLE_NTABLES 5
 
 static inline rci_t _max_value(rci_t *data, int length) {
   rci_t max = 0;
@@ -46,10 +46,72 @@ static inline rci_t _max_value(rci_t *data, int length) {
 
 static inline void _kk_setup(int const kk, int const knar, int *k_, int *knar_, int const *pivots, int const ntables) {
   int i,j, rem;
-  int lb[4], ub[4];
+  int lb[__M4RI_PLE_NTABLES], ub[__M4RI_PLE_NTABLES];
 
-  assert(ntables <= 4 && ntables > 0);
+  assert(ntables <= __M4RI_PLE_NTABLES && ntables > 0);
   switch(ntables) {
+  case 6:
+    rem = kk % 6;
+    k_[0] = kk / 6 + ((rem >= 5) ? 1 : 0);
+    k_[1] = kk / 6 + ((rem >= 4) ? 1 : 0);
+    k_[2] = kk / 6 + ((rem >= 3) ? 1 : 0);
+    k_[3] = kk / 6 + ((rem >= 2) ? 1 : 0);
+    k_[4] = kk / 6 + ((rem >= 1) ? 1 : 0);;
+    k_[5] = kk / 6;
+
+    knar_[0] = 0;
+    knar_[1] = 0;
+    knar_[2] = 0;
+    knar_[3] = 0;
+    knar_[4] = 0;
+    knar_[5] = 0;
+
+    lb[0] = 0;
+    lb[1] = k_[0];
+    lb[2] = lb[1]+k_[1];
+    lb[3] = lb[2]+k_[2];
+    lb[4] = lb[3]+k_[3];
+    lb[5] = lb[4]+k_[4];
+
+    ub[0] =     0+k_[0];
+    ub[1] = ub[0]+k_[1];
+    ub[2] = ub[1]+k_[2];
+    ub[3] = ub[2]+k_[3];
+    ub[4] = ub[3]+k_[4];
+    ub[5] = ub[4]+k_[5];
+
+    assert((k_[0] > 0) && (k_[1] > 0) && (k_[2] > 0) && (k_[3] > 0) && (k_[4] > 0) && (k_[5] > 0));
+    break;
+
+  case 5:
+    rem = kk % 5;
+    k_[0] = kk / 5 + ((rem >= 4) ? 1 : 0);
+    k_[1] = kk / 5 + ((rem >= 3) ? 1 : 0);
+    k_[2] = kk / 5 + ((rem >= 2) ? 1 : 0);
+    k_[3] = kk / 5 + ((rem >= 1) ? 1 : 0);
+    k_[4] = kk / 5;
+
+    knar_[0] = 0;
+    knar_[1] = 0;
+    knar_[2] = 0;
+    knar_[3] = 0;
+    knar_[4] = 0;
+
+    lb[0] = 0;
+    lb[1] = k_[0];
+    lb[2] = lb[1]+k_[1];
+    lb[3] = lb[2]+k_[2];
+    lb[4] = lb[3]+k_[3];
+
+    ub[0] =     0+k_[0];
+    ub[1] = ub[0]+k_[1];
+    ub[2] = ub[1]+k_[2];
+    ub[3] = ub[2]+k_[3];
+    ub[4] = ub[3]+k_[4];
+
+    assert((k_[0] > 0) && (k_[1] > 0) && (k_[2] > 0) && (k_[3] > 0) && (k_[4] > 0));
+    break;
+
   case 4:
     rem = kk % 4;
     k_[0] = kk / 4 + ((rem >= 3) ? 1 : 0);
@@ -114,14 +176,14 @@ static inline void _kk_setup(int const kk, int const knar, int *k_, int *knar_, 
 
   case 1:
     k_[0] = kk;
-    knar_[0] = knar;
+    knar_[0] = 0;
     lb[0] = 0;
     ub[0] = 0+k_[0];
 
     break;
 
   default:
-    m4ri_die("Only 4 tables are supported at the moment.");
+    m4ri_die("Only %d tables are supported at the moment.", __M4RI_PLE_NTABLES);
   }
 
   for(i=0; i<knar; i++) {
@@ -466,6 +528,206 @@ void mzd_process_rows4_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
   __M4RI_DD_MZD(M);
 }
 
+void mzd_process_rows5_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
+                           int const k0, mzd_t const *T0, rci_t const *E0,
+                           int const k1, mzd_t const *T1, rci_t const *E1,
+                           int const k2, mzd_t const *T2, rci_t const *E2,
+                           int const k3, mzd_t const *T3, rci_t const *E3,
+                           int const k4, mzd_t const *T4, rci_t const *E4) {
+  assert(k0+k1+k2+k3+k4 <= m4ri_radix);
+
+  int const spot0 = (startcol) % m4ri_radix;
+  int const spot1 = (startcol + k0) % m4ri_radix;
+  int const spot2 = (startcol + k0 + k1) % m4ri_radix;
+  int const spot3 = (startcol + k0 + k1 + k2) % m4ri_radix;
+  int const spot4 = (startcol + k0 + k1 + k2 + k3) % m4ri_radix;
+
+  wi_t const block0 = startcol / m4ri_radix;
+  wi_t const block1 = (startcol + k0) / m4ri_radix;
+  wi_t const block2 = (startcol + k0 + k1) / m4ri_radix;
+  wi_t const block3 = (startcol + k0 + k1 + k2) / m4ri_radix;
+  wi_t const block4 = (startcol + k0 + k1 + k2 + k3) / m4ri_radix;
+
+  int const spill0 = spot0 + k0 - m4ri_radix;
+  int const spill1 = spot1 + k1 - m4ri_radix;
+  int const spill2 = spot2 + k2 - m4ri_radix;
+  int const spill3 = spot3 + k3 - m4ri_radix;
+  int const spill4 = spot4 + k4 - m4ri_radix;
+
+  wi_t const blockdiff1 = block1 - block0;
+  wi_t const blockdiff2 = block2 - block0;
+  wi_t const blockdiff3 = block3 - block0;
+  wi_t const blockdiff4 = block4 - block0;
+  wi_t wide = M->width - block0;
+
+  if(wide < 3) {
+    mzd_process_rows(M, startrow, stoprow, startcol,  k0, T0, E0);
+    mzd_process_rows(M, startrow, stoprow, startcol + k0,  k1, T1, E1);
+    mzd_process_rows(M, startrow, stoprow, startcol + k0 + k1,  k2, T2, E2);
+    mzd_process_rows(M, startrow, stoprow, startcol + k0 + k1 + k2, k3, T3, E3);
+    mzd_process_rows(M, startrow, stoprow, startcol + k0 + k1 + k2 + k3, k4, T4, E4);
+    return;
+  }
+
+  for(rci_t r = startrow; r < stoprow; ++r) {
+    word *m0 = M->rows[r] + block0;
+    rci_t const x0 = E0[_mzd_read_bits_int_raw(m0, spot0,           0, spill0, k0)];
+    word *t0 = T0->rows[x0] + block0;
+    m0[0] ^= t0[0];
+    m0[1] ^= t0[1];
+
+    t0 += 2;
+
+    rci_t const x1 = E1[ _mzd_read_bits_int_raw(m0, spot1, blockdiff1, spill1, k1) ];
+    word *t1 = T1->rows[x1] + block1;
+    switch(blockdiff1) {
+    case 0: m0[0] ^= t1[0 - blockdiff1];
+    case 1: m0[1] ^= t1[1 - blockdiff1];
+      break;
+    }
+    t1 += 2 - blockdiff1;
+
+    rci_t const x2 = E2[ _mzd_read_bits_int_raw(m0, spot2, blockdiff2, spill2, k2) ];
+    word *t2 = T2->rows[x2] + block2;
+    switch(blockdiff2) {
+    case 0: m0[0] ^= t2[0 - blockdiff2];
+    case 1: m0[1] ^= t2[1 - blockdiff2];
+      break;
+    }
+    t2 += 2 - blockdiff2;
+
+    rci_t const x3 = E3[ _mzd_read_bits_int_raw(m0, spot3, blockdiff3, spill3, k3) ];
+    word *t3 = T3->rows[x3] + block3;
+    switch(blockdiff3) {
+    case 0: m0[0] ^= t3[0 - blockdiff3];
+    case 1: m0[1] ^= t3[1 - blockdiff3];
+      break;
+    }
+    t3 += 2 - blockdiff3;
+
+    rci_t const x4 = E4[ _mzd_read_bits_int_raw(m0, spot4, blockdiff4, spill4, k4) ];
+    word *t4 = T4->rows[x4] + block4;
+    switch(blockdiff4) {
+    case 0: m0[0] ^= t4[0 - blockdiff4];
+    case 1: m0[1] ^= t4[1 - blockdiff4];
+      break;
+    }
+    t4 += 2 - blockdiff4;
+
+    _mzd_combine5(m0+2, t0, t1, t2, t3, t4, wide-2);
+  }
+
+  __M4RI_DD_MZD(M);
+}
+
+void mzd_process_rows6_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
+                           int const k0, mzd_t const *T0, rci_t const *E0,
+                           int const k1, mzd_t const *T1, rci_t const *E1,
+                           int const k2, mzd_t const *T2, rci_t const *E2,
+                           int const k3, mzd_t const *T3, rci_t const *E3,
+                           int const k4, mzd_t const *T4, rci_t const *E4,
+                           int const k5, mzd_t const *T5, rci_t const *E5) {
+  assert(k0+k1+k2+k3+k4+k5 <= m4ri_radix);
+
+  int const spot0 = (startcol) % m4ri_radix;
+  int const spot1 = (startcol + k0) % m4ri_radix;
+  int const spot2 = (startcol + k0 + k1) % m4ri_radix;
+  int const spot3 = (startcol + k0 + k1 + k2) % m4ri_radix;
+  int const spot4 = (startcol + k0 + k1 + k2 + k3) % m4ri_radix;
+  int const spot5 = (startcol + k0 + k1 + k2 + k3 + k4) % m4ri_radix;
+
+  wi_t const block0 = startcol / m4ri_radix;
+  wi_t const block1 = (startcol + k0) / m4ri_radix;
+  wi_t const block2 = (startcol + k0 + k1) / m4ri_radix;
+  wi_t const block3 = (startcol + k0 + k1 + k2) / m4ri_radix;
+  wi_t const block4 = (startcol + k0 + k1 + k2 + k3) / m4ri_radix;
+  wi_t const block5 = (startcol + k0 + k1 + k2 + k3 + k4) / m4ri_radix;
+
+  int const spill0 = spot0 + k0 - m4ri_radix;
+  int const spill1 = spot1 + k1 - m4ri_radix;
+  int const spill2 = spot2 + k2 - m4ri_radix;
+  int const spill3 = spot3 + k3 - m4ri_radix;
+  int const spill4 = spot4 + k4 - m4ri_radix;
+  int const spill5 = spot5 + k5 - m4ri_radix;
+
+  wi_t const blockdiff1 = block1 - block0;
+  wi_t const blockdiff2 = block2 - block0;
+  wi_t const blockdiff3 = block3 - block0;
+  wi_t const blockdiff4 = block4 - block0;
+  wi_t const blockdiff5 = block5 - block0;
+  wi_t wide = M->width - block0;
+
+  if(wide < 3) {
+    mzd_process_rows(M, startrow, stoprow, startcol,  k0, T0, E0);
+    mzd_process_rows(M, startrow, stoprow, startcol + k0,  k1, T1, E1);
+    mzd_process_rows(M, startrow, stoprow, startcol + k0 + k1,  k2, T2, E2);
+    mzd_process_rows(M, startrow, stoprow, startcol + k0 + k1 + k2, k3, T3, E3);
+    mzd_process_rows(M, startrow, stoprow, startcol + k0 + k1 + k2 + k3, k4, T4, E4);
+    mzd_process_rows(M, startrow, stoprow, startcol + k0 + k1 + k2 + k3 + k4, k5, T5, E5);
+    return;
+  }
+
+  for(rci_t r = startrow; r < stoprow; ++r) {
+    word *m0 = M->rows[r] + block0;
+    rci_t const x0 = E0[_mzd_read_bits_int_raw(m0, spot0,           0, spill0, k0)];
+    word *t0 = T0->rows[x0] + block0;
+    m0[0] ^= t0[0];
+    m0[1] ^= t0[1];
+
+    t0 += 2;
+
+    rci_t const x1 = E1[ _mzd_read_bits_int_raw(m0, spot1, blockdiff1, spill1, k1) ];
+    word *t1 = T1->rows[x1] + block1;
+    switch(blockdiff1) {
+    case 0: m0[0] ^= t1[0 - blockdiff1];
+    case 1: m0[1] ^= t1[1 - blockdiff1];
+      break;
+    }
+    t1 += 2 - blockdiff1;
+
+    rci_t const x2 = E2[ _mzd_read_bits_int_raw(m0, spot2, blockdiff2, spill2, k2) ];
+    word *t2 = T2->rows[x2] + block2;
+    switch(blockdiff2) {
+    case 0: m0[0] ^= t2[0 - blockdiff2];
+    case 1: m0[1] ^= t2[1 - blockdiff2];
+      break;
+    }
+    t2 += 2 - blockdiff2;
+
+    rci_t const x3 = E3[ _mzd_read_bits_int_raw(m0, spot3, blockdiff3, spill3, k3) ];
+    word *t3 = T3->rows[x3] + block3;
+    switch(blockdiff3) {
+    case 0: m0[0] ^= t3[0 - blockdiff3];
+    case 1: m0[1] ^= t3[1 - blockdiff3];
+      break;
+    }
+    t3 += 2 - blockdiff3;
+
+    rci_t const x4 = E4[ _mzd_read_bits_int_raw(m0, spot4, blockdiff4, spill4, k4) ];
+    word *t4 = T4->rows[x4] + block4;
+    switch(blockdiff4) {
+    case 0: m0[0] ^= t4[0 - blockdiff4];
+    case 1: m0[1] ^= t4[1 - blockdiff4];
+      break;
+    }
+    t4 += 2 - blockdiff4;
+
+    rci_t const x5 = E5[ _mzd_read_bits_int_raw(m0, spot5, blockdiff5, spill5, k5) ];
+    word *t5 = T5->rows[x5] + block5;
+    switch(blockdiff5) {
+    case 0: m0[0] ^= t5[0 - blockdiff5];
+    case 1: m0[1] ^= t5[1 - blockdiff5];
+      break;
+    }
+    t5 += 2 - blockdiff5;
+
+    _mzd_combine6(m0+2, t0, t1, t2, t3, t4, t5, wide-2);
+  }
+
+  __M4RI_DD_MZD(M);
+}
+
+
 void _mzd_ple_a10(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const start_col,
                   wi_t const addblock, int const k, rci_t *pivots) {
   /* perform needed row swaps */
@@ -582,6 +844,69 @@ void _mzd_ple_a11_4(mzd_t *A,
   __M4RI_DD_MZD(A);
 }
 
+void _mzd_ple_a11_5(mzd_t *A,
+                    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock,
+                    int const k0, int const knar0, mzd_t const *T0, rci_t const *M0,
+                    int const k1, int const knar1, mzd_t const *T1, rci_t const *M1,
+                    int const k2, int const knar2, mzd_t const *T2, rci_t const *M2,
+                    int const k3, int const knar3, mzd_t const *T3, rci_t const *M3,
+                    int const k4, int const knar4, mzd_t const *T4, rci_t const *M4) {
+
+  wi_t const wide = A->width - addblock;
+  if(wide <= 0)
+    return;
+
+  for(rci_t i = start_row + knar0 + knar1 + knar2 + knar3 + knar4; i < stop_row; ++i) {
+    rci_t x0 = M0[mzd_read_bits_int(A,i,start_col, k0)];
+    rci_t x1 = M1[mzd_read_bits_int(A,i,start_col+k0, k1)];
+    rci_t x2 = M2[mzd_read_bits_int(A,i,start_col+k0+k1, k2)];
+    rci_t x3 = M3[mzd_read_bits_int(A,i,start_col+k0+k1+k2, k3)];
+    rci_t x4 = M4[mzd_read_bits_int(A,i,start_col+k0+k1+k2+k3, k4)];
+    word const *s0 = T0->rows[x0] + addblock;
+    word const *s1 = T1->rows[x1] + addblock;
+    word const *s2 = T2->rows[x2] + addblock;
+    word const *s3 = T3->rows[x3] + addblock;
+    word const *s4 = T4->rows[x4] + addblock;
+    word *t = A->rows[i] + addblock;
+    _mzd_combine5(t, s0, s1, s2, s3, s4, wide);
+  }
+
+  __M4RI_DD_MZD(A);
+}
+
+void _mzd_ple_a11_6(mzd_t *A,
+                    rci_t const start_row, rci_t const stop_row, rci_t const start_col, wi_t const addblock,
+                    int const k0, int const knar0, mzd_t const *T0, rci_t const *M0,
+                    int const k1, int const knar1, mzd_t const *T1, rci_t const *M1,
+                    int const k2, int const knar2, mzd_t const *T2, rci_t const *M2,
+                    int const k3, int const knar3, mzd_t const *T3, rci_t const *M3,
+                    int const k4, int const knar4, mzd_t const *T4, rci_t const *M4,
+                    int const k5, int const knar5, mzd_t const *T5, rci_t const *M5) {
+
+  wi_t const wide = A->width - addblock;
+  if(wide <= 0)
+    return;
+
+  for(rci_t i = start_row + knar0 + knar1 + knar2 + knar3 + knar4 + knar5; i < stop_row; ++i) {
+    rci_t x0 = M0[mzd_read_bits_int(A,i,start_col, k0)];
+    rci_t x1 = M1[mzd_read_bits_int(A,i,start_col+k0, k1)];
+    rci_t x2 = M2[mzd_read_bits_int(A,i,start_col+k0+k1, k2)];
+    rci_t x3 = M3[mzd_read_bits_int(A,i,start_col+k0+k1+k2, k3)];
+    rci_t x4 = M4[mzd_read_bits_int(A,i,start_col+k0+k1+k2+k3, k4)];
+    rci_t x5 = M4[mzd_read_bits_int(A,i,start_col+k0+k1+k2+k3+k4, k5)];
+    word const *s0 = T0->rows[x0] + addblock;
+    word const *s1 = T1->rows[x1] + addblock;
+    word const *s2 = T2->rows[x2] + addblock;
+    word const *s3 = T3->rows[x3] + addblock;
+    word const *s4 = T4->rows[x4] + addblock;
+    word const *s5 = T5->rows[x5] + addblock;
+    word *t = A->rows[i] + addblock;
+    _mzd_combine6(t, s0, s1, s2, s3, s4, s5, wide);
+  }
+
+  __M4RI_DD_MZD(A);
+}
+
 /* extract E from A for table creation */
 mzd_t *_mzd_ple_to_e(mzd_t *E, mzd_t const *A, rci_t r, rci_t c, int k, rci_t *offsets) {
   /* this function call is now rather cheap, but it could be avoided
@@ -620,6 +945,8 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
     if (0.5 * __M4RI_TWOPOW(k) * A->ncols > __M4RI_CPU_L3_CACHE / 2.0)
       k -= 1;
   }
+  /* __M4RI_CPU_L2_CACHE == __M4RI_PLE_NTABLES * 2^k * B->width * 8 */
+  k = (int)log2((__M4RI_CPU_L2_CACHE/8)/(double)A->width/(double)__M4RI_PLE_NTABLES);
 
   int kk = __M4RI_PLE_NTABLES * k;
 
@@ -631,26 +958,26 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
   for(rci_t i = 0; i < nrows; ++i)
     P->values[i] = i;
 
-  mzd_t *T0 = mzd_init(__M4RI_TWOPOW(k), ncols);
-  mzd_t *T1 = mzd_init(__M4RI_TWOPOW(k), ncols);
-  mzd_t *T2 = mzd_init(__M4RI_TWOPOW(k), ncols);
-  mzd_t *T3 = mzd_init(__M4RI_TWOPOW(k), ncols);
+  mzd_t *T[__M4RI_PLE_NTABLES];
+
+  for(int i=0; i<__M4RI_PLE_NTABLES; i++)
+    T[i] = mzd_init(__M4RI_TWOPOW(k), ncols);
 
   mzd_t *U = mzd_init(kk, ncols);
 
   /* these are the elimination lookups */
 
-  rci_t *E0 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-  rci_t *E1 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-  rci_t *E2 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-  rci_t *E3 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *ebuf = (rci_t*)m4ri_mm_calloc(__M4RI_PLE_NTABLES * __M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *E[__M4RI_PLE_NTABLES];
+  for(int i=0; i<__M4RI_PLE_NTABLES; i++)
+    E[i] = ebuf + i*__M4RI_TWOPOW(k);
 
   /* these are the multiplication lookups */
 
-  rci_t *M0 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-  rci_t *M1 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-  rci_t *M2 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-  rci_t *M3 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *mbuf = (rci_t*)m4ri_mm_calloc(__M4RI_PLE_NTABLES * __M4RI_TWOPOW(k), sizeof(rci_t));
+  rci_t *M[__M4RI_PLE_NTABLES];
+  for(int i=0; i<__M4RI_PLE_NTABLES; i++)
+    M[i] = mbuf + i*__M4RI_TWOPOW(k);
 
   rci_t *done   = (rci_t*)m4ri_mm_malloc(kk * sizeof(rci_t));
   rci_t *pivots = (rci_t*)m4ri_mm_malloc(kk * sizeof(rci_t));
@@ -726,92 +1053,124 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
       continue;
     }
 
-    if (kk >= 3*k && kk >= 4) {
+    int k_[__M4RI_PLE_NTABLES], knar_[__M4RI_PLE_NTABLES], ntables = 0;
 
-      int k_[4], knar_[4];
-      _kk_setup(kk, knar, k_, knar_, pivots, 4);
+    if (__M4RI_PLE_NTABLES >= 6 && kk >= 5*k && kk >= 6) {
+      ntables = 6;
+    } else if (__M4RI_PLE_NTABLES >= 5 && kk >= 4*k && kk >= 5) {
+      ntables = 5;
+    } else if (__M4RI_PLE_NTABLES >= 4 && kk >= 3*k && kk >= 4) {
+      ntables = 4;
+    } else if (__M4RI_PLE_NTABLES >= 3 && kk >= 2*k && kk >= 3) {
+      ntables = 3;
+    } else if (__M4RI_PLE_NTABLES >= 2 && kk >=   k && kk >= 2) {
+      ntables = 2;
+    } else {
+      ntables = 1;
+    }
 
+    _kk_setup(kk, knar, k_, knar_, pivots, ntables);
+
+    /**
+     * 4. generate multiplication and inversion tables T amd E from U
+     */
+
+    rci_t i_knar = 0;
+    rci_t i_curr_col = curr_col;
+    rci_t *i_pivots = pivots;
+    int i_base = 0;
+    for(int i=0; i<ntables; i++) {
+      //mzd_make_table_ple(U, 0, curr_col, kk, knar, T[0], E[0], M[0], pivots, 0);
+      mzd_make_table_ple(U, i_knar, i_curr_col, k_[i], knar_[i], T[i], E[i], M[i], i_pivots,  i_base);
+      i_knar += knar_[i];
+      i_curr_col += k_[i];
+      i_pivots += knar_[i];
+      i_base += k_[i];
+    }
+
+    switch(ntables) {
+#if __M4RI_PLE_NTABLES >= 6
+    case 6:
       /**
-       * 4. generate multiplication and inversion tables T amd E from U
-       */
-
-      mzd_make_table_ple(U, 0,                            curr_col,                   k_[0], knar_[0], T0, E0, M0, pivots, 0);
-      mzd_make_table_ple(U, 0+knar_[0],                   curr_col+k_[0],             k_[1], knar_[1], T1, E1, M1, pivots+knar_[0], k_[0]);
-      mzd_make_table_ple(U, 0+knar_[0]+knar_[1],          curr_col+k_[0]+k_[1],       k_[2], knar_[2], T2, E2, M2, pivots+knar_[0]+knar_[1], k_[0]+k_[1]);
-      mzd_make_table_ple(U, 0+knar_[0]+knar_[1]+knar_[2], curr_col+k_[0]+k_[1]+k_[2], k_[3], knar_[3], T3, E3, M3, pivots+knar_[0]+knar_[1]+knar_[2], k_[0]+k_[1]+k_[2]);
-
+       * 5. update A1 = (A01 | A11) */
+      _mzd_ple_a11_6(A, curr_row, done_row+1, curr_col, splitblock,
+                     k_[0], knar_[0], T[0], M[0], k_[1], knar_[1], T[1], M[1],
+                     k_[2], knar_[2], T[2], M[2], k_[3], knar_[3], T[3], M[3],
+                     k_[4], knar_[4], T[4], M[4], k_[5], knar_[5], T[5], M[5]);
       /**
-       * 5. update A1 = (A01 | A11)
-       */
+       * 6. update A2 = (A02 | A12) */
+      if (done_row < nrows) {
+        mzd_process_rows6_ple(A, done_row + 1, nrows, curr_col,
+                              k_[0], T[0], E[0], k_[1], T[1], E[1],
+                              k_[2], T[2], E[2], k_[3], T[3], E[3],
+                              k_[4], T[4], E[4], k_[5], T[5], E[5]);
+      }
+      break;
+#endif
+#if __M4RI_PLE_NTABLES >= 5
+    case 5:
+      _mzd_ple_a11_5(A, curr_row, done_row+1, curr_col, splitblock, k_[0], knar_[0], T[0], M[0],
+                     k_[1], knar_[1], T[1], M[1], k_[2], knar_[2], T[2], M[2],
+                     k_[3], knar_[3], T[3], M[3], k_[4], knar_[4], T[4], M[4]);
 
+      if (done_row < nrows) {
+        mzd_process_rows5_ple(A, done_row + 1, nrows, curr_col, k_[0], T[0], E[0],
+                              k_[1], T[1], E[1], k_[2], T[2], E[2],
+                              k_[3], T[3], E[3], k_[4], T[4], E[4]);
+      }
+      break;
+#endif
+#if __M4RI_PLE_NTABLES >= 4
+    case 4:
       _mzd_ple_a11_4(A, curr_row, done_row+1, curr_col, splitblock,
-                     k_[0], knar_[0], T0, M0,
-                     k_[1], knar_[1], T1, M1,
-                     k_[2], knar_[2], T2, M2,
-                     k_[3], knar_[3], T3, M3);
-
-      /**
-       * 6. update A2 = (A02 | A12)
-       */
+                     k_[0], knar_[0], T[0], M[0],
+                     k_[1], knar_[1], T[1], M[1],
+                     k_[2], knar_[2], T[2], M[2],
+                     k_[3], knar_[3], T[3], M[3]);
 
       if (done_row < nrows) {
         mzd_process_rows4_ple(A, done_row + 1, nrows, curr_col,
-                              k_[0], T0, E0,
-                              k_[1], T1, E1,
-                              k_[2], T2, E2,
-                              k_[3], T3, E3);
+                              k_[0], T[0], E[0], k_[1], T[1], E[1],
+                              k_[2], T[2], E[2], k_[3], T[3], E[3]);
       }
-
-    } else if (kk >= 2*k && kk >= 3) {
-
-      int k_[3], knar_[3];
-      _kk_setup(kk, knar, k_, knar_, pivots, 3);
-
-      mzd_make_table_ple(U, 0,                   curr_col,             k_[0], knar_[0], T0, E0, M0, pivots, 0);
-      mzd_make_table_ple(U, 0+knar_[0],          curr_col+k_[0],       k_[1], knar_[1], T1, E1, M1, pivots+knar_[0], k_[0]);
-      mzd_make_table_ple(U, 0+knar_[0]+knar_[1], curr_col+k_[0]+k_[1], k_[2], knar_[2], T2, E2, M2, pivots+knar_[0]+knar_[1], k_[0]+k_[1]);
-
+      break;
+#endif
+#if __M4RI_PLE_NTABLES >= 3
+    case 3:
       _mzd_ple_a11_3(A, curr_row, done_row+1, curr_col, splitblock,
-                     k_[0], knar_[0], T0, M0,
-                     k_[1], knar_[1], T1, M1,
-                     k_[2], knar_[2], T2, M2);
-
+                     k_[0], knar_[0], T[0], M[0],
+                     k_[1], knar_[1], T[1], M[1],
+                     k_[2], knar_[2], T[2], M[2]);
 
       if (done_row < nrows) {
         mzd_process_rows3_ple(A, done_row + 1, nrows, curr_col,
-                              k_[0], T0, E0,
-                              k_[1], T1, E1,
-                              k_[2], T2, E2);
+                              k_[0], T[0], E[0], k_[1], T[1], E[1], k_[2], T[2], E[2]);
       }
-
-    } else if (kk >= k && kk >= 2) {
-
-      int k_[2], knar_[2];
-      _kk_setup(kk, knar, k_, knar_, pivots, 2);
-
-      mzd_make_table_ple(U, 0,          curr_col,       k_[0], knar_[0], T0, E0, M0, pivots, 0);
-      mzd_make_table_ple(U, 0+knar_[0], curr_col+k_[0], k_[1], knar_[1], T1, E1, M1, pivots+knar_[0], k_[0]);
-
+      break;
+#endif
+#if __M4RI_PLE_NTABLES >= 2
+    case 2:
       _mzd_ple_a11_2(A, curr_row, done_row+1, curr_col, splitblock,
-                     k_[0], knar_[0], T0, M0, k_[1], knar_[1], T1, M1);
+                     k_[0], knar_[0], T[0], M[0], k_[1], knar_[1], T[1], M[1]);
 
       if(done_row < nrows) {
-        mzd_process_rows2_ple(A, done_row + 1, nrows, curr_col,
-                              k_[0], T0, E0,
-                              k_[1], T1, E1);
+        mzd_process_rows2_ple(A, done_row + 1, nrows, curr_col, k_[0], T[0], E[0], k_[1], T[1], E[1]);
       }
-    } else {
-      mzd_make_table_ple(U, 0, curr_col, kk, knar, T0, E0, M0, pivots, 0);
-      _mzd_ple_a11_1(A, curr_row, done_row+1, curr_col, splitblock, kk, knar, T0, M0);
+      break;
+#endif
+    case 1:
+      _mzd_ple_a11_1(A, curr_row, done_row+1, curr_col, splitblock, kk, knar, T[0], M[0]);
 
       if(done_row < nrows) {
-        mzd_process_rows(A, done_row + 1, nrows, curr_col, kk, T0, E0);
+        mzd_process_rows(A, done_row + 1, nrows, curr_col, kk, T[0], E[0]);
       }
+      break;
+    default:
+      m4ri_die("ntables = %d not supported.\n",ntables);
     }
 
     curr_col += kk;
     curr_row += knar;
-
   }
 
   /* Now compressing L */
@@ -825,16 +1184,10 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
   mzp_free_window(Qbar);
 
   mzd_free(U);
-  mzd_free(T0);
-  mzd_free(T1);
-  mzd_free(T2);
-  mzd_free(T3);
-  m4ri_mm_free(E0);  m4ri_mm_free(M0);
-  m4ri_mm_free(E1);  m4ri_mm_free(M1);
-  m4ri_mm_free(E2);  m4ri_mm_free(M2);
-  m4ri_mm_free(E3);  m4ri_mm_free(M3);
-  m4ri_mm_free(done);
-  m4ri_mm_free(pivots);
+  for(int i=0; i<__M4RI_PLE_NTABLES; i++)
+    mzd_free(T[i]);
+  m4ri_mm_free(ebuf);   m4ri_mm_free(mbuf);
+  m4ri_mm_free(done);   m4ri_mm_free(pivots);
 
   __M4RI_DD_MZD(A);
   __M4RI_DD_MZP(P);
