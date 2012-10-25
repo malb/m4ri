@@ -617,7 +617,7 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
     k = m4ri_opt_k(nrows, ncols, 0);
     if (k >= 7)
       k = 7;
-    if (0.5 * __M4RI_TWOPOW(k) * A->ncols > __M4RI_CPU_L2_CACHE / 2.0)
+    if (0.5 * __M4RI_TWOPOW(k) * A->ncols > __M4RI_CPU_L3_CACHE / 2.0)
       k -= 1;
   }
 

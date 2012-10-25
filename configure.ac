@@ -70,7 +70,7 @@ AC_ARG_WITH(papi,
     [m4ri_config_papi=$withval])
 
 AC_ARG_WITH(cachesize,
-        AS_HELP_STRING([--with-cachesize@<:@=VALUE@:>@], [Manual cache sizes, separated by a colon. Overrides cache tuning.]),[m4ri_config_cachesize=$withval])
+        AS_HELP_STRING([--with-cachesize@<:@=VALUE@:>@], [L1,L2 and L3 cache sizes in bytes, separated by a colon. Overrides cache tuning.]),[m4ri_config_cachesize=$withval])
 
 AC_CHECK_HEADER([mm_malloc.h],AC_DEFINE(HAVE_MM_MALLOC,,[Support aligned allocations]),)
 if test "$ac_cv_header_mm_malloc_h" = "yes"; then
@@ -179,20 +179,23 @@ AC_SUBST(PAPI_CFLAGS)
 AC_ARG_ENABLE([cachetune], 
      AS_HELP_STRING([--enable-cachetune],[calculate cache size from timing information.]))      
 
-# L1 and L2 Cache Size
+# Cache Sizes
 if test -z $m4ri_config_cachesize; then
    AX_CACHE_SIZE()
    AS_IF([test "x$enable_cachetune" = "xyes"], [AX_CACHE_SIZE_TUNE()]) 
 else
   AS_IF([test "x$enable_cachetune" = "xyes"], [AC_MSG_WARN(Ignoring cache tuning since --with-cachesize was given.)]) 
 
-  ax_l1_size=`echo $m4ri_config_cachesize | $SED 's/\:.*//g'`
-  ax_l2_size=`echo $m4ri_config_cachesize | $SED 's/.*\://g'`
+  ax_l1_size=`echo $m4ri_config_cachesize | cut -d ":" -f 1`
+  ax_l2_size=`echo $m4ri_config_cachesize | cut -d ":" -f 2`
+  ax_l3_size=`echo $m4ri_config_cachesize | cut -d ":" -f 3`
 
   M4RI_CPU_L1_CACHE=${ax_l1_size}
   M4RI_CPU_L2_CACHE=${ax_l2_size}
+  M4RI_CPU_L3_CACHE=${ax_l3_size}
   AC_SUBST(M4RI_CPU_L1_CACHE)
   AC_SUBST(M4RI_CPU_L2_CACHE)
+  AC_SUBST(M4RI_CPU_L3_CACHE)
 
 fi
 

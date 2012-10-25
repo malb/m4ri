@@ -864,7 +864,7 @@ void _mzd_trsm_upper_left_even(mzd_t const *U, mzd_t *B, const int cutoff) {
 }
 
 mzd_t *mzd_trtri_upper(mzd_t *U) {
-  if (U->nrows*U->ncols < __M4RI_CPU_L2_CACHE<<1) {
+  if (U->nrows*U->ncols < __M4RI_CPU_L3_CACHE<<1) {
     mzd_trtri_upper_russian(U,0);
   } else {
     rci_t const n = U->nrows;

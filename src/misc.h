@@ -566,15 +566,24 @@ void m4ri_fini(void);
 
 /***** Memory Management *****/
 
-#if __M4RI_CPU_L2_CACHE == 0 && !defined(M4RI_DOXYGEN)
+#if __M4RI_CPU_L3_CACHE == 0
+/*
+ * Fix some standard value for L3 cache size if it couldn't be
+ * determined by configure.
+ */
+#define __M4RI_CPU_L3_CACHE 4194304
+#endif // __M4RI_CPU_L3_CACHE
+
+#if __M4RI_CPU_L2_CACHE == 0
 /*
  * Fix some standard value for L2 cache size if it couldn't be
  * determined by configure.
  */
-#define __M4RI_CPU_L2_CACHE 524288
+#define __M4RI_CPU_L2_CACHE 262144
 #endif // __M4RI_CPU_L2_CACHE
 
-#if __M4RI_CPU_L1_CACHE == 0 && !defined(M4RI_DOXYGEN)
+
+#if __M4RI_CPU_L1_CACHE == 0
 /*
  * Fix some standard value for L1 cache size if it couldn't be
  * determined by configure.

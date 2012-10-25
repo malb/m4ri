@@ -4,9 +4,9 @@
 #
 # DESCRIPTION
 #
-#   Find L1 and L2 caches size by running some timing experiments.
-#   The results are available in the defines __M4RI_CPU_L1_CACHE and
-#   __M4RI_CPU_L2_CACHE.
+#   Find L1, L2, L3 caches size by running some timing experiments.
+#   The results are available in the defines __M4RI_CPU_L1_CACHE,
+#   __M4RI_CPU_L2_CACHE and __M4RI_CPU_L3_CACHE.
 #
 #   This macro depends on AC_PROG_SED, AC_PROG_CC.
 #
@@ -40,13 +40,13 @@ double walltime(double t0) {
   struct timeval tp;
   static long base_sec = 0;
   static long base_usec = 0;
-  
+
   (void) gettimeofday(&tp,NULL);
   if (base_sec == 0) {
     base_sec = tp.tv_sec;
     base_usec = tp.tv_usec;
   }
-  
+
   time = (double) (tp.tv_sec - base_sec);
   mic = (double) (tp.tv_usec - base_usec);
   time = (time + mic * mega) - t0;
@@ -59,9 +59,9 @@ double run_experiment(size_t size, size_t trials) {
   unsigned long *b = (unsigned long*)malloc(size/4);
   unsigned long *c = (unsigned long*)malloc(size/4);
   unsigned long *d = (unsigned long*)malloc(size/4);
-  
+
   size_t n = size/4/(sizeof(unsigned long));
-  
+
   /* we setup a lookup table with a random-ish pattern */
   a[0] = 1337;
   b[0] = 5345345;
@@ -73,7 +73,7 @@ double run_experiment(size_t size, size_t trials) {
   }
   a[n-1] %= n;
   b[n-1] %= n;
-  
+
   double wt = walltime(0.0);
   clock_t ct = clock();
   for(i=0; i<trials; i++) {
@@ -105,8 +105,8 @@ size_t cache_size(const size_t *candidates, const size_t n, size_t trials) {
   double dtimes[NUMBER_OF_EXPERIMENTS][n];
   size_t i,j;
   double wt, result;
-  
-  
+
+
   for(j=0; j<NUMBER_OF_EXPERIMENTS; j++) {
     size_t mult  = 1;
     size_t _trials = trials;
@@ -125,10 +125,10 @@ size_t cache_size(const size_t *candidates, const size_t n, size_t trials) {
       wt = walltime(wt);
       times[j][i] = mult*result;
       dtimes[j][i] = candidates[i-1]*times[j][i]/times[j][i-1]/candidates[i];
-      
+
       printf("s: %5zu, rx: %6.2f, x: %6.2f, wt: %6.2f, dx: %6.2f\n",candidates[i],result,times[j][i],wt,dtimes[j][i]);
       fflush(NULL);
-      
+
       while(wt > 0.25) {
         _trials = _trials/2;
         mult = 2*mult;
@@ -145,29 +145,29 @@ size_t cache_size(const size_t *candidates, const size_t n, size_t trials) {
     }
     dtimes[0][i] = tmp/NUMBER_OF_EXPERIMENTS;
   }
-  
+
   size_t max = 1;
   for(i=1;i<n;i++){
-    if (dtimes[0][i] > dtimes[0][max]) {
+    if (dtimes[0][i] > dtimes[0][max] ) {
       max = i;
     }
   }
   return candidates[max-1];
 }
-      ]], 
+      ]],
       [[
-  const size_t c1[] = {4,8,16,32,64,128,256,512};
-  const size_t c2[] = {512,1024,1536,2048,3072,4096,6144,8192,16384,32768};
+  const size_t c1[] = {   4,   8,  16,  32,  64, 128, 256};
+  const size_t c2[] = { 128, 256, 512};
+  const size_t c3[] = {1024,1536,2048,3072,4096,6144,8192,16384,32768};
 
   FILE *f;
   printf("\n");
-  size_t _l1 = cache_size(c1,  8, 1ULL<<15);
-  size_t _l2 = cache_size(c2, 10, 1ULL<<10);
-
-  /*printf("%lu:%lu\n",(unsigned long)(_l1*1024),(unsigned long)(_l2*1024));*/
+  size_t _l1 = cache_size(c1,  7, 1ULL<<15);
+  size_t _l2 = cache_size(c2,  3, 1ULL<<12);
+  size_t _l3 = cache_size(c3,  9, 1ULL<< 9);
 
   f = fopen("conftest_cache_sizes", "w"); if (!f) return 1;
-  fprintf(f,"%lu:%lu\n",(unsigned long)(_l1*1024),(unsigned long)(_l2*1024));
+  fprintf(f,"%lu:%lu:%lu\n",(unsigned long)(_l1*1024),(unsigned long)(_l2*1024),(unsigned long)(_l3*1024));
   fclose(f);
   return 0;
    ]])],
@@ -176,15 +176,21 @@ size_t cache_size(const size_t *candidates, const size_t n, size_t trials) {
     [ax_cv_cache_sizes=unknown])])
   AC_LANG_POP([C])
   AC_MSG_CHECKING(the L1 cache size)
-  ax_l1_size=`echo $ax_cv_cache_sizes | $SED 's/\:.*//g'`
+  ax_l1_size=`echo $ax_cv_cache_sizes | cut -d ':' -f 1`
   AC_MSG_RESULT( $ax_l1_size Bytes)
 
   AC_MSG_CHECKING(the L2 cache size)
-  ax_l2_size=`echo $ax_cv_cache_sizes | $SED 's/.*\://g'`
+  ax_l2_size=`echo $ax_cv_cache_sizes | cut -d ':' -f 2`
   AC_MSG_RESULT( $ax_l2_size Bytes)
+
+  AC_MSG_CHECKING(the L3 cache size)
+  ax_l3_size=`echo $ax_cv_cache_sizes | cut -d ':' -f 3`
+  AC_MSG_RESULT( $ax_l3_size Bytes)
 
   M4RI_CPU_L1_CACHE=${ax_l1_size}
   M4RI_CPU_L2_CACHE=${ax_l2_size}
+  M4RI_CPU_L3_CACHE=${ax_l3_size}
   AC_SUBST(M4RI_CPU_L1_CACHE)
   AC_SUBST(M4RI_CPU_L2_CACHE)
+  AC_SUBST(M4RI_CPU_L3_CACHE)
 ])

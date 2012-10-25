@@ -49,7 +49,7 @@ void m4ri_mmc_cleanup(void);
 /**
  * \brief Maximal size of blocks stored in cache.
  */
-#define __M4RI_MMC_THRESHOLD __M4RI_CPU_L2_CACHE
+#define __M4RI_MMC_THRESHOLD __M4RI_CPU_L3_CACHE
 
 /**
  * \brief Tuple of pointer to allocated memory block and it's size.

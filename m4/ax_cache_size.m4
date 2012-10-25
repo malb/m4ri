@@ -54,6 +54,7 @@ AC_DEFUN([AX_CACHE_SIZE],
 
         ax_l1_size=$CPU0_L1_CACHE
         ax_l2_size=$CPU0_L2_CACHE
+        ax_l3_size=$CPU0_L3_CACHE
 
     else
       if test "x$ax_cv_cpu_vendor" != "xUnknown"; then
@@ -67,10 +68,17 @@ AC_DEFUN([AX_CACHE_SIZE],
         fi
 
 	if test "x$cpu_exthi" > "x80000005"; then
-          AX_GCC_X86_CPUID(0x80000006) # For L1 cache
+          AX_GCC_X86_CPUID(0x80000006) # For L2 cache
           l2_hexval=`echo $ax_cv_gcc_x86_cpuid_0x80000006 | cut -d ":" -f 3`
           ax_l2_size=$((0x$l2_hexval >> 16))
         fi
+
+	if test "x$cpu_exthi" > "x80000005"; then
+          AX_GCC_X86_CPUID(0x80000006) # For L3 cache
+          l2_hexval=`echo $ax_cv_gcc_x86_cpuid_0x80000006 | cut -d ":" -f 4`
+          ax_l2_size=$((0x$l2_hexval >> 18))*512
+        fi
+
       fi
 
       #Or use sysctl
@@ -86,7 +94,7 @@ AC_DEFUN([AX_CACHE_SIZE],
           if test ! -z "$sysctl_out"; then
             ax_l2_size=$(($sysctl_out / 1024))
           fi;
-	  
+
 	fi
 	if test -z "$ax_l1_size" -o "$ax_l1_size" = "0" ; then
           sysctl_out=`$sysctl_exe -n hw.l1dcachesize 2>/dev/null`;
@@ -97,7 +105,7 @@ AC_DEFUN([AX_CACHE_SIZE],
 	if test -z "$ax_l1_size" -o "ax_l1_size" = "0" ; then
           sysctl_out=`$sysctl_exe -n hw.l1cachesize 2>/dev/null`;
           if test ! -z "$sysctl_out"; then
-             ax_l1_size=$(($sysctl_out / 1024))            
+             ax_l1_size=$(($sysctl_out / 1024))
           fi;
         fi
       fi
@@ -105,6 +113,7 @@ AC_DEFUN([AX_CACHE_SIZE],
 
     test -z "$ax_l1_size" && ax_l1_size=0
     test -z "$ax_l2_size" && ax_l2_size=0
+    test -z "$ax_l3_size" && ax_l3_size=0
 
     # Keep only digits if there is a unit (ie 1024K -> 1024) and convert in Bytes
     AC_MSG_CHECKING(the L1 cache size)
@@ -117,8 +126,15 @@ AC_DEFUN([AX_CACHE_SIZE],
     ax_l2_size=$(($ax_l2_size*1024))
     AC_MSG_RESULT( $ax_l2_size Bytes)
 
+    AC_MSG_CHECKING(the L3 cache size)
+    ax_l3_size=`echo $ax_l3_size | $SED 's/\([[0-9]]\)[[A-Za-z]]$/\1/g'`
+    ax_l3_size=$(($ax_l3_size*1024))
+    AC_MSG_RESULT( $ax_l3_size Bytes)
+
     M4RI_CPU_L1_CACHE=${ax_l1_size}
     M4RI_CPU_L2_CACHE=${ax_l2_size}
+    M4RI_CPU_L3_CACHE=${ax_l3_size}
     AC_SUBST(M4RI_CPU_L1_CACHE)
     AC_SUBST(M4RI_CPU_L2_CACHE)
+    AC_SUBST(M4RI_CPU_L3_CACHE)
 ])

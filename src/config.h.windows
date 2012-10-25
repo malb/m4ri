@@ -7,7 +7,8 @@
 #define __M4RI_HAVE_SSE2		0
 #define __M4RI_HAVE_OPENMP		0
 #define __M4RI_CPU_L1_CACHE		32768
-#define __M4RI_CPU_L2_CACHE		2147483648
+#define __M4RI_CPU_L2_CACHE		262144
+#define __M4RI_CPU_L3_CACHE		2147483648
 #define __M4RI_DEBUG_DUMP		(0 || 0)
 #define __M4RI_DEBUG_MZD		0
 

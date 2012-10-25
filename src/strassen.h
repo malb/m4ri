@@ -161,7 +161,7 @@ mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t const *A, mzd_t const *B, int cut
  */
 
 #ifndef __M4RI_STRASSEN_MUL_CUTOFF
-#define __M4RI_STRASSEN_MUL_CUTOFF MIN(((int)sqrt((double)(4 * __M4RI_CPU_L2_CACHE))), 4096)
+#define __M4RI_STRASSEN_MUL_CUTOFF MIN(((int)sqrt((double)(4 * __M4RI_CPU_L3_CACHE))), 4096)
 #endif
 
 #endif // M4RI_STRASSEN_H

@@ -219,7 +219,7 @@ mzd_t *mzd_trtri_upper_russian(mzd_t *A, int k) {
     k = m4ri_opt_k(A->nrows, A->ncols, 0);
     if (k >= 7)
       k = 7;
-    if (0.75 * __M4RI_TWOPOW(k) *A->ncols > __M4RI_CPU_L2_CACHE / 2.0)
+    if (0.75 * __M4RI_TWOPOW(k) *A->ncols > __M4RI_CPU_L3_CACHE / 2.0)
       k -= 1;
   }
 

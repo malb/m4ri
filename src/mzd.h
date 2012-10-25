@@ -72,7 +72,7 @@
  * algorithm.
  */
 
-#define __M4RI_MUL_BLOCKSIZE MIN(((int)sqrt((double)(4 * __M4RI_CPU_L2_CACHE))) / 2, 2048)
+#define __M4RI_MUL_BLOCKSIZE MIN(((int)sqrt((double)(4 * __M4RI_CPU_L3_CACHE))) / 2, 2048)
 
 typedef struct {
   size_t size;

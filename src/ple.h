@@ -37,7 +37,7 @@
  * Crossover point for PLUQ factorization.
  */
 
-#define __M4RI_PLE_CUTOFF MIN(524288, __M4RI_CPU_L2_CACHE >> 3)
+#define __M4RI_PLE_CUTOFF MIN(524288, __M4RI_CPU_L3_CACHE >> 3)
 
 /**
  * \brief PLUQ matrix decomposition.

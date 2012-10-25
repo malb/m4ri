@@ -687,7 +687,7 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
     k = m4ri_opt_k(A->nrows, ncols, 0);
     if (k >= 7)
       k = 7;
-    if (0.75 * __M4RI_TWOPOW(k) * ncols > __M4RI_CPU_L2_CACHE / 2.0)
+    if (0.75 * __M4RI_TWOPOW(k) * ncols > __M4RI_CPU_L3_CACHE / 2.0)
       k -= 1;
   }
   int kk = 6 * k;
@@ -893,7 +893,7 @@ rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r) {
     k = m4ri_opt_k(max_r, A->ncols, 0);
     if (k >= 7)
       k = 7;
-    if (0.75 * __M4RI_TWOPOW(k) *A->ncols > __M4RI_CPU_L2_CACHE / 2.0)
+    if (0.75 * __M4RI_TWOPOW(k) *A->ncols > __M4RI_CPU_L3_CACHE / 2.0)
       k -= 1;
   }
   int kk = 6 * k;
