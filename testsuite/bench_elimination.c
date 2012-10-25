@@ -33,15 +33,25 @@ int run_nothing(void *_p, unsigned long long *data, int *data_len) {
     mzd_randomize(U);
     mzd_randomize(L);
     for (rci_t i = 0; i < p->m; ++i) {
-      mzd_write_bit(U,i,i, 1);
-      for (rci_t j = 0; j < i; ++j)
-        mzd_write_bit(U,i,j, 0);
-      if (i >= p->r)
-        for (rci_t j = i; j < p->n; ++j)
-          mzd_write_bit(U,i,j, 0);
-      for (rci_t j = i + 1; j < p->m; ++j)
-        mzd_write_bit(L,i,j, 0);
+
+      for (rci_t j = i + 1; j < p->m; j+=m4ri_radix) {
+        int const length = MIN(m4ri_radix, p->m - j);
+        mzd_clear_bits(L, i, j, length);
+      }
       mzd_write_bit(L,i,i, 1);
+
+      for (rci_t j = 0; j < i; j+=m4ri_radix) {
+        int const length = MIN(m4ri_radix, i - j);
+        mzd_clear_bits(U, i, j, length);
+      }
+      if(i < p->r) {
+        mzd_write_bit(U, i, i, 1);
+      } else {
+        for (rci_t j = i; j < p->n; j+=m4ri_radix) {
+          int const length = MIN(m4ri_radix, p->n - i);
+          mzd_clear_bits(U, i, j, length);
+        }
+      }
     }
     mzd_mul(A,L,U,0);
     mzd_free(L);
@@ -105,15 +115,25 @@ int run(void *_p, unsigned long long *data, int *data_len) {
     mzd_randomize(U);
     mzd_randomize(L);
     for (rci_t i = 0; i < p->m; ++i) {
-      mzd_write_bit(U,i,i, 1);
-      for (rci_t j = 0; j < i; ++j)
-        mzd_write_bit(U,i,j, 0);
-      if (i >= p->r)
-        for (rci_t j = i; j < p->n; ++j)
-          mzd_write_bit(U,i,j, 0);
-      for (rci_t j = i + 1; j < p->m; ++j)
-        mzd_write_bit(L,i,j, 0);
+
+      for (rci_t j = i + 1; j < p->m; j+=m4ri_radix) {
+        int const length = MIN(m4ri_radix, p->m - j);
+        mzd_clear_bits(L, i, j, length);
+      }
       mzd_write_bit(L,i,i, 1);
+
+      for (rci_t j = 0; j < i; j+=m4ri_radix) {
+        int const length = MIN(m4ri_radix, i - j);
+        mzd_clear_bits(U, i, j, length);
+      }
+      if(i < p->r) {
+        mzd_write_bit(U, i, i, 1);
+      } else {
+        for (rci_t j = i; j < p->n; j+=m4ri_radix) {
+          int const length = MIN(m4ri_radix, p->n - i);
+          mzd_clear_bits(U, i, j, length);
+        }
+      }
     }
     mzd_mul(A,L,U,0);
     mzd_free(L);
@@ -209,7 +229,7 @@ int main(int argc, char **argv) {
   srandom(17);
   unsigned long long data[16];
 
-  for (int i = 0; i < 16; ++i)
+  for (int i = 0; i < 4; ++i)
     run_nothing((void*)&params, data, &data_len);
 
   run_bench(run, (void*)&params, data, data_len);
