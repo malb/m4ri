@@ -1069,6 +1069,8 @@ mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k) {
   return _mzd_mul_m4rm(C, A, B, k, FALSE);
 }
 
+#define __M4RI_M4RM_NTABLES 8
+
 mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear) {
   /**
    * The algorithm proceeds as follows:
@@ -1089,13 +1091,11 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
   assert(A->offset == 0);
   assert(B->offset == 0);
   assert(C->offset == 0);
-  rci_t x1, x2, x3, x4;
-  word *t1, *t2, *t3, *t4;
 
-#ifdef __M4RI_M4RM_GRAY8
-  rci_t x5, x6, x7, x8;
-  word *t5, *t6, *t7, *t8;
-#endif
+  rci_t  x[__M4RI_M4RM_NTABLES];
+  rci_t *L[__M4RI_M4RM_NTABLES];
+  word  *t[__M4RI_M4RM_NTABLES];
+  mzd_t *T[__M4RI_M4RM_NTABLES];
 
   word *c;
 
@@ -1110,148 +1110,59 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
       return mzd_addmul_naive(C, A, B);
   }
 
-  wi_t wide = C->width;
-
   /* clear first */
   if (clear) {
     mzd_set_ui(C, 0);
   }
 
-  int const blocksize = __M4RI_MUL_BLOCKSIZE;
+  const int blocksize = __M4RI_MUL_BLOCKSIZE;
 
-  if (k == 0) {
-    k = m4ri_opt_k(blocksize, a_nc, b_nc);
-#ifdef __M4RI_M4RM_GRAY8
-    if (k > 3)
-      k -= 2;
-    /* reduce k further if that has a chance of hitting L1 */
-    size_t const tsize = 0.8 * __M4RI_TWOPOW(k) * b_nc;
-    if(__M4RI_CPU_L1_CACHE < tsize && tsize <= 2 * __M4RI_CPU_L1_CACHE)
-      k -= 1;
-#else
-    if (k > 2)
-      k -= 1;
-#endif
+  /* __M4RI_CPU_L2_CACHE == 2^k * B->width * 8 * 8 */
+  k = (int)log2((__M4RI_CPU_L2_CACHE/64)/(double)B->width);
+
+  const wi_t wide = C->width;
+  const word bm = __M4RI_TWOPOW(k)-1;
+
+  rci_t *buffer = (rci_t*)m4ri_mm_malloc(__M4RI_M4RM_NTABLES * __M4RI_TWOPOW(k) * sizeof(rci_t));
+  for(int z=0; z<__M4RI_M4RM_NTABLES; z++) {
+    L[z] = buffer + z*__M4RI_TWOPOW(k);
+    T[z] = mzd_init(__M4RI_TWOPOW(k), b_nc);
   }
-
-#ifndef __M4RI_M4RM_GRAY8
-  rci_t *buffer = (rci_t*)m4ri_mm_malloc(4 * __M4RI_TWOPOW(k) * sizeof(rci_t));
-#else
-  rci_t *buffer = (rci_t*)m4ri_mm_malloc(8 * __M4RI_TWOPOW(k) * sizeof(rci_t));
-#endif
-
-  mzd_t *T1 = mzd_init(__M4RI_TWOPOW(k), b_nc);
-  rci_t *L1 = buffer;
-  mzd_t *T2 = mzd_init(__M4RI_TWOPOW(k), b_nc);
-  rci_t *L2 = buffer + 1*__M4RI_TWOPOW(k);
-  mzd_t *T3 = mzd_init(__M4RI_TWOPOW(k), b_nc);
-  rci_t *L3 = buffer + 2*__M4RI_TWOPOW(k);
-  mzd_t *T4 = mzd_init(__M4RI_TWOPOW(k), b_nc);
-  rci_t *L4 = buffer + 3*__M4RI_TWOPOW(k);
-
-#ifdef __M4RI_M4RM_GRAY8
-  mzd_t *T5 = mzd_init(__M4RI_TWOPOW(k), b_nc);
-  rci_t *L5 = buffer + 4*__M4RI_TWOPOW(k);
-  mzd_t *T6 = mzd_init(__M4RI_TWOPOW(k), b_nc);
-  rci_t *L6 = buffer + 5*__M4RI_TWOPOW(k);
-  mzd_t *T7 = mzd_init(__M4RI_TWOPOW(k), b_nc);
-  rci_t *L7 = buffer + 6*__M4RI_TWOPOW(k);
-  mzd_t *T8 = mzd_init(__M4RI_TWOPOW(k), b_nc);
-  rci_t *L8 = buffer + 7*__M4RI_TWOPOW(k);
-#endif
 
   /* process stuff that fits into multiple of k first, but blockwise (babystep-giantstep)*/
-#ifdef __M4RI_M4RM_GRAY8
-  int const kk = 8 * k;
-#else
-  int const kk = 4 * k;
-#endif
+  int const kk = __M4RI_M4RM_NTABLES * k;
   rci_t const end = a_nc / kk;
 
-  rci_t giantstep = 0;
-  for (; giantstep + blocksize <= a_nr; giantstep += blocksize) {
+  for (rci_t giantstep = 0; giantstep < a_nr; giantstep += blocksize) {
     for(rci_t i = 0; i < end; ++i) {
-      mzd_make_table( B, kk*i, 0, k, T1, L1);
-      mzd_make_table( B, kk*i+k, 0, k, T2, L2);
-      mzd_make_table( B, kk*i+k+k, 0, k, T3, L3);
-      mzd_make_table( B, kk*i+k+k+k, 0, k, T4, L4);
-#ifdef __M4RI_M4RM_GRAY8
-      mzd_make_table( B, kk*i+k+k+k+k, 0, k, T5, L5);
-      mzd_make_table( B, kk*i+k+k+k+k+k, 0, k, T6, L6);
-      mzd_make_table( B, kk*i+k+k+k+k+k+k, 0, k, T7, L7);
-      mzd_make_table( B, kk*i+k+k+k+k+k+k+k, 0, k, T8, L8);
-#endif
-
-#if __M4RI_HAVE_OPENMP
-#pragma omp parallel for private(x1,x2,x3,x4,x5,x6,x7,x8,c,t1,t2,t3,t4,t5,t6,t7,t8) schedule(static,16)
-#endif
-      for(int babystep = 0; babystep < blocksize; ++babystep) {
-        rci_t j = giantstep + babystep;
-        x1 = L1[ mzd_read_bits_int(A, j, kk*i, k) ];
-        x2 = L2[ mzd_read_bits_int(A, j, kk*i+k, k) ];
-        x3 = L3[ mzd_read_bits_int(A, j, kk*i+k+k, k) ];
-        x4 = L4[ mzd_read_bits_int(A, j, kk*i+k+k+k, k) ];
-#ifdef __M4RI_M4RM_GRAY8
-        x5 = L5[ mzd_read_bits_int(A, j, kk*i+k+k+k+k, k) ];
-        x6 = L6[ mzd_read_bits_int(A, j, kk*i+k+k+k+k+k, k) ];
-        x7 = L7[ mzd_read_bits_int(A, j, kk*i+k+k+k+k+k+k, k) ];
-        x8 = L8[ mzd_read_bits_int(A, j, kk*i+k+k+k+k+k+k+k, k) ];
-#endif
-        c = C->rows[j];
-        t1 = T1->rows[x1];
-        t2 = T2->rows[x2];
-        t3 = T3->rows[x3];
-        t4 = T4->rows[x4];
-#ifdef __M4RI_M4RM_GRAY8
-        t5 = T5->rows[x5];
-        t6 = T6->rows[x6];
-        t7 = T7->rows[x7];
-        t8 = T8->rows[x8];
-#endif
-        _MZD_COMBINE;
+      for(int z=0; z<__M4RI_M4RM_NTABLES; z++) {
+        mzd_make_table( B, kk*i + k*z, 0, k, T[z], L[z]);
       }
-    }
-  }
 
-  for(rci_t i = 0; i < end; ++i) {
-    mzd_make_table( B, kk*i, 0, k, T1, L1);
-    mzd_make_table( B, kk*i+k, 0, k, T2, L2);
-    mzd_make_table( B, kk*i+k+k, 0, k, T3, L3);
-    mzd_make_table( B, kk*i+k+k+k, 0, k, T4, L4);
-#ifdef __M4RI_M4RM_GRAY8
-    mzd_make_table( B, kk*i+k+k+k+k, 0, k, T5, L5);
-    mzd_make_table( B, kk*i+k+k+k+k+k, 0, k, T6, L6);
-    mzd_make_table( B, kk*i+k+k+k+k+k+k, 0, k, T7, L7);
-    mzd_make_table( B, kk*i+k+k+k+k+k+k+k, 0, k, T8, L8);
-#endif
+      const rci_t blockend = MIN(giantstep+blocksize, a_nr);
+      for(rci_t j = giantstep; j < blockend; j++) {
+        const word a = mzd_read_bits(A, j, kk*i, kk);
+        x[ 0] = L[ 0][ (a >> 0*k) & bm ];
+        x[ 1] = L[ 1][ (a >> 1*k) & bm ];
+        x[ 2] = L[ 2][ (a >> 2*k) & bm ];
+        x[ 3] = L[ 3][ (a >> 3*k) & bm ];
+        x[ 4] = L[ 4][ (a >> 4*k) & bm ];
+        x[ 5] = L[ 5][ (a >> 5*k) & bm ];
+        x[ 6] = L[ 6][ (a >> 6*k) & bm ];
+        x[ 7] = L[ 7][ (a >> 7*k) & bm ];
 
-#if __M4RI_HAVE_OPENMP
-#pragma omp parallel for private(x1,x2,x3,x4,x5,x6,x7,x8,c,t1,t2,t3,t4,t5,t6,t7,t8) schedule(static,16)
-#endif
-    for(int babystep = 0; babystep < a_nr - giantstep; ++babystep) {
-      rci_t j = giantstep + babystep;
-      x1 = L1[ mzd_read_bits_int(A, j, kk*i, k) ];
-      x2 = L2[ mzd_read_bits_int(A, j, kk*i+k, k) ];
-      x3 = L3[ mzd_read_bits_int(A, j, kk*i+k+k, k) ];
-      x4 = L4[ mzd_read_bits_int(A, j, kk*i+k+k+k, k) ];
-#ifdef __M4RI_M4RM_GRAY8
-      x5 = L5[ mzd_read_bits_int(A, j, kk*i+k+k+k+k, k) ];
-      x6 = L6[ mzd_read_bits_int(A, j, kk*i+k+k+k+k+k, k) ];
-      x7 = L7[ mzd_read_bits_int(A, j, kk*i+k+k+k+k+k+k, k) ];
-      x8 = L8[ mzd_read_bits_int(A, j, kk*i+k+k+k+k+k+k+k, k) ];
-#endif
-      c = C->rows[j];
-      t1 = T1->rows[x1];
-      t2 = T2->rows[x2];
-      t3 = T3->rows[x3];
-      t4 = T4->rows[x4];
-#ifdef __M4RI_M4RM_GRAY8
-      t5 = T5->rows[x5];
-      t6 = T6->rows[x6];
-      t7 = T7->rows[x7];
-      t8 = T8->rows[x8];
-#endif
-      _MZD_COMBINE;
+        c = C->rows[j];
+        t[ 0] = T[ 0]->rows[x[ 0]];
+        t[ 1] = T[ 1]->rows[x[ 1]];
+        t[ 2] = T[ 2]->rows[x[ 2]];
+        t[ 3] = T[ 3]->rows[x[ 3]];
+        t[ 4] = T[ 4]->rows[x[ 4]];
+        t[ 5] = T[ 5]->rows[x[ 5]];
+        t[ 6] = T[ 6]->rows[x[ 6]];
+        t[ 7] = T[ 7]->rows[x[ 7]];
+
+        _mzd_combine8(c, t[ 0], t[ 1], t[ 2], t[ 3], t[ 4], t[ 5], t[ 6], t[ 7], wide);
+      }
     }
   }
 
@@ -1259,40 +1170,32 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
   if (a_nc%kk) {
     rci_t i;
     for (i = kk / k * end; i < a_nc / k; ++i) {
-      mzd_make_table( B, k*i, 0, k, T1, L1);
+      mzd_make_table( B, k*i, 0, k, T[0], L[0]);
       for(rci_t j = 0; j < a_nr; ++j) {
-        x1 = L1[ mzd_read_bits_int(A, j, k*i, k) ];
+        x[0] = L[0][ mzd_read_bits_int(A, j, k*i, k) ];
         c = C->rows[j];
-        t1 = T1->rows[x1];
+        t[0] = T[0]->rows[x[0]];
         for(wi_t ii = 0; ii < wide; ++ii) {
-          c[ii] ^= t1[ii];
+          c[ii] ^= t[0][ii];
         }
       }
     }
     /* handle stuff that doesn't fit into multiple of k */
     if (a_nc%k) {
-      mzd_make_table( B, k*(a_nc/k), 0, a_nc%k, T1, L1);
+      mzd_make_table( B, k*(a_nc/k), 0, a_nc%k, T[0], L[0]);
       for(rci_t j = 0; j < a_nr; ++j) {
-        x1 = L1[ mzd_read_bits_int(A, j, k*i, a_nc%k) ];
+        x[0] = L[0][ mzd_read_bits_int(A, j, k*i, a_nc%k) ];
         c = C->rows[j];
-        t1 = T1->rows[x1];
+        t[0] = T[0]->rows[x[0]];
         for(wi_t ii = 0; ii < wide; ++ii) {
-          c[ii] ^= t1[ii];
+          c[ii] ^= t[0][ii];
         }
       }
     }
   }
 
-  mzd_free(T1);
-  mzd_free(T2);
-  mzd_free(T3);
-  mzd_free(T4);
-#ifdef __M4RI_M4RM_GRAY8
-  mzd_free(T5);
-  mzd_free(T6);
-  mzd_free(T7);
-  mzd_free(T8);
-#endif
+  for(int j=0; j<__M4RI_M4RM_NTABLES; j++)
+    mzd_free(T[j]);
   m4ri_mm_free(buffer);
 
   __M4RI_DD_MZD(C);

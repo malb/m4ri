@@ -309,11 +309,4 @@ static inline void _mzd_combine(word *c, word const *t1, wi_t wide_in) {
   __M4RI_DD_RAWROW(c, wide_in);
 }
 
-
-#ifdef __M4RI_M4RM_GRAY8
-#define _MZD_COMBINE _mzd_combine8(c, t1, t2, t3, t4, t5, t6, t7, t8, wide)
-#else // __M4RI_M4RM_GRAY8
-#define _MZD_COMBINE _mzd_combine4(c, t1, t2, t3, t4, wide)
-#endif // __M4RI_M4RM_GRAY8
-
 #endif // M4RI_XOR_H
