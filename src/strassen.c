@@ -58,23 +58,22 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
 
   /* handle case first, where the input matrices are too small already */
   if (CLOSER(m, cutoff) || CLOSER(k, cutoff) || CLOSER(n, cutoff)) {
-    /* we copy the matrix first since it is only constant memory
-       overhead and improves data locality, if you remove it make sure
-       there are no speed regressions */
-    /* C = _mzd_mul_m4rm(C, A, B, 0, TRUE); */
-    mzd_t *Cbar = mzd_init(m, n);
-    _mzd_mul_m4rm(Cbar, A, B, 0, FALSE);
-    mzd_copy(C, Cbar);
-    mzd_free(Cbar);
+    /* we copy the matrices first since it is only constant memory overhead and improves data
+       locality */
+    if(mzd_is_windowed(A)|mzd_is_windowed(B)|mzd_is_windowed(C)) {
+      mzd_t *Abar = mzd_copy(NULL, A);
+      mzd_t *Bbar = mzd_copy(NULL, B);
+      mzd_t *Cbar = mzd_init(m, n);
+      _mzd_mul_m4rm(Cbar, Abar, Bbar, 0, FALSE);
+      mzd_copy(C, Cbar);
+      mzd_free(Cbar);
+      mzd_free(Bbar);
+      mzd_free(Abar);
+    } else {
+      _mzd_mul_m4rm(C, A, B, 0, TRUE);
+    }
     return C;
   }
-
-/* #if __M4RI_HAVE_OPENMP */
-/*   if (omp_get_num_threads() < omp_get_max_threads()) { */
-/*     mzd_set_ui(C, 0); */
-/*     return _mzd_addmul_mp_even(C, A, B, cutoff); */
-/*   } */
-/* #endif */
 
   /* adjust cutting numbers to work on words */
   {
@@ -217,14 +216,18 @@ mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
   m = A->nrows;
   /* handle case first, where the input matrices are too small already */
   if (CLOSER(m, cutoff)) {
-    /* we copy the matrix first since it is only constant memory
-       overhead and improves data locality, if you remove it make sure
-       there are no speed regressions */
-    /* C = _mzd_mul_m4rm(C, A, B, 0, TRUE); */
-    mzd_t *Cbar = mzd_init(m, m);
-    _mzd_mul_m4rm(Cbar, A, A, 0, FALSE);
-    mzd_copy(C, Cbar);
-    mzd_free(Cbar);
+    /* we copy the matrices first since it is only constant memory overhead and improves data
+       locality */
+    if(mzd_is_windowed(A)|mzd_is_windowed(C)) {
+      mzd_t *Abar = mzd_copy(NULL, A);
+      mzd_t *Cbar = mzd_init(m, m);
+      _mzd_mul_m4rm(Cbar, Abar, Abar, 0, FALSE);
+      mzd_copy(C, Cbar);
+      mzd_free(Cbar);
+      mzd_free(Abar);
+    } else {
+      _mzd_mul_m4rm(C, A, A, 0, TRUE);
+    }
     return C;
   }
 
@@ -505,21 +508,22 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
 
   /* handle case first, where the input matrices are too small already */
   if (CLOSER(m, cutoff) || CLOSER(k, cutoff) || CLOSER(n, cutoff)) {
-    /* we copy the matrix first since it is only constant memory
-       overhead and improves data locality, if you remove it make sure
-       there are no speed regressions */
-    mzd_t *Cbar = mzd_copy(NULL, C);
-    mzd_addmul_m4rm(Cbar, A, B, 0);
-    mzd_copy(C, Cbar);
-    mzd_free(Cbar);
+    /* we copy the matrices first since it is only constant memory overhead and improves data
+       locality */
+    if(mzd_is_windowed(A)|mzd_is_windowed(B)|mzd_is_windowed(C)) {
+      mzd_t *Abar = mzd_copy(NULL, A);
+      mzd_t *Bbar = mzd_copy(NULL, B);
+      mzd_t *Cbar = mzd_copy(NULL, C);
+      mzd_addmul_m4rm(Cbar, Abar, Bbar, 0);
+      mzd_copy(C, Cbar);
+      mzd_free(Cbar);
+      mzd_free(Bbar);
+      mzd_free(Abar);
+    } else {
+      mzd_addmul_m4rm(C, A, B, 0);
+    }
     return C;
   }
-
-/* #if __M4RI_HAVE_OPENMP */
-/*   if (omp_get_num_threads() < omp_get_max_threads()) { */
-/*     return _mzd_addmul_mp_even(C, A, B, cutoff); */
-/*   } */
-/* #endif */
 
   /* adjust cutting numbers to work on words */
   rci_t mmm, kkk, nnn;
@@ -658,13 +662,18 @@ mzd_t *_mzd_addsqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
 
   /* handle case first, where the input matrices are too small already */
   if (CLOSER(m, cutoff)) {
-    /* we copy the matrix first since it is only constant memory
-       overhead and improves data locality, if you remove it make sure
-       there are no speed regressions */
-    mzd_t *Cbar = mzd_copy(NULL, C);
-    mzd_addmul_m4rm(Cbar, A, A, 0);
-    mzd_copy(C, Cbar);
-    mzd_free(Cbar);
+    /* we copy the matrices first since it is only constant memory overhead and improves data
+       locality */
+    if(mzd_is_windowed(A)|mzd_is_windowed(C)) {
+      mzd_t *Cbar = mzd_copy(NULL, C);
+      mzd_t *Abar = mzd_copy(NULL, A);
+      mzd_addmul_m4rm(Cbar, Abar, Abar, 0);
+      mzd_copy(C, Cbar);
+      mzd_free(Cbar);
+      mzd_free(Abar);
+    } else {
+      mzd_addmul_m4rm(C, A, A, 0);
+    }
     return C;
   }
 
