@@ -837,3 +837,40 @@ void print_wall_time(double seconds) {
   else
     printf("wall time: %10.5f us", 1000000.0 * seconds);
 }
+
+#ifdef HAVE_LIBPAPI
+int papi_test(int * papi_events, int papi_array_len) {
+  int res = PAPI_start_counters(papi_events, papi_array_len);
+  switch(res) {
+  case 0: {
+    long long* tmp = (long long*)malloc(papi_array_len * sizeof(long long));
+    PAPI_stop_counters(tmp, papi_array_len);
+    free(tmp);
+    break;
+  }
+  case PAPI_ECNFLCT: {
+    fprintf(stderr, "%s: %s: Conflicting event: The underlying counter hardware cannot count the specified events simultaneously.\n", progname, papi_event_name(papi_events[papi_array_len - 1]));
+    fprintf(stderr, "Run `papi_event_chooser PRESET");
+    for (int nv = 0; nv < papi_array_len - 1; ++nv)
+      fprintf(stderr, " %s", papi_event_name(papi_events[nv]));
+    fprintf(stderr, "` to get a list of possible events that can be added.\n");
+    break;
+  }
+  case PAPI_ENOEVNT: {
+    for (int nv = 0; nv < papi_array_len; ++nv)
+      if ((res = PAPI_query_event(papi_events[nv])) != PAPI_OK) {
+        fprintf(stderr, "%s: PAPI_start_counters: %s: %s.\n", progname, papi_event_name(papi_events[nv]), PAPI_strerror(res));
+        break;
+      }
+    break;
+  }
+  case PAPI_ESYS:
+    fprintf(stderr, "%s: PAPI_start_counters: %s\n", progname, strerror(errno));
+    break;
+  default:
+    fprintf(stderr, "%s: PAPI_start_counters: %s.\n", progname, PAPI_strerror(res));
+    break;
+  }
+  return res;
+}
+#endif

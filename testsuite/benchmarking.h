@@ -31,6 +31,7 @@ int run_bench(
 extern int papi_events[];
 extern int papi_array_len;
 char* papi_event_name(int event);
+int papi_test(int * papi_events, int papi_array_len);
 #endif
 
 void print_wall_time(double seconds);
