@@ -280,7 +280,7 @@ int main() {
   status += sqr_test_equality(128, 0, 64);
   status += sqr_test_equality(171, 0, 63); 
   status += sqr_test_equality(171, 0, 131); 
-  status += sqr_test_equality(193, 10, 64);
+  status += sqr_test_equality(193, 8, 64);
   status += sqr_test_equality(1025, 3, 256);
   status += sqr_test_equality(2048, 0, 1024);
   status += sqr_test_equality(3528, 0, 1024);
@@ -298,7 +298,7 @@ int main() {
   status += addsqr_test_equality(128, 0, 64);
   status += addsqr_test_equality(171, 0, 63);
   status += addsqr_test_equality(171, 0, 131);
-  status += addsqr_test_equality(193, 10, 64);
+  status += addsqr_test_equality(193, 8, 64);
   status += addsqr_test_equality(1025, 3, 256);
   status += addsqr_test_equality(4096, 0, 2048);
   status += addsqr_test_equality(1000, 0, 256);

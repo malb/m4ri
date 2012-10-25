@@ -946,8 +946,8 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
     else if(k>8)
       k=8;
   }
-
   int kk = __M4RI_PLE_NTABLES * k;
+  assert(kk <= m4ri_radix);
 
   /** initialise permutations as identity **/
 

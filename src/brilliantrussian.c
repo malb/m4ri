@@ -1138,6 +1138,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
 
   /* process stuff that fits into multiple of k first, but blockwise (babystep-giantstep)*/
   int const kk = __M4RI_M4RM_NTABLES * k;
+  assert(kk <= m4ri_radix);
   rci_t const end = a_nc / kk;
 
   for (rci_t giantstep = 0; giantstep < a_nr; giantstep += blocksize) {
