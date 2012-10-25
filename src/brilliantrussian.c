@@ -1119,6 +1119,10 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
 
   /* __M4RI_CPU_L2_CACHE == 2^k * B->width * 8 * 8 */
   k = (int)log2((__M4RI_CPU_L2_CACHE/64)/(double)B->width);
+  if (k<2)
+    k=2;
+  else if(k>8)
+    k=8;
 
   const wi_t wide = C->width;
   const word bm = __M4RI_TWOPOW(k)-1;

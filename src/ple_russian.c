@@ -947,6 +947,10 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
   }
   /* __M4RI_CPU_L2_CACHE == __M4RI_PLE_NTABLES * 2^k * B->width * 8 */
   k = (int)log2((__M4RI_CPU_L2_CACHE/8)/(double)A->width/(double)__M4RI_PLE_NTABLES);
+  if (k<2)
+    k=2;
+  else if(k>8)
+    k=8;
 
   int kk = __M4RI_PLE_NTABLES * k;
 

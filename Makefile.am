@@ -54,51 +54,51 @@ libm4ri_la_LIBADD = $(LIBPNG_LIBADD)
 
 check_PROGRAMS=test_multiplication test_elimination test_trsm test_ple test_solve test_kernel test_random test_smallops test_transpose test_colswap test_invert test_misc
 test_multiplication_SOURCES=testsuite/test_multiplication.c
-test_multiplication_LDFLAGS=-lm4ri
+test_multiplication_LDFLAGS=-lm4ri -lm
 test_multiplication_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
 
 test_elimination_SOURCES=testsuite/test_elimination.c
-test_elimination_LDFLAGS=-lm4ri
+test_elimination_LDFLAGS=-lm4ri -lm
 test_elimination_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
 
 test_trsm_SOURCES=testsuite/test_trsm.c
-test_trsm_LDFLAGS=-lm4ri
+test_trsm_LDFLAGS=-lm4ri -lm
 test_trsm_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
 
 test_ple_SOURCES=testsuite/test_ple.c
-test_ple_LDFLAGS=-lm4ri
+test_ple_LDFLAGS=-lm4ri -lm
 test_ple_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
 
 test_solve_SOURCES=testsuite/test_solve.c
-test_solve_LDFLAGS=-lm4ri
+test_solve_LDFLAGS=-lm4ri -lm
 test_solve_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
 
 test_kernel_SOURCES=testsuite/test_kernel.c
-test_kernel_LDFLAGS=-lm4ri
+test_kernel_LDFLAGS=-lm4ri -lm
 test_kernel_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
 
 test_random_SOURCES=testsuite/test_random.c
-test_random_LDFLAGS=-lm4ri
+test_random_LDFLAGS=-lm4ri -lm
 test_random_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
 
 test_smallops_SOURCES=testsuite/test_smallops.c testsuite/testing.c testsuite/testing.h
-test_smallops_LDFLAGS=-lm4ri
+test_smallops_LDFLAGS=-lm4ri -lm
 test_smallops_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
 
 test_transpose_SOURCES=testsuite/test_transpose.c
-test_transpose_LDFLAGS=-lm4ri
+test_transpose_LDFLAGS=-lm4ri -lm
 test_transpose_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
 
 test_colswap_SOURCES=testsuite/test_colswap.c
-test_colswap_LDFLAGS=-lm4ri
+test_colswap_LDFLAGS=-lm4ri -lm
 test_colswap_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
 
 test_invert_SOURCES=testsuite/test_invert.c
-test_invert_LDFLAGS=-lm4ri
+test_invert_LDFLAGS=-lm4ri -lm
 test_invert_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
 
 test_misc_SOURCES=testsuite/test_misc.c
-test_misc_LDFLAGS=-lm4ri
+test_misc_LDFLAGS=-lm4ri -lm
 test_misc_CFLAGS=-I$(srcdir)/src $(AM_CFLAGS)
 
 TESTS = test_multiplication test_elimination test_trsm test_ple test_solve test_kernel test_random test_smallops test_transpose test_colswap test_invert test_misc
