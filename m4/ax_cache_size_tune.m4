@@ -156,13 +156,13 @@ size_t cache_size(const size_t *candidates, const size_t n, size_t trials) {
 }
       ]],
       [[
-  const size_t c1[] = {   4,   8,  16,  32,  64, 128, 256};
+  const size_t c1[] = {   4,   8,  16,  32,  64, 128};
   const size_t c2[] = { 128, 256, 512};
   const size_t c3[] = {1024,1536,2048,3072,4096,6144,8192,16384,32768};
 
   FILE *f;
   printf("\n");
-  size_t _l1 = cache_size(c1,  7, 1ULL<<15);
+  size_t _l1 = cache_size(c1,  6, 1ULL<<15);
   size_t _l2 = cache_size(c2,  3, 1ULL<<12);
   size_t _l3 = cache_size(c3,  9, 1ULL<< 9);
 
