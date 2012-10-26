@@ -4,7 +4,7 @@ AC_PREREQ([2.64])
 
 AC_CANONICAL_HOST
 
-AC_CONFIG_SRCDIR(src/brilliantrussian.c)
+AC_CONFIG_SRCDIR(m4ri/brilliantrussian.c)
 
 AM_INIT_AUTOMAKE
 
@@ -21,7 +21,7 @@ AC_PROG_LIBTOOL
 
 AC_PROG_INSTALL
 
-AC_CONFIG_HEADERS(src/config.h)
+AC_CONFIG_HEADERS(m4ri/config.h)
 
 dnl Check if a C++ compiler was specified. If so, assume we want to wrap word in a C++ class.
 AC_EGREP_CPP(YES, [
@@ -257,6 +257,6 @@ AC_SUBST(RELEASE)
 
 AC_PROG_MAKE_SET
 
-AC_CONFIG_FILES([Makefile testsuite/Makefile src/m4ri_config.h m4ri.pc])
+AC_CONFIG_FILES([Makefile testsuite/Makefile m4ri/m4ri_config.h m4ri.pc])
 AC_OUTPUT
 
