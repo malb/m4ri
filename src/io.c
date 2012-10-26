@@ -347,14 +347,14 @@ mzd_t *mzd_from_jcf(const char *fn, int verbose) {
 
   A = mzd_init(m,n);
   
-  rci_t i = (rci_t)-1;
+  long i = -1;
   long j = 0;
 
   while(fscanf(fh,"%ld\n",&j) == 1) {
     if (j<0) {
       i++, j = -j;
     }
-    mzd_write_bit(A, i, j, 1);
+    mzd_write_bit(A, i, j-1, 1);
   };
 
  from_jcf_close_fh:

@@ -105,7 +105,28 @@ nonzero_entries_upper_bound
 column_index
 \endverbatim
  *
- * where a negative column_index indicates a row increase by one.
+ * where a negative column_index indicates a row_index increase by one and a non-zero entry at index
+ * -column_index.
+ *
+ * \note the JCF format is one-based in contrast to everything else in this library which is
+ * zero-based.
+ *
+ * For example, a valid input is:
+\verbatim
+2 3 2
+3
+
+-2
+-1
+-2
+\endverbatim
+ *
+ * which produces the matrix
+\verbatim
+[0 1]
+[1 1]
+\endverbatim
+ *
  *
  * \param fn Filename
  * \param verbose Print error message to stdout if != 0
