@@ -28,7 +28,7 @@
  *
  ********************************************************************/
 
-#include "mzd.h"
+#include <m4ri/mzd.h>
 
 void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k);
 

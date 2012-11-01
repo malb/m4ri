@@ -29,7 +29,7 @@
  * \author David Harvey
  */
 
-#include "misc.h"
+#include <m4ri/misc.h>
 
 /**
  * \brief Step for mixing two 64-bit words to compute their parity.

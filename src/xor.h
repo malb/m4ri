@@ -30,13 +30,13 @@
  *
  ********************************************************************/
 
-#include "m4ri_config.h"
+#include <m4ri/m4ri_config.h>
 
 #if __M4RI_HAVE_SSE2
 #include <emmintrin.h>
 #endif
 
-#include "misc.h"
+#include <m4ri/misc.h>
 
 /**
  * Compute c[i] += t1[i] + t2[i] + t3[i] + t4[i] + t5[i] + t6[i] + t7[i] + t8[i] for 0 <= i < wide

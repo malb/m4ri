@@ -33,8 +33,8 @@
 ********************************************************************/
 
 #include <math.h>
-#include "mzd.h"
-#include "brilliantrussian.h"
+#include <m4ri/mzd.h>
+#include <m4ri/brilliantrussian.h>
 
 /**
  * \brief Matrix multiplication via the Strassen-Winograd matrix

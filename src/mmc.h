@@ -30,7 +30,7 @@
 *
 ********************************************************************/
 
-#include "misc.h"
+#include <m4ri/misc.h>
 
 void *m4ri_mmc_malloc(size_t size);
 void m4ri_mmc_free(void *condemned, size_t size);

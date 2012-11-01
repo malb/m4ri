@@ -21,7 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "m4ri.h"
+#include <m4ri/m4ri.h>
 
 int test_size[18] = {
   1, 3, 4, 7, 8, 11, 16, 17, 32, 40, 64, 80, 128, 160, 192, 240, 256, 512

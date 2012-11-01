@@ -21,7 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "m4ri.h"
+#include <m4ri/m4ri.h>
 
 int test_colswap(rci_t c1) {
   int failure = 0;

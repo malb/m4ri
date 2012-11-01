@@ -22,10 +22,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
+#include <m4ri/config.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "m4ri.h"
+#include <m4ri/m4ri.h>
 
 int test_random(rci_t m, rci_t n)
 {

@@ -1,6 +1,6 @@
-#include "config.h"
+#include <m4ri/config.h>
 #include <stdlib.h>
-#include "m4ri.h"
+#include <m4ri/m4ri.h>
 
 int test_pluq_full_rank (rci_t m, rci_t n){
   printf("pluq: testing full rank m: %5d, n: %5d", m, n);

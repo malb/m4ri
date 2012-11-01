@@ -53,19 +53,19 @@
 extern "C" {
 #endif
 
-#include "mzp.h"
-#include "mzd.h"
-#include "brilliantrussian.h"
-#include "strassen.h"
-#include "graycode.h"
-#include "parity.h"
-#include "triangular.h"
-#include "triangular_russian.h"
-#include "ple.h"
-#include "ple_russian.h"
-#include "solve.h"
-#include "echelonform.h"
-#include "io.h"
+#include <m4ri/mzp.h>
+#include <m4ri/mzd.h>
+#include <m4ri/brilliantrussian.h>
+#include <m4ri/strassen.h>
+#include <m4ri/graycode.h>
+#include <m4ri/parity.h>
+#include <m4ri/triangular.h>
+#include <m4ri/triangular_russian.h>
+#include <m4ri/ple.h>
+#include <m4ri/ple_russian.h>
+#include <m4ri/solve.h>
+#include <m4ri/echelonform.h>
+#include <m4ri/io.h>
 
 #if defined(__cplusplus) && !defined(M4RI_WRAPWORD) && !defined (_MSC_VER)
 }

@@ -38,8 +38,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "mzd.h"
-#include "mzp.h"
+#include <m4ri/mzd.h>
+#include <m4ri/mzp.h>
 
 /**
  * \brief Constructs all possible \f$2^k\f$ row combinations using the gray

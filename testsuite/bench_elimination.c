@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
-#include "config.h"
-#include "m4ri.h"
+#include <m4ri/config.h>
+#include <m4ri/m4ri.h>
 #include "cpucycles.h"
 #include "benchmarking.h"
 

@@ -33,7 +33,7 @@
 *
 ********************************************************************/
 
-#include "m4ri_config.h"
+#include <m4ri/m4ri_config.h>
 
 #if __M4RI_USE_MM_MALLOC
 #include <mm_malloc.h>
@@ -75,7 +75,7 @@ typedef int wi_t;
 
 #ifdef M4RI_WRAPWORD
 // C++ wrapper class around an uint64_t, exclusively interesting for the developer(s) of M4RI.
-#include "wordwrapper.h"
+#include <m4ri/wordwrapper.h>
 #else
 
 /**

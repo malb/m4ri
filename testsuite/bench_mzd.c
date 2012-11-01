@@ -25,7 +25,7 @@
 #define __STDC_FORMAT_MACROS 1
 #endif
 
-#include "config.h"
+#include <m4ri/config.h>
 
 #ifdef HAVE_LIBPAPI
 #define _GNU_SOURCE
@@ -39,7 +39,7 @@
 #include <inttypes.h>
 
 #include "cpucycles.h"
-#include "m4ri.h"
+#include <m4ri/m4ri.h>
 #include "benchmarking.h"
 
 struct test_params {

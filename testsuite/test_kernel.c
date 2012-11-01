@@ -18,9 +18,9 @@
 *
 ********************************************************************/
 
-#include "config.h"
+#include <m4ri/config.h>
 #include <stdlib.h>
-#include "m4ri.h"
+#include <m4ri/m4ri.h>
 
 int test_kernel_left_pluq(rci_t m, rci_t n) {
   mzd_t* A = mzd_init(m, n);

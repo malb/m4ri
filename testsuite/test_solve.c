@@ -1,9 +1,9 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
-#include "config.h"
+#include <m4ri/config.h>
 #include <stdlib.h>
-#include "m4ri.h"
+#include <m4ri/m4ri.h>
 
 int test_pluq_solve_left(rci_t m, rci_t n, int offsetA, int offsetB){
   mzd_t* Abase = mzd_init(2048, 2048);

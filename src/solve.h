@@ -29,8 +29,8 @@
  *
  ********************************************************************/
 
-#include "mzp.h"
-#include "mzd.h"
+#include <m4ri/mzp.h>
+#include <m4ri/mzd.h>
 
 /**
  * \brief Solves A X = B with A and B matrices. 

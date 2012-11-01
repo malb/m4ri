@@ -30,8 +30,8 @@
 *
 ********************************************************************/
 
-#include "mzd.h"
-#include "mzp.h"
+#include <m4ri/mzd.h>
+#include <m4ri/mzp.h>
 
 /**
  * Crossover point for PLUQ factorization.

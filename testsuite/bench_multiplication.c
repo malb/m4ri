@@ -1,8 +1,8 @@
 #include <stdlib.h>
 
-#include "config.h"
+#include <m4ri/config.h>
 #include "cpucycles.h"
-#include "m4ri.h"
+#include <m4ri/m4ri.h>
 #include "benchmarking.h"
 
 #ifdef HAVE_LIBPAPI

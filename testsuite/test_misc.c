@@ -20,7 +20,7 @@
  */
 
 #include <stdarg.h>
-#include "m4ri.h"
+#include <m4ri/m4ri.h>
 
 #define b(n) (m4ri_one<<(n))
 

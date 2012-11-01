@@ -1,8 +1,8 @@
-#include "config.h"
+#include <m4ri/config.h>
 #include <stdlib.h>
 #include <inttypes.h>
 #include "testing.h"
-#include "m4ri.h"
+#include <m4ri/m4ri.h>
 
 //#define ABORT_ON_FAIL 1
 

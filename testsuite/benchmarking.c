@@ -52,7 +52,7 @@
  * The last three lines can be suppressed by passing the option -q (quiet).
  */
 
-#include "config.h"
+#include <m4ri/config.h>
 
 #ifdef HAVE_LIBPAPI
 #define _GNU_SOURCE
@@ -69,7 +69,7 @@
 #include <sys/time.h>
 #include <ctype.h>
 #include "benchmarking.h"
-#include "misc.h"
+#include <m4ri/misc.h>
 
 enum { C80, C90, C95, C98, C99 };
 
@@ -739,7 +739,7 @@ word bench_random_word() {
 }
 
 // Needed for mzd_t.
-#include "mzd.h"
+#include <m4ri/mzd.h>
 
 // The same as m4ri_randomize. Duplicated here because it's
 // not available in older revisions that we want to benchmark against.

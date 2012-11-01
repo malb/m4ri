@@ -32,7 +32,7 @@
 *
 ********************************************************************/
 
-#include "m4ri_config.h"
+#include <m4ri/m4ri_config.h>
 
 #include <math.h>
 #include <assert.h>
@@ -42,8 +42,8 @@
 #include <emmintrin.h>
 #endif
 
-#include "misc.h"
-#include "debug_dump.h"
+#include <m4ri/misc.h>
+#include <m4ri/debug_dump.h>
 
 #if __M4RI_HAVE_SSE2
 /**
