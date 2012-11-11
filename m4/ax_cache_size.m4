@@ -113,7 +113,7 @@ AC_DEFUN([AX_CACHE_SIZE],
 
     test -z "$ax_l1_size" && ax_l1_size=0
     test -z "$ax_l2_size" && ax_l2_size=0
-    test -z "$ax_l3_size" && ax_l3_size=0
+    test -z "$ax_l3_size" && ax_l3_size=$ax_l2_size
 
     # Keep only digits if there is a unit (ie 1024K -> 1024) and convert in Bytes
     AC_MSG_CHECKING(the L1 cache size)
