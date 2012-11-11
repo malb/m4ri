@@ -177,14 +177,14 @@ AC_SUBST(PAPI_LDFLAGS)
 AC_SUBST(PAPI_CFLAGS)
 
 AC_ARG_ENABLE([cachetune], 
-     AS_HELP_STRING([--enable-cachetune],[calculate cache size from timing information.]))      
+     AS_HELP_STRING([--enable-cachetune],[calculate cache size from timing information (deprecated).]))
 
 # Cache Sizes
 if test -z $m4ri_config_cachesize; then
    AX_CACHE_SIZE()
-   AS_IF([test "x$enable_cachetune" = "xyes"], [AX_CACHE_SIZE_TUNE()]) 
+   AS_IF([test "x$enable_cachetune" = "xyes"], [AC_MSG_WARN(--enable-cachetune is deprecated since it usually does not provide optimal parameters.) AX_CACHE_SIZE_TUNE()])
 else
-  AS_IF([test "x$enable_cachetune" = "xyes"], [AC_MSG_WARN(Ignoring cache tuning since --with-cachesize was given.)]) 
+  AS_IF([test "x$enable_cachetune" = "xyes"], [AC_MSG_WARN(Ignoring cache tuning since --with-cachesize was given.)])
 
   ax_l1_size=`echo $m4ri_config_cachesize | cut -d ":" -f 1`
   ax_l2_size=`echo $m4ri_config_cachesize | cut -d ":" -f 2`
