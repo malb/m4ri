@@ -13,7 +13,9 @@
 #endif
 
 struct mul_params {
+  rci_t m;
   rci_t n;
+  rci_t l;
   int cutoff;
 };
 
@@ -22,8 +24,8 @@ static unsigned long long loop_calibration[32];
 int run_nothing(void *_p, unsigned long long *data, int *data_len) {
   struct mul_params *p = (struct mul_params *)_p;
 
-  mzd_t *A = mzd_init(p->n, p->n);
-  mzd_t *B = mzd_init(p->n, p->n);
+  mzd_t *A = mzd_init(p->m, p->n);
+  mzd_t *B = mzd_init(p->n, p->l);
 
   mzd_randomize(A);
   mzd_randomize(B);
@@ -76,8 +78,8 @@ int run(void *_p, unsigned long long *data, int *data_len) {
 #endif
   int papi_res;
 
-  mzd_t *A = mzd_init(p->n, p->n);
-  mzd_t *B = mzd_init(p->n, p->n);
+  mzd_t *A = mzd_init(p->m, p->n);
+  mzd_t *B = mzd_init(p->n, p->l);
 
   mzd_randomize(A);
   mzd_randomize(B);
@@ -111,9 +113,16 @@ int run(void *_p, unsigned long long *data, int *data_len) {
 }
 
 void print_help_and_exit() {
-  printf("Parameter(s) n(, cutoff) expected.\n");
-  printf(" n      -- integer > 0\n");
-  printf(" cutoff -- integer >= 0 (optional, default: 0).\n");
+  printf("Parameters expected.\n");
+  printf("Two combinations are supported:\n");
+  printf(" 1. n, cuttoff\n");
+  printf(" n      -- matrix dimension, integer > 0\n");
+  printf(" cutoff -- integer >= 0 (optional, default: 0).\n\n");
+  printf(" 2. m, n, l, cuttoff\n");
+  printf(" m      -- row dimension of A, integer > 0\n");
+  printf(" n      -- column dimension of A, integer > 0\n");
+  printf(" l      -- column dimension of B, integer > 0\n");
+  printf(" cutoff -- integer >= 0 (optional, default: 0).\n\n");
   printf("\n");
   bench_print_global_options(stderr);
   m4ri_die("");
@@ -142,18 +151,41 @@ int main(int argc, char **argv) {
   data_len = 2;
 #endif
 
-  if (opts < 0 || argc < 2 || argc > 3) {
+  if (opts < 0) {
     print_help_and_exit();
   }
 
-  params.n = atoi(argv[1]);
-  if (argc == 3)
-    params.cutoff = atoi(argv[2]);
-  else
+  switch(argc) {
+  case 2:
+    params.m = atoi(argv[1]);
+    params.n = atoi(argv[1]);
+    params.l = atoi(argv[1]);
     params.cutoff = 0;
+    break;
+  case 3:
+    params.m = atoi(argv[1]);
+    params.n = atoi(argv[1]);
+    params.l = atoi(argv[1]);
+    params.cutoff = atoi(argv[2]);
+    break;
+  case 4:
+    params.m = atoi(argv[1]);
+    params.n = atoi(argv[2]);
+    params.l = atoi(argv[3]);
+    params.cutoff = 0;
+    break;
+  case 5:
+    params.m = atoi(argv[1]);
+    params.n = atoi(argv[2]);
+    params.l = atoi(argv[3]);
+    params.cutoff = atoi(argv[4]);
+    break;
+  default:
+    print_help_and_exit();
+  }
 
-  if (params.n <= 0) {
-    m4ri_die("Parameter n must be > 0\n");
+  if (params.m <= 0 || params.n <= 0 || params.l <= 0) {
+    m4ri_die("Parameters m,n,l must be > 0\n");
   }
 
   srandom(17);
@@ -166,7 +198,7 @@ int main(int argc, char **argv) {
   run_bench(run, (void*)&params, data, data_len);
 
   double cc_per_op = ((double)data[1])/ powl((double)params.n,2.807);
-  printf("n: %5d, cutoff: %5d, cpu cycles: %12llu, cc/n^2.807: %.5lf, ", params.n, params.cutoff, data[1], cc_per_op);
+  printf("m: %5d, n: %5d, l: %5d, cutoff: %5d, cpu cycles: %12llu, cc/n^2.807: %.5lf, ", params.m, params.n, params.l, params.cutoff, data[1], cc_per_op);
   print_wall_time(data[0] / 1000000.0);
   printf("\n");
 
