@@ -1,7 +1,5 @@
 AC_INIT(m4ri,20121224)
 
-AC_PREREQ([2.64])
-
 AC_CANONICAL_HOST
 
 AC_CONFIG_SRCDIR(m4ri/brilliantrussian.c)
