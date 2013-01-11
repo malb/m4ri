@@ -78,20 +78,6 @@ void m4ri_destroy_all_codes() {
   m4ri_codebook = NULL;
 }
 
-static int log2_floor(int v) {
-  static unsigned const int b[] = { 0x2, 0xC, 0xF0, 0xFF00, 0xFFFF0000 };
-  static unsigned const int S[] = { 1, 2, 4, 8, 16 };
-  unsigned int r = 0;
-  for (int i = 4; i >= 0; --i)
-  {
-    if ((v & b[i]))
-    {
-      v >>= S[i];
-      r |= S[i];
-    } 
-  }
-  return r;
-}
 
 int m4ri_opt_k(int a, int b, int c) {
   int n = MIN(a, b);

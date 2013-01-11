@@ -1122,6 +1122,12 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
     k = (int)log2((__M4RI_CPU_L2_CACHE/64)/(double)B->width);
     if ((__M4RI_CPU_L2_CACHE - 64*__M4RI_TWOPOW(k)*B->width) > (64*__M4RI_TWOPOW(k+1)*B->width - __M4RI_CPU_L2_CACHE))
       k++;
+
+    rci_t const klog = round(0.75 * log2_floor(MIN(MIN(a_nr,a_nc),b_nc)));
+
+    if(klog < k)
+      k = klog;
+
     if (k<2)
       k=2;
     else if(k>6)

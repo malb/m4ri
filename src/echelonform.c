@@ -77,7 +77,7 @@ rci_t mzd_echelonize_pluq(mzd_t *A, int full) {
     mzd_set_ui(R, 0);
     mzd_free_window(R);
   }
-  
+
   mzp_free(P);
   mzp_free(Q);
 

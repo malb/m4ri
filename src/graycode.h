@@ -129,13 +129,33 @@ void m4ri_build_all_codes(void);
 void m4ri_destroy_all_codes(void);
 
 /**
- * \brief Return the optimal var k for the given parameters. 
+ * floor(log_2(v))
+ */
+
+static inline int log2_floor(int v) {
+  static unsigned const int b[] = { 0x2, 0xC, 0xF0, 0xFF00, 0xFFFF0000 };
+  static unsigned const int S[] = { 1, 2, 4, 8, 16 };
+  unsigned int r = 0;
+  for (int i = 4; i >= 0; --i)
+  {
+    if ((v & b[i]))
+    {
+      v >>= S[i];
+      r |= S[i];
+    }
+  }
+  return r;
+}
+
+
+/**
+ * \brief Return the optimal var k for the given parameters.
  *
  * If var c != 0 then var k for multiplication is returned, else
- * var k for inversion. The optimal var k here means \f$0.75 log_2(n)\f$ 
+ * var k for inversion. The optimal var k here means \f$0.75 log_2(n)\f$
  * where \f$n\f$ is \f$min(a,b)\f$ for inversion and
  * \f$b\f$ for multiplication.
- * 
+ *
  * \param a Number of rows of (first) matrix
  * \param b Number of columns of (first) matrix
  * \param c Number of columns of second matrix (may be 0)
