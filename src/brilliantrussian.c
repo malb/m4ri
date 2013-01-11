@@ -1155,6 +1155,9 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
       }
 
       const rci_t blockend = MIN(giantstep+blocksize, a_nr);
+#if __M4RI_HAVE_OPENMP
+#pragma omp parallel for schedule(static,512) private(x,t)
+#endif
       for(rci_t j = giantstep; j < blockend; j++) {
         const word a = mzd_read_bits(A, j, kk*i, kk);
         x[ 0] = L[ 0][ (a >> 0*k) & bm ];

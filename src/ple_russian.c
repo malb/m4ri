@@ -667,6 +667,9 @@ void mzd_process_rows6_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
     return;
   }
 
+#if __M4RI_HAVE_OPENMP
+#pragma omp parallel for schedule(static,512)
+#endif
   for(rci_t r = startrow; r < stoprow; ++r) {
     word *m0 = M->rows[r] + block0;
     rci_t const x0 = E0[_mzd_read_bits_int_raw(m0, spot0,           0, spill0, k0)];
