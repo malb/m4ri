@@ -103,41 +103,6 @@ int _mzd_ple_submatrix(mzd_t *A,
                        wi_t const splitblock);
 
 /**
- * \brief Helper function for bulk of work in PLE decomposition.
- *
- * This funcion computes M[i] = M[i] + T0[E1[x0]] + T1[E1[x1]] for startrow <=
- * i < stoprow where (1) x0 is read from M[i][startcol:startcol+k0],
- * then (2) T0[E0[x0]] is added, then (3) x1 is read from
- * M[i][startcol:startcol+k1] and then T1[E1[x1]] added.
- *
- * \param M Matrix to work on.
- * \param startrow Start processing in this row.
- * \param stoprow  Stop processing before this row.
- * \param startcol Start processing from this column and read from this column.
- * \param k0       Read k0 bits starting at M[i,startcol]
- * \param T0       Matrix with at least 2^k0 rows
- * \param E0       Permutation on 0..2^k0-1.
- * \param k1       Read k1 bits starting at M[i,startcol]
- * \param T1       Matrix with at least 2^k1 rows
- * \param E1       Permutation on 0..2^k1-1.
- */
-
-void mzd_process_rows2_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
-                           int const k0, mzd_t const *T0, rci_t const *E0,
-                           int const k1, mzd_t const *T1, rci_t const *E1);
-
-void mzd_process_rows3_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
-                           int const k0, mzd_t const *T0, rci_t const *E0,
-                           int const k1, mzd_t const *T1, rci_t const *E1,
-			   int const k2, mzd_t const *T2, rci_t const *E2);
-
-void mzd_process_rows4_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
-                           int const k0, mzd_t const *T0, rci_t const *E0,
-                           int const k1, mzd_t const *T1, rci_t const *E1,
-                           int const k2, mzd_t const *T2, rci_t const *E2,
-                           int const k3, mzd_t const *T3, rci_t const *E3);
-
-/**
  * \brief Extract the k x A::ncols echelon form submatrix of A starting at row r and column c.
  *
  * \param E Storage for k x A::ncols matrix.
