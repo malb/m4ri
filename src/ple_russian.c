@@ -919,9 +919,10 @@ mzd_t *_mzd_ple_to_e(mzd_t *E, mzd_t const *A, rci_t r, rci_t c, int k, rci_t *o
   rci_t startcol = (c / m4ri_radix) * m4ri_radix;
   mzd_submatrix(E, A, r, 0, r+k, A->ncols);
 
-  for(rci_t i = 0; i < k; ++i)
-    for(rci_t j = startcol; j < c + offsets[i]; ++j)
-      mzd_write_bit(E, i, j,  0);
+  for(rci_t i = 0; i < k; ++i) {
+    for(rci_t j = startcol; j < c + offsets[i]; j+=m4ri_radix)
+      mzd_clear_bits(E, i, j, MIN(c + offsets[i] - j, m4ri_radix));
+  }
 
   __M4RI_DD_MZD(E);
   return E;
