@@ -609,9 +609,9 @@ void m4ri_fini(void);
 static inline void *m4ri_mm_calloc(size_t count, size_t size) {
   void *newthing;
 #if __M4RI_USE_MM_MALLOC
-  newthing = _mm_malloc(count * size, 16);
+  newthing = _mm_malloc(count * size, 64);
 #elif __M4RI_USE_POSIX_MEMALIGN
-  int error = posix_memalign(&newthing, 16, count * size);
+  int error = posix_memalign(&newthing, 64, count * size);
   if (error) newthing = NULL;
 #else
   newthing = calloc(count, size);
@@ -675,9 +675,9 @@ static inline void *m4ri_mm_malloc_aligned(size_t size, size_t alignment) {
 static inline void *m4ri_mm_malloc(size_t size) {
   void *newthing;
 #if __M4RI_USE_MM_MALLOC
-    newthing = _mm_malloc(size, 16);
+    newthing = _mm_malloc(size, 64);
 #elif __M4RI_USE_POSIX_MEMALIGN
-    int error = posix_memalign(&newthing, 16, size);
+    int error = posix_memalign(&newthing, 64, size);
     if (error) newthing = NULL;
 #else
     newthing = malloc(size);
