@@ -86,6 +86,16 @@ mzp_t *mzp_init_window(mzp_t *P, rci_t begin, rci_t end);
 
 void mzp_free_window(mzp_t *condemned);
 
+
+/**
+ * \brief copy permutation Q to P
+ *
+ * \param P Target permutation matrix (may be NULL)
+ * \param Q Source permutation matrix (must not be NULL)
+ */
+
+mzp_t *mzp_copy(mzp_t *P, const mzp_t *Q);
+
 /**
  * \brief Set the permutation P to the identity permutation. The only
  * allowed value is 1.

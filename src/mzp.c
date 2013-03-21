@@ -51,6 +51,14 @@ void mzp_free_window(mzp_t *condemned){
   m4ri_mm_free(condemned);
 }
 
+mzp_t *mzp_copy(mzp_t *P, const mzp_t *Q) {
+  if(P == NULL)
+    P = mzp_init(Q->length);
+  for(rci_t i=0; i<Q->length; i++)
+    P->values[i] = Q->values[i];
+  return P;
+}
+
 void mzp_set_ui(mzp_t *P, unsigned int value) {
   assert(value == 1);
   for (rci_t i = 0; i < P->length; ++i) {
