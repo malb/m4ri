@@ -241,6 +241,7 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t st
       }
     }
   }
+  write_mask[width-1] |= ~A->high_bitmask;
 
   for(rci_t i = start_row; i < A->nrows; i += step_size) {
     step_size = MIN(step_size, A->nrows - i);
