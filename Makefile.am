@@ -104,3 +104,4 @@ test_misc_LDFLAGS=-lm4ri -lm
 test_misc_CFLAGS=$(AM_CFLAGS)
 
 TESTS = test_multiplication test_elimination test_trsm test_ple test_solve test_kernel test_random test_smallops test_transpose test_colswap test_invert test_misc
+

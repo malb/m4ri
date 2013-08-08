@@ -41,7 +41,7 @@ void mzd_info(const mzd_t *A, int do_rank) {
 
 #define SAFECHAR (m4ri_radix + m4ri_radix / 4 + 1)
 
-void mzd_print( mzd_t const *M ) {
+void mzd_print(mzd_t const *M) {
   char temp[SAFECHAR];
   for (rci_t i = 0; i < M->nrows; ++i) {
     printf("[");
@@ -203,6 +203,7 @@ mzd_t * mzd_from_png(const char *fn, int verbose) {
 }
 
 int mzd_to_png(const mzd_t *A, const char *fn, int compression_level, const char *comment, int verbose) {
+  assert(A->offset == 0);
   FILE *fh = fopen(fn, "wb");
 
   if (!fh) {
