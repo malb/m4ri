@@ -132,12 +132,6 @@ typedef struct mzd_t {
   wi_t row_offset;
 
   /**
-   * column offset of the first column.
-   */
-
-  uint16_t offset;
-
-  /**
    * Booleans to speed up things.
    *
    * The bits have the following meaning:
@@ -159,26 +153,11 @@ typedef struct mzd_t {
 
   uint8_t blockrows_log;
 
-#if 0	// Commented out in order to keep the size of mzd_t 64 bytes (one cache line). This could be added back if rows was ever removed.
-  /**
-   * blockrows_mask = blockrows - 1;
-   * where blockrows is the number of rows in one block, which is a power of 2.
-   */
-
-  int blockrows_mask;
-#endif
-
   /**
    * Mask for valid bits in the word with the highest index (width - 1).
    */
 
   word high_bitmask;
-
-  /**
-   * Mask for valid bits in the word with the lowest index (0).
-   */
-
-  word low_bitmask;
 
   /**
    * Contains pointers to the actual blocks of memory containing the
@@ -193,6 +172,11 @@ typedef struct mzd_t {
    */
 
   word **rows;
+
+  /**
+   * ensures sizeof(mzd_t) == 64
+   */
+  uint64_t dummy;
 
 } mzd_t;
 
@@ -420,16 +404,11 @@ static inline void _mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb, w
   if ((rowa == rowb) || (startblock >= M->width))
     return;
 
-  /* This is the case since we're only called from _mzd_ple_mmpf,
-   * which makes the same assumption. Therefore we don't need
-   * to take a mask_begin into account. */
-  assert(M->offset == 0);
-
   wi_t width = M->width - startblock - 1;
   word *a = M->rows[rowa] + startblock;
   word *b = M->rows[rowb] + startblock;
   word tmp; 
-  word const mask_end = __M4RI_LEFT_BITMASK((M->ncols + M->offset) % m4ri_radix);
+  word const mask_end = __M4RI_LEFT_BITMASK(M->ncols % m4ri_radix);
 
   if (width != 0) {
     for(wi_t i = 0; i < width; ++i) {
@@ -461,8 +440,8 @@ static inline void mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb) {
   wi_t width = M->width - 1;
   word *a = M->rows[rowa];
   word *b = M->rows[rowb];
-  word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - M->offset);
-  word const mask_end = __M4RI_LEFT_BITMASK((M->ncols + M->offset) % m4ri_radix);
+  word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix);
+  word const mask_end = __M4RI_LEFT_BITMASK((M->ncols) % m4ri_radix);
 
   word tmp = (a[0] ^ b[0]) & mask_begin;
   if (width != 0) {
@@ -526,8 +505,8 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
   if (cola == colb)
     return;
 
-  rci_t const _cola = cola + M->offset;
-  rci_t const _colb = colb + M->offset;
+  rci_t const _cola = cola;
+  rci_t const _colb = colb;
 
   wi_t const a_word = _cola / m4ri_radix;
   wi_t const b_word = _colb / m4ri_radix;
@@ -636,7 +615,7 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
  */
 
 static inline BIT mzd_read_bit(mzd_t const *M, rci_t const row, rci_t const col ) {
-  return __M4RI_GET_BIT(M->rows[row][(col+M->offset)/m4ri_radix], (col+M->offset) % m4ri_radix);
+  return __M4RI_GET_BIT(M->rows[row][col/m4ri_radix], col%m4ri_radix);
 }
 
 /**
@@ -652,7 +631,7 @@ static inline BIT mzd_read_bit(mzd_t const *M, rci_t const row, rci_t const col 
  */
 
 static inline void mzd_write_bit(mzd_t *M, rci_t const row, rci_t const col, BIT const value) {
-  __M4RI_WRITE_BIT(M->rows[row][(col + M->offset) / m4ri_radix], (col + M->offset) % m4ri_radix, value);
+  __M4RI_WRITE_BIT(M->rows[row][col/m4ri_radix], col%m4ri_radix, value);
 }
 
 
@@ -667,8 +646,8 @@ static inline void mzd_write_bit(mzd_t *M, rci_t const row, rci_t const col, BIT
  */
 
 static inline void mzd_xor_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n, word values) {
-  int const spot = (y + M->offset) % m4ri_radix;
-  wi_t const block = (y + M->offset) / m4ri_radix;
+  int const spot   = y % m4ri_radix;
+  wi_t const block = y / m4ri_radix;
   M->rows[x][block] ^= values << spot;
   int const space = m4ri_radix - spot;
   if (n > space)
@@ -689,8 +668,8 @@ static inline void mzd_and_bits(mzd_t const *M, rci_t const x, rci_t const y, in
   /* This is the best way, since this will drop out once we inverse the bits in values: */
   values >>= (m4ri_radix - n);	/* Move the bits to the lowest columns */
 
-  int const spot = (y + M->offset) % m4ri_radix;
-  wi_t const block = (y + M->offset) / m4ri_radix;
+  int const spot   = y % m4ri_radix;
+  wi_t const block = y / m4ri_radix;
   M->rows[x][block] &= values << spot;
   int const space = m4ri_radix - spot;
   if (n > space)
@@ -709,8 +688,8 @@ static inline void mzd_and_bits(mzd_t const *M, rci_t const x, rci_t const y, in
 static inline void mzd_clear_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n) {
   assert(n>0 && n <= m4ri_radix);
   word values = m4ri_ffff >> (m4ri_radix - n);
-  int const spot = (y + M->offset) % m4ri_radix;
-  wi_t const block = (y + M->offset) / m4ri_radix;
+  int const spot   = y % m4ri_radix;
+  wi_t const block = y / m4ri_radix;
   M->rows[x][block] &= ~(values << spot);
   int const space = m4ri_radix - spot;
   if (n > space)
@@ -731,13 +710,12 @@ static inline void mzd_clear_bits(mzd_t const *M, rci_t const x, rci_t const y, 
 
 static inline void mzd_row_add_offset(mzd_t *M, rci_t dstrow, rci_t srcrow, rci_t coloffset) {
   assert(dstrow < M->nrows && srcrow < M->nrows && coloffset < M->ncols);
-  coloffset += M->offset;
   wi_t const startblock= coloffset/m4ri_radix;
   wi_t wide = M->width - startblock;
   word *src = M->rows[srcrow] + startblock;
   word *dst = M->rows[dstrow] + startblock;
   word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - coloffset % m4ri_radix);
-  word const mask_end = __M4RI_LEFT_BITMASK((M->ncols + M->offset) % m4ri_radix);
+  word const mask_end = __M4RI_LEFT_BITMASK(M->ncols % m4ri_radix);
 
   *dst++ ^= *src++ & mask_begin;
   --wide;
@@ -1095,8 +1073,8 @@ mzd_t *_mzd_add(mzd_t *C, mzd_t const *A, mzd_t const *B);
  */ 
 
 static inline word mzd_read_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n) {
-  int const spot = (y + M->offset) % m4ri_radix;
-  wi_t const block = (y + M->offset) / m4ri_radix;
+  int const spot   = y % m4ri_radix;
+  wi_t const block = y / m4ri_radix;
   int const spill = spot + n - m4ri_radix;
   word temp = (spill <= 0) ? M->rows[x][block] << -spill : (M->rows[x][block + 1] << (m4ri_radix - spill)) | (M->rows[x][block] >> spill);
   return temp >> (m4ri_radix - n);
@@ -1126,43 +1104,6 @@ void mzd_combine(mzd_t *DST, rci_t const row3, wi_t const startblock3,
 		 mzd_t const *SC1, rci_t const row1, wi_t const startblock1, 
 		 mzd_t const *SC2, rci_t const row2, wi_t const startblock2);
 
-
-/**
- * \brief c_row[c_startblock:] = a_row[a_startblock:] + b_row[b_startblock:] for different offsets
- * 
- * Adds a_row of A, starting with a_startblock to the end, to
- * b_row of B, starting with b_startblock to the end. This gets stored
- * in C, in c_row, starting with c_startblock.
- *
- * \param C destination matrix
- * \param c_row destination row for matrix C
- * \param A source matrix
- * \param a_row source row for matrix A
- * \param B source matrix
- * \param b_row source row for matrix B
- *
- */
-
-static inline void mzd_combine_weird(mzd_t *C,       rci_t const c_row,
-                                     mzd_t const *A, rci_t const a_row,
-                                     mzd_t const *B, rci_t const b_row) {
-  word tmp;
-  rci_t i = 0;
-
-
-  for(; i + m4ri_radix <= A->ncols; i += m4ri_radix) {
-    tmp = mzd_read_bits(A, a_row, i, m4ri_radix) ^ mzd_read_bits(B, b_row, i, m4ri_radix);
-    mzd_clear_bits(C, c_row, i, m4ri_radix);
-    mzd_xor_bits(C, c_row, i, m4ri_radix, tmp);
-  }
-  if(A->ncols - i) {
-    tmp = mzd_read_bits(A, a_row, i, (A->ncols - i)) ^ mzd_read_bits(B, b_row, i, (B->ncols - i));
-    mzd_clear_bits(C, c_row, i, (C->ncols - i));
-    mzd_xor_bits(C, c_row, i, (C->ncols - i), tmp);
-  }
-
-  __M4RI_DD_MZD(C);
-}
 
 /**
  * \brief a_row[a_startblock:] += b_row[b_startblock:] for offset 0
@@ -1263,15 +1204,6 @@ static inline void mzd_combine_even(mzd_t *C,       rci_t const c_row, wi_t cons
   word *b = B->rows[b_row] + b_startblock;
   word *c = C->rows[c_row] + c_startblock;
   
-  /* /\* this is a corner case triggered by Strassen multiplication */
-  /*  * which assumes certain (virtual) matrix sizes  */
-  /*  * 2011/03/07: I don't think this was ever correct *\/ */
-  /* if (a_row >= A->nrows) { */
-  /*   assert(a_row < A->nrows); */
-  /*   for(wi_t i = 0; i < wide; ++i) { */
-  /*     c[i] = b[i]; */
-  /*   } */
-  /* } else { */
 #if __M4RI_HAVE_SSE2
   if(wide > __M4RI_SSE2_CUTOFF) {
     /** check alignments **/
@@ -1342,16 +1274,6 @@ static inline int mzd_read_bits_int(mzd_t const *M, rci_t const x, rci_t const y
  *
  */
 int mzd_is_zero(mzd_t const *A);
-
-/**
- * \brief Clear the given row, but only begins at the column coloffset.
- *
- * \param M Matrix
- * \param row Index of row
- * \param coloffset Column offset
- */
-
-void mzd_row_clear_offset(mzd_t *M, rci_t const row, rci_t const coloffset);
 
 /**
  * \brief Find the next nonzero entry in M starting at start_row and start_col. 

@@ -5,11 +5,11 @@
 int test_pluq_full_rank (rci_t m, rci_t n){
   printf("pluq: testing full rank m: %5d, n: %5d", m, n);
 
-  mzd_t* U = mzd_init (m,n);
-  mzd_t* L = mzd_init (m,m);
-  mzd_t* U2 = mzd_init (m,n);
-  mzd_t* L2 = mzd_init (m,m);
-  mzd_t* A = mzd_init (m,n);
+  mzd_t* U  = mzd_init(m,n);
+  mzd_t* L  = mzd_init(m,m);
+  mzd_t* U2 = mzd_init(m,n);
+  mzd_t* L2 = mzd_init(m,m);
+  mzd_t* A = mzd_init(m,n);
   mzd_randomize (U);
   mzd_randomize (L);
 

@@ -206,16 +206,14 @@ int _mzd_ple_submatrix(mzd_t *A,
   wi_t const width = A->width;
   rci_t const ncols = A->ncols;
   int const flags = A->flags;
-  word low_bitmask = A->low_bitmask;
   word high_bitmask = A->high_bitmask;
 
   if (A->width > splitblock) {
     A->width = splitblock;
     A->ncols = splitblock * m4ri_radix;
-    assert(A->offset == 0);
     A->flags &= mzd_flag_multiple_blocks;
     A->flags |= (mzd_flag_windowed_zerooffset | mzd_flag_windowed_zeroexcess);
-    A->high_bitmask = A->low_bitmask = m4ri_ffff;
+    A->high_bitmask = m4ri_ffff;
     /* No need to set mzd_flag_windowed_ownsblocks, because we won't free A until it's elements are restored below. */
   }
 
@@ -266,7 +264,6 @@ int _mzd_ple_submatrix(mzd_t *A,
   A->ncols = ncols;
   A->width = width;
   A->flags = flags;
-  A->low_bitmask = low_bitmask;
   A->high_bitmask = high_bitmask;
 
   __M4RI_DD_MZD(A);
@@ -914,8 +911,6 @@ void _mzd_ple_a11_6(mzd_t *A,
 mzd_t *_mzd_ple_to_e(mzd_t *E, mzd_t const *A, rci_t r, rci_t c, int k, rci_t *offsets) {
   /* this function call is now rather cheap, but it could be avoided
      completetly if needed */
-  assert(E->offset == 0);
-  assert(A->offset == 0);
   rci_t startcol = (c / m4ri_radix) * m4ri_radix;
   mzd_submatrix(E, A, r, 0, r+k, A->ncols);
 
@@ -930,8 +925,6 @@ mzd_t *_mzd_ple_to_e(mzd_t *E, mzd_t const *A, rci_t r, rci_t c, int k, rci_t *o
 
 /* method of many people factorisation */
 rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
-  assert(A->offset == 0);
-
   rci_t const nrows = A->nrows;
   rci_t const ncols = A->ncols;
   rci_t curr_row = 0;

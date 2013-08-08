@@ -25,42 +25,40 @@
 
 int test_colswap(rci_t c1) {
   int failure = 0;
-  printf("col_swap c1: %4d, (c2,offset): ", c1);
+  printf("col_swap c1: %4d", c1);
   rci_t const rows = 4 * c1 + 1;
   mzd_t* A = mzd_init(rows, 4 * c1 + 1);
   mzd_randomize(A);
   for (int c2 = 0; c2 < c1 && !failure; c2 += 13) {
-    for (int offset = 0; offset < c1 && !failure; offset += MAX(1, c1 / 2)) {
-      mzd_t* B = mzd_init_window(A, 0, offset, rows, offset + c1 + 1);
-      mzd_t* C = mzd_copy(NULL, B);
+    mzd_t* B = mzd_init_window(A, 0, 0, rows, c1 + 1);
+    mzd_t* C = mzd_copy(NULL, B);
 
-      mzd_col_swap(B, c1, c2);
-      for(int r = 0; r < rows; ++r) {
-	if (mzd_read_bit(C, r, c1) != mzd_read_bit(B, r, c2) || mzd_read_bit(C, r, c2) != mzd_read_bit(B, r, c1)) {
-	  ++failure;
-	  break;
-	}
+    mzd_col_swap(B, c1, c2);
+    for(int r = 0; r < rows; ++r) {
+      if (mzd_read_bit(C, r, c1) != mzd_read_bit(B, r, c2) || mzd_read_bit(C, r, c2) != mzd_read_bit(B, r, c1)) {
+        ++failure;
+        break;
       }
-      mzd_col_swap(B, c2, c1);
-      if (!mzd_equal(B, C)) {
-	++failure;
-      }
-
-      mzd_col_swap_in_rows(B, c1, c2, c2, c1);
-      for(int r = c1; r < c2; ++r) {
-	if (mzd_read_bit(C, r, c1) != mzd_read_bit(B, r, c2) || mzd_read_bit(C, r, c2) != mzd_read_bit(B, r, c1)) {
-	  ++failure;
-	  break;
-	}
-      }
-      mzd_col_swap_in_rows(B, c2, c1, c2, c1);
-      if (!mzd_equal(B, C)) {
-	++failure;
-      }
-
-      mzd_free(C);
-      mzd_free(B);
     }
+    mzd_col_swap(B, c2, c1);
+    if (!mzd_equal(B, C)) {
+      ++failure;
+    }
+
+    mzd_col_swap_in_rows(B, c1, c2, c2, c1);
+    for(int r = c1; r < c2; ++r) {
+      if (mzd_read_bit(C, r, c1) != mzd_read_bit(B, r, c2) || mzd_read_bit(C, r, c2) != mzd_read_bit(B, r, c1)) {
+        ++failure;
+        break;
+      }
+    }
+    mzd_col_swap_in_rows(B, c2, c1, c2, c1);
+    if (!mzd_equal(B, C)) {
+      ++failure;
+    }
+    
+    mzd_free(C);
+    mzd_free(B);
   }
   mzd_free(A);
   printf("  ");

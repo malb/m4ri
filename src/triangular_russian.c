@@ -4,16 +4,15 @@
 #include "ple_russian.h"
 #include "xor.h"
 
-void _mzd_trsm_upper_left_submatrix(mzd_t const *U, mzd_t *B, rci_t const start_row, int const k, word const mask_begin, word const mask_end) {
+void _mzd_trsm_upper_left_submatrix(mzd_t const *U, mzd_t *B, rci_t const start_row, int const k, word const mask_end) {
   for (int i = 0; i < k; ++i) {
     for (int j = 0; j < i; ++j) {
       if (mzd_read_bit(U, start_row+(k-i-1), start_row+(k-i)+j)) {
         word *a = B->rows[start_row+(k-i-1)];
         word *b = B->rows[start_row+(k-i)+j];
 
-        *a++ ^= *b++ & mask_begin;
 	wi_t ii;
-        for(ii = 1; ii + 8 <= B->width - 1; ii += 8) {
+        for(ii = 0; ii + 8 <= B->width - 1; ii += 8) {
           *a++ ^= *b++;
           *a++ ^= *b++;
           *a++ ^= *b++;
@@ -44,11 +43,7 @@ void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k) {
   wi_t const wide = B->width;
   int const blocksize = __M4RI_MUL_BLOCKSIZE;
 
-  word mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - B->offset);
-  word mask_end = __M4RI_LEFT_BITMASK((B->ncols + B->offset) % m4ri_radix);
-
-  if (B->width == 1)
-    mask_begin = mask_begin & mask_end;
+  word mask_end = __M4RI_LEFT_BITMASK(B->ncols % m4ri_radix);
 
   if (k == 0) {
     k = m4ri_opt_k(blocksize, B->nrows, B->ncols);
@@ -60,14 +55,14 @@ void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k) {
       k -= 1;
   }
 
-  mzd_t *T0 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
-  mzd_t *T1 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
-  mzd_t *T2 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
-  mzd_t *T3 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
-  mzd_t *T4 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
-  mzd_t *T5 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
-  mzd_t *T6 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
-  mzd_t *T7 = mzd_init(__M4RI_TWOPOW(k), B->ncols + B->offset);
+  mzd_t *T0 = mzd_init(__M4RI_TWOPOW(k), B->ncols);
+  mzd_t *T1 = mzd_init(__M4RI_TWOPOW(k), B->ncols);
+  mzd_t *T2 = mzd_init(__M4RI_TWOPOW(k), B->ncols);
+  mzd_t *T3 = mzd_init(__M4RI_TWOPOW(k), B->ncols);
+  mzd_t *T4 = mzd_init(__M4RI_TWOPOW(k), B->ncols);
+  mzd_t *T5 = mzd_init(__M4RI_TWOPOW(k), B->ncols);
+  mzd_t *T6 = mzd_init(__M4RI_TWOPOW(k), B->ncols);
+  mzd_t *T7 = mzd_init(__M4RI_TWOPOW(k), B->ncols);
 
 
   rci_t *L0 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
@@ -81,10 +76,12 @@ void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k) {
 
   int kk = 8 * k;
 
+  assert(kk <= m4ri_radix);
+
   rci_t i = 0;
   for (; i < B->nrows - kk; i += kk) {
 
-    _mzd_trsm_upper_left_submatrix(U, B, B->nrows-i-kk, kk, mask_begin, mask_end);
+    _mzd_trsm_upper_left_submatrix(U, B, B->nrows-i-kk, kk, mask_end);
 
     mzd_make_table(B, B->nrows - i - 8*k, 0, k, T7, L7);
     mzd_make_table(B, B->nrows - i - 7*k, 0, k, T6, L6);
@@ -125,7 +122,7 @@ void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k) {
     if (i > B->nrows - k)
       k = B->nrows - i;
 
-    _mzd_trsm_upper_left_submatrix(U, B, B->nrows-i-k, k, mask_begin, mask_end);
+    _mzd_trsm_upper_left_submatrix(U, B, B->nrows-i-k, k, mask_end);
 
     mzd_make_table(B, B->nrows - i - 1*k, 0, k, T0, L0);
 
@@ -213,7 +210,7 @@ static inline void _mzd_trtri_upper_submatrix(mzd_t *A, rci_t pivot_r, rci_t eli
 
 
 mzd_t *mzd_trtri_upper_russian(mzd_t *A, int k) {
-  assert(A->nrows == A->ncols && A->offset == 0);
+  assert(A->nrows == A->ncols);
 
   if (k == 0) {
     k = m4ri_opt_k(A->nrows, A->ncols, 0);

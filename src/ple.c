@@ -61,7 +61,6 @@ rci_t _mzd_pluq(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
 }
 
 rci_t _mzd_ple(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
-  assert(A->offset == 0);
   rci_t ncols = A->ncols;
 
 #if 1
