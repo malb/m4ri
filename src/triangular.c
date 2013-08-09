@@ -37,19 +37,8 @@
  ****************/
 
 /*
- * This version assumes that the matrices are at an even position on
- * the m4ri_radix grid and that their dimension is a multiple of m4ri_radix.
+ * Assumes that U->ncols < 64
  */
-
-void _mzd_trsm_upper_right_even(mzd_t const *U, mzd_t *B, const int cutoff);
-
-/*
- * Variant where U and B start at an odd bit position. Assumes that
- * U->ncols < 64
- */
-
-void _mzd_trsm_upper_right_weird(mzd_t const *U, mzd_t *B);
-
 void _mzd_trsm_upper_right_base(mzd_t const *U, mzd_t *B);
 
 void mzd_trsm_upper_right(mzd_t const *U, mzd_t *B, const int cutoff) {
@@ -61,14 +50,30 @@ void mzd_trsm_upper_right(mzd_t const *U, mzd_t *B, const int cutoff) {
   _mzd_trsm_upper_right(U, B, cutoff);
 }
 
+void _mzd_trsm_upper_right_trtri(mzd_t const *U, mzd_t *B) {
+  mzd_t *u = mzd_extract_u(NULL, U);
+  mzd_trtri_upper(u);
+  mzd_t *C = mzd_mul(NULL, B, u, 0);
+  mzd_copy(B, C);
+  mzd_free(C);
+  mzd_free(u);
+}
+
 void _mzd_trsm_upper_right(mzd_t const *U, mzd_t *B, const int cutoff) {
-  rci_t const nb = B->ncols;
   rci_t const mb = B->nrows;
-  int const n1 = m4ri_radix;
-  if(nb <= n1) {
-    _mzd_trsm_upper_right_weird(U, B);
+  rci_t const nb = B->ncols;
+
+  if(nb <= TRSM_THRESHOLD) {
+    /* base case */
+    _mzd_trsm_upper_right_base(U, B);
+    return;
+  } else if(nb <= __M4RI_MUL_BLOCKSIZE) {
+    _mzd_trsm_upper_right_trtri(U, B);
     return;
   }
+
+  rci_t const nb1 = (((nb - 1) / m4ri_radix + 1) >> 1) * m4ri_radix;
+
   /**
    \verbatim
      _________
@@ -84,97 +89,7 @@ void _mzd_trsm_upper_right(mzd_t const *U, mzd_t *B, const int cutoff) {
      |B0 |B1 |
      |___|___|
    \endverbatim
-     * \li U00 and B0 are possibly located at uneven locations.
-   * \li Their column dimension is lower than 64.
-   * \li The first column of U01, U11, B1 are aligned at words.
    */
-  mzd_t *B0  = mzd_init_window (B,  0,  0, mb, n1);
-  mzd_t *B1  = mzd_init_window (B,  0, n1, mb, nb);
-  mzd_t const *U00 = mzd_init_window_const (U,  0,  0, n1, n1);
-  mzd_t const *U01 = mzd_init_window_const (U,  0, n1, n1, nb);
-  mzd_t const *U11 = mzd_init_window_const (U, n1, n1, nb, nb);
-
-  _mzd_trsm_upper_right_weird (U00, B0);
-  mzd_addmul (B1, B0, U01, cutoff);
-  _mzd_trsm_upper_right_even (U11, B1, cutoff);
-
-  mzd_free_window(B0);
-  mzd_free_window(B1);
-
-  mzd_free_window((mzd_t*)U00);
-  mzd_free_window((mzd_t*)U01);
-  mzd_free_window((mzd_t*)U11);
-
-  __M4RI_DD_MZD(B);
-}
-
-void _mzd_trsm_upper_right_weird(mzd_t const *U, mzd_t *B) {
-  rci_t const mb = B->nrows;
-  rci_t const nb = B->ncols;
-
-  for(rci_t i = 1; i < nb; ++i) {
-
-    /* Computes X_i = B_i + X_{0..i-1} U_{0..i-1,i} */
-
-    register word ucol = 0;
-    for(rci_t k = 0; k < i; ++k) {
-      if(__M4RI_GET_BIT(U->rows[k][0], i))
-	__M4RI_SET_BIT(ucol, k);
-    }
-    /* doing 64 dotproducts at a time, to use the parity64 parallelism */
-    rci_t giantstep;
-    word tmp[64];
-    for(giantstep = 0; giantstep + m4ri_radix < mb; giantstep += m4ri_radix) {
-      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
-	tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
-
-      word const dotprod = m4ri_parity64(tmp);
-
-      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
-        if(__M4RI_GET_BIT(dotprod, babystep))
-          __M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i);
-    }
-    for(int babystep = 0; giantstep + babystep < mb; ++babystep){
-      tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
-
-    }
-    for(int babystep = mb - giantstep; babystep < 64; ++babystep){
-      tmp[babystep] = 0;
-    }
-
-    word const dotprod = m4ri_parity64(tmp);
-
-    for(int babystep = 0; giantstep + babystep < mb; ++babystep)
-      if(__M4RI_GET_BIT(dotprod, babystep))
-	__M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i);
-  }
-
-  __M4RI_DD_MZD(B);
-}
-
-void _mzd_trsm_upper_right_trtri(mzd_t const *U, mzd_t *B) {
-  mzd_t *u = mzd_extract_u(NULL, U);
-  mzd_trtri_upper(u);
-  mzd_t *C = mzd_mul(NULL, B, u, 0);
-  mzd_copy(B, C);
-  mzd_free(C);
-  mzd_free(u);
-}
-
-void _mzd_trsm_upper_right_even(mzd_t const *U, mzd_t *B, const int cutoff) {
-  rci_t const mb = B->nrows;
-  rci_t const nb = B->ncols;
-
-  if(nb <= TRSM_THRESHOLD) {
-    /* base case */
-    _mzd_trsm_upper_right_base (U, B);
-    return;
-  } else if(nb <= __M4RI_MUL_BLOCKSIZE) {
-    _mzd_trsm_upper_right_trtri(U, B);
-    return;
-  }
-
-  rci_t const nb1 = (((nb - 1) / m4ri_radix + 1) >> 1) * m4ri_radix;
 
   mzd_t *B0 = mzd_init_window(B,  0,     0,   mb, nb1);
   mzd_t *B1 = mzd_init_window(B,  0,   nb1,   mb, nb);
@@ -182,9 +97,9 @@ void _mzd_trsm_upper_right_even(mzd_t const *U, mzd_t *B, const int cutoff) {
   mzd_t const *U01 = mzd_init_window_const(U, 0,   nb1, nb1, nb);
   mzd_t const *U11 = mzd_init_window_const(U, nb1, nb1,  nb, nb);
 
-  _mzd_trsm_upper_right_even (U00, B0, cutoff);
+  _mzd_trsm_upper_right(U00, B0, cutoff);
   mzd_addmul (B1, B0, U01, cutoff);
-  _mzd_trsm_upper_right_even (U11, B1, cutoff);
+  _mzd_trsm_upper_right(U11, B1, cutoff);
 
   mzd_free_window(B0);
   mzd_free_window(B1);
@@ -279,19 +194,6 @@ void _mzd_trsm_upper_right_base(mzd_t const *U, mzd_t *B) {
  * LOWER RIGHT
  ****************/
 
-/*
- * Variant where L and B start at an odd bit position Assumes that
- * L->ncols < 64
- */
-void _mzd_trsm_lower_right_weird(mzd_t const *L, mzd_t *B);
-
-/*
- * Variant where L and B start at an even bit position Assumes that
- * L->ncols < 64
- */
-
-void _mzd_trsm_lower_right_even(mzd_t const *L, mzd_t *B, const int cutoff);
-
 void _mzd_trsm_lower_right_base(mzd_t const *L, mzd_t *B);
 
 void mzd_trsm_lower_right(mzd_t const *L, mzd_t *B, const int cutoff) {
@@ -304,12 +206,16 @@ void mzd_trsm_lower_right(mzd_t const *L, mzd_t *B, const int cutoff) {
 }
 
 void _mzd_trsm_lower_right(mzd_t const *L, mzd_t *B, const int cutoff) {
-  rci_t const nb = B->ncols;
   rci_t const mb = B->nrows;
-  int const n1 = m4ri_radix;
-  if(nb <= n1)
-    _mzd_trsm_lower_right_weird (L, B);
-  else{
+  rci_t const nb = B->ncols;
+
+  if(nb <= TRSM_THRESHOLD){
+    /* base case */
+    _mzd_trsm_lower_right_base (L, B);
+    return;
+  }
+  rci_t const nb1 = (((nb - 1) / m4ri_radix + 1) >> 1) * m4ri_radix;
+
   /**
    \verbatim
      |\
@@ -326,102 +232,24 @@ void _mzd_trsm_lower_right(mzd_t const *L, mzd_t *B, const int cutoff) {
      |B0  |B1  |
      |____|____|
    \endverbatim
-   * \li L00 and B0 are possibly located at uneven locations.
-   * \li Their column dimension is lower than 64.
-   * \li The first column of L10, L11, B1 are aligned to words.
    */
-    mzd_t *B0  = mzd_init_window (B,  0,  0, mb, n1);
-    mzd_t *B1  = mzd_init_window (B,  0, n1, mb, nb);
-    mzd_t const *L00 = mzd_init_window_const (L,  0,  0, n1, n1);
-    mzd_t const *L10 = mzd_init_window_const (L,  n1, 0, nb, n1);
-    mzd_t const *L11 = mzd_init_window_const (L, n1, n1, nb, nb);
 
-    _mzd_trsm_lower_right_even (L11, B1, cutoff);
-    mzd_addmul (B0, B1, L10, cutoff);
-    _mzd_trsm_lower_right_weird (L00, B0);
+  mzd_t *B0 = mzd_init_window(B,  0,     0,   mb, nb1);
+  mzd_t *B1 = mzd_init_window(B,  0,   nb1,   mb, nb);
+  mzd_t const *L00 = mzd_init_window_const(L, 0,     0, nb1, nb1);
+  mzd_t const *L10 = mzd_init_window_const(L, nb1, 0, nb, nb1);
+  mzd_t const *L11 = mzd_init_window_const(L, nb1, nb1,  nb, nb);
 
-    mzd_free_window(B0);
-    mzd_free_window(B1);
+  _mzd_trsm_lower_right(L11, B1, cutoff);
+  mzd_addmul (B0, B1, L10, cutoff);
+  _mzd_trsm_lower_right(L00, B0, cutoff);
 
-    mzd_free_window((mzd_t*)L00);
-    mzd_free_window((mzd_t*)L10);
-    mzd_free_window((mzd_t*)L11);
-  }
+  mzd_free_window(B0);
+  mzd_free_window(B1);
 
-  __M4RI_DD_MZD(B);
-}
-
-void _mzd_trsm_lower_right_weird(mzd_t const *L, mzd_t *B) {
-  rci_t const mb = B->nrows;
-  rci_t const nb = B->ncols;
-
-  for(rci_t i = nb - 1; i >= 0; --i) {
-
-    /* Computes X_i = B_i + X_{i+1,n} L_{i+1..n,i} */
-
-    register word ucol = 0;
-    for(rci_t k = i + 1; k < nb; ++k) {
-      if(__M4RI_GET_BIT(L->rows[k][0], i))
-	__M4RI_SET_BIT(ucol, k);
-    }
-    /* doing 64 dotproducts at a time, to use the m4ri_parity64 parallelism */
-    rci_t giantstep;
-    word tmp[64];
-    for(giantstep = 0; giantstep + m4ri_radix < mb; giantstep += m4ri_radix) {
-      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
-	tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
-
-      word const dotprod = m4ri_parity64(tmp);
-
-      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
-        if(__M4RI_GET_BIT(dotprod, babystep))
-          __M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i);
-    }
-    for(int babystep = 0; giantstep + babystep < mb; ++babystep){
-      tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
-    }
-    for(int babystep = mb - giantstep; babystep < 64; ++babystep){
-      tmp[babystep] = 0;
-    }
-
-    word const dotprod = m4ri_parity64(tmp);
-
-    for(int babystep = 0; giantstep + babystep < mb; ++babystep)
-      if(__M4RI_GET_BIT(dotprod, babystep))
-	__M4RI_FLIP_BIT(B->rows[giantstep + babystep ][0], i);
-  }
-
-  __M4RI_DD_MZD(B);
-}
-
-void _mzd_trsm_lower_right_even(mzd_t const *L, mzd_t *B, const int cutoff) {
-  rci_t const mb = B->nrows;
-  rci_t const nb = B->ncols;
-
-  if(nb <= TRSM_THRESHOLD){
-    /* base case */
-    _mzd_trsm_lower_right_base (L, B);
-  }
-  else {
-    rci_t const nb1 = (((nb - 1) / m4ri_radix + 1) >> 1) * m4ri_radix;
-
-    mzd_t *B0 = mzd_init_window(B,  0,     0,   mb, nb1);
-    mzd_t *B1 = mzd_init_window(B,  0,   nb1,   mb, nb);
-    mzd_t const *L00 = mzd_init_window_const(L, 0,     0, nb1, nb1);
-    mzd_t const *L10 = mzd_init_window_const(L, nb1, 0, nb, nb1);
-    mzd_t const *L11 = mzd_init_window_const(L, nb1, nb1,  nb, nb);
-
-    _mzd_trsm_lower_right_even (L11, B1, cutoff);
-    mzd_addmul (B0, B1, L10, cutoff);
-    _mzd_trsm_lower_right_even (L00, B0, cutoff);
-
-    mzd_free_window(B0);
-    mzd_free_window(B1);
-
-    mzd_free_window((mzd_t*)L00);
-    mzd_free_window((mzd_t*)L10);
-    mzd_free_window((mzd_t*)L11);
-  }
+  mzd_free_window((mzd_t*)L00);
+  mzd_free_window((mzd_t*)L10);
+  mzd_free_window((mzd_t*)L11);
 
   __M4RI_DD_MZD(B);
 }
@@ -473,20 +301,6 @@ void _mzd_trsm_lower_right_base(mzd_t const *L, mzd_t *B) {
  * LOWER LEFT
  ****************/
 
-/*
- * Variant where U and B start at an odd bit position. Assumes that
- * L->ncols < 64
- */
-
-void _mzd_trsm_lower_left_weird(mzd_t const *L, mzd_t *B);
-
-/*
- * This version assumes that the matrices are at an even position on
- * the m4ri_radix grid and that their dimension is a multiple of m4ri_radix.
- */
-
-void _mzd_trsm_lower_left_even(mzd_t const *L, mzd_t *B, const int cutoff);
-
 void mzd_trsm_lower_left(mzd_t const *L, mzd_t *B, const int cutoff) {
   if(L->ncols != B->nrows)
     m4ri_die("mzd_trsm_lower_left: L ncols (%d) need to match B nrows (%d).\n", L->ncols, B->nrows);
@@ -497,11 +311,6 @@ void mzd_trsm_lower_left(mzd_t const *L, mzd_t *B, const int cutoff) {
 }
 
 void _mzd_trsm_lower_left(mzd_t const *L, mzd_t *B, const int cutoff) {
-  _mzd_trsm_lower_left_even(L, B, cutoff);
-  __M4RI_DD_MZD(B);
-}
-
-void _mzd_trsm_lower_left_even(mzd_t const *L, mzd_t *B, const int cutoff) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
   int const nbrest = nb % m4ri_radix;
@@ -554,11 +363,11 @@ void _mzd_trsm_lower_left_even(mzd_t const *L, mzd_t *B, const int cutoff) {
     mzd_t const *L10 = mzd_init_window_const(L, mb1,   0, mb, mb1);
     mzd_t const *L11 = mzd_init_window_const(L, mb1, mb1, mb, mb);
 
-    _mzd_trsm_lower_left_even (L00, B0, cutoff);
+    _mzd_trsm_lower_left(L00, B0, cutoff);
 
     mzd_addmul (B1, L10, B0, cutoff);
 
-    _mzd_trsm_lower_left_even (L11, B1, cutoff);
+    _mzd_trsm_lower_left(L11, B1, cutoff);
 
     mzd_free_window(B0);
     mzd_free_window(B1);
@@ -672,7 +481,7 @@ mzd_t *mzd_trtri_upper(mzd_t *U) {
     mzd_t *U11 = mzd_init_window(U, n2, n2 , n , n );
 
     _mzd_trsm_upper_left( U00, U01, 0);
-    _mzd_trsm_upper_right_even(U11, U01, 0);
+    _mzd_trsm_upper_right(U11, U01, 0);
     mzd_trtri_upper(U00);
     mzd_trtri_upper(U11);
 

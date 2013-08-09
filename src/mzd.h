@@ -1196,6 +1196,16 @@ static inline int mzd_read_bits_int(mzd_t const *M, rci_t const x, rci_t const y
 int mzd_is_zero(mzd_t const *A);
 
 /**
+ * \brief Clear the given row, but only begins at the column coloffset.
+ *
+ * \param M Matrix
+ * \param row Index of row
+ * \param coloffset Column offset
+ */
+
+void mzd_row_clear_offset(mzd_t *M, rci_t const row, rci_t const coloffset);
+
+/**
  * \brief Find the next nonzero entry in M starting at start_row and start_col. 
  *
  * This function walks down rows in the inner loop and columns in the
