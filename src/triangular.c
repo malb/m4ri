@@ -587,7 +587,6 @@ void mzd_trsm_upper_left(mzd_t const *U, mzd_t *B, const int cutoff) {
 void _mzd_trsm_upper_left(mzd_t const *U, mzd_t *B, const int cutoff) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
-  int const nbrest = nb % m4ri_radix;
 
   if(mb <= m4ri_radix) {
     /* base case */

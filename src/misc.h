@@ -73,10 +73,6 @@ typedef int rci_t;
 
 typedef int wi_t;
 
-#ifdef M4RI_WRAPWORD
-// C++ wrapper class around an uint64_t, exclusively interesting for the developer(s) of M4RI.
-#include <m4ri/wordwrapper.h>
-#else
 
 /**
  * \brief A word is the typical packed data structure to represent packed bits.
@@ -131,8 +127,6 @@ typedef uint64_t word;
  */
 
 #define __M4RI_CONVERT_TO_WORD(i) ((word)(i))
-
-#endif
 
 /**
  * \brief The number of bits in a word.

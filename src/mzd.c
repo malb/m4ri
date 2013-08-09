@@ -3,7 +3,7 @@
 *            M4RI: Linear Algebra over GF(2)
 *
 *    Copyright (C) 2007 Gregory Bard <gregory.bard@ieee.org> 
-*    Copyright (C) 2009,2010 Martin Albrecht <martinralbrecht@googlemail.com>
+*    Copyright (C) 2009-2013 Martin Albrecht <martinralbrecht+m4ri@googlemail.com>
 *    Copyright (C) 2011 Carlo Wood <carlo@alinoe.com>
 *
 *  Distributed under the terms of the GNU General Public License (GPL)
@@ -144,9 +144,7 @@ static void mzd_t_free(mzd_t *M) {
 }
 
 mzd_t *mzd_init(rci_t r, rci_t c) {
-  if (sizeof(mzd_t) != 64) {
-    m4ri_die("sizeof(mzd_t) = %zd\n", sizeof(mzd_t));
-  }
+  assert(sizeof(mzd_t) == 64);
 
   mzd_t *A = mzd_t_malloc();
 
@@ -183,9 +181,6 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
 
     for(rci_t i = 0; i < A->nrows; ++i) {
       A->rows[i] = A->blocks[i >> A->blockrows_log].begin + (i & blockrows_mask) * A->rowstride;
-#ifdef M4RI_WRAPWORD
-      word::init_array(A->rows[i], A->width);
-#endif
     }
 
   } else {
@@ -1861,23 +1856,6 @@ mzd_t *mzd_submatrix(mzd_t *S, mzd_t const *M, rci_t const startrow, rci_t const
   }
   __M4RI_DD_MZD(S);
   return S;
-}
-
-void mzd_combine(mzd_t *C,       rci_t const c_row, wi_t const c_startblock,
-		 mzd_t const *A, rci_t const a_row, wi_t const a_startblock, 
-		 mzd_t const *B, rci_t const b_row, wi_t const b_startblock) {
-
-  /** 
-   * \todo respect ncols at the end 
-   */
-
-  if( C == A && a_row == c_row && a_startblock == c_startblock) {
-    mzd_combine_even_in_place(C, c_row, c_startblock, B, b_row, b_startblock);
-    return;
-  }
-
-  mzd_combine_even(C, c_row, c_startblock, A, a_row, a_startblock, B, b_row, b_startblock);
-  return;
 }
 
 void mzd_col_swap(mzd_t *M, rci_t const cola, rci_t const colb) {

@@ -228,9 +228,6 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t st
 
   /* we have a bitmask to encode where to write to */
   word *write_mask = (word*)m4ri_mm_calloc(width, sizeof(word));
-#ifdef M4RI_WRAPWORD
-  word::init_array(write_mask, width);
-#endif
   for(rci_t i = 0; i < A->ncols; i += m4ri_radix) {
     int const todo = MIN(m4ri_radix, A->ncols - i);
     for(int k = 0; k < todo; ++k) {
