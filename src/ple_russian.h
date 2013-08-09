@@ -34,6 +34,34 @@
 #include <m4ri/mzp.h>
 
 /**
+ * \brief PLE Elimination Tables 
+ */
+typedef struct {
+  mzd_t *T; /*< the actual table with 2^k entries */
+  rci_t *M; /*< lookup for multiplication */
+  rci_t *E; /*< lookup for elimination */
+  word  *B; /*< cache of first 64 entries in each row */
+} ple_table_t;
+
+/**
+ * Create new table with 2^k rows and ncols.
+ *
+ * \param k log2 of the number of rows (0 < k <= 8).
+ * \param ncols Number of columns.
+ */
+
+ple_table_t *ple_table_init(int k, rci_t ncols);
+
+/**
+ * \brief Delete table T
+ * 
+ * \param T PLE table.
+ */
+
+void ple_table_free(ple_table_t *T);
+
+
+/**
  * \brief PLE matrix decomposition of A using Gray codes.
  *
  * Returns (P,L,E,Q) satisfying PLE = A where P is a permutation
@@ -115,71 +143,63 @@ int _mzd_ple_submatrix(mzd_t *A,
 mzd_t *_mzd_ple_to_e(mzd_t *E, mzd_t const *A, rci_t r, rci_t c, int k, rci_t *offsets);
 
 /**
- * \brief add rows E0,E1 to M between startrow and stoprow, starting at startcol.
+ * \brief add rows T0,T1,T2 to M between startrow and stoprow, starting at startcol.
  *
  * \param M        Matrix
  * \param startrow Start processing in this row
  * \param stoprow  Stop processing in this row
  * \param startcol Start processing in this column
  * \param k0       Number of bits to read for E0
- * \param T0       Lookup index -> row for E0
- * \param E0       2^k0 x A::ncols table
+ * \param T0       PLE Table with 2^k0 rows
  * \param k1       Number of bits to read for E1
- * \param T1       Lookup index -> row for E1
- * \param E1       2^k1 x A::ncols table
+ * \param T1       PLE Table with 2^k1 rows
  */
 
 void mzd_process_rows2_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
-                           int const k0, mzd_t const *T0, rci_t const *E0,
-                           int const k1, mzd_t const *T1, rci_t const *E1);
+                           int const k0, ple_table_t const *T0,
+                           int const k1, ple_table_t const *T1);
 
 /**
- * \brief add rows E0,E1,E2 to M between startrow and stoprow, starting at startcol.
+ * \brief add rows T0,T1,T2,T3 to M between startrow and stoprow, starting at startcol.
  *
  * \param M        Matrix
  * \param startrow Start processing in this row
  * \param stoprow  Stop processing in this row
  * \param startcol Start processing in this column
  * \param k0       Number of bits to read for E0
- * \param T0       Lookup index -> row for E0
- * \param E0       2^k0 x A::ncols table
+ * \param T0       PLE Table with 2^k0 rows
  * \param k1       Number of bits to read for E1
- * \param T1       Lookup index -> row for E1
- * \param E1       2^k1 x A::ncols table
+ * \param T1       PLE Table with 2^k1 rows
  * \param k2       Number of bits to read for E2
- * \param T2       Lookup index -> row for E2
- * \param E2       2^k2 x A::ncols table
+ * \param T2       PLE Table with 2^k2 rows
  */
 
 void mzd_process_rows3_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
-                           int const k0, mzd_t const *T0, rci_t const *E0,
-                           int const k1, mzd_t const *T1, rci_t const *E1,
-			   int const k2, mzd_t const *T2, rci_t const *E2);
+                           int const k0, ple_table_t const *T0,
+                           int const k1, ple_table_t const *T1,
+			   int const k2, ple_table_t const *T2);
 
 /**
- * \brief add rows E0,E1,E2,E3 to M between startrow and stoprow, starting at startcol.
+ * \brief add rows T0,T1,T2,T3 to M between startrow and stoprow, starting at startcol.
  *
  * \param M        Matrix
  * \param startrow Start processing in this row
  * \param stoprow  Stop processing in this row
  * \param startcol Start processing in this column
  * \param k0       Number of bits to read for E0
- * \param T0       Lookup index -> row for E0
- * \param E0       2^k0 x A::ncols table
+ * \param T0       PLE Table with 2^k0 rows
  * \param k1       Number of bits to read for E1
- * \param T1       Lookup index -> row for E1
- * \param E1       2^k1 x A::ncols table
+ * \param T1       PLE Table with 2^k1 rows
  * \param k2       Number of bits to read for E2
- * \param T2       Lookup index -> row for E2
- * \param E2       2^k2 x A::ncols table
+ * \param T2       PLE Table with 2^k2 rows
  * \param k3       Number of bits to read for E3
- * \param T3       Lookup index -> row for E3
- * \param E3       3^k3 x A::ncols table */
+ * \param T3       PLE Table with 2^k3 rows
+ */
 
 void mzd_process_rows4_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
-                           int const k0, mzd_t const *T0, rci_t const *E0,
-                           int const k1, mzd_t const *T1, rci_t const *E1,
-                           int const k2, mzd_t const *T2, rci_t const *E2,
-                           int const k3, mzd_t const *T3, rci_t const *E3);
+                           int const k0, ple_table_t const *T0,
+                           int const k1, ple_table_t const *T1,
+                           int const k2, ple_table_t const *T2,
+                           int const k3, ple_table_t const *T3);
 
 #endif // M4RI_PLE_RUSSIAN

@@ -160,7 +160,6 @@ static inline void _mzd_combine6(word *c, word const *t1, word const *t2, word c
 #endif // __M4RI_HAVE_SSE2
 }
 
-
 /**
  * Compute c[i] += t1[i] + t2[i] + t3[i] + t4[i] + t5[i] for 0 <= i < wide
  *
