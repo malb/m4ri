@@ -34,7 +34,7 @@
 #endif
 
 /** the number of tables used in PLE decomposition **/
-#define __M4RI_PLE_NTABLES 5
+#define __M4RI_PLE_NTABLES 6
 
 static inline rci_t _max_value(rci_t *data, int length) {
   rci_t max = 0;
@@ -669,6 +669,7 @@ void mzd_process_rows6_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startc
 #endif
   for(rci_t r = startrow; r < stoprow; ++r) {
     word *m0 = M->rows[r] + block0;
+
     rci_t const x0 = E0[_mzd_read_bits_int_raw(m0, spot0,           0, spill0, k0)];
     word *t0 = T0->rows[x0] + block0;
     m0[0] ^= t0[0];
