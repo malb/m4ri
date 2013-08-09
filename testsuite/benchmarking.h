@@ -35,5 +35,6 @@ int papi_test(int * papi_events, int papi_array_len);
 #endif
 
 void print_wall_time(double seconds);
+void print_cpu_time(double seconds);
 
 #endif //BENCHMARKETING_H

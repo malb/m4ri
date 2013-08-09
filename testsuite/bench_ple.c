@@ -108,6 +108,9 @@ int main(int argc, char **argv) {
   unsigned long long data[2];
   run_bench(run, (void*)&p, data, 2);
 
-  printf("m: %5d, n: %5d, what: %s, r: %5d, cpu cycles: %12llu, wall time: %6.3lf\n", p.m, p.n, p.what, p.r, data[1], data[0] / 1000000.0);
+  printf("m: %5d, n: %5d, what: %s, r: %5d, cpu cycles: %12llu, ", p.m, p.n, p.what, p.r, data[1]);
+  print_wall_time( data[0] / 1000000.0 ); printf(", ");
+  print_cpu_time( data[1] / (double)cpucycles_persecond() );  printf("\n");
+
 }
 

@@ -791,6 +791,15 @@ void print_wall_time(double seconds) {
     printf("wall time: %10.5f us", 1000000.0 * seconds);
 }
 
+void print_cpu_time(double seconds) {
+  if (seconds >= 0.01)
+    printf("cpu time: %10.5f s", seconds);
+  else if (seconds >= 0.00001)
+    printf("cpu time: %10.5f ms", 1000.0 * seconds);
+  else
+    printf("cpu time: %10.5f us", 1000000.0 * seconds);
+}
+
 #ifdef HAVE_LIBPAPI
 int papi_test(int * papi_events, int papi_array_len) {
   int res = PAPI_start_counters(papi_events, papi_array_len);
