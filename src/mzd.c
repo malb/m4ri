@@ -165,7 +165,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
     while(blockrows >>= 1)
       A->blockrows_log++;
     blockrows = 1 << A->blockrows_log;
-    //A->blockrows_mask = blockrows - 1;
+
     int const blockrows_mask = blockrows - 1;
     int const nblocks = (r + blockrows - 1) / blockrows;
     A->flags |= (nblocks > 1) ? mzd_flag_multiple_blocks : 0;

@@ -143,63 +143,68 @@ int _mzd_ple_submatrix(mzd_t *A,
 mzd_t *_mzd_ple_to_e(mzd_t *E, mzd_t const *A, rci_t r, rci_t c, int k, rci_t *offsets);
 
 /**
- * \brief add rows T0,T1,T2 to M between startrow and stoprow, starting at startcol.
+ * \brief add rows T[0],T[1] to M between startrow and stoprow, starting at startcol.
  *
  * \param M        Matrix
  * \param startrow Start processing in this row
  * \param stoprow  Stop processing in this row
  * \param startcol Start processing in this column
- * \param k0       Number of bits to read for E0
- * \param T0       PLE Table with 2^k0 rows
- * \param k1       Number of bits to read for E1
- * \param T1       PLE Table with 2^k1 rows
+ * \param k        Number of bits to read in each table
+ * \param T        PLE Table with 2^k[i] rows
  */
 
-void mzd_process_rows2_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
-                           int const k0, ple_table_t const *T0,
-                           int const k1, ple_table_t const *T1);
+void _mzd_process_rows_ple_2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t const **T);
 
 /**
- * \brief add rows T0,T1,T2,T3 to M between startrow and stoprow, starting at startcol.
+ * \brief add rows T[0],T[1],T[2] to M between startrow and stoprow, starting at startcol.
  *
  * \param M        Matrix
  * \param startrow Start processing in this row
  * \param stoprow  Stop processing in this row
  * \param startcol Start processing in this column
- * \param k0       Number of bits to read for E0
- * \param T0       PLE Table with 2^k0 rows
- * \param k1       Number of bits to read for E1
- * \param T1       PLE Table with 2^k1 rows
- * \param k2       Number of bits to read for E2
- * \param T2       PLE Table with 2^k2 rows
+ * \param k        Number of bits to read in each table
+ * \param T        PLE Table with 2^k[i] rows
  */
 
-void mzd_process_rows3_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
-                           int const k0, ple_table_t const *T0,
-                           int const k1, ple_table_t const *T1,
-			   int const k2, ple_table_t const *T2);
+void _mzd_process_rows_ple_3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t const **T);
 
 /**
- * \brief add rows T0,T1,T2,T3 to M between startrow and stoprow, starting at startcol.
+ * \brief add rows T[0],T[1],T[2],T[3] to M between startrow and stoprow, starting at startcol.
  *
  * \param M        Matrix
  * \param startrow Start processing in this row
  * \param stoprow  Stop processing in this row
  * \param startcol Start processing in this column
- * \param k0       Number of bits to read for E0
- * \param T0       PLE Table with 2^k0 rows
- * \param k1       Number of bits to read for E1
- * \param T1       PLE Table with 2^k1 rows
- * \param k2       Number of bits to read for E2
- * \param T2       PLE Table with 2^k2 rows
- * \param k3       Number of bits to read for E3
- * \param T3       PLE Table with 2^k3 rows
+ * \param k        Number of bits to read in each table
+ * \param T        PLE Table with 2^k[i] rows
  */
 
-void mzd_process_rows4_ple(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol,
-                           int const k0, ple_table_t const *T0,
-                           int const k1, ple_table_t const *T1,
-                           int const k2, ple_table_t const *T2,
-                           int const k3, ple_table_t const *T3);
+void _mzd_process_rows_ple_4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t const **T);
+
+/**
+ * \brief add rows T[0],T[1],T[2],T[3],T[4] to M between startrow and stoprow, starting at startcol.
+ *
+ * \param M        Matrix
+ * \param startrow Start processing in this row
+ * \param stoprow  Stop processing in this row
+ * \param startcol Start processing in this column
+ * \param k        Number of bits to read in each table
+ * \param T        PLE Table with 2^k[i] rows
+ */
+
+void _mzd_process_rows_ple_5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t const **T);
+
+/**
+ * \brief add rows T[0],T[1],T[2],T[3],T[4],T[5] to M between startrow and stoprow, starting at startcol.
+ *
+ * \param M        Matrix
+ * \param startrow Start processing in this row
+ * \param stoprow  Stop processing in this row
+ * \param startcol Start processing in this column
+ * \param k        Number of bits to read in each table
+ * \param T        PLE Table with 2^k[i] rows
+ */
+
+void _mzd_process_rows_ple_6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t const **T);
 
 #endif // M4RI_PLE_RUSSIAN

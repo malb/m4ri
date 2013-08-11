@@ -710,6 +710,12 @@ static inline void m4ri_mm_free(void *condemned, ...) {
 #define RESTRICT
 #endif
 
+/**
+ * Macros for template expansion.
+ */
 
+#define __M4RI_TEMPLATE_EXPAND0(x,y) x ## _ ## y
+#define __M4RI_TEMPLATE_EXPAND1(x,y) __M4RI_TEMPLATE_EXPAND0(x,y)
+#define __M4RI_TEMPLATE_NAME(fun) __M4RI_TEMPLATE_EXPAND1(fun, N)
 
 #endif // M4RI_MISC_H

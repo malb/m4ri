@@ -132,7 +132,7 @@ typedef struct mzd_t {
 /**
  * \brief The minimum width where padding occurs.
  */
-static wi_t const mzd_paddingwidth = 3;
+static wi_t const mzd_paddingwidth = 1;
 
 static uint8_t const mzd_flag_nonzero_excess = 0x2;
 static uint8_t const mzd_flag_windowed_zerooffset = 0x4;

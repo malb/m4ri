@@ -76,18 +76,18 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
   }
 
   /* adjust cutting numbers to work on words */
-  {
-    rci_t mult = m4ri_radix;
-    rci_t width = MIN(MIN(m, n), k) / 2;
-    while (width > cutoff) {
-      width /= 2;
-      mult *= 2;
-    }
 
-    mmm = (((m - m % mult) / m4ri_radix) >> 1) * m4ri_radix;
-    kkk = (((k - k % mult) / m4ri_radix) >> 1) * m4ri_radix;
-    nnn = (((n - n % mult) / m4ri_radix) >> 1) * m4ri_radix;
+  rci_t mult = m4ri_radix;
+  rci_t width = MIN(MIN(m, n), k) / 2;
+  while (width > cutoff) {
+    width /= 2;
+    mult *= 2;
   }
+
+  mmm = (((m - m % mult) / m4ri_radix) >> 1) * m4ri_radix;
+  kkk = (((k - k % mult) / m4ri_radix) >> 1) * m4ri_radix;
+  nnn = (((n - n % mult) / m4ri_radix) >> 1) * m4ri_radix;
+
   /*         |A |   |B |   |C |
    * Compute |  | x |  | = |  | */
   {
