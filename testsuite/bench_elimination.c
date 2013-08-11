@@ -238,6 +238,8 @@ int main(int argc, char **argv) {
 
   printf("m: %5d, n: %5d, last r: %5d, cpu cycles: %12llu, cc/(mnr^0.807): %.5lf, ", params.m, params.n, params.r, data[1], cc_per_op);
   print_wall_time(data[0] / 1000000.0);
+  printf(", ");
+  print_cpu_time(data[1] / (double)cpucycles_persecond());
   printf("\n");
 #ifdef HAVE_LIBPAPI
   for (int n = 1; n < data_len; ++n) {
