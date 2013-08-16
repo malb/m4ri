@@ -37,9 +37,11 @@ pkgincludesub_HEADERS = m4ri/m4ri.h \
 	m4ri/triangular_russian.h \
 	m4ri/ple.h \
 	m4ri/ple_russian.h \
+	m4ri/ple_russian_template.h \
 	m4ri/solve.h \
 	m4ri/echelonform.h \
 	m4ri/xor.h \
+	m4ri/xor_template.h \
 	m4ri/mmc.h \
 	m4ri/debug_dump.h \
 	m4ri/io.h
