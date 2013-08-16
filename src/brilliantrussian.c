@@ -1037,6 +1037,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
    * Step 3. for \f$h = 1,2, ... , c\f$ do
    *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
    */
+
   rci_t        x[__M4RI_M4RM_NTABLES];
   rci_t       *L[__M4RI_M4RM_NTABLES];
   word  const *t[__M4RI_M4RM_NTABLES];

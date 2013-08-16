@@ -78,43 +78,21 @@ void __M4RI_TEMPLATE_NAME(_mzd_ple_a11)(mzd_t *A,
 
   const rci_t bits_to_read = sh[N-1] + k[N-1];
 
-  switch(__M4RI_ALIGNMENT(A->rows[0] + block,16)) {
-  case 8:
-    for(rci_t i = start_row; i < stop_row; ++i) {
-      const word bits = mzd_read_bits(A, i, start_col, bits_to_read);
-      word *m = A->rows[i] + block;
+  for(rci_t i = start_row; i < stop_row; ++i) {
+    const word bits = mzd_read_bits(A, i, start_col, bits_to_read);
+    word *m = A->rows[i] + block;
 
-      switch(N) {  /* we rely on the compiler to optimise this switch away, it reads nicer than #if */
-      case 8:   x[ N-8 ] = M[ N-8 ][ (bits>> sh[ N-8 ]) & bm[ N-8 ] ]; t[ N-8 ] = T[ N-8 ]->rows[ x[ N-8 ] ] + block;
-      case 7:   x[ N-7 ] = M[ N-7 ][ (bits>> sh[ N-7 ]) & bm[ N-7 ] ]; t[ N-7 ] = T[ N-7 ]->rows[ x[ N-7 ] ] + block;
-      case 6:   x[ N-6 ] = M[ N-6 ][ (bits>> sh[ N-6 ]) & bm[ N-6 ] ]; t[ N-6 ] = T[ N-6 ]->rows[ x[ N-6 ] ] + block;
-      case 5:   x[ N-5 ] = M[ N-5 ][ (bits>> sh[ N-5 ]) & bm[ N-5 ] ]; t[ N-5 ] = T[ N-5 ]->rows[ x[ N-5 ] ] + block;
-      case 4:   x[ N-4 ] = M[ N-4 ][ (bits>> sh[ N-4 ]) & bm[ N-4 ] ]; t[ N-4 ] = T[ N-4 ]->rows[ x[ N-4 ] ] + block;
-      case 3:   x[ N-3 ] = M[ N-3 ][ (bits>> sh[ N-3 ]) & bm[ N-3 ] ]; t[ N-3 ] = T[ N-3 ]->rows[ x[ N-3 ] ] + block;
-      case 2:   x[ N-2 ] = M[ N-2 ][ (bits>> sh[ N-2 ]) & bm[ N-2 ] ]; t[ N-2 ] = T[ N-2 ]->rows[ x[ N-2 ] ] + block;
-      case 1:   x[ N-1 ] = M[ N-1 ][ (bits>> sh[ N-1 ]) & bm[ N-1 ] ]; t[ N-1 ] = T[ N-1 ]->rows[ x[ N-1 ] ] + block;
-      }
-      __M4RI_TEMPLATE_NAME(_mzd_combine_u)(m, t, wide);
+    switch(N) {  /* we rely on the compiler to optimise this switch away, it reads nicer than #if */
+    case 8:   x[ N-8 ] = M[ N-8 ][ (bits>> sh[ N-8 ]) & bm[ N-8 ] ]; t[ N-8 ] = T[ N-8 ]->rows[ x[ N-8 ] ] + block;
+    case 7:   x[ N-7 ] = M[ N-7 ][ (bits>> sh[ N-7 ]) & bm[ N-7 ] ]; t[ N-7 ] = T[ N-7 ]->rows[ x[ N-7 ] ] + block;
+    case 6:   x[ N-6 ] = M[ N-6 ][ (bits>> sh[ N-6 ]) & bm[ N-6 ] ]; t[ N-6 ] = T[ N-6 ]->rows[ x[ N-6 ] ] + block;
+    case 5:   x[ N-5 ] = M[ N-5 ][ (bits>> sh[ N-5 ]) & bm[ N-5 ] ]; t[ N-5 ] = T[ N-5 ]->rows[ x[ N-5 ] ] + block;
+    case 4:   x[ N-4 ] = M[ N-4 ][ (bits>> sh[ N-4 ]) & bm[ N-4 ] ]; t[ N-4 ] = T[ N-4 ]->rows[ x[ N-4 ] ] + block;
+    case 3:   x[ N-3 ] = M[ N-3 ][ (bits>> sh[ N-3 ]) & bm[ N-3 ] ]; t[ N-3 ] = T[ N-3 ]->rows[ x[ N-3 ] ] + block;
+    case 2:   x[ N-2 ] = M[ N-2 ][ (bits>> sh[ N-2 ]) & bm[ N-2 ] ]; t[ N-2 ] = T[ N-2 ]->rows[ x[ N-2 ] ] + block;
+    case 1:   x[ N-1 ] = M[ N-1 ][ (bits>> sh[ N-1 ]) & bm[ N-1 ] ]; t[ N-1 ] = T[ N-1 ]->rows[ x[ N-1 ] ] + block;
     }
-    break;
-  case 0:
-    for(rci_t i = start_row; i < stop_row; ++i) {
-      const word bits = mzd_read_bits(A, i, start_col, bits_to_read);
-      word *m = A->rows[i] + block;
-
-      switch(N) {  /* we rely on the compiler to optimise this switch away, it reads nicer than #if */
-      case 8:   x[ N-8 ] = M[ N-8 ][ (bits>> sh[ N-8 ]) & bm[ N-8 ] ]; t[ N-8 ] = T[ N-8 ]->rows[ x[ N-8 ] ] + block;
-      case 7:   x[ N-7 ] = M[ N-7 ][ (bits>> sh[ N-7 ]) & bm[ N-7 ] ]; t[ N-7 ] = T[ N-7 ]->rows[ x[ N-7 ] ] + block;
-      case 6:   x[ N-6 ] = M[ N-6 ][ (bits>> sh[ N-6 ]) & bm[ N-6 ] ]; t[ N-6 ] = T[ N-6 ]->rows[ x[ N-6 ] ] + block;
-      case 5:   x[ N-5 ] = M[ N-5 ][ (bits>> sh[ N-5 ]) & bm[ N-5 ] ]; t[ N-5 ] = T[ N-5 ]->rows[ x[ N-5 ] ] + block;
-      case 4:   x[ N-4 ] = M[ N-4 ][ (bits>> sh[ N-4 ]) & bm[ N-4 ] ]; t[ N-4 ] = T[ N-4 ]->rows[ x[ N-4 ] ] + block;
-      case 3:   x[ N-3 ] = M[ N-3 ][ (bits>> sh[ N-3 ]) & bm[ N-3 ] ]; t[ N-3 ] = T[ N-3 ]->rows[ x[ N-3 ] ] + block;
-      case 2:   x[ N-2 ] = M[ N-2 ][ (bits>> sh[ N-2 ]) & bm[ N-2 ] ]; t[ N-2 ] = T[ N-2 ]->rows[ x[ N-2 ] ] + block;
-      case 1:   x[ N-1 ] = M[ N-1 ][ (bits>> sh[ N-1 ]) & bm[ N-1 ] ]; t[ N-1 ] = T[ N-1 ]->rows[ x[ N-1 ] ] + block;
-      }
-      __M4RI_TEMPLATE_NAME(_mzd_combine_a)(m, t, wide);
-    }
-    break;
+    __M4RI_TEMPLATE_NAME(_mzd_combine)(m, t, wide);
   }
   __M4RI_DD_MZD(A);
 }

@@ -153,7 +153,7 @@ mzd_t *_mzd_ple_to_e(mzd_t *E, mzd_t const *A, rci_t r, rci_t c, int k, rci_t *o
  * \param T        PLE Table with 2^k[i] rows
  */
 
-void _mzd_process_rows_ple_2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t const **T);
+void _mzd_process_rows_ple_2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t **T);
 
 /**
  * \brief add rows T[0],T[1],T[2] to M between startrow and stoprow, starting at startcol.
@@ -166,7 +166,7 @@ void _mzd_process_rows_ple_2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t star
  * \param T        PLE Table with 2^k[i] rows
  */
 
-void _mzd_process_rows_ple_3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t const **T);
+void _mzd_process_rows_ple_3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t **T);
 
 /**
  * \brief add rows T[0],T[1],T[2],T[3] to M between startrow and stoprow, starting at startcol.
@@ -179,7 +179,7 @@ void _mzd_process_rows_ple_3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t star
  * \param T        PLE Table with 2^k[i] rows
  */
 
-void _mzd_process_rows_ple_4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t const **T);
+void _mzd_process_rows_ple_4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t **T);
 
 /**
  * \brief add rows T[0],T[1],T[2],T[3],T[4] to M between startrow and stoprow, starting at startcol.
@@ -192,7 +192,7 @@ void _mzd_process_rows_ple_4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t star
  * \param T        PLE Table with 2^k[i] rows
  */
 
-void _mzd_process_rows_ple_5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t const **T);
+void _mzd_process_rows_ple_5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t **T);
 
 /**
  * \brief add rows T[0],T[1],T[2],T[3],T[4],T[5] to M between startrow and stoprow, starting at startcol.
@@ -205,6 +205,6 @@ void _mzd_process_rows_ple_5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t star
  * \param T        PLE Table with 2^k[i] rows
  */
 
-void _mzd_process_rows_ple_6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t const **T);
+void _mzd_process_rows_ple_6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, int const *k, const ple_table_t **T);
 
 #endif // M4RI_PLE_RUSSIAN

@@ -130,7 +130,7 @@ static inline void __M4RI_TEMPLATE_NAME(_mzd_combine_u)(word *m, word const *t[N
 
 #if __M4RI_HAVE_SSE2
 
-  assert( (__M4RI_ALIGNMENT(m,16) == 8) | (__M4RI_ALIGNMENT(m,16) == 0) );
+  assert( (__M4RI_ALIGNMENT(m,16) == 8) );
 
   switch(N) {  /* we rely on the compiler to optimise this switch away, it reads nicer than #if */
   case 8: assert(__M4RI_ALIGNMENT(m,16) == __M4RI_ALIGNMENT(t[7],16));
