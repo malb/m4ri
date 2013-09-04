@@ -66,6 +66,7 @@ extern "C" {
 #include <m4ri/solve.h>
 #include <m4ri/echelonform.h>
 #include <m4ri/io.h>
+#include <m4ri/djb.h>
 
 #if defined(__cplusplus) && !defined (_MSC_VER)
 }

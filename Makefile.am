@@ -20,7 +20,8 @@ libm4ri_la_SOURCES = \
 	m4ri/echelonform.c \
 	m4ri/mmc.c \
 	m4ri/debug_dump.c \
-	m4ri/io.c
+	m4ri/io.c \
+	m4ri/djb.c
 
 BUILT_SOURCES = m4ri/m4ri_config.h
 
@@ -44,7 +45,8 @@ pkgincludesub_HEADERS = m4ri/m4ri.h \
 	m4ri/xor_template.h \
 	m4ri/mmc.h \
 	m4ri/debug_dump.h \
-	m4ri/io.h
+	m4ri/io.h \
+	m4ri/djb.h
 
 nodist_pkgincludesub_HEADERS = m4ri/m4ri_config.h
 

@@ -683,6 +683,7 @@ static inline void *m4ri_mm_malloc(size_t size) {
   else return newthing;
 }
 
+
 /**
  * \brief Free wrapper.
  *
