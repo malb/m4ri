@@ -41,6 +41,8 @@
 
 void mzd_print(mzd_t const *M);
 
+void mzd_print_row(mzd_t const *M, const rci_t i);
+
 /**
  * \brief Print compact information about the matrix to stdout. 
  *
@@ -133,5 +135,7 @@ column_index
  */
 
 mzd_t *mzd_from_jcf(const char *fn, int verbose);
+
+mzd_t *mzd_from_str(rci_t m, rci_t n, const char *str);
 
 #endif //M4RI_IO_H

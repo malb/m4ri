@@ -64,6 +64,28 @@ void mzd_print(mzd_t const *M) {
   }
 }
 
+void mzd_print_row(mzd_t const *M, const rci_t i) {
+  char temp[SAFECHAR];
+  printf("[");
+  word *row = M->rows[i];
+  for (wi_t j = 0; j < M->width - 1; ++j) {
+    m4ri_word_to_str(temp, row[j], 1);
+    printf("%s|", temp);
+  }
+  row = row + M->width - 1;
+  int const wide = (M->ncols % m4ri_radix) ? M->ncols % m4ri_radix : m4ri_radix;
+  for (int j = 0; j < wide; ++j) {
+    if(j != 0 && (j % 4) == 0)
+      printf(":");
+    if (__M4RI_GET_BIT(*row, j)) 
+      printf("1");
+    else
+      printf(" ");
+  }
+  printf("]\n");
+}
+
+
 #if __M4RI_HAVE_LIBPNG
 #define PNGSIGSIZE 8
 
@@ -355,4 +377,15 @@ mzd_t *mzd_from_jcf(const char *fn, int verbose) {
   } else {
     return A;
   }
+}
+
+mzd_t *mzd_from_str(rci_t m, rci_t n, const char *str) {
+  int idx = 0;
+  mzd_t *A = mzd_init(m, n);
+  for(rci_t i=0; i<A->nrows; i++) {
+    for(rci_t j=0; j<A->ncols; j++) {
+      mzd_write_bit(A, i, j, str[idx++] == '1');
+    }
+  }
+  return A;
 }
