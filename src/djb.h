@@ -1,9 +1,11 @@
 /**
  * Dan Bernstein's "Optimizing linear maps mod 2"
  *
- * This code is a port of Dan's sort1.cpp which is available at
- * http://binary.cr.yp.to/linearmod2.html
+ * This code is a port of sort1.cpp available at http://binary.cr.yp.to/linearmod2.html
  *
+ * Given a matrix A djb_compile(A) will compute a djb_t data structure which realises A with
+ * (heuristically) (m * n)/(log m - loglog m) XORs.
+ * 
  * It makes use of a binary heap written by Martin Kunev which is available at
  * https://gist.github.com/martinkunev/1365481
  *
@@ -20,7 +22,6 @@ typedef enum {
   source_source
 } srctyp_t;
  
-
 typedef struct {
   rci_t nrows;
   rci_t ncols;
@@ -33,6 +34,10 @@ typedef struct {
 
 #define M4RI_DJB_BASE_SIZE 64
 
+/**
+ * Allocate a new DJB linear map
+ */
+
 static inline djb_t *djb_init(rci_t nrows, rci_t ncols) {
   /* we want to use realloc, so we call unaligned malloc */
   djb_t *m = malloc(sizeof(djb_t));
@@ -42,9 +47,9 @@ static inline djb_t *djb_init(rci_t nrows, rci_t ncols) {
   *m = (djb_t){
     .nrows = nrows,
     .ncols = ncols,
-    .target = malloc(sizeof(rci_t) * M4RI_DJB_BASE_SIZE),
-    .source = malloc(sizeof(rci_t) * M4RI_DJB_BASE_SIZE),
-    .srctyp = malloc(sizeof(srctyp_t) *   M4RI_DJB_BASE_SIZE),
+    .target = malloc(sizeof(rci_t)    * M4RI_DJB_BASE_SIZE),
+    .source = malloc(sizeof(rci_t)    * M4RI_DJB_BASE_SIZE),
+    .srctyp = malloc(sizeof(srctyp_t) * M4RI_DJB_BASE_SIZE),
     .length = 0,
     .allocated = M4RI_DJB_BASE_SIZE,
   };
@@ -60,24 +65,33 @@ static inline void djb_free(djb_t *m) {
   free(m);
 }
 
-static inline void djb_push_back(djb_t *h, rci_t target, rci_t source, int srctyp) {
-  assert((target <= h->nrows) && 
-         ((source < h->ncols) | (srctyp != source_source)) &&
-         ((source < h->nrows) | (srctyp != source_target)));
-  if (h->length >= h->allocated) {
-    h->allocated += M4RI_DJB_BASE_SIZE;
-    h->target = realloc(h->target, h->allocated*sizeof(rci_t));
-    h->source = realloc(h->source, h->allocated*sizeof(rci_t));
-    h->srctyp = realloc(h->srctyp, h->allocated*sizeof(srctyp_t));
+/**
+ * Add a new operation out[target] ^= srctype[source] to queue.
+ *
+ * \param z DJB linear map.
+ * \param target Output index
+ * \param source Input index
+ * \param Type of input (source_source or source_target)
+ */
+
+static inline void djb_push_back(djb_t *z, rci_t target, rci_t source, int srctyp) {
+  assert((target < z->nrows) && 
+         ((source < z->ncols) | (srctyp != source_source)) &&
+         ((source < z->nrows) | (srctyp != source_target)));
+  if (z->length >= z->allocated) {
+    z->allocated += M4RI_DJB_BASE_SIZE;
+    z->target = realloc(z->target, z->allocated*sizeof(rci_t));
+    z->source = realloc(z->source, z->allocated*sizeof(rci_t));
+    z->srctyp = realloc(z->srctyp, z->allocated*sizeof(srctyp_t));
   }
-  h->target[h->length] = target;
-  h->source[h->length] = source;
-  h->srctyp[h->length] = srctyp;
-  h->length++;
+  z->target[z->length] = target;
+  z->source[z->length] = source;
+  z->srctyp[z->length] = srctyp;
+  z->length++;
 }
 
 /**
- * Compile a new DJB linear map data structure from A.
+ * Compile a new DJB linear map from A.
  *
  * \param A
  */
@@ -85,23 +99,25 @@ static inline void djb_push_back(djb_t *h, rci_t target, rci_t source, int srcty
 djb_t *djb_compile(mzd_t *A);
 
 /**
- * W = m*V
+ * \brief W = m*V
  *
  * Apply the linear map m to V and write the result in W.
  *
- * \param m Linear map.
+ * \param z  DJB linear map.
+ * \param W  Output matrix
+ * \param V  Input matrix
  */
 
-void djb_apply_mzd(djb_t *m, mzd_t *W, const mzd_t *V);
+void djb_apply_mzd(djb_t *z, mzd_t *W, const mzd_t *V);
 
 
 /**
- *
+ * Print infomrmation on linear map mA
  */
 
-static inline void djb_info(djb_t *h) {
-  double save = (double)h->length / (double)(h->nrows * h->ncols);
-  printf("%d x %d linear map in %d xors (cost: %.5f)\n",h->nrows, h->ncols, h->length, save);
+static inline void djb_info(djb_t *z) {
+  double save = (double)z->length / (double)(z->nrows * z->ncols);
+  printf("%d x %d linear map in %d xors (cost: %.5f)\n", z->nrows, z->ncols, z->length, save);
 }
 
 

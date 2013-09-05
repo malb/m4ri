@@ -16,7 +16,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-
 static inline int mzd_compare_rows_revlex(const mzd_t *A, rci_t a, rci_t b) {
   for(wi_t j=A->width-1; j>=0; j--)  {
     if (A->rows[a][j] < A->rows[b][j])
@@ -108,13 +107,13 @@ void heap_pop(struct heap *restrict h, const mzd_t *A) {
 
 djb_t *djb_compile(mzd_t *A) {
   heap_t *h = heap_init();
-  const rci_t q = A->nrows;
+  rci_t m = A->nrows;
   rci_t n = A->ncols;
 
-  djb_t *m = djb_init(q, n);
+  djb_t *z = djb_init(m, n);
 
-  for (rci_t i=0; i < q; i++) 
-    heap_push(h, i, A);
+  for (rci_t i=0; i < m; i++)
+    heap_push(h, i, A); // sort by mzd_compare_rows_revlex
 
   while (n > 0) {
     if (mzd_read_bit(A, heap_front(h), n - 1) == 0) {
@@ -127,15 +126,16 @@ djb_t *djb_compile(mzd_t *A) {
 
     if (q >= 2 && mzd_read_bit(A, heap_front(h), n - 1)) {
       mzd_row_add(A, heap_front(h), temp);
-      djb_push_back(m, temp, heap_front(h), source_target);
+      djb_push_back(z, temp, heap_front(h), source_target);
     } else {
       mzd_write_bit(A, temp, n-1, 0);
-      djb_push_back(m, temp, n-1, source_source);
+      djb_push_back(z, temp, n-1, source_source);
     }
     heap_push(h, temp, A);
   }
   heap_free(h);
-  return m;
+ 
+  return z;
 }
 
 void djb_apply_mzd(djb_t *m, mzd_t *W, const mzd_t *V) {
