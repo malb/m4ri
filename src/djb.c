@@ -124,7 +124,7 @@ djb_t *djb_compile(mzd_t *A) {
     rci_t temp = heap_front(h);
     heap_pop(h, A);
 
-    if (q >= 2 && mzd_read_bit(A, heap_front(h), n - 1)) {
+    if (m >= 2 && mzd_read_bit(A, heap_front(h), n - 1)) {
       mzd_row_add(A, heap_front(h), temp);
       djb_push_back(z, temp, heap_front(h), source_target);
     } else {
