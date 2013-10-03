@@ -40,19 +40,18 @@ typedef struct {
 
 static inline djb_t *djb_init(rci_t nrows, rci_t ncols) {
   /* we want to use realloc, so we call unaligned malloc */
-  djb_t *m = malloc(sizeof(djb_t));
+  djb_t *m = (djb_t*)malloc(sizeof(djb_t));
   if (m == NULL)
     m4ri_die("malloc failed.\n");
 
-  *m = (djb_t){
-    .nrows = nrows,
-    .ncols = ncols,
-    .target = malloc(sizeof(rci_t)    * M4RI_DJB_BASE_SIZE),
-    .source = malloc(sizeof(rci_t)    * M4RI_DJB_BASE_SIZE),
-    .srctyp = malloc(sizeof(srctyp_t) * M4RI_DJB_BASE_SIZE),
-    .length = 0,
-    .allocated = M4RI_DJB_BASE_SIZE,
-  };
+  m->nrows = nrows;
+  m->ncols = ncols;
+  m->target = (rci_t*)malloc(sizeof(rci_t)    * M4RI_DJB_BASE_SIZE);
+  m->source = (rci_t*)malloc(sizeof(rci_t)    * M4RI_DJB_BASE_SIZE);
+  m->srctyp = (srctyp_t*)malloc(sizeof(srctyp_t) * M4RI_DJB_BASE_SIZE);
+  m->length = 0;
+  m->allocated = M4RI_DJB_BASE_SIZE;
+
   if (m->target == NULL || m->source == NULL || m->srctyp == NULL)
     m4ri_die("malloc failed.\n");
   return m;
@@ -74,15 +73,15 @@ static inline void djb_free(djb_t *m) {
  * \param Type of input (source_source or source_target)
  */
 
-static inline void djb_push_back(djb_t *z, rci_t target, rci_t source, int srctyp) {
+static inline void djb_push_back(djb_t *z, rci_t target, rci_t source, srctyp_t srctyp) {
   assert((target < z->nrows) && 
          ((source < z->ncols) | (srctyp != source_source)) &&
          ((source < z->nrows) | (srctyp != source_target)));
   if (z->length >= z->allocated) {
     z->allocated += M4RI_DJB_BASE_SIZE;
-    z->target = realloc(z->target, z->allocated*sizeof(rci_t));
-    z->source = realloc(z->source, z->allocated*sizeof(rci_t));
-    z->srctyp = realloc(z->srctyp, z->allocated*sizeof(srctyp_t));
+    z->target = (rci_t*)realloc(z->target, z->allocated*sizeof(rci_t));
+    z->source = (rci_t*)realloc(z->source, z->allocated*sizeof(rci_t));
+    z->srctyp = (srctyp_t*)realloc(z->srctyp, z->allocated*sizeof(srctyp_t));
   }
   z->target[z->length] = target;
   z->source[z->length] = source;
