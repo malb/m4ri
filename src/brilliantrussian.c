@@ -176,9 +176,9 @@ static inline void _mzd_copy_back_rows(mzd_t *A, mzd_t const *U, rci_t r, rci_t 
 
 void mzd_make_table(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L)
 {
-  wi_t const homeblock = (c + M->offset) / m4ri_radix;
-  word const mask_end = __M4RI_LEFT_BITMASK((M->ncols + M->offset) % m4ri_radix);
-  word const pure_mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - ((c + M->offset) % m4ri_radix));
+  wi_t const homeblock = c / m4ri_radix;
+  word const mask_end = __M4RI_LEFT_BITMASK(M->ncols % m4ri_radix);
+  word const pure_mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - (c % m4ri_radix));
   word const mask_begin = (M->width - homeblock != 1) ? pure_mask_begin : pure_mask_begin & mask_end;
   wi_t const wide = M->width - homeblock;
 
@@ -360,8 +360,6 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   assert(k <= m4ri_radix);
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
-  wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
-  int const entry_point = wide % 8;	/* Unrolled loop entry point */
 
   int const ka = k / 2;
   int const kb = k - k / 2;
@@ -381,21 +379,11 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
     if((x0 | x1) == 0)	// x0 == 0 && x1 == 0
       continue;
     word *m0 = M->rows[r] + blocknum;
-    word const *t0 = T0->rows[x0] + blocknum;
-    word const *t1 = T1->rows[x1] + blocknum;
+    word const *t[2];
+    t[0] = T0->rows[x0] + blocknum;
+    t[1] = T1->rows[x1] + blocknum;
 
-    wi_t n = count;
-    switch (entry_point) {
-    case 0: do { *m0++ ^= *t0++ ^ *t1++;
-      case 7:    *m0++ ^= *t0++ ^ *t1++;
-      case 6:    *m0++ ^= *t0++ ^ *t1++;
-      case 5:    *m0++ ^= *t0++ ^ *t1++;
-      case 4:    *m0++ ^= *t0++ ^ *t1++;
-      case 3:    *m0++ ^= *t0++ ^ *t1++;
-      case 2:    *m0++ ^= *t0++ ^ *t1++;
-      case 1:    *m0++ ^= *t0++ ^ *t1++;
-      } while (--n > 0);
-    }
+    _mzd_combine_2( m0, t, wide);
   }
 
   __M4RI_DD_MZD(M);
@@ -406,8 +394,6 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   assert(k <= m4ri_radix);
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
-  wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
-  int const entry_point = wide % 8;	/* Unrolled loop entry point */
 
   int rem = k % 3;
 
@@ -433,22 +419,12 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
       continue;
 
     word *m0 = M->rows[r] + blocknum;
-    word const *t0 = T0->rows[x0] + blocknum;
-    word const *t1 = T1->rows[x1] + blocknum;
-    word const *t2 = T2->rows[x2] + blocknum;
+    word const *t[3];
+    t[0] = T0->rows[x0] + blocknum;
+    t[1] = T1->rows[x1] + blocknum;
+    t[2] = T2->rows[x2] + blocknum;
 
-    wi_t n = count;
-    switch (entry_point) {
-    case 0: do { *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
-      case 7:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
-      case 6:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
-      case 5:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
-      case 4:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
-      case 3:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
-      case 2:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
-      case 1:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++;
-      } while (--n > 0);
-    }
+    _mzd_combine_3( m0, t, wide);
   }
 
   __M4RI_DD_MZD(M);
@@ -460,8 +436,6 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   assert(k <= m4ri_radix);
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
-  wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
-  int const entry_point = wide % 8;	/* Unrolled loop entry point */
 
   int const rem = k % 4;
 
@@ -490,23 +464,13 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
       continue;
 
     word *m0 = M->rows[r] + blocknum;
-    word const *t0 = T0->rows[x0] + blocknum;
-    word const *t1 = T1->rows[x1] + blocknum;
-    word const *t2 = T2->rows[x2] + blocknum;
-    word const *t3 = T3->rows[x3] + blocknum;
+    word const *t[4];
+    t[0] = T0->rows[x0] + blocknum;
+    t[1] = T1->rows[x1] + blocknum;
+    t[2] = T2->rows[x2] + blocknum;
+    t[3] = T3->rows[x3] + blocknum;
 
-    wi_t n = count;
-    switch (entry_point) {
-    case 0: do { *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
-      case 7:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
-      case 6:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
-      case 5:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
-      case 4:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
-      case 3:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
-      case 2:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
-      case 1:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++;
-      } while (--n > 0);
-    }
+    _mzd_combine_4( m0, t, wide);
   }
 
   __M4RI_DD_MZD(M);
@@ -518,8 +482,6 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   assert(k <= m4ri_radix);
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
-  wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
-  int const entry_point = wide % 8;	/* Unrolled loop entry point */
   int rem = k % 5;
 
   int const ka = k / 5 + ((rem >= 4) ? 1 : 0);
@@ -551,24 +513,14 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
       continue;
 
     word *m0 = M->rows[r] + blocknum;
-    word const *t0 = T0->rows[x0] + blocknum;
-    word const *t1 = T1->rows[x1] + blocknum;
-    word const *t2 = T2->rows[x2] + blocknum;
-    word const *t3 = T3->rows[x3] + blocknum;
-    word const *t4 = T4->rows[x4] + blocknum;
+    word const *t[5];
+    t[0] = T0->rows[x0] + blocknum;
+    t[1] = T1->rows[x1] + blocknum;
+    t[2] = T2->rows[x2] + blocknum;
+    t[3] = T3->rows[x3] + blocknum;
+    t[4] = T4->rows[x4] + blocknum;
 
-    wi_t n = count;
-    switch (entry_point) {
-    case 0: do { *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
-      case 7:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
-      case 6:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
-      case 5:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
-      case 4:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
-      case 3:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
-      case 2:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
-      case 1:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++;
-      } while (--n > 0);
-    }
+    _mzd_combine_5( m0, t, wide);
   }
 
   __M4RI_DD_MZD(M);
@@ -581,8 +533,6 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   assert(k <= m4ri_radix);
   wi_t const blocknum = startcol / m4ri_radix;
   wi_t const wide = M->width - blocknum;
-  wi_t const count = (wide + 7) / 8;	/* Unrolled loop count */
-  int const entry_point = wide % 8;	/* Unrolled loop entry point */
 
   int const rem = k % 6;
 
@@ -620,25 +570,15 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
       continue;
 
     word *m0 = M->rows[r] + blocknum;
-    word const *t0 = T0->rows[x0] + blocknum;
-    word const *t1 = T1->rows[x1] + blocknum;
-    word const *t2 = T2->rows[x2] + blocknum;
-    word const *t3 = T3->rows[x3] + blocknum;
-    word const *t4 = T4->rows[x4] + blocknum;
-    word const *t5 = T5->rows[x5] + blocknum;
+    word const *t[6];
+    t[0] = T0->rows[x0] + blocknum;
+    t[1] = T1->rows[x1] + blocknum;
+    t[2] = T2->rows[x2] + blocknum;
+    t[3] = T3->rows[x3] + blocknum;
+    t[4] = T4->rows[x4] + blocknum;
+    t[5] = T5->rows[x5] + blocknum;
 
-    wi_t n = count;
-    switch (entry_point) {
-      case 0: do { *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++ ^ *t5++;
-      case 7:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++ ^ *t5++;
-      case 6:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++ ^ *t5++;
-      case 5:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++ ^ *t5++;
-      case 4:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++ ^ *t5++;
-      case 3:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++ ^ *t5++;
-      case 2:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++ ^ *t5++;
-      case 1:    *m0++ ^= *t0++ ^ *t1++ ^ *t2++ ^ *t3++ ^ *t4++ ^ *t5++;
-      } while (--n > 0);
-    }
+    _mzd_combine_6( m0, t, wide);
   }
 
   __M4RI_DD_MZD(M);
@@ -1016,23 +956,32 @@ void mzd_top_echelonize_m4ri(mzd_t *M, int k) {
   _mzd_top_echelonize_m4ri(M,k,0,0,M->nrows);
 }
 
-mzd_t *mzd_inv_m4ri(mzd_t *dst, mzd_t const* src, int k) {
-  assert(src->nrows == src->ncols && src->offset == 0);
-  if(dst == NULL) {
-    dst = mzd_init(src->nrows, src->ncols);
+mzd_t *mzd_inv_m4ri(mzd_t *B, mzd_t const* A, int k) {
+  assert(A->nrows == A->ncols);
+  if(B == NULL) {
+    B = mzd_init(A->nrows, A->ncols);
   } else {
-    assert(dst->ncols == src->ncols && dst->nrows && src->ncols && dst->offset == 0);
+    assert(B->ncols == A->ncols && B->nrows && A->ncols);
   }
 
-  mzd_set_ui(dst, 1);
+  const rci_t n  = A->nrows;
+  const rci_t nr = m4ri_radix * A->width;
+  mzd_t *C = mzd_init(n, 2*nr);
 
-  mzd_t *A = mzd_concat(NULL, src, dst);
-  mzd_echelonize_m4ri(A, TRUE, 0);
+  mzd_t *AW = mzd_init_window(C, 0, 0,  n, n);
+  mzd_t *BW = mzd_init_window(C, 0, nr, n, nr+n);
 
-  dst = mzd_submatrix(dst, A, 0, src->ncols, A->nrows, A->ncols);
-  mzd_free(A);
-  __M4RI_DD_MZD(dst);
-  return dst;
+  mzd_copy(AW, A);
+  mzd_set_ui(BW, 1);
+
+  mzd_echelonize_m4ri(C, TRUE, 0);
+
+  mzd_copy(B, BW);
+  mzd_free_window(AW);
+  mzd_free_window(BW);
+  mzd_free(C);
+  __M4RI_DD_MZD(B);
+  return B;
 }
 
 
@@ -1088,14 +1037,15 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
    * Step 3. for \f$h = 1,2, ... , c\f$ do
    *   calculate \f$C_{jh} = C_{jh} + T_{xh}\f$.
    */
-  assert(A->offset == 0);
-  assert(B->offset == 0);
-  assert(C->offset == 0);
 
-  rci_t  x[__M4RI_M4RM_NTABLES];
-  rci_t *L[__M4RI_M4RM_NTABLES];
-  word  *t[__M4RI_M4RM_NTABLES];
-  mzd_t *T[__M4RI_M4RM_NTABLES];
+  rci_t        x[__M4RI_M4RM_NTABLES];
+  rci_t       *L[__M4RI_M4RM_NTABLES];
+  word  const *t[__M4RI_M4RM_NTABLES];
+  mzd_t       *T[__M4RI_M4RM_NTABLES];
+#ifdef __M4RI_HAVE_SSE2
+  mzd_t  *Talign[__M4RI_M4RM_NTABLES];
+  int c_align = (__M4RI_ALIGNMENT(C->rows[0], 16) == 8);
+#endif
 
   word *c;
 
@@ -1140,7 +1090,13 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
   rci_t *buffer = (rci_t*)m4ri_mm_malloc(__M4RI_M4RM_NTABLES * __M4RI_TWOPOW(k) * sizeof(rci_t));
   for(int z=0; z<__M4RI_M4RM_NTABLES; z++) {
     L[z] = buffer + z*__M4RI_TWOPOW(k);
+#ifdef __M4RI_HAVE_SSE2
+    /* we make sure that T are aligned as C */
+    Talign[z] = mzd_init(__M4RI_TWOPOW(k), b_nc+m4ri_radix);
+    T[z] = mzd_init_window(Talign[z], 0, c_align*m4ri_radix, Talign[z]->nrows, b_nc + c_align*m4ri_radix);
+#else
     T[z] = mzd_init(__M4RI_TWOPOW(k), b_nc);
+#endif
   }
 
   /* process stuff that fits into multiple of k first, but blockwise (babystep-giantstep)*/
@@ -1179,7 +1135,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
         t[ 6] = T[ 6]->rows[x[ 6]];
         t[ 7] = T[ 7]->rows[x[ 7]];
 
-        _mzd_combine8(c, t[ 0], t[ 1], t[ 2], t[ 3], t[ 4], t[ 5], t[ 6], t[ 7], wide);
+        _mzd_combine_8(c, t, wide);
       }
     }
   }
@@ -1212,8 +1168,12 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
     }
   }
 
-  for(int j=0; j<__M4RI_M4RM_NTABLES; j++)
+  for(int j=0; j<__M4RI_M4RM_NTABLES; j++) {
     mzd_free(T[j]);
+#ifdef __M4RI_HAVE_SSE2
+    mzd_free(Talign[j]);
+#endif
+  }
   m4ri_mm_free(buffer);
 
   __M4RI_DD_MZD(C);

@@ -157,13 +157,19 @@ mzd_t *mzd_kernel_left_pluq(mzd_t *A, int const cutoff) {
   }
 
   mzd_t *U = mzd_init_window(A, 0, 0, r, r);
-  mzd_t *B = mzd_init_window(A, 0, r, r, A->ncols);
-
-  mzd_trsm_upper_left(U, B, cutoff);
 
   mzd_t *R = mzd_init(A->ncols, A->ncols - r);
   mzd_t *RU = mzd_init_window(R, 0, 0, r, R->ncols);
-  mzd_copy(RU, B);
+
+  for(rci_t i=0; i< r ; i++) {
+    for(rci_t j=0; j< RU->ncols; j+=m4ri_radix) {
+      const int workload = MIN(m4ri_radix, RU->ncols - j);
+      mzd_xor_bits(RU, i, j, workload, mzd_read_bits(A, i, r + j, workload));
+    }
+  }
+
+  mzd_trsm_upper_left(U, RU, cutoff);
+
   for(rci_t i = 0; i < R->ncols; ++i) {
     mzd_write_bit(R, r + i, i, 1);
   }
@@ -172,7 +178,6 @@ mzd_t *mzd_kernel_left_pluq(mzd_t *A, int const cutoff) {
   mzp_free(Q);
   mzd_free_window(RU);
   mzd_free_window(U);
-  mzd_free_window(B);
 
   __M4RI_DD_MZD(A);
   __M4RI_DD_MZD(R);

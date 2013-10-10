@@ -21,22 +21,9 @@ AC_PROG_INSTALL
 
 AC_CONFIG_HEADERS(m4ri/config.h)
 
-dnl Check if a C++ compiler was specified. If so, assume we want to wrap word in a C++ class.
-AC_EGREP_CPP(YES, [
-#ifdef __cplusplus
-YES
-#endif
-], [m4ri_wrapword="yes"], [m4ri_wrapword="no"])
-
-if test "$m4ri_wrapword" = "yes"; then
-  AC_DEFINE([M4RI_WRAPWORD], [/**/],
-      [Defined when compiling with a C++ compiler and word should be a C++ class.])
-else
-  dnl We can only run this test when we're using a C compiler.
-  AC_PROG_CC_C99()
-  if test "$ac_cv_prog_cc_c99" = "no"; then
-    AC_MSG_ERROR([C99 support is required but not found.])
-  fi
+AC_PROG_CC_C99()
+if test "$ac_cv_prog_cc_c99" = "no"; then
+  AC_MSG_ERROR([C99 support is required but not found.])
 fi
 
 # SSE2 support

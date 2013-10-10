@@ -2,19 +2,6 @@
 # of this repository. If the environment variable topsrcdir is the top source directory
 # of the clone, compile this testsuite as:
 #
-# defines="-Dmzd_randomize=bench_randomize"
-# if ! grep lesser_LSB $topsrcdir/src/misc.h >/dev/null; then
-#   defines="$defines -DBENCH_RANDOM_REVERSE"
-# fi
-# if ! grep rci_t $topsrcdir/src/misc.h >/dev/null; then
-#   defines="$defines -Drci_t=size_t -Dwi_t=size_t"
-# fi
-# make bench_elimination bench_multiplication TOPSRCDIR="$topsrcdir" DEFINES="$defines"
-#
-# Note that if (once) the revision of TOPSRCDIR is new enough and contains the
-# current fast mzd_randomize (or when you don't care that it's slow) then you
-# can completely leave out DEFINES and just compile as:
-#
 # make TOPSRCDIR="$topsrcdir"
 #
 # Finally, if you also leave out TOPSRCDIR and just run 'make' then the testsuite

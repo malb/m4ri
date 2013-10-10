@@ -40,7 +40,7 @@ int run_nothing(void *_p, unsigned long long *data, int *data_len) {
       }
       mzd_write_bit(L,i,i, 1);
 
-      for (rci_t j = 0; j < i; j+=m4ri_radix) {
+      for (rci_t j = 0; j < i && j <p->n; j+=m4ri_radix) {
         int const length = MIN(m4ri_radix, i - j);
         mzd_clear_bits(U, i, j, length);
       }
@@ -48,7 +48,7 @@ int run_nothing(void *_p, unsigned long long *data, int *data_len) {
         mzd_write_bit(U, i, i, 1);
       } else {
         for (rci_t j = i; j < p->n; j+=m4ri_radix) {
-          int const length = MIN(m4ri_radix, p->n - i);
+          int const length = MIN(m4ri_radix, p->n - j);
           mzd_clear_bits(U, i, j, length);
         }
       }
@@ -122,7 +122,7 @@ int run(void *_p, unsigned long long *data, int *data_len) {
       }
       mzd_write_bit(L,i,i, 1);
 
-      for (rci_t j = 0; j < i; j+=m4ri_radix) {
+      for (rci_t j = 0; j < i && j < p->n; j+=m4ri_radix) {
         int const length = MIN(m4ri_radix, i - j);
         mzd_clear_bits(U, i, j, length);
       }
@@ -142,6 +142,9 @@ int run(void *_p, unsigned long long *data, int *data_len) {
     mzd_randomize(A);
   }
 
+  mzp_t *P = mzp_init(A->nrows);
+  mzp_t *Q = mzp_init(A->ncols);
+
 #ifndef HAVE_LIBPAPI
   data[0] = walltime(0);
   data[1] = cpucycles();
@@ -153,17 +156,18 @@ int run(void *_p, unsigned long long *data, int *data_len) {
     m4ri_die("");
 #endif
   if(strcmp(p->algorithm, "m4ri") == 0)
-    p->r = mzd_echelonize_m4ri(A, 1, 0);
-  else if(strcmp(p->algorithm, "pluq") == 0)
-    p->r = mzd_echelonize_pluq(A, 1);
+    p->r = mzd_echelonize_m4ri(A, 0, 0);
+  else if(strcmp(p->algorithm, "ple") == 0)
+    p->r = mzd_ple(A, P, Q, 0);
   else if(strcmp(p->algorithm, "mmpf") == 0)
-    p->r = _mzd_pluq_russian(A, mzp_init(A->nrows), mzp_init(A->ncols), 0);
-  else if(strcmp(p->algorithm, "naive") == 0)
-    p->r = mzd_echelonize_naive(A, 1);
+    p->r = _mzd_ple_russian(A, P, Q, 0);
 #ifndef HAVE_LIBPAPI
   data[1] = cpucycles() - data[1];
   data[0] = walltime(data[0]);
 #else
+  mzp_free(P);
+  mzp_free(Q);
+
   PAPI_stop_counters((long long*)&data[1], array_len);
   t0 = PAPI_get_virt_usec() - t0;
   data[0] = t0;
@@ -179,7 +183,7 @@ void print_help_and_exit() {
   printf("Parameters m(, n, alg, r) expected.\n");
   printf(" m   -- integer > 0\n");
   printf(" n   -- integer > 0\n");
-  printf(" alg -- 'm4ri', 'pluq', 'mmpf' or 'naive' (default: 'pluq')\n");
+  printf(" alg -- 'm4ri', 'ple', or 'mmpf' (default: 'ple')\n");
   printf(" r   -- target rank >= 0, if 0 then mzd_randomize() is called (default: MIN(m,n))\n");
   printf("\n");
   bench_print_global_options(stderr);
@@ -220,11 +224,11 @@ int main(int argc, char **argv) {
   if (argc >= 4)
     params.algorithm = argv[3];
   else
-    params.algorithm = "pluq";
+    params.algorithm = "ple";
   if (argc >= 5)
     params.r = atoi(argv[4]);
   else
-    params.r = params.m;
+    params.r = MIN(params.m, params.n);
 
   srandom(17);
   unsigned long long data[16];

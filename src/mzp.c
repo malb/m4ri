@@ -89,20 +89,19 @@ void mzd_apply_p_left_trans(mzd_t *A, mzp_t const *P) {
 /* optimised column swap operations */
 
 static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t const *B, rci_t const *permutation, word const *write_mask, rci_t const start_row, rci_t const stop_row, rci_t length) {
-  assert(A->offset == 0);
   for(rci_t i = 0; i < length; i += m4ri_radix) {
     /* optimisation for identity permutations */
     if (write_mask[i / m4ri_radix] == m4ri_ffff)
       continue;
     int const todo = MIN(m4ri_radix, length - i);
-    wi_t const a_word = (i + A->offset) / m4ri_radix;
+    wi_t const a_word = i / m4ri_radix;
     wi_t words[m4ri_radix];
     int bits[m4ri_radix];
     word bitmasks[m4ri_radix];
 
     /* we pre-compute bit access in advance */
     for(int k = 0; k < todo; ++k) {
-        rci_t const colb = permutation[i + k] + B->offset;
+        rci_t const colb = permutation[i + k];
         words[k] = colb / m4ri_radix;
         bits[k] = colb % m4ri_radix;
         bitmasks[k] = m4ri_one << bits[k];
@@ -197,7 +196,6 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t const *B, rci_t 
  * Implements both apply_p_right and apply_p_right_trans.
  */
 void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t start_col, int notrans) {
-  assert(A->offset == 0);
   if(A->nrows - start_row == 0)
     return;
   rci_t const length = MIN(P->length, A->ncols);
@@ -230,9 +228,6 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t st
 
   /* we have a bitmask to encode where to write to */
   word *write_mask = (word*)m4ri_mm_calloc(width, sizeof(word));
-#ifdef M4RI_WRAPWORD
-  word::init_array(write_mask, width);
-#endif
   for(rci_t i = 0; i < A->ncols; i += m4ri_radix) {
     int const todo = MIN(m4ri_radix, A->ncols - i);
     for(int k = 0; k < todo; ++k) {
@@ -309,32 +304,22 @@ void _mzd_apply_p_right(mzd_t *A, mzp_t const *P) {
 void mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P) {
   if(!A->nrows)
     return;
-  if(A->offset) {
-    _mzd_apply_p_right_trans(A,P);
-    return;
-  }
   _mzd_apply_p_right_even(A, P, 0, 0, 0); 
 }
 
 void mzd_apply_p_right(mzd_t *A, mzp_t const *P) {
   if(!A->nrows)
     return;
-  if(A->offset) {
-    _mzd_apply_p_right(A,P);
-    return;
-  }
   _mzd_apply_p_right_even(A, P, 0, 0, 1); 
 }
 
 void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t start_col) {
-  assert(A->offset == 0);
   if(!A->nrows)
     return;
   _mzd_apply_p_right_even(A, P, start_row, start_col, 0); 
 }
 
 void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t start_col) {
-  assert(A->offset == 0);
   if(!A->nrows)
     return;
   _mzd_apply_p_right_even(A, P, start_row, start_col, 1); 
@@ -422,7 +407,7 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
 
     /* first we deal with the rest of the current word we need to
        write */
-    int const rest = m4ri_radix - ((j + A->offset) % m4ri_radix);
+    int const rest = m4ri_radix - (j % m4ri_radix);
 
     tmp = mzd_read_bits(A, i, n1, rest);
     mzd_clear_bits(A, i, j, rest);
@@ -432,7 +417,7 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
 
     /* now each write is simply a word write */
 
-    block = (n1 + j - r1 + A->offset) / m4ri_radix;
+    block = (n1 + j - r1) / m4ri_radix;
 
     if (rest % m4ri_radix == 0) {
       for( ; j + m4ri_radix <= r1 + r2; j += m4ri_radix, ++block) {
@@ -457,9 +442,9 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
 
     /* now clear the rest of L2 */
     j = r1 + r2;
-    mzd_clear_bits(A, i, j, m4ri_radix - ((j + A->offset) % m4ri_radix));
+    mzd_clear_bits(A, i, j, m4ri_radix - (j % m4ri_radix));
 
-    j += m4ri_radix - ((j + A->offset) % m4ri_radix);
+    j += m4ri_radix - (j % m4ri_radix);
 
     /* it's okay to write the full word, i.e. past n1+r2, because
        everything is zero there anyway. Thus, we can omit the code

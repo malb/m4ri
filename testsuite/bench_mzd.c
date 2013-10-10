@@ -697,20 +697,6 @@ BENCHMARK_PREFIX(mzd_is_zero)
 }
 BENCHMARK_POSTFIX
 
-BENCHMARK_PREFIX(mzd_row_clear_offset)
-{
-  mzd_t* const A = mzd_init(p->m, p->n);
-  mzd_randomize(A);
-  rci_t row = p->row[0];
-  rci_t col = p->col[0];
-  uint64_t const loop_count = p->count;
-
-  TIME(mzd_row_clear_offset(A, row, col));
-
-  mzd_free(A);
-}
-BENCHMARK_POSTFIX
-
 BENCHMARK_PREFIX(mzd_find_pivot)
 {
   mzd_t* const A = mzd_init(p->m, p->n);
@@ -903,7 +889,6 @@ static function_st function_mapper[] = {
   { "mzd_and_bits",         run_mzd_and_bits,         "Rmn,ri,ci,n,w",   "",   10000000 },
   { "mzd_clear_bits",       run_mzd_clear_bits,       "Rmn,ri,ci,n",     "",   10000000 },
   { "mzd_is_zero",          run_mzd_is_zero,          "Rmn",             "mn", 10000000 },
-  { "mzd_row_clear_offset", run_mzd_row_clear_offset, "Omn,ri,ci",       "C",  10000000 },
   { "mzd_find_pivot",       run_mzd_find_pivot,       "Rmn,ri,ci",       "",   1000000 },
   { "mzd_density",          run_mzd_density,          "Rmn,wi",          "",   10000000 },
   { "_mzd_density",         run__mzd_density,         "Rmn,wi,ri,ci",    "",   10000000 },

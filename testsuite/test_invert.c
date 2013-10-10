@@ -5,19 +5,15 @@
 /**
  * Check that inversion works.
  *
- * \param m Number of rows of A
- * \param l Number of columns of A/number of rows of B
- * \param n Number of columns of B
+ * \param n Number of rows of A
  * \param k Parameter k of M4RM algorithm, may be 0 for automatic choice.
- * \param cutoff Cut off parameter at which dimension to switch from
- * Strassen to M4RM
  */
 int invert_test(rci_t n, int k) {
   int ret  = 0;
   printf("invert: n: %4d, k: %2d", n, k);
 
-  mzd_t *I2 = mzd_init(n,n);
-  mzd_set_ui(I2,1);
+  mzd_t *I2 = mzd_init(n, n);
+  mzd_set_ui(I2, 1);
 
   mzd_t *U = mzd_init(n,n);
   mzd_randomize(U);
@@ -46,7 +42,7 @@ int invert_test(rci_t n, int k) {
   }
   mzd_t *A = mzd_mul(NULL, L, U, 0);
 
-  B = mzd_inv_m4ri(B,A,k);
+  B = mzd_inv_m4ri(B, A, k);
 
   I1 = mzd_mul(I1, A, B, 0);
 

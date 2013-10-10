@@ -30,7 +30,7 @@
 int test_random(rci_t m, rci_t n)
 {
   mzd_t *A = mzd_init(m + 3, n + 64);
-  mzd_t *W = mzd_init_window(A, 1, 13, m + 1, n + 13);
+  mzd_t *W = mzd_init_window(A, 1, 0, m + 1, n);
   mzd_t *M = mzd_init(m, n);
   printf("randomize m: %4d, n: %4d ", m, n);
   srandom(17);

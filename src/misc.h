@@ -73,10 +73,6 @@ typedef int rci_t;
 
 typedef int wi_t;
 
-#ifdef M4RI_WRAPWORD
-// C++ wrapper class around an uint64_t, exclusively interesting for the developer(s) of M4RI.
-#include <m4ri/wordwrapper.h>
-#else
 
 /**
  * \brief A word is the typical packed data structure to represent packed bits.
@@ -131,8 +127,6 @@ typedef uint64_t word;
  */
 
 #define __M4RI_CONVERT_TO_WORD(i) ((word)(i))
-
-#endif
 
 /**
  * \brief The number of bits in a word.
@@ -689,6 +683,7 @@ static inline void *m4ri_mm_malloc(size_t size) {
   else return newthing;
 }
 
+
 /**
  * \brief Free wrapper.
  *
@@ -716,6 +711,12 @@ static inline void m4ri_mm_free(void *condemned, ...) {
 #define RESTRICT
 #endif
 
+/**
+ * Macros for template expansion.
+ */
 
+#define __M4RI_TEMPLATE_EXPAND0(x,y) x ## _ ## y
+#define __M4RI_TEMPLATE_EXPAND1(x,y) __M4RI_TEMPLATE_EXPAND0(x,y)
+#define __M4RI_TEMPLATE_NAME(fun) __M4RI_TEMPLATE_EXPAND1(fun, N)
 
 #endif // M4RI_MISC_H

@@ -6,29 +6,30 @@
 
 //#define ABORT_ON_FAIL 1
 
-int smallops_test_add(rci_t M, rci_t N, rci_t m, rci_t n, rci_t offset, word pattern) {
+int smallops_test_add(rci_t M, rci_t N, rci_t m, rci_t n, word pattern) {
   int ret = 0; 
 
-  printf("      mzd_add: M: %4d, N: %4d, m: %4d, n: %4d, offset: %4d, pattern: 0x%" PRIx64 " ", M, N, m, n, offset, pattern);
+  printf("      mzd_add: M: %4d, N: %4d, m: %4d, n: %4d, pattern: 0x%" PRIx64 " ", M, N, m, n, pattern);
 
   mzd_t *AA;
-  mzd_t *A = mzd_init_test_matrix_random(M, N, m, n, offset, pattern, &AA);
+  mzd_t *A = mzd_init_test_matrix_random(M, N, m, n, pattern, &AA);
 
   mzd_t *BB;
-  mzd_t *B = mzd_init_test_matrix_random(M, N, m, n, offset, pattern, &BB);
+  mzd_t *B = mzd_init_test_matrix_random(M, N, m, n, pattern, &BB);
 
   mzd_t *CC;
-  mzd_t *C = mzd_init_test_matrix_random(M, N, m, n, offset, pattern, &CC);
+  mzd_t *C = mzd_init_test_matrix_random(M, N, m, n, pattern, &CC);
 
   mzd_t *DD;
-  mzd_t *D = mzd_init_test_matrix_random(M, N, m, n, offset, pattern, &DD);
+  mzd_t *D = mzd_init_test_matrix_random(M, N, m, n, pattern, &DD);
 
   /* Creation went okay? */
 
-  ret += mzd_check_pattern(AA, m, n, offset, pattern);
-  ret += mzd_check_pattern(BB, m, n, offset, pattern);
-  ret += mzd_check_pattern(CC, m, n, offset, pattern);
-  ret += mzd_check_pattern(DD, m, n, offset, pattern);
+  ret += mzd_check_pattern(AA, m, n, pattern);
+  ret += mzd_check_pattern(BB, m, n, pattern);
+  ret += mzd_check_pattern(CC, m, n, pattern);
+  ret += mzd_check_pattern(DD, m, n, pattern);
+
 
   /* Testing equality A+A == 0 */
 
@@ -38,9 +39,9 @@ int smallops_test_add(rci_t M, rci_t N, rci_t m, rci_t n, rci_t offset, word pat
     ret +=1;
   }
 
-  ret += mzd_check_pattern(AA, m, n, offset, pattern);
-  ret += mzd_check_pattern(BB, m, n, offset, pattern);
-  ret += mzd_check_pattern(CC, m, n, offset, pattern);
+  ret += mzd_check_pattern(AA, m, n, pattern);
+  ret += mzd_check_pattern(BB, m, n, pattern);
+  ret += mzd_check_pattern(CC, m, n, pattern);
 
   /* Testing equality A+A == 0 but this time C is already zero */
 
@@ -50,9 +51,9 @@ int smallops_test_add(rci_t M, rci_t N, rci_t m, rci_t n, rci_t offset, word pat
     ret +=1;
   }
 
-  ret += mzd_check_pattern(AA, m, n, offset, pattern);
-  ret += mzd_check_pattern(BB, m, n, offset, pattern);
-  ret += mzd_check_pattern(CC, m, n, offset, pattern);
+  ret += mzd_check_pattern(AA, m, n, pattern);
+  ret += mzd_check_pattern(BB, m, n, pattern);
+  ret += mzd_check_pattern(CC, m, n, pattern);
 
   /* Testing in place add. C is zero, so afterwards C == A */
 
@@ -62,9 +63,9 @@ int smallops_test_add(rci_t M, rci_t N, rci_t m, rci_t n, rci_t offset, word pat
     ret +=1;
   }
 
-  ret += mzd_check_pattern(AA, m, n, offset, pattern);
-  ret += mzd_check_pattern(BB, m, n, offset, pattern);
-  ret += mzd_check_pattern(CC, m, n, offset, pattern);
+  ret += mzd_check_pattern(AA, m, n, pattern);
+  ret += mzd_check_pattern(BB, m, n, pattern);
+  ret += mzd_check_pattern(CC, m, n, pattern);
 
   /* Testing equality C (== A) + A == 0 */
 
@@ -94,10 +95,10 @@ int smallops_test_add(rci_t M, rci_t N, rci_t m, rci_t n, rci_t offset, word pat
       ret += 1;
     }
 
-    ret += mzd_check_pattern(AA, m, n, offset, pattern);
-    ret += mzd_check_pattern(BB, m, n, offset, pattern);
-    ret += mzd_check_pattern(CC, m, n, offset, pattern);
-    ret += mzd_check_pattern(DD, m, n, offset, pattern);
+    ret += mzd_check_pattern(AA, m, n, pattern);
+    ret += mzd_check_pattern(BB, m, n, pattern);
+    ret += mzd_check_pattern(CC, m, n, pattern);
+    ret += mzd_check_pattern(DD, m, n, pattern);
   }
 
   mzd_free_test_matrix_random(AA, A);
@@ -123,20 +124,13 @@ int main() {
 
   srandom(17);
 
-  status += smallops_test_add(64, 64,  10,  10, 10, 0x03030303030303llu);
-  status += smallops_test_add(100, 100,  64,  64, 1, 0x03030303030303llu);
-  status += smallops_test_add(100, 100,  64,  64, 1, 0x03030303030303llu);
+  status += smallops_test_add( 64,  64,  10,  10, 0x03030303030303llu);
+  status += smallops_test_add(100, 100,  64,  64, 0x03030303030303llu);
 
-  status += smallops_test_add(1024, 1024, 513, 511, 10, 0x03030303030303llu);
-  status += smallops_test_add(1024, 1024, 513, 511, 63, 0x03030303030303llu);
-  status += smallops_test_add(1024, 1024, 513, 511, 64, 0x03030303030303llu);
-  status += smallops_test_add(1024, 1024, 513, 511, 65, 0x03030303030303llu);
-  status += smallops_test_add(1024, 1024, 512, 768+30,  0, 0x03030303030303llu);
+  status += smallops_test_add(1024, 1024, 513,    511, 0x03030303030303llu);
+  status += smallops_test_add(1024, 1024, 512, 768+30, 0x03030303030303llu);
 
-  status += smallops_test_add(2048, 2048, 1024, 1024, 0, 0x03030303030303llu);
-  status += smallops_test_add(2048, 2048, 1024, 1024, 63, 0x03030303030303llu);
-  status += smallops_test_add(2048, 2048, 1024, 1024, 64, 0x03030303030303llu);
-  status += smallops_test_add(2048, 2048, 1024, 1024, 65, 0x03030303030303llu);
+  status += smallops_test_add(2048, 2048, 1024, 1024,  0x03030303030303llu);
 
   if (status == 0) {
     printf("All tests passed.\n");

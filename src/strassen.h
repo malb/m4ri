@@ -126,36 +126,6 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff);
 mzd_t *_mzd_addmul (mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff);
 
 /**
- * C = A*B + C for matrices with offsets != 0
- *
- * This is scratch code.
- *
- * \internal
- */
-
-mzd_t *_mzd_addmul_weird_weird (mzd_t *C, mzd_t const *A, mzd_t const *B);
-
-/**
- * C = A*B + C for A with offset == 0 and B with offset != 0.
- *
- * This is scratch code.
- *
- * \internal
- */
-
-mzd_t *_mzd_addmul_weird_even (mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff);
-
-/**
- * C = A*B + C for A with offset != 0 and B with offset == 0.
- *
- * This is scratch code.
- *
- * \internal
- */
-
-mzd_t *_mzd_addmul_even_weird (mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff);
-
-/**
  * The default cutoff for Strassen-Winograd multiplication. It should
  * hold hold that 2 * (n^2)/8 fits into the L2 cache.
  */
