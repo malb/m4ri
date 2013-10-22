@@ -38,7 +38,8 @@ BENCH_PRGS = \
 	bench_trsm \
 	bench_elimination_sparse \
 	bench_mzd \
-	bench_invert
+	bench_invert \
+	bench_rank
 
 M4RI_HEADERS = \
         ../src/config.h \
