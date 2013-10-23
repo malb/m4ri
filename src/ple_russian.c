@@ -17,9 +17,11 @@
 *                  http://www.gnu.org/licenses/
 *
 ********************************************************************/
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "m4ri_config.h"
-#include <assert.h>
 
 #if __M4RI_HAVE_SSE2
 #include <emmintrin.h>

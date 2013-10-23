@@ -23,8 +23,6 @@
 #include "config.h"
 #endif
 
-#include <assert.h>
-
 #include "brilliantrussian.h"
 #include "xor.h"
 #include "graycode.h"

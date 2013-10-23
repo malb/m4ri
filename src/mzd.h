@@ -32,10 +32,14 @@
 *
 ********************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <m4ri/m4ri_config.h>
 
-#include <math.h>
 #include <assert.h>
+#include <math.h>
 #include <stdio.h>
 
 #if __M4RI_HAVE_SSE2

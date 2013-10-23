@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "triangular_russian.h"
 #include "graycode.h"
 #include "brilliantrussian.h"

@@ -18,6 +18,10 @@
 *
 ********************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "m4ri_config.h"
 
 #if __M4RI_HAVE_LIBPNG

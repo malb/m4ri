@@ -7,6 +7,10 @@
  * \author Martin Albrecht <martinralbrecht@googlemail.com> adapted to M4RI
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <m4ri/mzd.h>
 #include <m4ri/io.h>
 #include <m4ri/misc.h>

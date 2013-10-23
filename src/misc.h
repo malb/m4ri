@@ -35,6 +35,10 @@
 
 #include <m4ri/m4ri_config.h>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #if __M4RI_USE_MM_MALLOC
 #include <mm_malloc.h>
 #endif
