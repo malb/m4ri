@@ -55,7 +55,7 @@ void __M4RI_TEMPLATE_NAME(_mzd_ple_a11)(mzd_t *A,
 
   wi_t const wide = A->width - block;
 
-  if(__M4RI_UNLIKELY(wide <= 0)) 
+  if(wide <= 0) 
     return;
 
   const mzd_t *T[N];

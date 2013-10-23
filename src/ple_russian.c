@@ -278,6 +278,9 @@ void mzd_make_table_ple(mzd_t const *A, rci_t r, rci_t writecol, int k, int knar
 
 void _mzd_ple_a10(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const start_col,
                   wi_t const addblock, int const k, rci_t *pivots) {
+  if(addblock == A->width)
+    return;
+
   /* perform needed row swaps */
   for(rci_t i = start_row; i < start_row + k; ++i) {
     _mzd_row_swap(A, i, P->values[i], addblock);
@@ -408,7 +411,8 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
 --------------------------------------
 \endverbatim
      */
-    wi_t splitblock = (curr_col + kk) / m4ri_radix + 1;
+    /* + 8 blocks comes from 64 byte cache line, rest is minimum required and maximum possible */
+    wi_t splitblock = MIN( MAX( (curr_col + kk) / m4ri_radix + 1, (curr_col / m4ri_radix) + 8 ), A->width );
 
     knar = _mzd_ple_submatrix(A, curr_row, nrows, curr_col, kk, P, Q, pivots, done, &done_row, splitblock);
 
