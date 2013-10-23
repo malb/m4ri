@@ -8,6 +8,9 @@
 #include "ple_russian.h"
 #include "xor.h"
 
+/** the number of tables used in TRSM decomposition **/
+#define __M4RI_TRSM_NTABLES 8
+
 void _mzd_trsm_upper_left_submatrix(mzd_t const *U, mzd_t *B, rci_t const start_row, int const k, word const mask_end) {
   for (int i = 0; i < k; ++i) {
     for (int j = 0; j < i; ++j) {
@@ -49,23 +52,30 @@ void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k) {
 
   word mask_end = __M4RI_LEFT_BITMASK(B->ncols % m4ri_radix);
 
-  if (k == 0) {
-    k = m4ri_opt_k(blocksize, B->nrows, B->ncols);
-    if (k > 3)
-      k -= 2;
-    /* reduce k further if that has a chance of hitting L1 */
-    size_t const tsize = (int)(0.8 * (__M4RI_TWOPOW(k) * B->nrows));
-    if(__M4RI_CPU_L1_CACHE < tsize && tsize <= 2 * __M4RI_CPU_L1_CACHE)
-      k -= 1;
+  if(k == 0) {
+    /* __M4RI_CPU_L2_CACHE == __M4RI_TRSM_NTABLES * 2^k * B->width * 8 */
+    k = (int)log2((__M4RI_CPU_L2_CACHE/8)/(double)B->width/(double)__M4RI_TRSM_NTABLES);
+
+    rci_t const klog = round(0.75 * log2_floor(MIN(B->nrows, B->ncols)));
+
+    if(klog < k) k = klog;
+    if (k<2)     k = 2;
+    else if(k>8) k = 8;
   }
 
-  mzd_t *T[8];
+
+  int kk = __M4RI_TRSM_NTABLES * k;
+  assert(kk <= m4ri_radix);
+
+  mzd_t *T[__M4RI_TRSM_NTABLES];
+  rci_t *L[__M4RI_TRSM_NTABLES];
+
 #ifdef __M4RI_HAVE_SSE2
-  mzd_t *Talign[8];
+  mzd_t *Talign[__M4RI_TRSM_NTABLES];
   int b_align = (__M4RI_ALIGNMENT(B->rows[0], 16) == 8);
 #endif
 
-  for(int i=0; i<8; i++) {
+  for(int i=0; i<__M4RI_TRSM_NTABLES; i++) {
 #ifdef __M4RI_HAVE_SSE2
     /* we make sure that T are aligned as C */
     Talign[i] = mzd_init(__M4RI_TWOPOW(k), B->ncols + m4ri_radix);
@@ -73,58 +83,61 @@ void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k) {
 #else
     T[i] = mzd_init(__M4RI_TWOPOW(k), B->ncols);
 #endif
+    L[i] = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
   }
-
-  rci_t *L0 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-  rci_t *L1 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-  rci_t *L2 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-  rci_t *L3 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-  rci_t *L4 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-  rci_t *L5 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-  rci_t *L6 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-  rci_t *L7 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
-
-  int kk = 8 * k;
-
-  assert(kk <= m4ri_radix);
 
   rci_t i = 0;
   for (; i < B->nrows - kk; i += kk) {
 
     _mzd_trsm_upper_left_submatrix(U, B, B->nrows-i-kk, kk, mask_end);
 
-    mzd_make_table(B, B->nrows - i - 8*k, 0, k, T[7], L7);
-    mzd_make_table(B, B->nrows - i - 7*k, 0, k, T[6], L6);
-    mzd_make_table(B, B->nrows - i - 6*k, 0, k, T[5], L5);
-    mzd_make_table(B, B->nrows - i - 5*k, 0, k, T[4], L4);
-    mzd_make_table(B, B->nrows - i - 4*k, 0, k, T[3], L3);
-    mzd_make_table(B, B->nrows - i - 3*k, 0, k, T[2], L2);
-    mzd_make_table(B, B->nrows - i - 2*k, 0, k, T[1], L1);
-    mzd_make_table(B, B->nrows - i - 1*k, 0, k, T[0], L0);
+    switch(__M4RI_TRSM_NTABLES) {
+    case 8:  mzd_make_table(B, B->nrows - i - 8*k, 0, k, T[7], L[7]);
+    case 7:  mzd_make_table(B, B->nrows - i - 7*k, 0, k, T[6], L[6]);
+    case 6:  mzd_make_table(B, B->nrows - i - 6*k, 0, k, T[5], L[5]);
+    case 5:  mzd_make_table(B, B->nrows - i - 5*k, 0, k, T[4], L[4]);
+    case 4:  mzd_make_table(B, B->nrows - i - 4*k, 0, k, T[3], L[3]);
+    case 3:  mzd_make_table(B, B->nrows - i - 3*k, 0, k, T[2], L[2]);
+    case 2:  mzd_make_table(B, B->nrows - i - 2*k, 0, k, T[1], L[1]);
+    case 1:  mzd_make_table(B, B->nrows - i - 1*k, 0, k, T[0], L[0]);
+      break;
+    default:
+      m4ri_die("__M4RI_TRSM_NTABLES must be <= 8 but got %d", __M4RI_TRSM_NTABLES);
+    }
+
 
     for(rci_t j = 0; j < B->nrows - i - kk; ++j) {
-      rci_t const x7 = L7[ mzd_read_bits_int(U, j, B->nrows - i - 8*k, k) ];
-      rci_t const x6 = L6[ mzd_read_bits_int(U, j, B->nrows - i - 7*k, k) ];
-      rci_t const x5 = L5[ mzd_read_bits_int(U, j, B->nrows - i - 6*k, k) ];
-      rci_t const x4 = L4[ mzd_read_bits_int(U, j, B->nrows - i - 5*k, k) ];
-      rci_t const x3 = L3[ mzd_read_bits_int(U, j, B->nrows - i - 4*k, k) ];
-      rci_t const x2 = L2[ mzd_read_bits_int(U, j, B->nrows - i - 3*k, k) ];
-      rci_t const x1 = L1[ mzd_read_bits_int(U, j, B->nrows - i - 2*k, k) ];
-      rci_t const x0 = L0[ mzd_read_bits_int(U, j, B->nrows - i - 1*k, k) ];
+      rci_t x;
+      const word *t[__M4RI_TRSM_NTABLES];
 
+      switch(__M4RI_TRSM_NTABLES) {
+      case 8: x = L[7][ mzd_read_bits_int(U, j, B->nrows - i - 8*k, k) ]; t[7] = T[7]->rows[x];
+      case 7: x = L[6][ mzd_read_bits_int(U, j, B->nrows - i - 7*k, k) ]; t[6] = T[6]->rows[x];
+      case 6: x = L[5][ mzd_read_bits_int(U, j, B->nrows - i - 6*k, k) ]; t[5] = T[5]->rows[x];
+      case 5: x = L[4][ mzd_read_bits_int(U, j, B->nrows - i - 5*k, k) ]; t[4] = T[4]->rows[x];
+      case 4: x = L[3][ mzd_read_bits_int(U, j, B->nrows - i - 4*k, k) ]; t[3] = T[3]->rows[x];
+      case 3: x = L[2][ mzd_read_bits_int(U, j, B->nrows - i - 3*k, k) ]; t[2] = T[2]->rows[x];
+      case 2: x = L[1][ mzd_read_bits_int(U, j, B->nrows - i - 2*k, k) ]; t[1] = T[1]->rows[x];
+      case 1: x = L[0][ mzd_read_bits_int(U, j, B->nrows - i - 1*k, k) ]; t[0] = T[0]->rows[x];
+        break;
+      default:
+        m4ri_die("__M4RI_TRSM_NTABLES must be <= 8 but got %d", __M4RI_TRSM_NTABLES);
+      }
 
       word *b = B->rows[j];
-      word const *t[8];
-      t[7] = T[7]->rows[x7];
-      t[6] = T[6]->rows[x6];
-      t[5] = T[5]->rows[x5];
-      t[4] = T[4]->rows[x4];
-      t[3] = T[3]->rows[x3];
-      t[2] = T[2]->rows[x2];
-      t[1] = T[1]->rows[x1];
-      t[0] = T[0]->rows[x0];
-
-      _mzd_combine_8(b, t, wide);
+      switch(__M4RI_TRSM_NTABLES) {
+      case 8: _mzd_combine_8(b, t, wide); break;
+      case 7: _mzd_combine_7(b, t, wide); break;
+      case 6: _mzd_combine_6(b, t, wide); break;
+      case 5: _mzd_combine_5(b, t, wide); break;
+      case 4: _mzd_combine_4(b, t, wide); break;
+      case 3: _mzd_combine_3(b, t, wide); break;
+      case 2: _mzd_combine_2(b, t, wide); break;
+      case 1: _mzd_combine(b, t[0], wide);
+        break;
+      default:
+        m4ri_die("__M4RI_TRSM_NTABLES must be <= 8 but got %d", __M4RI_TRSM_NTABLES);
+      }
     }
   }
 
@@ -135,10 +148,10 @@ void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k) {
 
     _mzd_trsm_upper_left_submatrix(U, B, B->nrows-i-k, k, mask_end);
 
-    mzd_make_table(B, B->nrows - i - 1*k, 0, k, T[0], L0);
+    mzd_make_table(B, B->nrows - i - 1*k, 0, k, T[0], L[0]);
 
     for(rci_t j = 0; j < B->nrows - i - k; ++j) {
-      rci_t const x0 = L0[ mzd_read_bits_int(U, j, B->nrows - i - 1*k, k) ];
+      rci_t const x0 = L[0][ mzd_read_bits_int(U, j, B->nrows - i - 1*k, k) ];
 
       word *b = B->rows[j];
       word *t0 = T[0]->rows[x0];
@@ -147,21 +160,13 @@ void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k) {
         b[ii] ^= t0[ii];
     }
   }
-  for(int i=0; i<8; i++) {
+  for(int i=0; i<__M4RI_TRSM_NTABLES; i++) {
     mzd_free(T[i]);
 #ifdef __M4RI_HAVE_SSE2
     mzd_free(Talign[i]);
 #endif
+    m4ri_mm_free(L[i]);
   }
-
-  m4ri_mm_free(L0);
-  m4ri_mm_free(L1);
-  m4ri_mm_free(L2);
-  m4ri_mm_free(L3);
-  m4ri_mm_free(L4);
-  m4ri_mm_free(L5);
-  m4ri_mm_free(L6);
-  m4ri_mm_free(L7);
 
   __M4RI_DD_MZD(B);
 }
