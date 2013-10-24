@@ -1114,26 +1114,36 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
 #endif
       for(rci_t j = giantstep; j < blockend; j++) {
         const word a = mzd_read_bits(A, j, kk*i, kk);
-        x[ 0] = L[ 0][ (a >> 0*k) & bm ];
-        x[ 1] = L[ 1][ (a >> 1*k) & bm ];
-        x[ 2] = L[ 2][ (a >> 2*k) & bm ];
-        x[ 3] = L[ 3][ (a >> 3*k) & bm ];
-        x[ 4] = L[ 4][ (a >> 4*k) & bm ];
-        x[ 5] = L[ 5][ (a >> 5*k) & bm ];
-        x[ 6] = L[ 6][ (a >> 6*k) & bm ];
-        x[ 7] = L[ 7][ (a >> 7*k) & bm ];
+
+        switch(__M4RI_M4RM_NTABLES) {
+        case 8: t[7] = T[ 7]->rows[ L[7][ (a >> 7*k) & bm ] ];
+        case 7: t[6] = T[ 6]->rows[ L[6][ (a >> 6*k) & bm ] ];
+        case 6: t[5] = T[ 5]->rows[ L[5][ (a >> 5*k) & bm ] ];
+        case 5: t[4] = T[ 4]->rows[ L[4][ (a >> 4*k) & bm ] ];
+        case 4: t[3] = T[ 3]->rows[ L[3][ (a >> 3*k) & bm ] ];
+        case 3: t[2] = T[ 2]->rows[ L[2][ (a >> 2*k) & bm ] ];
+        case 2: t[1] = T[ 1]->rows[ L[1][ (a >> 1*k) & bm ] ];
+        case 1: t[0] = T[ 0]->rows[ L[0][ (a >> 0*k) & bm ] ];
+          break;
+        default:
+          m4ri_die("__M4RI_M4RM_NTABLES must be <= 8 but got %d", __M4RI_M4RM_NTABLES);
+        }
 
         c = C->rows[j];
-        t[ 0] = T[ 0]->rows[x[ 0]];
-        t[ 1] = T[ 1]->rows[x[ 1]];
-        t[ 2] = T[ 2]->rows[x[ 2]];
-        t[ 3] = T[ 3]->rows[x[ 3]];
-        t[ 4] = T[ 4]->rows[x[ 4]];
-        t[ 5] = T[ 5]->rows[x[ 5]];
-        t[ 6] = T[ 6]->rows[x[ 6]];
-        t[ 7] = T[ 7]->rows[x[ 7]];
 
-        _mzd_combine_8(c, t, wide);
+        switch(__M4RI_M4RM_NTABLES) {
+        case 8: _mzd_combine_8(c, t, wide); break;
+        case 7: _mzd_combine_7(c, t, wide); break;
+        case 6: _mzd_combine_6(c, t, wide); break;
+        case 5: _mzd_combine_5(c, t, wide); break;
+        case 4: _mzd_combine_4(c, t, wide); break;
+        case 3: _mzd_combine_3(c, t, wide); break;
+        case 2: _mzd_combine_2(c, t, wide); break;
+        case 1: _mzd_combine(c, t[0], wide);
+          break;
+        default:
+          m4ri_die("__M4RI_M4RM_NTABLES must be <= 8 but got %d", __M4RI_M4RM_NTABLES);
+        }
       }
     }
   }
