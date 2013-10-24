@@ -55,24 +55,51 @@ static inline void __M4RI_TEMPLATE_NAME(_mzd_combine)(word *m, word const *t[N],
   case 1: t__[N-1] = (__m128i*)t[N-1];
   };
 
-  __m128i xmm1;
+  __m128i xmm0, xmm1, xmm2, xmm3;
 
   for(wi_t i=0; i< (wide>>1); i++) {
-    xmm1 = _mm_xor_si128(*m__, *t__[0]++);
 
     switch(N) {  /* we rely on the compiler to optimise this switch away, it reads nicer than #if */
-    case 8: xmm1 = _mm_xor_si128(xmm1, *t__[N-7]++);
-    case 7: xmm1 = _mm_xor_si128(xmm1, *t__[N-6]++);
-    case 6: xmm1 = _mm_xor_si128(xmm1, *t__[N-5]++);
-    case 5: xmm1 = _mm_xor_si128(xmm1, *t__[N-4]++);
-    case 4: xmm1 = _mm_xor_si128(xmm1, *t__[N-3]++);
-    case 3: xmm1 = _mm_xor_si128(xmm1, *t__[N-2]++);
-    case 2: xmm1 = _mm_xor_si128(xmm1, *t__[N-1]++);
-    case 1: break;
+    case 8: 
+      xmm0 = _mm_xor_si128(*t__[0]++, *t__[1]++); xmm1 = _mm_xor_si128(*t__[2]++, *t__[3]++);
+      xmm2 = _mm_xor_si128(*t__[4]++, *t__[5]++); xmm3 = _mm_xor_si128(*t__[6]++, *t__[7]++);
+      xmm0 = _mm_xor_si128(xmm0, xmm1);  xmm2 = _mm_xor_si128(xmm2, xmm3);
+      xmm0 = _mm_xor_si128(xmm0, xmm2);  xmm0 = _mm_xor_si128(*m__, xmm0);
+      break;
+    case 7: 
+      xmm0 = _mm_xor_si128(*t__[0]++, *t__[1]++); xmm1 = _mm_xor_si128(*t__[2]++, *t__[3]++);
+      xmm0 = _mm_xor_si128(xmm0, *t__[4]++);      xmm1 = _mm_xor_si128(xmm1, *t__[5]++);
+      xmm0 = _mm_xor_si128(xmm0, *t__[6]++);      xmm0 = _mm_xor_si128(xmm0, xmm1);
+      xmm0 = _mm_xor_si128(*m__, xmm0);
+      break;
+    case 6: 
+      xmm0 = _mm_xor_si128(*t__[0]++, *t__[1]++); xmm1 = _mm_xor_si128(*t__[2]++, *t__[3]++);
+      xmm0 = _mm_xor_si128(xmm0, *t__[4]++);      xmm1 = _mm_xor_si128(xmm1, *t__[5]++);
+      xmm0 = _mm_xor_si128(xmm0, xmm1);           xmm0 = _mm_xor_si128(*m__, xmm0);
+      break;
+    case 5: 
+      xmm0 = _mm_xor_si128(*t__[0]++, *t__[1]++); xmm1 = _mm_xor_si128(*t__[2]++, *t__[3]++);
+      xmm0 = _mm_xor_si128(xmm0, *t__[4]++);      xmm0 = _mm_xor_si128(xmm0, xmm1);
+      xmm0 = _mm_xor_si128(*m__, xmm0);
+      break;
+    case 4: 
+      xmm0 = _mm_xor_si128(*t__[0]++, *t__[1]++); xmm1 = _mm_xor_si128(*t__[2]++, *t__[3]++);
+      xmm0 = _mm_xor_si128(xmm0, xmm1);           xmm0 = _mm_xor_si128(*m__, xmm0);
+      break;
+    case 3: 
+      xmm0 = _mm_xor_si128(*t__[0]++, *t__[1]++); xmm1 = _mm_xor_si128(*m__, *t__[2]++);
+      xmm0 = _mm_xor_si128(xmm0, xmm1);
+      break;
+    case 2: 
+      xmm0 = _mm_xor_si128(*t__[0]++, *t__[1]++); xmm0 = _mm_xor_si128(*m__, xmm0);
+      break;
+    case 1:
+      xmm0 = _mm_xor_si128(*m__, *t__[0]++); 
+      break;
     };
-    *m__++ = xmm1;
+    *m__++ = xmm0;
   }
-
+ 
   if(wide & 0x1) {
     m = (word*)m__;
     switch(N) {  /* we rely on the compiler to optimise this switch away, it reads nicer than #if */
