@@ -208,8 +208,6 @@ void _mzd_trsm_lower_left_submatrix(mzd_t const *L, mzd_t *B, rci_t const start_
 void _mzd_trsm_lower_left_russian(mzd_t const *L, mzd_t *B, int k) {
   wi_t const wide = B->width;
 
-  word mask_end = __M4RI_LEFT_BITMASK(B->ncols % m4ri_radix);
-
   if(k == 0) {
     /* __M4RI_CPU_L2_CACHE == __M4RI_TRSM_NTABLES * 2^k * B->width * 8 */
     k = (int)log2((__M4RI_CPU_L2_CACHE/8)/(double)B->width/(double)__M4RI_TRSM_NTABLES);
@@ -242,10 +240,11 @@ void _mzd_trsm_lower_left_russian(mzd_t const *L, mzd_t *B, int k) {
     J[i] = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
   }
 
+  const word mask = __M4RI_LEFT_BITMASK(k);
   rci_t i = 0;
   for (; i < B->nrows - kk; i += kk) {
 
-    _mzd_trsm_lower_left_submatrix(L, B, i, kk, mask_end);
+    _mzd_trsm_lower_left_submatrix(L, B, i, kk, B->high_bitmask);
 
     switch(__M4RI_TRSM_NTABLES) {
     case 8:  mzd_make_table(B, i + 7*k, 0, k, T[7], J[7]);
@@ -263,18 +262,19 @@ void _mzd_trsm_lower_left_russian(mzd_t const *L, mzd_t *B, int k) {
 
 
     for(rci_t j = i+kk; j < B->nrows; ++j) {
-      rci_t x;
       const word *t[__M4RI_TRSM_NTABLES];
 
+      word tmp = mzd_read_bits(L, j, i, kk);
+
       switch(__M4RI_TRSM_NTABLES) {
-      case 8: x = J[7][ mzd_read_bits_int(L, j, i + 7*k, k) ]; t[7] = T[7]->rows[x];
-      case 7: x = J[6][ mzd_read_bits_int(L, j, i + 6*k, k) ]; t[6] = T[6]->rows[x];
-      case 6: x = J[5][ mzd_read_bits_int(L, j, i + 5*k, k) ]; t[5] = T[5]->rows[x];
-      case 5: x = J[4][ mzd_read_bits_int(L, j, i + 4*k, k) ]; t[4] = T[4]->rows[x];
-      case 4: x = J[3][ mzd_read_bits_int(L, j, i + 3*k, k) ]; t[3] = T[3]->rows[x];
-      case 3: x = J[2][ mzd_read_bits_int(L, j, i + 2*k, k) ]; t[2] = T[2]->rows[x];
-      case 2: x = J[1][ mzd_read_bits_int(L, j, i + 1*k, k) ]; t[1] = T[1]->rows[x];
-      case 1: x = J[0][ mzd_read_bits_int(L, j, i + 0*k, k) ]; t[0] = T[0]->rows[x];
+      case 8: t[7] = T[7]->rows[ J[7][ (tmp >> (7*k)) & mask ] ];
+      case 7: t[6] = T[6]->rows[ J[6][ (tmp >> (6*k)) & mask ] ];
+      case 6: t[5] = T[5]->rows[ J[5][ (tmp >> (5*k)) & mask ] ];
+      case 5: t[4] = T[4]->rows[ J[4][ (tmp >> (4*k)) & mask ] ];
+      case 4: t[3] = T[3]->rows[ J[3][ (tmp >> (3*k)) & mask ] ];
+      case 3: t[2] = T[2]->rows[ J[2][ (tmp >> (2*k)) & mask ] ];
+      case 2: t[1] = T[1]->rows[ J[1][ (tmp >> (1*k)) & mask ] ];
+      case 1: t[0] = T[0]->rows[ J[0][ (tmp >> (0*k)) & mask ] ];
         break;
       default:
         m4ri_die("__M4RI_TRSM_NTABLES must be <= 8 but got %d", __M4RI_TRSM_NTABLES);
@@ -302,7 +302,7 @@ void _mzd_trsm_lower_left_russian(mzd_t const *L, mzd_t *B, int k) {
     if (i > B->nrows - k)
       k = B->nrows - i;
 
-    _mzd_trsm_lower_left_submatrix(L, B, i, k, mask_end);
+    _mzd_trsm_lower_left_submatrix(L, B, i, k, B->high_bitmask);
 
     mzd_make_table(B, i + 0*k, 0, k, T[0], J[0]);
 
