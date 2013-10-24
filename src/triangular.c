@@ -363,6 +363,8 @@ void mzd_trsm_lower_left(mzd_t const *L, mzd_t *B, const int cutoff) {
         }
       }
     }
+  } else if(mb <= __M4RI_MUL_BLOCKSIZE) {
+    _mzd_trsm_lower_left_russian(L, B, 0);
   } else {
     rci_t const mb1 = (((mb - 1) / m4ri_radix + 1) >> 1) * m4ri_radix;
 

@@ -30,6 +30,28 @@
 
 #include <m4ri/mzd.h>
 
+/**
+ * \brief Solves L X = B with X and B matrices and L lower triangular using Gray code tables.
+ * 
+ * X is stored inplace on B.
+ *
+ * \param L Input lower triangular matrix.
+ * \param B Input matrix, being overwritten by the solution matrix X
+ * \param k Size of Gray code tables or zero for automatic choice (recommended).
+ */
+
+void _mzd_trsm_lower_left_russian(mzd_t const *L, mzd_t *B, int k);
+
+/**
+ * \brief Solves U X = B with X and B matrices and U upper triangular using Gray code tables.
+ *
+ * X is stored inplace on B.
+ *  
+ * \param U Input upper triangular matrix.
+ * \param B Input matrix, being overwritten by the solution matrix X
+ * \param k Size of Gray code tables or zero for automatic choice (recommended).
+ */
+
 void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k);
 
 /**

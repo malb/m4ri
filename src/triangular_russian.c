@@ -12,8 +12,8 @@
 #define __M4RI_TRSM_NTABLES 8
 
 void _mzd_trsm_upper_left_submatrix(mzd_t const *U, mzd_t *B, rci_t const start_row, int const k, word const mask_end) {
-  for (int i = 0; i < k; ++i) {
-    for (int j = 0; j < i; ++j) {
+  for (rci_t i = 0; i < k; ++i) {
+    for (rci_t j = 0; j < i; ++j) {
       if (mzd_read_bit(U, start_row+(k-i-1), start_row+(k-i)+j)) {
         word *a = B->rows[start_row+(k-i-1)];
         word *b = B->rows[start_row+(k-i)+j];
@@ -48,7 +48,6 @@ void _mzd_trsm_upper_left_submatrix(mzd_t const *U, mzd_t *B, rci_t const start_
 
 void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k) {
   wi_t const wide = B->width;
-  int const blocksize = __M4RI_MUL_BLOCKSIZE;
 
   word mask_end = __M4RI_LEFT_BITMASK(B->ncols % m4ri_radix);
 
@@ -170,6 +169,164 @@ void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k) {
 
   __M4RI_DD_MZD(B);
 }
+
+void _mzd_trsm_lower_left_submatrix(mzd_t const *L, mzd_t *B, rci_t const start_row, int const k, word const mask_end) {
+  for (int i = 0; i < k; ++i) {
+    for (int j = 0; j < i; ++j) {
+      if (mzd_read_bit(L, start_row+i, start_row+j)) {
+        word *a = B->rows[start_row+i];
+        word *b = B->rows[start_row+j];
+
+	wi_t ii;
+        for(ii = 0; ii + 8 <= B->width - 1; ii += 8) {
+          *a++ ^= *b++;
+          *a++ ^= *b++;
+          *a++ ^= *b++;
+          *a++ ^= *b++;
+          *a++ ^= *b++;
+          *a++ ^= *b++;
+          *a++ ^= *b++;
+          *a++ ^= *b++;
+        }
+        switch(B->width - ii) {
+        case 8:  *a++ ^= *b++;
+        case 7:  *a++ ^= *b++;
+        case 6:  *a++ ^= *b++;
+        case 5:  *a++ ^= *b++;
+        case 4:  *a++ ^= *b++;
+        case 3:  *a++ ^= *b++;
+        case 2:  *a++ ^= *b++;
+        case 1:  *a++ ^= (*b++ & mask_end);
+        }
+      }
+    }
+  }
+
+  __M4RI_DD_MZD(B);
+}
+
+void _mzd_trsm_lower_left_russian(mzd_t const *L, mzd_t *B, int k) {
+  wi_t const wide = B->width;
+
+  word mask_end = __M4RI_LEFT_BITMASK(B->ncols % m4ri_radix);
+
+  if(k == 0) {
+    /* __M4RI_CPU_L2_CACHE == __M4RI_TRSM_NTABLES * 2^k * B->width * 8 */
+    k = (int)log2((__M4RI_CPU_L2_CACHE/8)/(double)B->width/(double)__M4RI_TRSM_NTABLES);
+
+    rci_t const klog = round(0.75 * log2_floor(MIN(B->nrows, B->ncols)));
+
+    if(klog < k) k = klog;
+    if (k<2)     k = 2;
+    else if(k>8) k = 8;
+  }
+  int kk = __M4RI_TRSM_NTABLES * k;
+  assert(kk <= m4ri_radix);
+
+  mzd_t *T[__M4RI_TRSM_NTABLES];
+  rci_t *J[__M4RI_TRSM_NTABLES];
+
+#ifdef __M4RI_HAVE_SSE2
+    /* we make sure that T are aligned as B, this is dirty, we need a function for this */
+  mzd_t *Talign[__M4RI_TRSM_NTABLES];
+  int b_align = (__M4RI_ALIGNMENT(B->rows[0], 16) == 8);
+#endif
+
+  for(int i=0; i<__M4RI_TRSM_NTABLES; i++) {
+#ifdef __M4RI_HAVE_SSE2
+    Talign[i] = mzd_init(__M4RI_TWOPOW(k), B->ncols + m4ri_radix);
+    T[i] = mzd_init_window(Talign[i], 0, b_align*m4ri_radix, Talign[i]->nrows, B->ncols + b_align*m4ri_radix);
+#else
+    T[i] = mzd_init(__M4RI_TWOPOW(k), B->ncols);
+#endif
+    J[i] = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
+  }
+
+  rci_t i = 0;
+  for (; i < B->nrows - kk; i += kk) {
+
+    _mzd_trsm_lower_left_submatrix(L, B, i, kk, mask_end);
+
+    switch(__M4RI_TRSM_NTABLES) {
+    case 8:  mzd_make_table(B, i + 7*k, 0, k, T[7], J[7]);
+    case 7:  mzd_make_table(B, i + 6*k, 0, k, T[6], J[6]);
+    case 6:  mzd_make_table(B, i + 5*k, 0, k, T[5], J[5]);
+    case 5:  mzd_make_table(B, i + 4*k, 0, k, T[4], J[4]);
+    case 4:  mzd_make_table(B, i + 3*k, 0, k, T[3], J[3]);
+    case 3:  mzd_make_table(B, i + 2*k, 0, k, T[2], J[2]);
+    case 2:  mzd_make_table(B, i + 1*k, 0, k, T[1], J[1]);
+    case 1:  mzd_make_table(B, i + 0*k, 0, k, T[0], J[0]);
+      break;
+    default:
+      m4ri_die("__M4RI_TRSM_NTABLES must be <= 8 but got %d", __M4RI_TRSM_NTABLES);
+    }
+
+
+    for(rci_t j = i+kk; j < B->nrows; ++j) {
+      rci_t x;
+      const word *t[__M4RI_TRSM_NTABLES];
+
+      switch(__M4RI_TRSM_NTABLES) {
+      case 8: x = J[7][ mzd_read_bits_int(L, j, i + 7*k, k) ]; t[7] = T[7]->rows[x];
+      case 7: x = J[6][ mzd_read_bits_int(L, j, i + 6*k, k) ]; t[6] = T[6]->rows[x];
+      case 6: x = J[5][ mzd_read_bits_int(L, j, i + 5*k, k) ]; t[5] = T[5]->rows[x];
+      case 5: x = J[4][ mzd_read_bits_int(L, j, i + 4*k, k) ]; t[4] = T[4]->rows[x];
+      case 4: x = J[3][ mzd_read_bits_int(L, j, i + 3*k, k) ]; t[3] = T[3]->rows[x];
+      case 3: x = J[2][ mzd_read_bits_int(L, j, i + 2*k, k) ]; t[2] = T[2]->rows[x];
+      case 2: x = J[1][ mzd_read_bits_int(L, j, i + 1*k, k) ]; t[1] = T[1]->rows[x];
+      case 1: x = J[0][ mzd_read_bits_int(L, j, i + 0*k, k) ]; t[0] = T[0]->rows[x];
+        break;
+      default:
+        m4ri_die("__M4RI_TRSM_NTABLES must be <= 8 but got %d", __M4RI_TRSM_NTABLES);
+      }
+
+      word *b = B->rows[j];
+      switch(__M4RI_TRSM_NTABLES) {
+      case 8: _mzd_combine_8(b, t, wide); break;
+      case 7: _mzd_combine_7(b, t, wide); break;
+      case 6: _mzd_combine_6(b, t, wide); break;
+      case 5: _mzd_combine_5(b, t, wide); break;
+      case 4: _mzd_combine_4(b, t, wide); break;
+      case 3: _mzd_combine_3(b, t, wide); break;
+      case 2: _mzd_combine_2(b, t, wide); break;
+      case 1: _mzd_combine(b, t[0], wide);
+        break;
+      default:
+        m4ri_die("__M4RI_TRSM_NTABLES must be <= 8 but got %d", __M4RI_TRSM_NTABLES);
+      }
+    }
+  }
+
+  /* handle stuff that doesn't fit in multiples of kk */
+  for ( ;i < B->nrows; i += k) {
+    if (i > B->nrows - k)
+      k = B->nrows - i;
+
+    _mzd_trsm_lower_left_submatrix(L, B, i, k, mask_end);
+
+    mzd_make_table(B, i + 0*k, 0, k, T[0], J[0]);
+
+    for(rci_t j = i+k; j < L->nrows; ++j) {
+      rci_t const x0 = J[0][ mzd_read_bits_int(L, j, i, k) ];
+
+      word *b = B->rows[j];
+      word *t0 = T[0]->rows[x0];
+
+      for (wi_t ii = 0; ii < wide; ++ii)
+        b[ii] ^= t0[ii];
+    }
+  }
+  for(int i=0; i<__M4RI_TRSM_NTABLES; i++) {
+    mzd_free(T[i]);
+#ifdef __M4RI_HAVE_SSE2
+    mzd_free(Talign[i]);
+#endif
+    m4ri_mm_free(J[i]);
+  }
+
+  __M4RI_DD_MZD(B);
+}
+
 
 void mzd_make_table_trtri(mzd_t const *M, rci_t r, rci_t c, int k, ple_table_t *Tb, rci_t startcol) {
   mzd_t *T = Tb->T;
