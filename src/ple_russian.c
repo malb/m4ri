@@ -158,11 +158,15 @@ int _mzd_ple_submatrix(mzd_t *A,
   }
 
   /* finish submatrix */
-  *done_row = _max_value(done, rank);
-  for(rci_t c2 = 0; c2 < rank && start_col + pivots[c2] < A->ncols -1; ++c2)
-    for(rci_t r2 = done[c2] + 1; r2 <= *done_row; ++r2)
-      if(mzd_read_bit(A, r2, start_col + pivots[c2]))
-        mzd_row_add_offset(A, r2, start_row + c2, start_col + pivots[c2] + 1);
+  if (rank == k) {
+    *done_row = _max_value(done, rank);
+    for(rci_t c2 = 0; c2 < rank && start_col + pivots[c2] < A->ncols -1; ++c2)
+      for(rci_t r2 = done[c2] + 1; r2 <= *done_row; ++r2)
+        if(mzd_read_bit(A, r2, start_col + pivots[c2]))
+          mzd_row_add_offset(A, r2, start_row + c2, start_col + pivots[c2] + 1);
+  }
+  else
+    *done_row = stop_row-1;
 
   /* reset to original size */
   A->ncols = ncols;
@@ -178,7 +182,7 @@ int _mzd_ple_submatrix(mzd_t *A,
 }
 
 /* create a table of all 2^k linear combinations */
-void mzd_make_table_ple(mzd_t const *A, rci_t r, rci_t writecol, int k, int knar, ple_table_t *table, rci_t *offsets, int base, rci_t readcol) {
+void mzd_make_table_ple(mzd_t const *A, rci_t r, rci_t writecol, int k, int knar, ple_table_t *table, rci_t *offsets, int base, rci_t readcol, int fullrank) {
 
   mzd_t *T = table->T;
   rci_t *E = table->E;
@@ -204,43 +208,77 @@ void mzd_make_table_ple(mzd_t const *A, rci_t r, rci_t writecol, int k, int knar
   word *ti1 = T->rows[0] + writeblock;
   word *ti = ti1         + T->rowstride;
 
-  M[0] = 0; E[0] = 0; B[0] = 0;
-  for (int i = 1; i < twokay; ++i) {
-    T->rows[i][readblock] = 0; /* we make sure that we can safely add from readblock */
+  if(!fullrank) {
+    /*
+     * 1) !fullrank: no need for E (and B)
+     */
+    M[0] = 0;
+    for (int i = 1; i < twokay; ++i) {
+      T->rows[i][readblock] = 0; /* we make sure that we can safely add from readblock */
 
-    rci_t rowneeded = r + m4ri_codebook[knar]->inc[i - 1];
-    a = A->rows[rowneeded] + writeblock;
+      rci_t rowneeded = r + m4ri_codebook[knar]->inc[i - 1];
+      a = A->rows[rowneeded] + writeblock;
 
-    /* Duff's device loop unrolling */
-    wi_t n = count;
-    switch (entry_point) {
-    case 0: do { *(ti++) = *(a++) ^ *(ti1++);
-    case 7:      *(ti++) = *(a++) ^ *(ti1++);
-    case 6:      *(ti++) = *(a++) ^ *(ti1++);
-    case 5:      *(ti++) = *(a++) ^ *(ti1++);
-    case 4:      *(ti++) = *(a++) ^ *(ti1++);
-    case 3:      *(ti++) = *(a++) ^ *(ti1++);
-    case 2:      *(ti++) = *(a++) ^ *(ti1++);
-    case 1:      *(ti++) = *(a++) ^ *(ti1++);
-      } while (--n > 0);
+      /* Duff's device loop unrolling */
+      wi_t n = count;
+      switch (entry_point) {
+      case 0: do { *(ti++) = *(a++) ^ *(ti1++);
+        case 7:      *(ti++) = *(a++) ^ *(ti1++);
+        case 6:      *(ti++) = *(a++) ^ *(ti1++);
+        case 5:      *(ti++) = *(a++) ^ *(ti1++);
+        case 4:      *(ti++) = *(a++) ^ *(ti1++);
+        case 3:      *(ti++) = *(a++) ^ *(ti1++);
+        case 2:      *(ti++) = *(a++) ^ *(ti1++);
+        case 1:      *(ti++) = *(a++) ^ *(ti1++);
+        } while (--n > 0);
+      }
+      ti  += next_row_offset;
+      ti1 += next_row_offset;
+
+      M[ m4ri_spread_bits(m4ri_codebook[k]->ord[i], offsets, knar, base) ] = i;
     }
-    ti  += next_row_offset;
-    ti1 += next_row_offset;
+  } else {
+    /*
+     * 2) fullrank: no spread bits needed
+     */
+    M[0] = 0; E[0] = 0; B[0] = 0;
+    for (int i = 1; i < twokay; ++i) {
+      T->rows[i][readblock] = 0; /* we make sure that we can safely add from readblock */
 
-    /* U is a basis but not the canonical basis, so we need to read what element we just created from T */
-    E[ mzd_read_bits_int(T, i, writecol, k) ] = i;
-    M[ m4ri_spread_bits(m4ri_codebook[k]->ord[i], offsets, knar, base) ] = i;
-  }
+      rci_t rowneeded = r + m4ri_codebook[knar]->inc[i - 1];
+      a = A->rows[rowneeded] + writeblock;
 
-  /* We need fix the table to update the transformation matrix correctly; e.g. if the first row has
-     [1 0 1] and we clear a row below with [1 0 1] we need to encode that this row is cleared by
-     adding the first row only ([1 0 0]). */
+      /* Duff's device loop unrolling */
+      wi_t n = count;
+      switch (entry_point) {
+      case 0: do { *(ti++) = *(a++) ^ *(ti1++);
+        case 7:      *(ti++) = *(a++) ^ *(ti1++);
+        case 6:      *(ti++) = *(a++) ^ *(ti1++);
+        case 5:      *(ti++) = *(a++) ^ *(ti1++);
+        case 4:      *(ti++) = *(a++) ^ *(ti1++);
+        case 3:      *(ti++) = *(a++) ^ *(ti1++);
+        case 2:      *(ti++) = *(a++) ^ *(ti1++);
+        case 1:      *(ti++) = *(a++) ^ *(ti1++);
+        } while (--n > 0);
+      }
+      ti  += next_row_offset;
+      ti1 += next_row_offset;
 
-  int const bits_to_read = MIN(m4ri_radix, T->ncols - readcol);
-  for(int i = 1; i < twokay; ++i) {
-    word const fix = m4ri_spread_bits(__M4RI_CONVERT_TO_WORD(m4ri_codebook[k]->ord[i]), offsets, knar, base);
-    mzd_xor_bits(T, i, writecol, k, fix);
-    B[i] = mzd_read_bits(T, i, readcol, bits_to_read);
+      /* U is a basis but not the canonical basis, so we need to read what element we just created from T */
+      E[ mzd_read_bits_int(T, i, writecol, k) ] = i;
+      M[ m4ri_codebook[k]->ord[i] ] = i;
+    }
+
+    /* We need fix the table to update the transformation matrix correctly; e.g. if the first row has
+       [1 0 1] and we clear a row below with [1 0 1] we need to encode that this row is cleared by
+       adding the first row only ([1 0 0]). */
+
+    int const bits_to_read = MIN(m4ri_radix, T->ncols - readcol);
+    for(int i = 1; i < twokay; ++i) {
+      word const fix = __M4RI_CONVERT_TO_WORD(m4ri_codebook[k]->ord[i]);
+      mzd_xor_bits(T, i, writecol, k, fix);
+      B[i] = mzd_read_bits(T, i, readcol, bits_to_read);
+    }
   }
 
   __M4RI_DD_MZD(T);
@@ -362,6 +400,7 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
   }
   int kk = __M4RI_PLE_NTABLES * k;
   assert(kk <= m4ri_radix);
+
 
   /** initialise permutations as identity **/
 
@@ -485,7 +524,7 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
     rci_t *i_pivots = pivots;
     int i_base = 0;
     for(int i=0; i<ntables; i++) {
-      mzd_make_table_ple(U, i_knar, i_curr_col, k_[i], knar_[i], T[i], i_pivots,  i_base, curr_col);
+      mzd_make_table_ple(U, i_knar, i_curr_col, k_[i], knar_[i], T[i], i_pivots,  i_base, curr_col, knar == kk);
       i_knar += knar_[i];
       i_curr_col += k_[i];
       i_pivots += knar_[i];
@@ -499,42 +538,42 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
       _mzd_ple_a11_8(A, curr_row + knar , done_row + 1, curr_col, splitblock, k_, (const ple_table_t**)T);
       /**
        * 6. update A2 = (A02 | A12) */
-      if (done_row < nrows) _mzd_process_rows_ple_8(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
+      if (done_row < nrows-1) _mzd_process_rows_ple_8(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
       break;
 
     case 7:
       _mzd_ple_a11_7(A, curr_row + knar , done_row + 1, curr_col, splitblock, k_, (const ple_table_t**)T);
 
-      if (done_row < nrows) _mzd_process_rows_ple_7(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
+      if (done_row < nrows-1) _mzd_process_rows_ple_7(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
       break;
 
     case 6:
       _mzd_ple_a11_6(A, curr_row + knar , done_row + 1, curr_col, splitblock, k_, (const ple_table_t**)T);
-      if (done_row < nrows) _mzd_process_rows_ple_6(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
+      if (done_row < nrows-1) _mzd_process_rows_ple_6(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
       break;
 
     case 5:
       _mzd_ple_a11_5(A, curr_row + knar, done_row + 1, curr_col, splitblock, k_, (const ple_table_t**)T);
 
-      if (done_row < nrows) _mzd_process_rows_ple_5(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
+      if (done_row < nrows-1) _mzd_process_rows_ple_5(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
       break;
 
     case 4:
       _mzd_ple_a11_4(A, curr_row + knar, done_row + 1, curr_col, splitblock, k_, (const ple_table_t**)T);
 
-      if (done_row < nrows) _mzd_process_rows_ple_4(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
+      if (done_row < nrows-1) _mzd_process_rows_ple_4(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
       break;
 
     case 3:
       _mzd_ple_a11_3(A, curr_row + knar, done_row+1, curr_col, splitblock, k_, (const ple_table_t**)T);
 
-      if (done_row < nrows) _mzd_process_rows_ple_3(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
+      if (done_row < nrows-1) _mzd_process_rows_ple_3(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
       break;
 
     case 2:
       _mzd_ple_a11_2(A, curr_row + knar, done_row+1, curr_col, splitblock, k_, (const ple_table_t**)T);
 
-      if(done_row < nrows) _mzd_process_rows_ple_2(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
+      if(done_row < nrows-1) _mzd_process_rows_ple_2(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t**)T);
       break;
 
     case 1:
