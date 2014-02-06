@@ -29,3 +29,9 @@ src/config.h
 src/m4ri_config.h
 src/stamp-h1
 testsuite/Makefile
+*.o
+*.lo
+.libs
+test-driver
+libm4ri.la
+src/.dirstamp
