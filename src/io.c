@@ -369,6 +369,8 @@ mzd_t *mzd_from_jcf(const char *fn, int verbose) {
     if (j<0) {
       i++, j = -j;
     }
+    if (((j-1) >= n) || (i>= m))
+      m4ri_die("trying to write to (%ld,%ld) in %ld x %ld matrix\n", i, j-1, m, n);
     mzd_write_bit(A, i, j-1, 1);
   };
 

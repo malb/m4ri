@@ -115,7 +115,7 @@ column_index
  *
  * For example, a valid input is:
 \verbatim
-2 3 2
+3 2 2
 3
 
 -2
