@@ -126,7 +126,8 @@ column_index
  * which produces the matrix
 \verbatim
 [0 1]
-[1 1]
+[1 0]
+[0 1]
 \endverbatim
  *
  *
