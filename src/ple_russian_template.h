@@ -25,9 +25,6 @@ void __M4RI_TEMPLATE_NAME(_mzd_process_rows_ple)(mzd_t *M, rci_t startrow, rci_t
   wi_t const block = startcol / m4ri_radix;
   wi_t const wide = M->width - block;
 
-#if __M4RI_HAVE_OPENMP
-#pragma omp parallel for schedule(static,512)
-#endif
   for(rci_t r = startrow; r < stoprow; ++r) {
     word bits = mzd_read_bits(M, r, startcol, sh[N-1] + k[N-1]);
     word   *m = M->rows[r] + block;
