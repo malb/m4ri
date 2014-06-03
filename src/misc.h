@@ -569,6 +569,8 @@ void m4ri_fini(void);
  * Fix some standard value for L3 cache size if it couldn't be
  * determined by configure.
  */
+
+#undef __M4RI_CPU_L3_CACHE
 #if __M4RI_CPU_L2_CACHE
 #define __M4RI_CPU_L3_CACHE __M4RI_CPU_L2_CACHE
 #else
@@ -581,6 +583,7 @@ void m4ri_fini(void);
  * Fix some standard value for L2 cache size if it couldn't be
  * determined by configure.
  */
+#undef __M4RI_CPU_L2_CACHE
 #define __M4RI_CPU_L2_CACHE 262144
 #endif // __M4RI_CPU_L2_CACHE
 
@@ -590,6 +593,7 @@ void m4ri_fini(void);
  * Fix some standard value for L1 cache size if it couldn't be
  * determined by configure.
  */
+#undef __M4RI_CPU_L1_CACHE
 #define __M4RI_CPU_L1_CACHE 16384
 #endif // __M4RI_CPU_L1_CACHE
 
