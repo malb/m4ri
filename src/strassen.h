@@ -123,7 +123,7 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff);
  *
  */
 
-mzd_t *_mzd_addmul (mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff);
+mzd_t *_mzd_addmul(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff);
 
 /**
  * The default cutoff for Strassen-Winograd multiplication. It should

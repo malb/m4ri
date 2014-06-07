@@ -17,6 +17,7 @@ struct mul_params {
   rci_t n;
   rci_t l;
   int cutoff;
+  int mp;
 };
 
 static unsigned long long loop_calibration[32];
@@ -94,7 +95,17 @@ int run(void *_p, unsigned long long *data, int *data_len) {
   if (papi_res)
     m4ri_die("");
 #endif
-  mzd_t *C = mzd_mul(NULL, A, B, p->cutoff);
+  mzd_t *C;
+  if (p->mp == 0) {
+    C = mzd_mul(NULL, A, B, p->cutoff);
+  } else {
+#if __M4RI_HAVE_OPENMP
+    C = mzd_mul_mp(NULL, A, B, p->cutoff);
+#else
+    printf("option mp ignored\n");
+    C = mzd_mul(NULL, A, B, p->cutoff);
+#endif
+  }
 #ifndef HAVE_LIBPAPI
   data[1] = cpucycles() - data[1];
   data[0] = walltime(data[0]);
@@ -123,6 +134,12 @@ void print_help_and_exit() {
   printf(" n      -- column dimension of A, integer > 0\n");
   printf(" l      -- column dimension of B, integer > 0\n");
   printf(" cutoff -- integer >= 0 (optional, default: 0).\n\n");
+  printf(" 3. m, n, l, cuttoff mp\n");
+  printf(" m      -- row dimension of A, integer > 0\n");
+  printf(" n      -- column dimension of A, integer > 0\n");
+  printf(" l      -- column dimension of B, integer > 0\n");
+  printf(" cutoff -- integer >= 0 (default: 0).\n");
+  printf(" mp     -- use mp implementation (default: 0).\n\n");
   printf("\n");
   bench_print_global_options(stderr);
   m4ri_die("");
@@ -161,24 +178,35 @@ int main(int argc, char **argv) {
     params.n = atoi(argv[1]);
     params.l = atoi(argv[1]);
     params.cutoff = 0;
+    params.mp = 0;
     break;
   case 3:
     params.m = atoi(argv[1]);
     params.n = atoi(argv[1]);
     params.l = atoi(argv[1]);
     params.cutoff = atoi(argv[2]);
+    params.mp = 0;
     break;
   case 4:
     params.m = atoi(argv[1]);
     params.n = atoi(argv[2]);
     params.l = atoi(argv[3]);
     params.cutoff = 0;
+    params.mp = 0;        
     break;
   case 5:
     params.m = atoi(argv[1]);
     params.n = atoi(argv[2]);
     params.l = atoi(argv[3]);
     params.cutoff = atoi(argv[4]);
+    params.mp = 0;
+    break;
+  case 6:
+    params.m = atoi(argv[1]);
+    params.n = atoi(argv[2]);
+    params.l = atoi(argv[3]);
+    params.cutoff = atoi(argv[4]);
+    params.mp = atoi(argv[5]);
     break;
   default:
     print_help_and_exit();

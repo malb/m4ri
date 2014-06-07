@@ -36,15 +36,10 @@
 #endif
 
 // Returns true if a is closer to cutoff than a/2.
-static inline int CLOSER(rci_t a, int cutoff)
-{
+static inline int closer(rci_t a, int cutoff) {
   return 3 * a < 4 * cutoff;
 }
 
-/**
- * Simple blockwise product
- */
-mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff);
 
 mzd_t *_mzd_mul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
   rci_t mmm, kkk, nnn;
@@ -57,7 +52,7 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
   rci_t n = B->ncols;
 
   /* handle case first, where the input matrices are too small already */
-  if (CLOSER(m, cutoff) || CLOSER(k, cutoff) || CLOSER(n, cutoff)) {
+  if (closer(m, cutoff) || closer(k, cutoff) || closer(n, cutoff)) {
     /* we copy the matrices first since it is only constant memory overhead and improves data
        locality */
     if(mzd_is_windowed(A)|mzd_is_windowed(B)|mzd_is_windowed(C)) {
@@ -215,7 +210,7 @@ mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
 
   m = A->nrows;
   /* handle case first, where the input matrices are too small already */
-  if (CLOSER(m, cutoff)) {
+  if (closer(m, cutoff)) {
     /* we copy the matrices first since it is only constant memory overhead and improves data
        locality */
     if(mzd_is_windowed(A)|mzd_is_windowed(C)) {
@@ -342,125 +337,6 @@ mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
 }
 
 
-#if __M4RI_HAVE_OPENMP
-mzd_t *_mzd_addmul_mp_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
-  /**
-   * \todo make sure not to overwrite crap after ncols and before width * m4ri_radix
-   */
-  rci_t a = A->nrows;
-  rci_t b = A->ncols;
-  rci_t c = B->ncols;
-  /* handle case first, where the input matrices are too small already */
-  if (CLOSER(A->nrows, cutoff) || CLOSER(A->ncols, cutoff) || CLOSER(B->ncols, cutoff)) {
-    /* we copy the matrix first since it is only constant memory
-       overhead and improves data locality, if you remove it make sure
-       there are no speed regressions */
-    /* C = _mzd_mul_m4rm(C, A, B, 0, TRUE); */
-    mzd_t *Cbar = mzd_init(C->nrows, C->ncols);
-    Cbar = _mzd_mul_m4rm(Cbar, A, B, 0, FALSE);
-    mzd_copy(C, Cbar);
-    mzd_free(Cbar);
-    return C;
-  }
-
-  /* adjust cutting numbers to work on words */
-  {
-    rci_t mult = 2 * m4ri_radix;
-/*    rci_t width = a; */
-/*    while (width > 2 * cutoff) { */
-/*      width /= 2; */
-/*      mult *= 2; */
-/*    } */
-    a -= a % mult;
-    b -= b % mult;
-    c -= c % mult;
-  }
-
-  rci_t anr = ((a / m4ri_radix) >> 1) * m4ri_radix;
-  rci_t anc = ((b / m4ri_radix) >> 1) * m4ri_radix;
-  rci_t bnr = anc;
-  rci_t bnc = ((c / m4ri_radix) >> 1) * m4ri_radix;
-
-  mzd_t const *A00 = mzd_init_window_const(A,   0,   0,   anr,   anc);
-  mzd_t const *A01 = mzd_init_window_const(A,   0, anc,   anr, 2*anc);
-  mzd_t const *A10 = mzd_init_window_const(A, anr,   0, 2*anr,   anc);
-  mzd_t const *A11 = mzd_init_window_const(A, anr, anc, 2*anr, 2*anc);
-
-  mzd_t const *B00 = mzd_init_window_const(B,   0,   0,   bnr,   bnc);
-  mzd_t const *B01 = mzd_init_window_const(B,   0, bnc,   bnr, 2*bnc);
-  mzd_t const *B10 = mzd_init_window_const(B, bnr,   0, 2*bnr,   bnc);
-  mzd_t const *B11 = mzd_init_window_const(B, bnr, bnc, 2*bnr, 2*bnc);
-
-  mzd_t *C00 = mzd_init_window(C,   0,   0,   anr,   bnc);
-  mzd_t *C01 = mzd_init_window(C,   0, bnc,   anr, 2*bnc);
-  mzd_t *C10 = mzd_init_window(C, anr,   0, 2*anr,   bnc);
-  mzd_t *C11 = mzd_init_window(C, anr, bnc, 2*anr, 2*bnc);
-
-#pragma omp parallel sections num_threads(4)
-  {
-#pragma omp section
-    {
-      _mzd_addmul_even(C00, A00, B00, cutoff);
-      _mzd_addmul_even(C00, A01, B10, cutoff);
-    }
-#pragma omp section
-    {
-      _mzd_addmul_even(C01, A00, B01, cutoff);
-      _mzd_addmul_even(C01, A01, B11, cutoff);
-    }
-#pragma omp section
-    {
-      _mzd_addmul_even(C10, A10, B00, cutoff);
-      _mzd_addmul_even(C10, A11, B10, cutoff);
-    }
-#pragma omp section
-    {
-      _mzd_addmul_even(C11, A10, B01, cutoff);
-      _mzd_addmul_even(C11, A11, B11, cutoff);
-    }
-  }
-
-  /* deal with rest */
-  if (B->ncols > 2 * bnc) {
-    mzd_t const *B_last_col = mzd_init_window_const(B, 0, 2*bnc, A->ncols, B->ncols);
-    mzd_t *C_last_col = mzd_init_window(C, 0, 2*bnc, A->nrows, C->ncols);
-    mzd_addmul_m4rm(C_last_col, A, B_last_col, 0);
-    mzd_free_window((mzd_t*)B_last_col);
-    mzd_free_window(C_last_col);
-  }
-  if (A->nrows > 2 * anr) {
-    mzd_t const *A_last_row = mzd_init_window_const(A, 2*anr, 0, A->nrows, A->ncols);
-    mzd_t const *B_bulk = mzd_init_window_const(B, 0, 0, B->nrows, 2*bnc);
-    mzd_t *C_last_row = mzd_init_window(C, 2*anr, 0, C->nrows, 2*bnc);
-    mzd_addmul_m4rm(C_last_row, A_last_row, B_bulk, 0);
-    mzd_free_window((mzd_t*)A_last_row);
-    mzd_free_window((mzd_t*)B_bulk);
-    mzd_free_window(C_last_row);
-  }
-  if (A->ncols > 2 * anc) {
-    mzd_t const *A_last_col = mzd_init_window_const(A,     0, 2*anc, 2*anr, A->ncols);
-    mzd_t const *B_last_row = mzd_init_window_const(B, 2*bnr,     0, B->nrows, 2*bnc);
-    mzd_t *C_bulk = mzd_init_window(C, 0, 0, 2*anr, 2*bnc);
-    mzd_addmul_m4rm(C_bulk, A_last_col, B_last_row, 0);
-    mzd_free_window((mzd_t*)A_last_col);
-    mzd_free_window((mzd_t*)B_last_row);
-    mzd_free_window(C_bulk);
-  }
-
-  /* clean up */
-  mzd_free_window((mzd_t*)A00); mzd_free_window((mzd_t*)A01);
-  mzd_free_window((mzd_t*)A10); mzd_free_window((mzd_t*)A11);
-
-  mzd_free_window((mzd_t*)B00); mzd_free_window((mzd_t*)B01);
-  mzd_free_window((mzd_t*)B10); mzd_free_window((mzd_t*)B11);
-
-  mzd_free_window(C00); mzd_free_window(C01);
-  mzd_free_window(C10); mzd_free_window(C11);
-
-  __M4RI_DD_MZD(C);
-  return C;
-}
-#endif
 
 mzd_t *mzd_mul(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
   if(A->ncols != B->nrows)
@@ -501,7 +377,7 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
   rci_t n = B->ncols;
 
   /* handle case first, where the input matrices are too small already */
-  if (CLOSER(m, cutoff) || CLOSER(k, cutoff) || CLOSER(n, cutoff)) {
+  if (closer(m, cutoff) || closer(k, cutoff) || closer(n, cutoff)) {
     /* we copy the matrices first since it is only constant memory overhead and improves data
        locality */
     if(mzd_is_windowed(A)|mzd_is_windowed(B)|mzd_is_windowed(C)) {
@@ -655,7 +531,7 @@ mzd_t *_mzd_addsqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
   rci_t m = A->nrows;
 
   /* handle case first, where the input matrices are too small already */
-  if (CLOSER(m, cutoff)) {
+  if (closer(m, cutoff)) {
     /* we copy the matrices first since it is only constant memory overhead and improves data
        locality */
     if(mzd_is_windowed(A)|mzd_is_windowed(C)) {

@@ -57,6 +57,7 @@ extern "C" {
 #include <m4ri/mzd.h>
 #include <m4ri/brilliantrussian.h>
 #include <m4ri/strassen.h>
+#include <m4ri/mp.h>  
 #include <m4ri/graycode.h>
 #include <m4ri/parity.h>
 #include <m4ri/triangular.h>

@@ -15,32 +15,27 @@
  */
 int mul_test_equality(rci_t m, rci_t l, rci_t n, int k, int cutoff) {
   int ret  = 0;
-  mzd_t *A, *B, *C, *D, *E;
-  
   printf("   mul: m: %4d, l: %4d, n: %4d, k: %2d, cutoff: %4d", m, l, n, k, cutoff);
 
   /* we create two random matrices */
-  A = mzd_init(m, l);
-  B = mzd_init(l, n);
+  mzd_t *A = mzd_init(m, l);
+  mzd_t *B = mzd_init(l, n);
   mzd_randomize(A);
   mzd_randomize(B);
 
   /* C = A*B via Strassen */
-  C = mzd_mul(NULL, A, B, cutoff);
+  mzd_t *C = mzd_mul(NULL, A, B, cutoff);
 
   /* D = A*B via M4RM, temporary buffers are managed internally */
-  D = mzd_mul_m4rm(    NULL, A, B, k);
-
-  /* E = A*B via naive cubic multiplication */
-  E = mzd_mul_naive(    NULL, A, B);
-
-  mzd_free(A);
-  mzd_free(B);
+  mzd_t *D = mzd_mul_m4rm(    NULL, A, B, k);
 
   if (mzd_equal(C, D) != TRUE) {
     printf(" Strassen != M4RM");
     ret -=1;
   }
+  
+  /* E = A*B via naive cubic multiplication */
+  mzd_t *E = mzd_mul_naive(    NULL, A, B);
 
   if (mzd_equal(D, E) != TRUE) {
     printf(" M4RM != Naiv");
@@ -51,7 +46,18 @@ int mul_test_equality(rci_t m, rci_t l, rci_t n, int k, int cutoff) {
     printf(" Strassen != Naiv");
     ret -= 1;
   }
-
+  
+#if __M4RI_HAVE_OPENMP
+  mzd_t *F = mzd_mul_mp(NULL, A, B, cutoff);
+  if (mzd_equal(C, F) != TRUE) {
+    printf(" MP != Naiv");
+    ret -= 1;
+  }
+  mzd_free(F);
+#endif
+  
+  mzd_free(A);
+  mzd_free(B);
   mzd_free(C);
   mzd_free(D);
   mzd_free(E);
@@ -126,38 +132,33 @@ int sqr_test_equality(rci_t m, int k, int cutoff) {
 
 int addmul_test_equality(rci_t m, rci_t l, rci_t n, int k, int cutoff) {
   int ret  = 0;
-  mzd_t *A, *B, *C, *D, *E, *F;
-  
   printf("addmul: m: %4d, l: %4d, n: %4d, k: %2d, cutoff: %4d", m, l, n, k, cutoff);
 
   /* we create two random matrices */
-  A = mzd_init(m, l);
-  B = mzd_init(l, n);
-  C = mzd_init(m, n);
+  mzd_t *A = mzd_init(m, l);
+  mzd_t *B = mzd_init(l, n);
+  mzd_t *C = mzd_init(m, n);
   mzd_randomize(A);
   mzd_randomize(B);
   mzd_randomize(C);
 
   /* D = C + A*B via M4RM, temporary buffers are managed internally */
-  D = mzd_copy(NULL, C);
+  mzd_t *D = mzd_copy(NULL, C);
   D = mzd_addmul_m4rm(D, A, B, k);
 
   /* E = C + A*B via naiv cubic multiplication */
-  E = mzd_mul_m4rm(NULL, A, B, k);
+  mzd_t *E = mzd_mul_m4rm(NULL, A, B, k);
   mzd_add(E, E, C);
-
-  /* F = C + A*B via naiv cubic multiplication */
-  F = mzd_copy(NULL, C);
-  F = mzd_addmul(F, A, B, cutoff);
-
-  mzd_free(A);
-  mzd_free(B);
-  mzd_free(C);
 
   if (mzd_equal(D, E) != TRUE) {
     printf(" M4RM != add,mul");
     ret -=1;
   }
+  
+  /* F = C + A*B via naiv cubic multiplication */
+  mzd_t *F = mzd_copy(NULL, C);
+  F = mzd_addmul(F, A, B, cutoff);
+
   if (mzd_equal(E, F) != TRUE) {
     printf(" add,mul = addmul");
     ret -=1;
@@ -167,12 +168,24 @@ int addmul_test_equality(rci_t m, rci_t l, rci_t n, int k, int cutoff) {
     ret -=1;
   }
 
+#if __M4RI_HAVE_OPENMP
+  mzd_t *G = mzd_copy(NULL, C);
+  G = mzd_addmul_mp(G, A, B, cutoff);
+  if (mzd_equal(D, G) != TRUE) {
+    printf(" MP != Naiv");
+    ret -= 1;
+  }
+  mzd_free(G);
+#endif
+  
   if (ret==0)
     printf(" ... passed\n");
   else
     printf(" ... FAILED\n");
 
-
+  mzd_free(A);
+  mzd_free(B);
+  mzd_free(C);
   mzd_free(D);
   mzd_free(E);
   mzd_free(F);
