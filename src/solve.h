@@ -132,8 +132,6 @@ int _mzd_solve_left(mzd_t *A, mzd_t *B, int const cutoff, int const inconsistenc
  * \param A Input matrix (overwritten).
  * \param cutoff Minimal dimension for Strassen recursion (default: 0).
  *
- * \wordoffset
- *
  * \sa mzd_pluq()
  *
  * \return X, NULL if kernel is empty

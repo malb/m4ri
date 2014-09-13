@@ -1,10 +1,6 @@
-/**
- * C99 binary heap
- * 
- * see https://gist.github.com/martinkunev/1365481
- *
- * \author Martin Kunev <martinkunev@gmail.com> original implementation
- * \author Martin Albrecht <martinralbrecht@googlemail.com> adapted to M4RI
+/*
+ * \author Martin Kunev <martinkunev@gmail.com> original implementation of C99 heap
+ * \author Martin Albrecht <martinralbrecht@googlemail.com> adapted to M4RI + DJB map
  */
 
 #ifdef HAVE_CONFIG_H
@@ -30,10 +26,14 @@ static inline int mzd_compare_rows_revlex(const mzd_t *A, rci_t a, rci_t b) {
   return 1;
 }
 
+/**
+ * \brief A Heap
+ */
+
 typedef struct heap {
-  unsigned int size; // Size of the allocated memory (in number of items)
-  unsigned int count; // Count of the elements in the heap
-  rci_t *data; // Array with the elements
+  unsigned int size; /*!< Size of the allocated memory (in number of items) */
+  unsigned int count; /*!<  Count of the elements in the heap */
+  rci_t *data; /*!< Array with the elements */
 } heap_t;
   
 // Returns the biggest element in the heap

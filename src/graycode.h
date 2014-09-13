@@ -1,5 +1,5 @@
 /**
- * \file grayflex.h
+ * \file graycode.h
  * \brief Gray code implementation.
  * 
  * The Gray code is a binary numeral system where two successive

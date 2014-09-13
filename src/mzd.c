@@ -34,12 +34,16 @@
 #include "mmc.h"
 
 
+/**
+ * \brief Cache of mzd_t containers
+ */
+
 typedef struct mzd_t_cache {
-  mzd_t mzd[64];
-  struct mzd_t_cache *prev;
-  struct mzd_t_cache *next;
-  uint64_t used;
-  unsigned char padding[sizeof(mzd_t) - 2 * sizeof(struct mzd_t_cache*) - sizeof(uint64_t)];
+  mzd_t mzd[64]; /*!< cached matrices */
+  struct mzd_t_cache *prev; /*!< previous block */
+  struct mzd_t_cache *next; /*!< next block */
+  uint64_t used; /*!< bitmasks which matrices in this block are used */
+  unsigned char padding[sizeof(mzd_t) - 2 * sizeof(struct mzd_t_cache*) - sizeof(uint64_t)]; /*!< alignment */
 #ifdef __GNUC__
 } mzd_t_cache_t __attribute__ ((__aligned__ (64)));
 #else

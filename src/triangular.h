@@ -1,5 +1,5 @@
 /**
- * \file trsm.h
+ * \file triangular.h
  *
  * \brief Triangular system solving with Matrix routines.
  *
@@ -156,9 +156,6 @@ void _mzd_trsm_upper_left (mzd_t const *U, mzd_t *B, const int cutoff);
  * \brief Invert the upper triangular matrix A by reduction to matrix multiplication.
  *
  * \param A Matrix to be inverted (overwritten).
- * \param k Table size parameter, may be 0 for automatic choice.
- *
- * \wordoffset
  *
  * \return Inverse of A or throws an error
  */

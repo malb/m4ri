@@ -1,12 +1,7 @@
-/**
- * \file debug_dump.h
- *
- * \brief Debug utility
- * 
- * \author Carlo Wood <carlo@alinoe.com>
- *
+/*
  * To enable dumping of output per function, configure the library with --enable-debug-dump.
  */
+
 /******************************************************************************
 *
 *                 M4RI: Linear Algebra over GF(2)

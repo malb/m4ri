@@ -1,6 +1,5 @@
-/**
- * \file xor.h
- * \brief Functions for adding vectors.
+/*
+ * Functions for adding vectors.
  *
  * \author Martin Albrecht <martinralbrecht@googlemail.com>
  *

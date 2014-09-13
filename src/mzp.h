@@ -162,8 +162,6 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P);
  * \param P Permutation.
  * \param start_row Start swapping at this row.
  * \param start_col Start swapping at this column.
- *
- * \wordoffset
  */
 
 void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t start_col);
@@ -177,8 +175,6 @@ void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t const *P, rci_t start_row, rc
  * \param P Permutation.
  * \param start_row Start swapping at this row.
  * \param start_col Start swapping at this column.
- *
- * \wordoffset
  */
 
 void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t start_col);

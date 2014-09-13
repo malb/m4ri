@@ -1,5 +1,7 @@
 /**
- * Dan Bernstein's "Optimizing linear maps mod 2"
+ * \file djb.h
+ *
+ * \brief Dan Bernstein's "Optimizing linear maps mod 2"
  *
  * This code is a port of sort1.cpp available at http://binary.cr.yp.to/linearmod2.html
  *
@@ -17,25 +19,40 @@
 
 #include <m4ri/mzd.h>
 
+/**
+ * \brief Specify source type of addition
+ */
+
 typedef enum {
-  source_target,
-  source_source
+  source_target, //< add from target matrix
+  source_source //< add from source matrix
 } srctyp_t;
+
+/**
+ * \brief DJB's optimized linear maps mod 2
+ */
  
 typedef struct {
-  rci_t nrows;
-  rci_t ncols;
-  rci_t *target;
-  rci_t *source;
-  srctyp_t *srctyp;
-  rci_t length;
-  wi_t allocated;
+  rci_t nrows; /*!< Number of rows of map */
+  rci_t ncols; /*!< Number of columns of map */
+  rci_t *target; /*!< target row at index i */
+  rci_t *source; /*!< source row at index i */
+  srctyp_t *srctyp; /*!< source type at index i */
+  rci_t length; /*!< length of target, source and srctype */
+  wi_t allocated; /*!< how much did we allocate already */
 } djb_t;
+
+/**
+ * Standard allocation chunk
+ */
 
 #define M4RI_DJB_BASE_SIZE 64
 
 /**
  * Allocate a new DJB linear map
+ *
+ * \param nrows Number of rows
+ * \param ncols Number of columns 
  */
 
 static inline djb_t *djb_init(rci_t nrows, rci_t ncols) {
@@ -57,6 +74,12 @@ static inline djb_t *djb_init(rci_t nrows, rci_t ncols) {
   return m;
 }
 
+/**
+ * Free a DJB linear maps
+ *
+ * \param m Map
+ */
+
 static inline void djb_free(djb_t *m) {
   free(m->target);
   free(m->source);
@@ -70,7 +93,7 @@ static inline void djb_free(djb_t *m) {
  * \param z DJB linear map.
  * \param target Output index
  * \param source Input index
- * \param Type of input (source_source or source_target)
+ * \param srctyp Type of input (source_source or source_target)
  */
 
 static inline void djb_push_back(djb_t *z, rci_t target, rci_t source, srctyp_t srctyp) {

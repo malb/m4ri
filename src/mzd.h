@@ -67,10 +67,14 @@
 
 #define __M4RI_MUL_BLOCKSIZE MIN(((int)sqrt((double)(4 * __M4RI_CPU_L3_CACHE))) / 2, 2048)
 
+/**
+ * \brief Data containers containing the values packed into words
+ */
+ 
 typedef struct {
-  size_t size;
-  word* begin;
-  word* end;
+  size_t size; /*!< number of words */
+  word* begin; /*!< first word */
+  word* end; /*!< last word */
 } mzd_block_t;
 
 /**
@@ -138,10 +142,34 @@ typedef struct mzd_t {
  */
 static wi_t const mzd_paddingwidth = 1;
 
+/**
+ * \brief flag when ncols%64 == 0
+ */
+
 static uint8_t const mzd_flag_nonzero_excess = 0x2;
+
+/**
+ * \brief flag for windowed matrix
+ */
+
 static uint8_t const mzd_flag_windowed_zerooffset = 0x4;
+
+/**
+ * \brief flag for windowed matrix where ncols%64 == 0
+ */
+
 static uint8_t const mzd_flag_windowed_zeroexcess = 0x8;
+
+/**
+ * \brief flag for windowed matrix wich owns its memory
+ */
+
 static uint8_t const mzd_flag_windowed_ownsblocks = 0x10;
+
+/**
+ * \brief flag for multiply blocks
+ */
+
 static uint8_t const mzd_flag_multiple_blocks = 0x20;
 
 /**
@@ -239,7 +267,7 @@ static inline wi_t mzd_rows_in_block(mzd_t const* M, int n) {
  * \brief Number of rows in this block including r
  *
  * \param M Matrix
- * \param rci_t row
+ * \param r row
  *
  * \return the number of rows with index >= r in this block
  */
@@ -769,8 +797,6 @@ mzd_t *_mzd_mul_va(mzd_t *C, mzd_t const *v, mzd_t const *A, int const clear);
  * \param M Matrix
  *
  * \todo Allow the user to provide a RNG callback.
- *
- * \wordoffset
  */
 
 void mzd_randomize(mzd_t *M);
@@ -802,8 +828,6 @@ void mzd_set_ui(mzd_t *M, unsigned int const value);
  * \param M Matrix
  * \param startcol First column to consider for reduction.
  * \param full Gauss-Jordan style or upper triangular form only.
- *
- * \wordoffset
  */
 
 rci_t mzd_gauss_delayed(mzd_t *M, rci_t const startcol, int const full);
@@ -818,8 +842,6 @@ rci_t mzd_gauss_delayed(mzd_t *M, rci_t const startcol, int const full);
  * \param M Matrix
  * \param full Gauss-Jordan style or upper triangular form only.
  *
- * \wordoffset
- * 
  * \sa mzd_echelonize_m4ri(), mzd_echelonize_pluq()
  */
 
@@ -830,8 +852,6 @@ rci_t mzd_echelonize_naive(mzd_t *M, int const full);
  *
  * \param A Matrix
  * \param B Matrix
- *
- * \wordoffset
  */
 
 int mzd_equal(mzd_t const *A, mzd_t const *B);
@@ -845,8 +865,6 @@ int mzd_equal(mzd_t const *A, mzd_t const *B);
  * \note This comparison is not well defined mathematically and
  * relatively arbitrary since elements of GF(2) don't have an
  * ordering.
- *
- * \wordoffset
  */
 
 int mzd_cmp(mzd_t const *A, mzd_t const *B);
@@ -876,8 +894,6 @@ mzd_t *mzd_copy(mzd_t *DST, mzd_t const *A);
  * \param B Matrix
  *
  * \note This is sometimes called augment.
- *
- * \wordoffset
  */
 
 mzd_t *mzd_concat(mzd_t *C, mzd_t const *A, mzd_t const *B);
@@ -897,8 +913,6 @@ mzd_t *mzd_concat(mzd_t *C, mzd_t const *A, mzd_t const *B);
  * \param C Matrix, may be NULL for automatic creation
  * \param A Matrix
  * \param B Matrix
- *
- * \wordoffset
  */
 
 mzd_t *mzd_stack(mzd_t *C, mzd_t const *A, mzd_t const *B);
@@ -926,8 +940,6 @@ mzd_t *mzd_submatrix(mzd_t *S, mzd_t const *M, rci_t const lowr, rci_t const low
  * \param INV Preallocated space for inversion matrix, may be NULL for automatic creation.
  * \param A Matrix to be reduced.
  * \param I Identity matrix.
- *
- * \wordoffset
  */
 
 mzd_t *mzd_invert_naive(mzd_t *INV, mzd_t const *A, mzd_t const *I);
@@ -951,8 +963,6 @@ mzd_t *mzd_add(mzd_t *C, mzd_t const *A, mzd_t const *B);
  * \param C Preallocated sum matrix, may be NULL for automatic creation.
  * \param A Matrix
  * \param B Matrix
- *
- * \wordoffset
  */
 
 mzd_t *_mzd_add(mzd_t *C, mzd_t const *A, mzd_t const *B);
@@ -963,8 +973,6 @@ mzd_t *_mzd_add(mzd_t *C, mzd_t const *A, mzd_t const *B);
  * \param C Preallocated difference matrix, may be NULL for automatic creation.
  * \param A Matrix
  * \param B Matrix
- *
- * \wordoffset
  */
 
 #define mzd_sub mzd_add
@@ -975,8 +983,6 @@ mzd_t *_mzd_add(mzd_t *C, mzd_t const *A, mzd_t const *B);
  * \param C Preallocated difference matrix, may be NULL for automatic creation.
  * \param A Matrix
  * \param B Matrix
- *
- * \wordoffset
  */
 
 #define _mzd_sub _mzd_add
@@ -1156,15 +1162,15 @@ static inline void mzd_combine_even(mzd_t *C,       rci_t const c_row, wi_t cons
  * row2 of SC2, starting with startblock2 to the end. This gets stored
  * in DST, in row3, starting with startblock3.
  *
- * \param DST destination matrix
- * \param row3 destination row for matrix dst
- * \param startblock3 starting block to work on in matrix dst
- * \param SC1 source matrix
- * \param row1 source row for matrix sc1
- * \param startblock1 starting block to work on in matrix sc1
- * \param SC2 source matrix
- * \param startblock2 starting block to work on in matrix sc2
- * \param row2 source row for matrix sc2
+ * \param C destination matrix
+ * \param c_row destination row for matrix dst
+ * \param c_startblock starting block to work on in matrix dst
+ * \param A source matrix
+ * \param a_row source row for matrix sc1
+ * \param a_startblock starting block to work on in matrix sc1
+ * \param B source matrix
+ * \param b_row source row for matrix sc2
+ * \param b_startblock starting block to work on in matrix sc2
  *
  */
 static inline void mzd_combine(mzd_t *C,       rci_t const c_row, wi_t const c_startblock,

@@ -44,8 +44,6 @@
  * \param A Matrix.
  * \param full Return the reduced row echelon form, not only upper triangular form.
  *
- * \wordoffset
- *
  * \return Rank of A.
  */
 
@@ -56,8 +54,6 @@ rci_t mzd_echelonize(mzd_t *A, int full);
  *
  * \param A Matrix.
  * \param full Return the reduced row echelon form, not only upper triangular form.
- *
- * \wordoffset
  *
  * \sa mzd_pluq()
  *
@@ -74,8 +70,6 @@ rci_t mzd_echelonize_pluq(mzd_t *A, int full);
  * \param A Matrix to be reduced.
  * \param full Return the reduced row echelon form, not only upper triangular form.
  * \param k M4RI parameter, may be 0 for auto-choose.
- *
- * \wordoffset
  *
  * \sa _mzd_echelonize_m4ri()
  * 

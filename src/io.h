@@ -41,6 +41,15 @@
 
 void mzd_print(mzd_t const *M);
 
+/**
+ * \brief Print row i of M to stdout. 
+ *
+ * The output will contain colons between every 4-th column.
+ *
+ * \param M Matrix
+ * \param i Row to print
+ */
+
 void mzd_print_row(mzd_t const *M, const rci_t i);
 
 /**
@@ -136,6 +145,24 @@ column_index
  */
 
 mzd_t *mzd_from_jcf(const char *fn, int verbose);
+
+/**
+ * \brief Create matrix from dense ASCII string
+ *
+ * The provided string is parsed in row major ordering, i.e. the first entry is
+ * writen to A[0,0], the second entry to A[0,1] etc.
+ *
+ * For example, calling
+\verbatim
+mzd_t *A = mzd_from_str(4, 4, "1000010000100001");
+\endverbatim
+ * 
+ * would create a 4 x 4 identity matrix. 
+ *
+ * \param m Number of rows
+ * \param n Nimber of columns
+ * \param str String containing ASCII zeros and ones of length m*n
+ */
 
 mzd_t *mzd_from_str(rci_t m, rci_t n, const char *str);
 

@@ -1,5 +1,5 @@
 /**
- * \file ple_mmpf.h
+ * \file ple_russian.h
  * \brief PLE and PLUQ factorization using Gray codes.
  *
  * \author Martin Albrecht <martinralbrecht@googlemail.com>
@@ -37,10 +37,10 @@
  * \brief PLE Elimination Tables 
  */
 typedef struct {
-  mzd_t *T; /*< the actual table with 2^k entries */
-  rci_t *M; /*< lookup for multiplication */
-  rci_t *E; /*< lookup for elimination */
-  word  *B; /*< cache of first 64 entries in each row */
+  mzd_t *T; /*!< the actual table with 2^k entries */
+  rci_t *M; /*!< lookup for multiplication */
+  rci_t *E; /*!< lookup for elimination */
+  word  *B; /*!< cache of first 64 entries in each row */
 } ple_table_t;
 
 /**
@@ -76,8 +76,6 @@ void ple_table_free(ple_table_t *T);
  * \param Q Preallocated column permutation.
  * \param k Size of Gray code tables.
  *
- * \wordoffset
- *
  * \return Rank of A.
  */
 
@@ -94,8 +92,6 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k);
  * \param P Preallocated row permutation.
  * \param Q Preallocated column permutation.
  * \param k Size of Gray code tables.
- *
- * \wordoffset
  *
  * \return Rank of A.
  */
@@ -139,6 +135,7 @@ int _mzd_ple_submatrix(mzd_t *A,
  * \param c Column index.
  * \param k Rank of E.
  * \param k Map from i to column of i-th pivot.
+ * \param offsets Encodes which columns contain pivots
  */
 mzd_t *_mzd_ple_to_e(mzd_t *E, mzd_t const *A, rci_t r, rci_t c, int k, rci_t *offsets);
 

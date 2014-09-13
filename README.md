@@ -16,14 +16,14 @@ FEATURES
  * basic arithmetic with dense matrices over F2 (addition, equality
    testing, stacking, augmenting, sub-matrices, randomisation);
 
- * asymptotically fast O(n^log_2(7)) matrix multiplication via the "Method
+ * asymptotically fast $O(n^{log_2 7})$ matrix multiplication via the "Method
    of the Four Russians" (M4RM) & Strassen-Winograd algorithm;
 
- * asymptotically fast O(n^log_2(7)) PLE factorisation (Gaussian
+ * asymptotically fast $O(n^{log_2 7})$ PLE factorisation (Gaussian
    elimination, system solving, ...);
 
  * fast row echelon form computation and matrix inversion via the "Method
-   of the Four Russians" (M4RI, O(n^3/log(n)));
+   of the Four Russians" (M4RI, $O(n^{3/log n})$);
 
  * support for the x86/x86_64 SSE2 instruction set where available;
 
@@ -63,7 +63,7 @@ https://bitbucket.org/malb/m4ri
 
 you need to first run the following command:
 
-$ autoreconf --install
+    autoreconf --install
 
 Then follow the instructions in the file INSTALL.
 
@@ -73,11 +73,11 @@ DOCUMENTATION
 To build the reference manual, ensure that you have Doxygen installed.
 The HTML version of the reference manual can be built as follows:
 
-$ cd src/
-$ doxygen
+    cd src/
+    doxygen
 
 The built documentation is contained under the doc subdirectory of m4ri/.
 Once the HTML version is built, you can build the PDF version as follows:
 
-$ cd doc/latex/
-$ make
+    cd doc/latex/
+    make

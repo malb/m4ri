@@ -60,8 +60,6 @@ void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k);
  * \param A Matrix to be inverted (overwritten).
  * \param k Table size parameter, may be 0 for automatic choice.
  *
- * \wordoffset
- *
  * \return Inverse of A or throws an error
  */
 

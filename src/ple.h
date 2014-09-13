@@ -64,8 +64,6 @@
  *
  * \sa _mzd_pluq() _mzd_pluq_mmpf() mzd_echelonize_pluq()
  *
- * \wordoffset
- *
  * \return Rank of A.
  */
 
@@ -100,8 +98,6 @@ rci_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t *Q, const int cutoff);
  *
  * \sa _mzd_ple() _mzd_pluq() _mzd_pluq_mmpf() mzd_echelonize_pluq()
  *
- * \wordoffset
- *
  * \return Rank of A.
  */
 
@@ -119,7 +115,6 @@ rci_t mzd_ple(mzd_t *A, mzp_t *P, mzp_t *Q, const int cutoff);
  *
  * \sa mzd_pluq()
  *
- * \wordoffset
  * \return Rank of A.
  */
 
@@ -137,7 +132,6 @@ rci_t _mzd_pluq(mzd_t *A, mzp_t *P, mzp_t *Q, const int cutoff);
  *
  * \sa mzd_ple()
  *
- * \wordoffset
  * \return Rank of A.
  */
 
@@ -154,7 +148,6 @@ rci_t _mzd_ple(mzd_t *A, mzp_t *P, mzp_t *Qt, const int cutoff);
  *
  * \sa mzd_pluq()
  *
- * \wordoffset
  * \return Rank of A.
  */
 
@@ -171,7 +164,6 @@ rci_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q);
  *
  * \sa mzd_ple()
  *
- * \wordoffset
  * \return Rank of A.
  */
 

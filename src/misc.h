@@ -46,7 +46,9 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+/// @cond INTERNAL
 #define __STDC_LIMIT_MACROS
+/// @endcond
 #include <stdint.h>
 
 /*
@@ -334,9 +336,9 @@ static inline word m4ri_swap_bits(word v) {
  * \param length bitsize of the output
  * \param base subtracted from every value in Q 
  *
- * \output inverse of m4ri_spread_bits)
+ * \returns inverse of m4ri_spread_bits)
  *
- * \seealso m4ri_spread_bits
+ * \see m4ri_spread_bits
  */
 
 static inline word m4ri_shrink_bits(word const from, rci_t* const Q, int const length, int const base) {
@@ -377,9 +379,9 @@ static inline word m4ri_shrink_bits(word const from, rci_t* const Q, int const l
  * \param length bitsize of input
  * \param base subtracted from every value in Q 
  * 
- * \output bitstring having the same bits as from but spread using Q
+ * \returns bitstring having the same bits as from but spread using Q
  * 
- * \seealso m4ri_shrink_bits
+ * \see m4ri_shrink_bits
  */
 
 static inline word m4ri_spread_bits(word const from, rci_t* const Q, int const length, int const base) {
@@ -564,6 +566,8 @@ void m4ri_fini(void);
 
 /***** Memory Management *****/
 
+/// @cond INTERNAL
+
 #if __M4RI_CPU_L3_CACHE == 0
 /*
  * Fix some standard value for L3 cache size if it couldn't be
@@ -596,6 +600,8 @@ void m4ri_fini(void);
 #undef __M4RI_CPU_L1_CACHE
 #define __M4RI_CPU_L1_CACHE 16384
 #endif // __M4RI_CPU_L1_CACHE
+
+/// @endcond
 
 /**
  * \brief Calloc wrapper.
@@ -709,7 +715,9 @@ static inline void m4ri_mm_free(void *condemned, ...) {
 #endif
 }
 
-/**
+/// @cond INTERNAL
+
+/*
  * MSVC does not understand the restrict keyword 
  */
 
@@ -719,12 +727,16 @@ static inline void m4ri_mm_free(void *condemned, ...) {
 #define RESTRICT
 #endif
 
-/**
+
+
+/*
  * Macros for template expansion.
  */
 
 #define __M4RI_TEMPLATE_EXPAND0(x,y) x ## _ ## y
 #define __M4RI_TEMPLATE_EXPAND1(x,y) __M4RI_TEMPLATE_EXPAND0(x,y)
 #define __M4RI_TEMPLATE_NAME(fun) __M4RI_TEMPLATE_EXPAND1(fun, N)
+
+//// @endcond
 
 #endif // M4RI_MISC_H
