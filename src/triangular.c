@@ -207,8 +207,10 @@ void _mzd_trsm_lower_right(mzd_t const *L, mzd_t *B, const int cutoff) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
 
-  if(nb <= m4ri_radix) 
-    return _mzd_trsm_lower_right_base (L, B);
+  if(nb <= m4ri_radix) {
+    _mzd_trsm_lower_right_base (L, B);
+    return;
+  }
 
   rci_t const nb1 = (((nb - 1) / m4ri_radix + 1) >> 1) * m4ri_radix;
 

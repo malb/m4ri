@@ -20,13 +20,12 @@
 ********************************************************************/
 
 #include "m4ri_config.h"
-
-#if __M4RI_HAVE_OPENMP
-
 #include "misc.h"
 #include "mp.h"
 #include "brilliantrussian.h"
 #include "strassen.h"
+
+#if __M4RI_HAVE_OPENMP
 
 #ifndef MIN
 #define MIN(a,b) (((a)<(b))?(a):(b))
