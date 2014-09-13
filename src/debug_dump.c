@@ -51,21 +51,16 @@ static inline void consistency_check_row(mzd_t const *M, rci_t row)
 static void consistency_check(mzd_t const *M)
 {
   assert(M->nrows >= 0 && M->ncols >= 0);
-  assert(M->offset >= 0 && M->offset < m4ri_radix);
-  assert(M->width * m4ri_radix >= M->ncols + M->offset);
-  assert((M->width - 1) * m4ri_radix < M->ncols + M->offset);
+  assert(M->width * m4ri_radix >= M->ncols);
+  assert((M->width - 1) * m4ri_radix < M->ncols);
   assert(M->width < mzd_paddingwidth || (M->rowstride & 1) == 0);
   //assert((M->blockrows_mask + 1) == (1 << M->blockrows_log));
   assert((1 << M->blockrows_log) * M->rowstride <= __M4RI_MAX_MZD_BLOCKSIZE);
   assert((1 << M->blockrows_log) * M->rowstride > __M4RI_MAX_MZD_BLOCKSIZE / 2);
-  assert((M->width > 1 && M->low_bitmask == __M4RI_RIGHT_BITMASK(m4ri_radix - M->offset)) ||
-         (M->width < 2 && M->low_bitmask == __M4RI_MIDDLE_BITMASK(M->ncols, M->offset)));
-  assert((M->width > 1 && M->high_bitmask == __M4RI_LEFT_BITMASK((M->ncols + M->offset) % m4ri_radix)) ||
-         (M->width < 2 && M->high_bitmask == __M4RI_MIDDLE_BITMASK(M->ncols, M->offset)));
-  assert(((M->flags & mzd_flag_nonzero_offset) == 0) == (M->offset == 0));
-  assert(((M->flags & mzd_flag_nonzero_excess) == 0) == ((M->ncols + M->offset) % m4ri_radix == 0));
-  assert((M->flags & mzd_flag_windowed_zerooffset) == 0 || M->offset == 0);
-  assert((M->flags & mzd_flag_windowed_zeroexcess) == 0 || ((M->ncols + M->offset) % m4ri_radix == 0));
+  assert((M->width > 1 && M->high_bitmask == __M4RI_LEFT_BITMASK((M->ncols) % m4ri_radix)) ||
+         (M->width < 2 && M->high_bitmask == __M4RI_MIDDLE_BITMASK(M->ncols, 0)));
+  assert(((M->flags & mzd_flag_nonzero_excess) == 0) == ((M->ncols % m4ri_radix == 0)));
+  assert((M->flags & mzd_flag_windowed_zeroexcess) == 0 || ((M->ncols) % m4ri_radix == 0));
   assert((((M->flags & mzd_flag_multiple_blocks) == 0) == (mzd_row_to_block(M, M->nrows - 1) == 0)));
   int n = 0;
   rci_t counted = 0;
