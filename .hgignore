@@ -58,4 +58,4 @@ testsuite/test_smallops
 testsuite/test_solve
 testsuite/test_transpose
 testsuite/test_trsm
-
+.projectile
