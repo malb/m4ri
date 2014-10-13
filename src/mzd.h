@@ -130,11 +130,12 @@ typedef struct mzd_t {
 
   uint8_t blockrows_log;
 
+  /* ensures sizeof(mzd_t) == 64 */
+  uint8_t padding[62 - 2*sizeof(rci_t) - 4*sizeof(wi_t) - sizeof(word) - 2*sizeof(void*)];
+
   word high_bitmask;    /*!< Mask for valid bits in the word with the highest index (width - 1). */
   mzd_block_t *blocks;  /*!< Pointers to the actual blocks of memory containing the values packed into words. */
   word   **rows;        /*!< Address of first word in each row, so the first word of row i is is m->rows[i] */
-  uint64_t dummy;       /*!< ensures sizeof(mzd_t) == 64 */
-
 } mzd_t;
 
 /**
