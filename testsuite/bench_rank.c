@@ -161,6 +161,8 @@ int run(void *_p, unsigned long long *data, int *data_len) {
     p->r = mzd_ple(A, P, Q, 0);
   else if(strcmp(p->algorithm, "mmpf") == 0)
     p->r = _mzd_ple_russian(A, P, Q, 0);
+  else
+    m4ri_die("unknown algorithm %s",p->algorithm);
 #ifndef HAVE_LIBPAPI
   data[1] = cpucycles() - data[1];
   data[0] = walltime(data[0]);
