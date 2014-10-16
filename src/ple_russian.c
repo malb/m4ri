@@ -31,9 +31,7 @@
 #include "brilliantrussian.h"
 #include "graycode.h"
 #include "xor.h"
-#ifndef NDEBUG
 #include "mmc.h"
-#endif
 
 
 /** the number of tables used in PLE decomposition **/
