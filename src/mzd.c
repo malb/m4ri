@@ -76,7 +76,7 @@ static int log2_floor(uint64_t v) {
  */
 
 static mzd_t* mzd_t_malloc() {
-#if __M4RI_HAVE_OPENMP
+#if __M4RI_ENABLE_MZD_CACHE == 0
   return (mzd_t*)m4ri_mm_malloc(sizeof(mzd_t));
 #else
   mzd_t *ret = NULL;
@@ -109,12 +109,11 @@ static mzd_t* mzd_t_malloc() {
     ret = &current_cache->mzd[free_entry];
   }
   return ret;
-#endif //__M4RI_HAVE_OPENMP
-
+#endif //__M4RI_ENABLE_MZD_CACHE
 }
 
 static void mzd_t_free(mzd_t *M) {
-#if __M4RI_HAVE_OPENMP
+#if __M4RI_ENABLE_MZD_CACHE == 0
   m4ri_mm_free(M);
 #else
   int foundit = 0;
@@ -144,7 +143,7 @@ static void mzd_t_free(mzd_t *M) {
   if(!foundit) {
     m4ri_mm_free(M);
   }
-#endif
+#endif //__M4RI_ENABLE_MZD_CACHE
 }
 
 mzd_t *mzd_init(rci_t r, rci_t c) {

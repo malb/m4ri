@@ -86,12 +86,32 @@ else
 fi
 AC_SUBST(M4RI_HAVE_OPENMP)
 
+
+# Thread-Safety
+M4RI_ENABLE_MZD_CACHE=1
+M4RI_ENABLE_MMC=1
+
+AC_ARG_ENABLE([thread-safe],
+	AS_HELP_STRING([--enable-thread-safe], [make library thread safe.]))
+
+if test "x$enable_thread_safe" = "xyes"; then
+  M4RI_ENABLE_MMC=0
+  M4RI_ENABLE_MZD_CACHE=0
+fi
+
+if test $M4RI_HAVE_OPENMP = 1; then
+  M4RI_ENABLE_MZD_CACHE=0
+fi
+
+AC_SUBST(M4RI_ENABLE_MZD_CACHE)
+AC_SUBST(M4RI_ENABLE_MMC)
+
 # Debugging support
 AC_ARG_ENABLE([debug],
-	AS_HELP_STRING([--enable-debug], [Enable assert() statements for debugging.]))
+	AS_HELP_STRING([--enable-debug], [enable assert() statements for debugging.]))
 
 AC_ARG_ENABLE([debug-dump],
-        AS_HELP_STRING([--enable-debug-dump], [Dump output at exit of every function.]))
+        AS_HELP_STRING([--enable-debug-dump], [dump output at exit of every function.]))
 
 if test "x$enable_debug_dump" = "xyes"; then
   M4RI_DEBUG_DUMP=1
@@ -101,7 +121,7 @@ fi
 AC_SUBST(M4RI_DEBUG_DUMP)
 
 AC_ARG_ENABLE([debug-mzd],
-        AS_HELP_STRING([--enable-debug-mzd], [Add consistency checks on matrix structures.]))
+        AS_HELP_STRING([--enable-debug-mzd], [add consistency checks on matrix structures.]))
 
 if test "x$enable_debug_mzd" = "xyes"; then
   M4RI_DEBUG_MZD=1
@@ -115,7 +135,7 @@ if test "x$enable_debug" = x"yes"; then
   AC_SUBST(DEBUG_FLAGS)
 else
   if test "x$enable_debug_mzd" != "xyes"; then
-    AC_DEFINE(NDEBUG,1,[Define whether debugging is enabled])
+    AC_DEFINE(NDEBUG,1,[define whether debugging is enabled])
   fi
 fi
 

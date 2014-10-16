@@ -37,11 +37,6 @@ void m4ri_mmc_free(void *condemned, size_t size);
 void m4ri_mmc_cleanup(void);
 
 /**
- * \brief Enable memory block cache (default: enabled).
- */
-#define __M4RI_ENABLE_MMC
-
-/**
  * \brief Number of blocks that are cached.
  */
 #define __M4RI_MMC_NBLOCKS 16

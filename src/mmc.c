@@ -25,10 +25,11 @@
 
 #include "mmc.h"
 
-#ifdef __M4RI_ENABLE_MMC
+#if __M4RI_ENABLE_MMC
 /**
  * The actual memory block cache.
  */
+
 mmb_t m4ri_mmc_cache[__M4RI_MMC_NBLOCKS];
 #endif // __M4RI_ENABLE_MMC
 
@@ -39,9 +40,10 @@ mmb_t m4ri_mmc_cache[__M4RI_MMC_NBLOCKS];
  *
  * \return pointer to allocated memory block.
  */
+
 void *m4ri_mmc_malloc(size_t size) {
 
-#ifdef __M4RI_ENABLE_MMC
+#if __M4RI_ENABLE_MMC
   void *ret = NULL;
 
 #if __M4RI_HAVE_OPENMP
@@ -81,7 +83,7 @@ void *m4ri_mmc_malloc(size_t size) {
  * \param size Number of bytes.
  */
 void m4ri_mmc_free(void *condemned, size_t size) {
-#ifdef __M4RI_ENABLE_MMC
+#if __M4RI_ENABLE_MMC
 
 #if __M4RI_HAVE_OPENMP
 #pragma omp critical (mmc)
@@ -123,7 +125,7 @@ void m4ri_mmc_free(void *condemned, size_t size) {
  * \warning Not thread safe.
  */
 void m4ri_mmc_cleanup(void) {
-#ifdef __M4RI_ENABLE_MMC
+#if __M4RI_ENABLE_MMC
 
 #if __M4RI_HAVE_OPENMP
 #pragma omp critical (mmc)
