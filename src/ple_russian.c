@@ -35,7 +35,7 @@
 
 
 /** the number of tables used in PLE decomposition **/
-#define __M4RI_PLE_NTABLES 8
+#define __M4RI_PLE_NTABLES 7
 
 ple_table_t *ple_table_init(int k, rci_t ncols) {
   ple_table_t *T = (ple_table_t*)m4ri_mm_malloc(sizeof(ple_table_t));
