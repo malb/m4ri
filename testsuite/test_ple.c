@@ -241,7 +241,6 @@ int test_pluq_string(rci_t m, rci_t n, const char *str) {
   mzp_t *P = mzp_init(A->nrows);
   mzp_t *Q = mzp_init(A->ncols);
   _mzd_ple_russian(Acopy, P, Q, 0);
-  mzd_print(Acopy);
   rci_t r = 0;
   int status = check_pluq(A, &r);
   printf(", rank: %5d ",r);
