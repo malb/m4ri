@@ -1078,10 +1078,9 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
 
     if (k<2)
       k=2;
-    else if(k>6)
-      k=6;
+    else if(k>8)
+      k=8;
   }
-
   const wi_t wide = C->width;
   const word bm = __M4RI_TWOPOW(k)-1;
 
