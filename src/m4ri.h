@@ -32,7 +32,7 @@
  * \mainpage 
  * 
  * M4RI is a library to do fast arithmetic with dense matrices over
- * \f$F_2\f$. M4RI is available under the GPLv2+ and used by the Sage
+ * \f$\mathbb{F}_2\f$. M4RI is available under the GPLv2+ and used by the Sage
  * mathematics software and the PolyBoRi library. See
  * http://m4ri.sagemath.org for details.
  *
