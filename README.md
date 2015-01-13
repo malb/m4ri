@@ -1,6 +1,3 @@
-INTRODUCTION
-============
-
 M4RI is a library for fast arithmetic with dense matrices over F2. The
 name M4RI comes from the first implemented algorithm: The "Method of
 the Four Russian"” inversion algorithm published by Gregory Bard. This
@@ -8,10 +5,7 @@ algorithm in turn is named after the "Method of the Four Russians"
 multiplication algorithm which is probably better referred to as
 Kronrod's method.
 
-M4RI is available at http://m4ri.sagemath.org
-
-FEATURES
-========
+# Main Features #
 
  * basic arithmetic with dense matrices over F2 (addition, equality
    testing, stacking, augmenting, sub-matrices, randomisation);
@@ -33,13 +27,12 @@ FEATURES
  * and support for Linux, Solaris, and OS X (GCC) and limited support
    for Windows (Visual Studio 2010).
 
-OPENMP SUPPORT
-==============
+# OpenMP Support #
 
 OpenMP support for parallel multiplication and elimination is enabled
 with the
 
-  --enable-openmp
+    --enable-openmp
 
 configure switch. If GCC is used to compile the library it is advised
 to use at least GCC 4.3 since earlier versions have problems with
@@ -52,8 +45,7 @@ multi-core AMD CPUs than on multi-core Intel CPUs. This is because the
 later has a shared L2 cache which is already almost fully utilised in
 the single-core implementation.
 
-INSTALL
-=======
+# Install #
 
 If you downloaded M4RI as a compressed tarball from its website,
 installation instructions are contained in the file INSTALL. If you
@@ -67,8 +59,7 @@ you need to first run the following command:
 
 Then follow the instructions in the file INSTALL.
 
-DOCUMENTATION
-=============
+# Documentation #
 
 To build the reference manual, ensure that you have Doxygen installed.
 The HTML version of the reference manual can be built as follows:
@@ -81,3 +72,5 @@ Once the HTML version is built, you can build the PDF version as follows:
 
     cd doc/latex/
     make
+
+[![Build Status](https://drone.io/bitbucket.org/malb/m4ri/status.png)](https://drone.io/bitbucket.org/malb/m4ri/latest)
