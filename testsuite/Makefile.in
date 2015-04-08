@@ -42,23 +42,23 @@ BENCH_PRGS = \
 	bench_rank
 
 M4RI_HEADERS = \
-        ../src/config.h \
-	../src/m4ri.h \
-	../src/brilliantrussian.h \
-        ../src/echelonform.h \
-        ../src/graycode.h \
-        ../src/misc.h \
-        ../src/mmc.h \
-        ../src/parity.h \
-        ../src/ple.h \
-        ../src/ple_russian.h \
-        ../src/solve.h \
-        ../src/strassen.h \
-        ../src/triangular.h \
-        ../src/triangular_russian.h \
-        ../src/mzd.h \
-        ../src/mzp.h \
-        ../src/xor.h
+        ../m4ri/config.h \
+	../m4ri/m4ri.h \
+	../m4ri/brilliantrussian.h \
+        ../m4ri/echelonform.h \
+        ../m4ri/graycode.h \
+        ../m4ri/misc.h \
+        ../m4ri/mmc.h \
+        ../m4ri/parity.h \
+        ../m4ri/ple.h \
+        ../m4ri/ple_russian.h \
+        ../m4ri/solve.h \
+        ../m4ri/strassen.h \
+        ../m4ri/triangular.h \
+        ../m4ri/triangular_russian.h \
+        ../m4ri/mzd.h \
+        ../m4ri/mzp.h \
+        ../m4ri/xor.h
 
 CPUCYCLES_DIR = ./cpucycles-20060326
 
@@ -87,10 +87,10 @@ cpucycles.h: cpucycles.o
 cpucycles.o:
 	(cd $(CPUCYCLES_DIR); sh do; cp cpucycles.o ..; cp cpucycles.h ..)
 
-testing.o: testing.c testing.h ../src/misc.h ../src/mzd.h
+testing.o: testing.c testing.h ../m4ri/misc.h ../m4ri/mzd.h
 	$(CC) $(DEBUG) $(CFLAGS) -c testing.c $(LDFLAGS) -o $@
 
-benchmarking.o: benchmarking.c benchmarking.h ../src/config.h ../src/misc.h
+benchmarking.o: benchmarking.c benchmarking.h ../m4ri/config.h ../m4ri/misc.h
 	$(CC) $(DEBUG) $(PAPI_CFLAGS) $(CFLAGS) -c benchmarking.c $(LDFLAGS) -o $@
 
 Makefile: @MAINTAINER_MODE_TRUE@ Makefile.in ../config.status
