@@ -36,7 +36,7 @@
  * mathematics software and the PolyBoRi library. See
  * http://m4ri.sagemath.org for details.
  *
- * \example testsuite/test_multiplication.c
+ * \example tests/test_multiplication.c
  */
 
 #include <stdio.h>

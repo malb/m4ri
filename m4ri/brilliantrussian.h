@@ -204,8 +204,8 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, i
  * \param full Return the reduced row echelon form, not only upper triangular form.
  * \param k M4RI parameter, may be 0 for auto-choose.
  *
- * \example testsuite/test_elimination.c
- * \example testsuite/bench_elimination.c
+ * \example tests/test_elimination.c
+ * \example tests/bench_elimination.c
  * 
  * \return Rank of A.
  */

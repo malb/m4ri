@@ -4,7 +4,7 @@
  *
  * \author Martin Albrecht <martinralbrecht@googlemail.com>
  *
- * \example testsuite/test_ple.c
+ * \example tests/test_ple.c
  */
 
 #ifndef M4RI_PLE_RUSSIAN

@@ -139,7 +139,7 @@ else
   fi
 fi
 
-# For the testsuite. Detect if PAPI is installed. See http://icl.cs.utk.edu/papi/ .
+# For tests. Detect if PAPI is installed. See http://icl.cs.utk.edu/papi/ .
 
 if test -z "$m4ri_config_papi"; then
    AC_CHECK_LIB(papi, PAPI_start_counters,
@@ -259,6 +259,6 @@ AC_SUBST(RELEASE)
 
 AC_PROG_MAKE_SET
 
-AC_CONFIG_FILES([Makefile testsuite/Makefile m4ri/m4ri_config.h m4ri.pc])
+AC_CONFIG_FILES([Makefile tests/Makefile m4ri/m4ri_config.h m4ri.pc])
 AC_OUTPUT
 
