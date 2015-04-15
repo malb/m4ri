@@ -259,6 +259,6 @@ AC_SUBST(RELEASE)
 
 AC_PROG_MAKE_SET
 
-AC_CONFIG_FILES([Makefile tests/Makefile m4ri/m4ri_config.h m4ri.pc])
+AC_CONFIG_FILES([Makefile tests/Makefile bench/Makefile m4ri/m4ri_config.h m4ri.pc])
 AC_OUTPUT
 

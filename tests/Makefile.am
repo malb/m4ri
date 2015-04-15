@@ -1,0 +1,35 @@
+# TOPSRCDIR allows to compile this testsuite for a clone (and different revision) of this
+# repository. If the environment variable topsrcdir is the top source directory of the clone,
+# compile this testsuite as:
+#
+# make TOPSRCDIR="$topsrcdir"
+#
+# Finally, if you also leave out TOPSRCDIR and just run 'make' then the testsuite
+# is compiled against the current source tree.
+
+AUTOMAKE_OPTIONS = foreign
+TOPSRCDIR = ..
+DEFINES =
+AM_CFLAGS = -I$(TOPSRCDIR) -D_XOPEN_SOURCE=600 @CFLAGS@ $(DEFINES) @OPENMP_CFLAGS@ @PAPI_CFLAGS@
+
+STAGEDIR := $(realpath -s $(TOPSRCDIR)/.libs)
+AM_LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri -lm @PAPI_LDFLAGS@ @PAPI_LIBS@
+LDFLAGS = -no-install
+
+test_smallops_SOURCES = test_smallops.c testing.c
+
+TESTS = test_elimination \
+	test_multiplication \
+	test_trsm \
+	test_ple \
+	test_solve \
+	test_kernel \
+	test_random \
+	test_smallops \
+	test_transpose \
+	test_colswap \
+	test_misc \
+	test_invert
+
+check_PROGRAMS = $(TESTS)
+
