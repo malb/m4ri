@@ -133,50 +133,52 @@ questions, comments.
 # History
 
 * **2014/09/14** A new version of M4RI and M4RIE is available for
-  [download](http://m4ri.sagemath.org/downloads). The biggest change is that `A->offset` was
+  [download](https://bitbucket.org/malb/m4ri/downloads). The biggest change is that `A->offset` was
   dropped. Also, various small (multicore) performance improvements were implemented. The update for
   M4RIE is to maintain compatibility with M4RI. A few improvements were implemented for the mzd_poly
   module as well.
 
 * **2013/04/16** A new version of M4RI is available for
-  [download](http://m4ri.sagemath.org/downloads). A detailed changlog is available
+  [download](https://bitbucket.org/malb/m4ri/downloads). A detailed changlog is available
   [here](https://bitbucket.org/malb/m4ri/wiki/M4RI-20130416) for M4RI.
 
 * **2012/12/21** A new version of M4RI is available for
-  [download](http://m4ri.sagemath.org/downloads). A detailed changlog is available
+  [download](https://bitbucket.org/malb/m4ri/downloads). A detailed changlog is available
   [here](https://bitbucket.org/malb/m4ri/wiki/M4RI-20121224) for M4RI. See also this
   [blog post](https://martinralbrecht.wordpress.com/2012/12/21/m4ri-20121224/) for details.
 
 * **2012/06/13** New versions of both M4RI and M4RIE are available for
-  [download](http://m4ri.sagemath.org/downloads). A detailed changlog are available
+  [download](https://bitbucket.org/malb/m4ri/downloads). A detailed changlog are available
   [here](https://bitbucket.org/malb/m4ri/wiki/M4RI-20120613) for M4RI.
 
 * **2012/04/13** New versions of both M4RI and M4RIE are available for
-  [download](http://m4ri.sagemath.org/downloads). Detailed changlogs are available
+  [download](https://bitbucket.org/malb/m4ri/downloads). Detailed changlogs are available
   [here](https://bitbucket.org/malb/m4ri/wiki/M4RI-20120415) for M4RI and
   [here](https://bitbucket.org/malb/m4rie/wiki/M4RIE-20120415) for M4RIE.
 
 * **2011/12/04** New versions of both M4RI and M4RIE are available for
-  [download](http://m4ri.sagemath.org/downloads). The highlight of this version for M4RI is support
+  [download](https://bitbucket.org/malb/m4ri/downloads). The highlight of this version for M4RI is support
   for reading and writing 1-bit PNG images. The highlight of this release of M4RIE is much improved
   performance for $4 < e \leq 8$. Detailed changlogs are available
   [here](https://bitbucket.org/malb/m4ri/wiki/M4RI-20111203) for M4RI and
   [here](https://bitbucket.org/malb/m4rie/wiki/M4RIE-20111203) for M4RIE.
 
-* **2011/11/30** A [technical report](http://arxiv.org/abs/1111.6900) by Martin R. Albrecht is available describing the M4RIE library. In particular, Newton-John tables are introduced and our implementation of Karatsuba based matrix-matrix multiplication is described:  
-   **The M4RIE library for dense linear algebra over small fields with even characteristic**  
-   **Abstract:** In this work, we present the M4RIE library which implements efficient algorithms
-   for linear algebra with dense matrices over $\mathbb{F}_{2^e}$ for $2 \leq e \leq 10$. As the
-   name of the library indicates, it makes heavy use of the M4RI library both directly (i.e., by
-   calling it) and indirectly (i.e., by using its concepts). We provide an open-source GPLv2+ C
-   library for efficient linear algebra over $\mathbb{F}_{2^e}$ for $e$ small. In this library we
-   implemented an idea due to Bradshaw and Boothby which reduces matrix multiplication over
-   $\mathbb{F}_{p^k}$ to a series of matrix multiplications over $\mathbb{F}_p$. Furthermore, we
-   propose a caching technique - Newton-John tables - to avoid finite field multiplications which is
-   inspired by Kronrod's method ("M4RM") for matrix multiplication over $\mathbb{F}_2$. Using these
-   two techniques we provide asymptotically fast triangular solving with matrices (TRSM) and
-   PLE-based Gaussian elimination. As a result, we are able to significantly improve upon the state
-   of the art in dense linear algebra over $\mathbb{F}_{2^e}$ with $2 \leq e \leq 10$.
+* **2011/11/30** A [technical report](http://arxiv.org/abs/1111.6900) by Martin R. Albrecht is available describing the M4RIE library. In particular, Newton-John tables are introduced and our implementation of Karatsuba based matrix-matrix multiplication is described:
+
+  > **The M4RIE library for dense linear algebra over small fields with even characteristic**
+  >  
+  > *Abstract:* In this work, we present the M4RIE library which implements efficient algorithms for
+  > linear algebra with dense matrices over $\mathbb{F}_{2^e}$ for $2 \leq e \leq 10$. As the name of
+  > the library indicates, it makes heavy use of the M4RI library both directly (i.e., by calling it)
+  > and indirectly (i.e., by using its concepts). We provide an open-source GPLv2+ C library for
+  > efficient linear algebra over $\mathbb{F}_{2^e}$ for $e$ small. In this library we implemented an
+  > idea due to Bradshaw and Boothby which reduces matrix multiplication over $\mathbb{F}_{p^k}$ to a
+  > series of matrix multiplications over $\mathbb{F}_p$. Furthermore, we propose a caching
+  > technique - Newton-John tables - to avoid finite field multiplications which is inspired by
+  > Kronrod's method ("M4RM") for matrix multiplication over $\mathbb{F}_2$. Using these two
+  > techniques we provide asymptotically fast triangular solving with matrices (TRSM) and PLE-based
+  > Gaussian elimination. As a result, we are able to significantly improve upon the state of the art
+  > in dense linear algebra over $\mathbb{F}_{2^e}$ with $2 \leq e \leq 10$.
 
 * **2011/11/29** A [technical report](http://arxiv.org/abs/1111.6549) by Martin R. Albrecht, Gregory Bard and Clément Pernet is available describing the Gaussian elimination machinery (PLE decomposition) in the M4RI library:  
   **Efficient Dense Gaussian Elimination over the Finite Field with Two Elements.**  
@@ -190,51 +192,51 @@ questions, comments.
     approach.
 
 * **2011/10/10** A new release of M4RI is available for
-  [download](http://m4ri.sagemath.org/downloads/m4ri-20111004.tar.gz). See the
+  [download](https://bitbucket.org/malb/m4ri/downloads/m4ri-20111004.tar.gz). See the
   [release notes](https://bitbucket.org/malb/m4ri/wiki/M4RI-20111004) for the list of changes. Also,
   a new release of M4RIE is also available for
-  [download](http://m4ri.sagemath.org/downloads/m4rie-20111004.tar.gz). See the
+  [download](https://bitbucket.org/malb/m4ri/downloads/m4rie-20111004.tar.gz). See the
   [release notes](https://bitbucket.org/malb/m4rie/wiki/M4RIE-20111004) for the list of changes.
 
 * **2011/07/14** A new release of M4RI is available for
-  [download](http://m4ri.sagemath.org/downloads/m4ri-20110715.tar.gz). See the
+  [download](https://bitbucket.org/malb/m4ri/downloads/m4ri-20110715.tar.gz). See the
   [release notes](https://bitbucket.org/malb/m4ri/wiki/M4RI-20110715) for the list of changes. Also,
   a new release of M4RIE is also available for
-  [download](http://m4ri.sagemath.org/downloads/m4rie-20110715.tar.gz). M4RIE now relies on M4RI for
+  [download](https://bitbucket.org/malb/m4ri/downloads/m4rie-20110715.tar.gz). M4RIE now relies on M4RI for
   cache size and other hardware feature detection.
 
 * **2011/06/10** A new release of M4RI is available for
-  [download](http://m4ri.sagemath.org/downloads/m4ri-20110613.tar.gz). This version fixes various
+  [download](https://bitbucket.org/malb/m4ri/downloads/m4ri-20110613.tar.gz). This version fixes various
   issues when M4RI is built with OpenMP enabled.
 
 * **2011/06/01** A new release of M4RI is available for
-  [download.](http://m4ri.sagemath.org/downloads/m4ri-20110601.tar.gz) See the
+  [download.](https://bitbucket.org/malb/m4ri/downloads/m4ri-20110601.tar.gz) See the
   [release notes](https://bitbucket.org/malb/m4ri/wiki/M4RI-20110601) for the list of changes. Also,
   a new release of M4RIE is also available for
-  [download](http://m4ri.sagemath.org/downloads/m4rie-20110601.tar.gz). The only changes to M4RIE
+  [download](https://bitbucket.org/malb/m4ri/downloads/m4rie-20110601.tar.gz). The only changes to M4RIE
   are to ensure compatibility with M4RI version 20110601 and up.
 
 * **2011/04/13** We now have a [mailinglist](http://groups.google.com/group/m4ri-devel).
 
 * **2010/08/14** A new release of M4RI is available for
-  [download.](http://m4ri.sagemath.org/downloads/m4ri-20100817.tar.gz) The main changes are improved
+  [download.](https://bitbucket.org/malb/m4ri/downloads/m4ri-20100817.tar.gz) The main changes are improved
   automatic cache size detection and some clean ups necessary for M4RIE. A first official release of
-  M4RIE is also available for [download](http://m4ri.sagemath.org/downloads/m4rie-20100817.tar.gz).
+  M4RIE is also available for [download](https://bitbucket.org/malb/m4ri/downloads/m4rie-20100817.tar.gz).
 
-* **2010/07/13** A new [release](http://m4ri.sagemath.org/downloads/m4ri-20100701.tar.gz) is
+* **2010/07/13** A new [release](https://bitbucket.org/malb/m4ri/downloads/m4ri-20100701.tar.gz) is
   available for download. See the
   [release notes](http://www.bitbucket.org/malb/m4ri/wiki/M4RI-20100701) for details.
 
-* **2009/11/04** A new [release](http://m4ri.sagemath.org/downloads/m4ri-20091101.tar.gz) is
+* **2009/11/04** A new [release](https://bitbucket.org/malb/m4ri/downloads/m4ri-20091101.tar.gz) is
   available for download. See the
   [release notes](http://www.bitbucket.org/malb/m4ri/wiki/M4RI-20091101) for details.
 
-* **2009/04/09** A new [release](http://m4ri.sagemath.org/downloads/m4ri-20090409.tar.gz) is
+* **2009/04/09** A new [release](https://bitbucket.org/malb/m4ri/downloads/m4ri-20090409.tar.gz) is
   available for download. It heavily breaks backward compatibility but supports much bigger matrices
   than before. See the [release notes](http://www.bitbucket.org/malb/m4ri/wiki/M4RI-20090409) for
   details.
 
-* **2009/01/05** A new [release](http://m4ri.sagemath.org/downloads/m4ri-20090105.tar.gz) is
+* **2009/01/05** A new [release](https://bitbucket.org/malb/m4ri/downloads/m4ri-20090105.tar.gz) is
   available for download. It contains new features, performance enhancements and bug fixes.
   [Release notes](http://www.bitbucket.org/malb/m4ri/wiki/M4RI-20090105) are available in the wiki.
 
@@ -244,7 +246,7 @@ questions, comments.
   Finally, we updated the [peformance](./performance.html) data for GAP and Magma on the Core 2 Duo
   with improved timings.
 
-* **2008/10/28** A new [release](http://m4ri.sagemath.org/downloads/m4ri-20081029.tar.gz) is
+* **2008/10/28** A new [release](https://bitbucket.org/malb/m4ri/downloads/m4ri-20081029.tar.gz) is
   available for download. It contains mainly bugfixes but starting with this release triangular
   solving with matrices (TRSM) is fully supported. Also LUP factorisation (i.e. on full rank
   matrices) seems to be working now but it is not optimised at all.
@@ -254,23 +256,23 @@ questions, comments.
   the [Sage Days 10](http://wiki.sagemath.org/days10) talk about matrix multiplication in the M4RI
   library are available online.
 
-* **2008/09/22** A new [release](http://m4ri.sagemath.org/downloads/m4ri-20080909.tar.gz) is
+* **2008/09/22** A new [release](https://bitbucket.org/malb/m4ri/downloads/m4ri-20080909.tar.gz) is
   available. It is identical to the version of M4RI shipped with [Sage](http://www.sagemath.org)
   3.1.2 and contains many build fixes for a wide range of platforms. Sage (and thus M4RI) supportes
   x86 Linux, x86_64 Linux, ia64 Linux, x86 OSX and ppc OSX. M4RI also supports Windows and Solaris
   10.
 
-* **2008/08/26** This [release](http://m4ri.sagemath.org/downloads/m4ri-20080826.tar.gz) is a pure
+* **2008/08/26** This [release](https://bitbucket.org/malb/m4ri/downloads/m4ri-20080826.tar.gz) is a pure
   bugfix release. Before this bugfix, if the input matrices were very non-square either wrong
   results or SIGSEGVs could be observed.
 
-* **2008/08/21** A new [release](http://m4ri.sagemath.org/downloads/m4ri-20080821.tar.gz) is
+* **2008/08/21** A new [release](https://bitbucket.org/malb/m4ri/downloads/m4ri-20080821.tar.gz) is
   available. This release contains Clément Pernet's latest LQUP and TRSM development code. LQUP
   still lacks a basecase but TRSM should be fairly complete. No attempts were made so far to
   optimise things. Furthermore, this release contains an improved strategy for choosing $k$ in M4RM
   which improves performance on the Core2Duo.
 
-* **2008/08/17** A new [release](http://m4ri.sagemath.org/downloads/m4ri-20080817.tar.gz) is
+* **2008/08/17** A new [release](https://bitbucket.org/malb/m4ri/downloads/m4ri-20080817.tar.gz) is
   available. This release adds a simple memory manager for systems with slow malloc/free syscalls.
   Also, the initialisation (m4ri_init) and finalisation (m4ri_fini) routines are now called
   automatically when the library is loaded/unloaded. This is tested with GCC and SunCC but not with
@@ -279,7 +281,7 @@ questions, comments.
   instruction how to enable multi-core support. This release does not contain Clément Pernet's
   latest LQUP patch.
 
-* **2008/06/24** A new [release](http://m4ri.sagemath.org/downloads/m4ri-20080624.tar.gz) is
+* **2008/06/24** A new [release](https://bitbucket.org/malb/m4ri/downloads/m4ri-20080624.tar.gz) is
   available. This release uses the libtool
   [-release mechanism](http://www.gnu.org/software/libtool/manual.html#Versioning) to ensure binary
   (in)compatibility between releases since - again - the API changed: since the project is quite
