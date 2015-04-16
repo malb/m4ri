@@ -168,28 +168,30 @@ questions, comments.
   > **The M4RIE library for dense linear algebra over small fields with even characteristic**
   >  
   > *Abstract:* In this work, we present the M4RIE library which implements efficient algorithms for
-  > linear algebra with dense matrices over $\mathbb{F}_{2^e}$ for $2 \leq e \leq 10$. As the name of
-  > the library indicates, it makes heavy use of the M4RI library both directly (i.e., by calling it)
-  > and indirectly (i.e., by using its concepts). We provide an open-source GPLv2+ C library for
-  > efficient linear algebra over $\mathbb{F}_{2^e}$ for $e$ small. In this library we implemented an
-  > idea due to Bradshaw and Boothby which reduces matrix multiplication over $\mathbb{F}_{p^k}$ to a
-  > series of matrix multiplications over $\mathbb{F}_p$. Furthermore, we propose a caching
-  > technique - Newton-John tables - to avoid finite field multiplications which is inspired by
-  > Kronrod's method ("M4RM") for matrix multiplication over $\mathbb{F}_2$. Using these two
-  > techniques we provide asymptotically fast triangular solving with matrices (TRSM) and PLE-based
-  > Gaussian elimination. As a result, we are able to significantly improve upon the state of the art
-  > in dense linear algebra over $\mathbb{F}_{2^e}$ with $2 \leq e \leq 10$.
+  > linear algebra with dense matrices over GF(2^e) for 2 ≤ e ≤ 10. As the name of the library
+  > indicates, it makes heavy use of the M4RI library both directly (i.e., by calling it) and
+  > indirectly (i.e., by using its concepts). We provide an open-source GPLv2+ C library for
+  > efficient linear algebra over GF(2^e) for e small. In this library we implemented an idea due to
+  > Bradshaw and Boothby which reduces matrix multiplication over GF(p^k) to a series of matrix
+  > multiplications over GF(p). Furthermore, we propose a caching technique - Newton-John tables -
+  > to avoid finite field multiplications which is inspired by Kronrod's method ("M4RM") for matrix
+  > multiplication over GF(2). Using these two techniques we provide asymptotically fast triangular
+  > solving with matrices (TRSM) and PLE-based Gaussian elimination. As a result, we are able to
+  > significantly improve upon the state of the art in dense linear algebra over $F(2^e) with 2 ≤ e
+  > ≤ 10.
 
-* **2011/11/29** A [technical report](http://arxiv.org/abs/1111.6549) by Martin R. Albrecht, Gregory Bard and Clément Pernet is available describing the Gaussian elimination machinery (PLE decomposition) in the M4RI library:  
-  **Efficient Dense Gaussian Elimination over the Finite Field with Two Elements.**  
-  **Abstract:** In this work we describe an efficient implementation of a hierarchy of algorithms
-    for Gaussian elimination upon dense matrices over the field with two elements. We discuss both
-    well-known and new algorithms as well as our implementations in the M4RI library, which has been
-    adopted into Sage. The focus of our discussion is a block iterative algorithm for PLE
-    decomposition which is inspired by the M4RI algorithm. The implementation presented in this work
-    provides considerable performance gains in practice when compared to the previously fastest
-    implementation. We provide performance figures on x86_64 CPUs to demonstrate the alacrity of our
-    approach.
+* **2011/11/29** A [technical report](http://arxiv.org/abs/1111.6549) by Martin R. Albrecht, Gregory Bard and Clément Pernet is available describing the Gaussian elimination machinery (PLE decomposition) in the M4RI library:
+
+  > **Efficient Dense Gaussian Elimination over the Finite Field with Two Elements.**
+  >  
+  > *Abstract:* In this work we describe an efficient implementation of a hierarchy of algorithms
+  > for Gaussian elimination upon dense matrices over the field with two elements. We discuss both
+  > well-known and new algorithms as well as our implementations in the M4RI library, which has been
+  > adopted into Sage. The focus of our discussion is a block iterative algorithm for PLE
+  > decomposition which is inspired by the M4RI algorithm. The implementation presented in this work
+  > provides considerable performance gains in practice when compared to the previously fastest
+  > implementation. We provide performance figures on x86_64 CPUs to demonstrate the alacrity of our
+  > approach.
 
 * **2011/10/10** A new release of M4RI is available for
   [download](https://bitbucket.org/malb/m4ri/downloads/m4ri-20111004.tar.gz). See the
