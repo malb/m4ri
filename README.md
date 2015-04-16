@@ -8,7 +8,6 @@ General Public License Version 2 or later (GPLv2+).
 
 # Main Features #
 
-
  * basic arithmetic with dense matrices over F2 (addition, equality testing, stacking, augmenting,
    sub-matrices, randomisation);
 
@@ -29,6 +28,9 @@ General Public License Version 2 or later (GPLv2+).
  * preliminary support for parallelisation on shared memory systems via OpenMP;
 
  * and support for Linux, Solaris, and OS X (GCC).
+
+See [further reading](https://bitbucket.org/malb/m4ri/src/HEAD/further.md?at=master) for implemented
+algorithms.
 
 # Performance
 
@@ -108,7 +110,7 @@ hosting and general infrastructure in the past.
 
 # Citing M4RI
 
-See [Further Reading](further.md).
+See [Further Reading](https://bitbucket.org/malb/m4ri/src/HEAD/further.md?at=master).
 
 
 # Contact
