@@ -110,7 +110,19 @@ hosting and general infrastructure in the past.
 
 # Citing M4RI
 
-See [Further Reading](https://bitbucket.org/malb/m4ri/src/HEAD/further.md?at=master).
+If you use our libraries in a non-trivial part of your research please consider citing them as
+follows:
+
+	@manual{M4RI,
+	    key          = "M4RI",
+	    author       = "Martin Albrecht and Gregory Bard",
+	    organization = "The M4RI~Team",
+	    title        = "{The M4RI Library -- Version 20121224}",
+	    year         = 2012,
+	    url          = "\url{http://m4ri.sagemath.org}",
+	}
+
+and cite the appropriate publications mentioned in [Further Reading](https://bitbucket.org/malb/m4ri/src/HEAD/further.md?at=master).
 
 
 # Contact
