@@ -29,7 +29,7 @@ General Public License Version 2 or later (GPLv2+).
 
  * and support for Linux, Solaris, and OS X (GCC).
 
-See [further reading](https://bitbucket.org/malb/m4ri/src/HEAD/further.md?at=master) for implemented
+See [further reading](https://bitbucket.org/malb/m4ri/wiki/Further%20Reading) for implemented
 algorithms.
 
 # Performance
@@ -122,7 +122,7 @@ follows:
 	    url          = "\url{http://m4ri.sagemath.org}",
 	}
 
-and cite the appropriate publications mentioned in [Further Reading](https://bitbucket.org/malb/m4ri/src/HEAD/further.md?at=master).
+and cite the appropriate publications mentioned in [Further Reading](https://bitbucket.org/malb/m4ri/wiki/Further%20Reading).
 
 
 # Contact
