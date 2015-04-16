@@ -71,6 +71,7 @@ built, you can build the PDF version as follows:
     cd doc/latex/
     make
 
+The documentation is also available [here](http://malb.bitbucket.org/m4ri/).
 
 # Contributors
 
