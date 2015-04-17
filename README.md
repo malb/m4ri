@@ -29,12 +29,12 @@ General Public License Version 2 or later (GPLv2+).
 
  * and support for Linux, Solaris, and OS X (GCC).
 
-See [further reading](https://bitbucket.org/malb/m4ri/wiki/Further%20Reading) for implemented
+See [Further Reading](https://bitbucket.org/malb/m4ri/wiki/Further%20Reading) for implemented
 algorithms.
 
 # Performance
 
-See [Performance](performance.md).
+See [Performance](http://malb.bitbucket.org/m4ri-e-website-2008-2015/performance.html).
 
 # OpenMP Support #
 
@@ -132,6 +132,11 @@ Please contact our [mailinglist](http://groups.google.com/group/m4ri-devel) if t
 questions, comments.
 
 # History
+
+* **2015/0417** Our hosting for http://m4ri.sagemath.org at University of Washington. is
+  discontinued and we’re moving everything over to https://bitbucket.org/malb/m4ri. A copy of the
+  old website (except for large files) is available at
+  http://malb.bitbucket.org/m4ri-e-website-2008-2015/.
 
 * **2014/09/14** A new version of M4RI and M4RIE is available for
   [download](https://bitbucket.org/malb/m4ri/downloads). The biggest change is that `A->offset` was
