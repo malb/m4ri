@@ -55,7 +55,16 @@ you need to first run the following command:
 
     autoreconf --install
 
-Then follow the instructions in the file INSTALL.
+Then do the usual
+
+    ./configure
+    make
+    make check
+
+For details see the instructions in the file INSTALL. Note that if your system does not have
+`autoreconf` installed, you can download release tarballs from
+[drone.io](https://drone.io/bitbucket.org/malb/m4ri/files) which can be built and installed without
+it.
 
 # Documentation #
 
