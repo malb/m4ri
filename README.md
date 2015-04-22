@@ -34,7 +34,7 @@ algorithms.
 
 # Performance
 
-See [Performance](http://malb.bitbucket.org/m4ri-e-website-2008-2015/performance.html).
+See [Performance](https://bitbucket.org/malb/m4ri/wiki/Performance).
 
 # OpenMP Support #
 
