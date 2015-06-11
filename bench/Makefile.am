@@ -32,8 +32,7 @@ CPUCYCLES_DIR = cpucycles-20060326
 CPUCYCLES_EXTRA_DIST = $(srcdir)/cpucycles-20060326/*.c \
                        $(srcdir)/cpucycles-20060326/*.h \
                        $(srcdir)/cpucycles-20060326/compile \
-                       $(srcdir)/cpucycles-20060326/do \
-                       $(srcdir)/cpucycles-20060326/do.notes
+                       $(srcdir)/cpucycles-20060326/do 
 
 EXTRA_DIST = $(CPUCYCLES_EXTRA_DIST)
 
