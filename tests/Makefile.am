@@ -8,15 +8,17 @@
 # is compiled against the current source tree.
 
 AUTOMAKE_OPTIONS = foreign
-TOPSRCDIR = ..
+TOPSRCDIR = $(srcdir)/..
+TOPBUILDDIR = $(builddir)/..
 DEFINES =
-AM_CFLAGS = -I$(TOPSRCDIR) -D_XOPEN_SOURCE=600 @CFLAGS@ $(DEFINES) @OPENMP_CFLAGS@ @PAPI_CFLAGS@
+# include TOPBUILDIR for m4ri_config.h
+AM_CFLAGS = -I$(TOPSRCDIR) -I$(TOPBUILDDIR) -D_XOPEN_SOURCE=600 @CFLAGS@ $(DEFINES) @OPENMP_CFLAGS@ @PAPI_CFLAGS@
 
-STAGEDIR := $(realpath -s $(TOPSRCDIR)/.libs)
+STAGEDIR := $(realpath -s $(TOPBUILDDIR)/.libs)
 AM_LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri -lm @PAPI_LDFLAGS@ @PAPI_LIBS@
 LDFLAGS = -no-install
 
-test_smallops_SOURCES = test_smallops.c testing.c
+test_smallops_SOURCES = test_smallops.c testing.c testing.h
 
 TESTS = test_elimination \
 	test_multiplication \
