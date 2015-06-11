@@ -20,6 +20,7 @@ LDFLAGS = -no-install
 
 BENCH = bench_elimination \
 	bench_multiplication \
+        bench_m4rm \
 	bench_ple \
 	bench_trsm \
 	bench_elimination_sparse \
@@ -40,6 +41,7 @@ bin_PROGRAMS = $(BENCH)
 
 bench_elimination_SOURCES = bench_elimination.c benchmarking.c benchmarking.h 
 bench_multiplication_SOURCES = bench_multiplication.c benchmarking.c benchmarking.h
+bench_m4rm_SOURCES = bench_m4rm.c benchmarking.c benchmarking.h
 bench_ple_SOURCES = bench_ple.c benchmarking.c benchmarking.h
 bench_trsm_SOURCES = bench_trsm.c benchmarking.c benchmarking.h
 bench_elimination_sparse_SOURCES = bench_elimination_sparse.c benchmarking.c benchmarking.h
