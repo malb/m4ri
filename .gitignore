@@ -49,3 +49,4 @@ test_trsm
 /m4ri/config.h.in
 /m4ri/m4ri_config.h
 /m4ri/stamp-h1
+/bench/bench_m4rm
