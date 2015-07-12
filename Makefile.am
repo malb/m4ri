@@ -60,5 +60,5 @@ pkgconfig_DATA = m4ri.pc
 libm4ri_la_LDFLAGS = -release 0.0.$(RELEASE) -no-undefined
 libm4ri_la_LIBADD = $(LIBPNG_LIBADD)
 
-SUBDIRS = . tests bench
+SUBDIRS = . tests
 
