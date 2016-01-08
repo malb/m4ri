@@ -252,8 +252,9 @@ static inline wi_t mzd_rows_in_block(mzd_t const *M, int n) {
       return (1 << M->blockrows_log) - M->row_offset;
     } else {
       int const last_block = mzd_row_to_block(M, M->nrows - 1);
-      if (n < last_block)
+      if (n < last_block) {
         return (1 << M->blockrows_log);
+      }
       return M->nrows + M->row_offset - (n << M->blockrows_log);
     }
   }
@@ -277,8 +278,9 @@ static inline wi_t mzd_remaining_rows_in_block(mzd_t const *M, rci_t r) {
       return (1 << M->blockrows_log) - M->row_offset - r;
     } else {
       int const last_block = mzd_row_to_block(M, M->nrows - 1);
-      if (n < last_block)
+      if (n < last_block) {
         return (1 << M->blockrows_log) - r;
+      }
       return M->nrows + M->row_offset - (n << M->blockrows_log) - r;
     }
   }
@@ -377,8 +379,9 @@ static inline mzd_t const *mzd_init_window_const(mzd_t const *M, rci_t const low
  */
 
 static inline void _mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb, wi_t const startblock) {
-  if ((rowa == rowb) || (startblock >= M->width))
+  if ((rowa == rowb) || (startblock >= M->width)) {
     return;
+  }
 
   wi_t width = M->width - startblock - 1;
   word *a    = M->rows[rowa] + startblock;
@@ -445,8 +448,9 @@ void mzd_col_swap(mzd_t *M, rci_t const cola, rci_t const colb);
 
 static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const colb, rci_t const start_row,
                                         rci_t const stop_row) {
-  if (cola == colb)
+  if (cola == colb) {
     return;
+  }
 
   rci_t const _cola = cola;
   rci_t const _colb = colb;
@@ -467,8 +471,9 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
   int count = MIN(mzd_remaining_rows_in_block(M, start_row), count_remaining);
 
   // Apparently we're calling with start_row == stop_row sometimes (seems a bug to me).
-  if (count <= 0)
+  if (count <= 0) {
     return;
+  }
 
   if (a_word == b_word) {
     while (1) {
@@ -509,8 +514,9 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
         ptr += rowstride;
       }
       block++;
-      if ((count = MIN(mzd_rows_in_block(M, block), count_remaining)) <= 0)
+      if ((count = MIN(mzd_rows_in_block(M, block), count_remaining)) <= 0) {
         break;
+      }
       ptr = mzd_first_row_next_block(M, block);
     }
   } else {
@@ -533,13 +539,15 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
         min_ptr += rowstride;
       }
       block++;
-      if ((count = MIN(mzd_rows_in_block(M, +block), count_remaining)) <= 0)
+      if ((count = MIN(mzd_rows_in_block(M, +block), count_remaining)) <= 0) {
         break;
+      }
       ptr = mzd_first_row_next_block(M, block);
-      if (min_bit == a_bit)
+      if (min_bit == a_bit) {
         min_ptr = ptr + a_word;
-      else
+      } else {
         min_ptr = ptr + b_word;
+      }
     }
   }
 
@@ -592,8 +600,9 @@ static inline void mzd_xor_bits(mzd_t const *M, rci_t const x, rci_t const y, in
   wi_t const block = y / m4ri_radix;
   M->rows[x][block] ^= values << spot;
   int const space = m4ri_radix - spot;
-  if (n > space)
+  if (n > space) {
     M->rows[x][block + 1] ^= values >> space;
+  }
 }
 
 /**
@@ -614,8 +623,9 @@ static inline void mzd_and_bits(mzd_t const *M, rci_t const x, rci_t const y, in
   wi_t const block = y / m4ri_radix;
   M->rows[x][block] &= values << spot;
   int const space = m4ri_radix - spot;
-  if (n > space)
+  if (n > space) {
     M->rows[x][block + 1] &= values >> space;
+  }
 }
 
 /**
@@ -634,8 +644,9 @@ static inline void mzd_clear_bits(mzd_t const *M, rci_t const x, rci_t const y, 
   wi_t const block = y / m4ri_radix;
   M->rows[x][block] &= ~(values << spot);
   int const space = m4ri_radix - spot;
-  if (n > space)
+  if (n > space) {
     M->rows[x][block + 1] &= ~(values >> space);
+  }
 }
 
 /**
@@ -684,8 +695,9 @@ static inline void mzd_row_add_offset(mzd_t *M, rci_t dstrow, rci_t srcrow, rci_
   }
 #endif
   wi_t i = -1;
-  while (++i < wide)
+  while (++i < wide) {
     dst[i] ^= src[i];
+  }
   /*
    * Revert possibly non-zero excess bits.
    * Note that i == wide here, and wide can be 0.
@@ -1167,9 +1179,11 @@ static inline void mzd_combine(mzd_t *C,       rci_t const c_row, wi_t const c_s
                                mzd_t const *B, rci_t const b_row, wi_t const b_startblock) {
 
   if ((C == A) & (a_row == c_row) & (a_startblock == c_startblock))
+  if ((C == A) & (a_row == c_row) & (a_startblock == c_startblock)) {
     mzd_combine_even_in_place(C, c_row, c_startblock, B, b_row, b_startblock);
-  else
+  } else {
     mzd_combine_even(C, c_row, c_startblock, A, a_row, a_startblock, B, b_row, b_startblock);
+  }
   return;
 }
 
@@ -1269,8 +1283,9 @@ rci_t mzd_first_zero_row(mzd_t const *A);
 
 static inline word mzd_hash(mzd_t const *A) {
   word hash = 0;
-  for (rci_t r = 0; r < A->nrows; ++r)
+  for (rci_t r = 0; r < A->nrows; ++r) {
     hash ^= rotate_word(calculate_hash(A->rows[r], A->width), r % m4ri_radix);
+  }
   return hash;
 }
 

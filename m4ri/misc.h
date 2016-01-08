@@ -667,7 +667,7 @@ static inline void *m4ri_mm_malloc_aligned(size_t size, size_t alignment) {
    m4ri_die("m4ri_mm_malloc: malloc returned NULL\n");
    return NULL; /* unreachable */
  }
- else return newthing;
+ else { return newthing; }
 }
 
 /**
@@ -694,7 +694,7 @@ static inline void *m4ri_mm_malloc(size_t size) {
     m4ri_die("m4ri_mm_malloc: malloc returned NULL\n");
     return NULL; /* unreachable */
   }
-  else return newthing;
+  else { return newthing; }
 }
 
 

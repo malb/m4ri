@@ -26,8 +26,9 @@
 
 static inline word calculate_hash(word const* rowptr, wi_t wide) {
   word hash = 0;
-  for (word const* ptr = rowptr; ptr < rowptr + wide; ++ptr)
+  for (word const* ptr = rowptr; ptr < rowptr + wide; ++ptr) {
     hash ^= *ptr;
+}
   return hash;
 }
 
