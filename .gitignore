@@ -32,6 +32,7 @@ test_smallops
 test_solve
 test_transpose
 test_trsm
+test_alignment
 /bench/bench_elimination
 /bench/bench_elimination_sparse
 /bench/bench_invert
@@ -50,3 +51,5 @@ test_trsm
 /m4ri/m4ri_config.h
 /m4ri/stamp-h1
 /bench/bench_m4rm
+/m4ri/config.h.in~
+

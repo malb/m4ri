@@ -631,12 +631,22 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
   int kk = 6 * k;
 
   mzd_t *U  = mzd_init(kk, ncols);
-  mzd_t *T0 = mzd_init(__M4RI_TWOPOW(k), ncols);
-  mzd_t *T1 = mzd_init(__M4RI_TWOPOW(k), ncols);
-  mzd_t *T2 = mzd_init(__M4RI_TWOPOW(k), ncols);
-  mzd_t *T3 = mzd_init(__M4RI_TWOPOW(k), ncols);
-  mzd_t *T4 = mzd_init(__M4RI_TWOPOW(k), ncols);
-  mzd_t *T5 = mzd_init(__M4RI_TWOPOW(k), ncols);
+  mzd_t *T  = mzd_init(6*__M4RI_TWOPOW(k), ncols+m4ri_radix);
+
+#if __M4RI_HAVE_SSE2
+  assert( (__M4RI_ALIGNMENT(A->rows[0],16) == 8) | (__M4RI_ALIGNMENT(A->rows[0],16) == 0) );
+  const rci_t align_offset = __M4RI_ALIGNMENT(A->rows[0],16)*8;
+#else
+  const rci_t align_offset = 0;
+#endif
+
+  mzd_t *T0 = mzd_init_window(T, 0*__M4RI_TWOPOW(k), align_offset, 1*__M4RI_TWOPOW(k), ncols + align_offset);
+  mzd_t *T1 = mzd_init_window(T, 1*__M4RI_TWOPOW(k), align_offset, 2*__M4RI_TWOPOW(k), ncols + align_offset);
+  mzd_t *T2 = mzd_init_window(T, 2*__M4RI_TWOPOW(k), align_offset, 3*__M4RI_TWOPOW(k), ncols + align_offset);
+  mzd_t *T3 = mzd_init_window(T, 3*__M4RI_TWOPOW(k), align_offset, 4*__M4RI_TWOPOW(k), ncols + align_offset);
+  mzd_t *T4 = mzd_init_window(T, 4*__M4RI_TWOPOW(k), align_offset, 5*__M4RI_TWOPOW(k), ncols + align_offset);
+  mzd_t *T5 = mzd_init_window(T, 5*__M4RI_TWOPOW(k), align_offset, 6*__M4RI_TWOPOW(k), ncols + align_offset);
+
   rci_t *L0 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
   rci_t *L1 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
   rci_t *L2 = (rci_t*)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
@@ -817,6 +827,8 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
   mzd_free(T5);
   m4ri_mm_free(L5);
   mzd_free(U);
+
+  mzd_free(T);
 
   __M4RI_DD_MZD(A);
   __M4RI_DD_RCI(r);
