@@ -226,7 +226,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
 
 */
 
-mzd_t *mzd_init_window(mzd_t *M, rci_t lowr, rci_t lowc, rci_t highr, rci_t highc) {
+mzd_t *mzd_init_window(mzd_t *M, const rci_t lowr, const rci_t lowc, const rci_t highr, const rci_t highc) {
   assert(lowc % m4ri_radix == 0);
 
   mzd_t *W = mzd_t_malloc();
