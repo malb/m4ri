@@ -1178,7 +1178,6 @@ static inline void mzd_combine(mzd_t *C,       rci_t const c_row, wi_t const c_s
                                mzd_t const *A, rci_t const a_row, wi_t const a_startblock, 
                                mzd_t const *B, rci_t const b_row, wi_t const b_startblock) {
 
-  if ((C == A) & (a_row == c_row) & (a_startblock == c_startblock))
   if ((C == A) & (a_row == c_row) & (a_startblock == c_startblock)) {
     mzd_combine_even_in_place(C, c_row, c_startblock, B, b_row, b_startblock);
   } else {
