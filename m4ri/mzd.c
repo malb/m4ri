@@ -2010,7 +2010,7 @@ void mzd_copy_row(mzd_t *B, rci_t i, mzd_t const *A, rci_t j) {
     b[width] = (b[width] & ~mask_end) | (a[width] & mask_end);
     
   } else {
-    b[0] = b[0] | (a[0]& mask_end) | (b[0] & ~mask_end);
+    b[0] = (a[0]& mask_end) | (b[0] & ~mask_end);
   }
 
   __M4RI_DD_ROW(B, i);
