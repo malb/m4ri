@@ -799,11 +799,28 @@ mzd_t *_mzd_mul_va(mzd_t *C, mzd_t const *v, mzd_t const *A, int const clear);
  * \brief Fill matrix M with uniformly distributed bits.
  *
  * \param M Matrix
- *
- * \todo Allow the user to provide a RNG callback.
  */
 
 void mzd_randomize(mzd_t *M);
+
+/**
+ * \brief Random callback that produces uniformly distributed random
+ * words on every call.
+ *
+ * \param data callback data
+ *
+ * \return uniformly distributed random word
+ */
+typedef word (*m4ri_random_callback)(void* data);
+
+/**
+ * \brief Fill matrix M with uniformly distributed bits.
+ *
+ * \param M Matrix
+ * \param rc callback
+ * \param data callback data passed to every call to rc
+ */
+void mzd_randomize_custom(mzd_t *M, m4ri_random_callback rc, void* data);
 
 /**
  * \brief Set the matrix M to the value equivalent to the integer
