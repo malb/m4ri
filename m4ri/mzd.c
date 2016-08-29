@@ -1563,6 +1563,18 @@ void mzd_randomize(mzd_t *A) {
   __M4RI_DD_MZD(A);
 }
 
+void mzd_randomize_custom(mzd_t *A, m4ri_random_callback rc, void* data) {
+  wi_t const width = A->width - 1;
+  word const mask_end = A->high_bitmask;
+  for(rci_t i = 0; i < A->nrows; ++i) {
+    for(wi_t j = 0; j < width; ++j)
+      A->rows[i][j] = rc(data);
+    A->rows[i][width] ^= (A->rows[i][width] ^ rc(data)) & mask_end;
+  }
+
+  __M4RI_DD_MZD(A);
+}
+
 void mzd_set_ui( mzd_t *A, unsigned int value) {
   word const mask_end = A->high_bitmask;
   

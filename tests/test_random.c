@@ -27,17 +27,25 @@
 #include <stdlib.h>
 #include <m4ri/m4ri.h>
 
+static word custom_random(void *data)
+{
+  return m4ri_random_word();
+}
+
 int test_random(rci_t m, rci_t n)
 {
   mzd_t *A = mzd_init(m + 3, n + 64);
   mzd_t *W = mzd_init_window(A, 1, 0, m + 1, n);
   mzd_t *M = mzd_init(m, n);
+  mzd_t *N = mzd_init(m, n);
   printf("randomize m: %4d, n: %4d ", m, n);
   srandom(17);
   mzd_randomize(M);
   srandom(17);
   mzd_randomize(W);
-  int failure = !mzd_equal(M, W);
+  srandom(17);
+  mzd_randomize_custom(N, &custom_random, NULL);
+  int failure = !mzd_equal(M, W) | !mzd_equal(M, N);
   if (failure)
   {
 #if 1
@@ -52,6 +60,7 @@ int test_random(rci_t m, rci_t n)
   }
   else
     printf("passed\n");
+  mzd_free(N);
   mzd_free(M);
   mzd_free(A);
   return failure;
