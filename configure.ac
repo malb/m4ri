@@ -221,7 +221,7 @@ AC_MSG_RESULT([${want_png}])
 if test "x${want_png}" = "xyes" ; then
    PKG_CHECK_MODULES([PNG], [libpng],
       [have_libpng="yes"; 
-       LIBPNG_LIBADD=`pkg-config --libs libpng`;
+       LIBPNG_LIBADD=${PNG_LIBS};
        M4RI_USE_PNG_PC=libpng],
       [have_libpng="no"])
    if ! test "x${have_libpng}" = "xyes" ; then
