@@ -220,7 +220,9 @@ AC_MSG_RESULT([${want_png}])
 
 if test "x${want_png}" = "xyes" ; then
    PKG_CHECK_MODULES([PNG], [libpng],
-      [have_libpng="yes"; LIBPNG_LIBADD=`pkg-config --libs libpng`],
+      [have_libpng="yes"; 
+       LIBPNG_LIBADD=`pkg-config --libs libpng`;
+       M4RI_USE_PNG_PC=libpng],
       [have_libpng="no"])
    if ! test "x${have_libpng}" = "xyes" ; then
       AC_CHECK_LIB([png],
@@ -239,6 +241,7 @@ if test "x${want_png}" = "xyes" ; then
                ])
             ])
         ])
+       RAW_LIBPNG=${LIBPNG_LIBADD}
    fi
    if test "x${have_libpng}" = "xno" ; then
       AC_MSG_WARN([Can not find a usuable PNG library. Make sure that CPPFLAGS and LDFLAGS are correctly set.])
@@ -249,6 +252,8 @@ if test "x${have_libpng}" = "xyes" ; then
    M4RI_HAVE_LIBPNG=1
    AC_SUBST(M4RI_HAVE_LIBPNG)
    AC_SUBST(LIBPNG_LIBADD)
+   AC_SUBST(M4RI_USE_PNG_PC)
+   AC_SUBST(RAW_LIBPNG)
 else
    M4RI_HAVE_LIBPNG=0
    AC_SUBST(M4RI_HAVE_LIBPNG)
