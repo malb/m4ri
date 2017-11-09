@@ -45,48 +45,25 @@ void mzd_info(const mzd_t *A, int do_rank) {
 
 #define SAFECHAR (m4ri_radix + m4ri_radix / 4 + 1)
 
-void mzd_print(mzd_t const *M) {
+void mzd_fprint_row(FILE* stream, mzd_t const *M, const rci_t i) {
   char temp[SAFECHAR];
-  for (rci_t i = 0; i < M->nrows; ++i) {
-    printf("[");
-    word *row = M->rows[i];
-    for (wi_t j = 0; j < M->width - 1; ++j) {
-      m4ri_word_to_str(temp, row[j], 1);
-      printf("%s|", temp);
-    }
-    row = row + M->width - 1;
-    int const wide = (M->ncols % m4ri_radix) ? M->ncols % m4ri_radix : m4ri_radix;
-    for (int j = 0; j < wide; ++j) {
-      if(j != 0 && (j % 4) == 0)
-        printf(":");
-      if (__M4RI_GET_BIT(*row, j)) 
-        printf("1");
-      else
-        printf(" ");
-    }
-    printf("]\n");
-  }
-}
-
-void mzd_print_row(mzd_t const *M, const rci_t i) {
-  char temp[SAFECHAR];
-  printf("[");
+  fprintf(stream, "[");
   word *row = M->rows[i];
   for (wi_t j = 0; j < M->width - 1; ++j) {
     m4ri_word_to_str(temp, row[j], 1);
-    printf("%s|", temp);
+    fprintf(stream, "%s|", temp);
   }
   row = row + M->width - 1;
   int const wide = (M->ncols % m4ri_radix) ? M->ncols % m4ri_radix : m4ri_radix;
   for (int j = 0; j < wide; ++j) {
     if(j != 0 && (j % 4) == 0)
-      printf(":");
+      fprintf(stream, ":");
     if (__M4RI_GET_BIT(*row, j)) 
-      printf("1");
+      fprintf(stream, "1");
     else
-      printf(" ");
+      fprintf(stream, " ");
   }
-  printf("]\n");
+  fprintf(stream, "]\n");
 }
 
 
