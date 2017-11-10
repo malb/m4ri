@@ -32,14 +32,16 @@
 #include <m4ri/mzd.h>
 
 /**
- * \brief Print a matrix to stdout. 
+ * \brief Print row i of M to an output stream.
  *
  * The output will contain colons between every 4-th column.
  *
+ * \param stream Output stream
  * \param M Matrix
+ * \param i Row to print
  */
 
-void mzd_print(mzd_t const *M);
+void mzd_fprint_row(FILE* stream, mzd_t const *M, const rci_t i);
 
 /**
  * \brief Print row i of M to stdout. 
@@ -50,7 +52,36 @@ void mzd_print(mzd_t const *M);
  * \param i Row to print
  */
 
-void mzd_print_row(mzd_t const *M, const rci_t i);
+static inline void mzd_print_row(mzd_t const *M, const rci_t i) {
+  mzd_fprint_row(stdout, M, i);
+}
+
+/**
+ * \brief Print a matrix to an output stream.
+ *
+ * The output will contain colons between every 4-th column.
+ *
+ * \param stream Output stream
+ * \param M Matrix
+ */
+
+static inline void mzd_fprint(FILE* stream, mzd_t const *M) {
+  for (rci_t i = 0; i < M->nrows; ++i) {
+    mzd_fprint_row(stream, M, i);
+  }
+}
+
+/**
+ * \brief Print a matrix to stdout. 
+ *
+ * The output will contain colons between every 4-th column.
+ *
+ * \param M Matrix
+ */
+
+static inline void mzd_print(mzd_t const *M) {
+  mzd_fprint(stdout, M);
+}
 
 /**
  * \brief Print compact information about the matrix to stdout. 
