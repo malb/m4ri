@@ -62,7 +62,7 @@ The built documentation is contained under the doc subdirectory of m4ri/. Once t
     cd doc/latex/
     make
 
-The documentation is also available [here](http://malb.bitbucket.org/m4ri/).
+The documentation is also available [here](http://malb.bitbucket.io/m4ri/).
 
 # Contributors
 
@@ -108,7 +108,7 @@ Please contact our [mailinglist](http://groups.google.com/group/m4ri-devel) if t
 
 # History
 
-* **2015/04/17** Our hosting for http://m4ri.sagemath.org at University of Washington. is discontinued and we’re moving everything over to https://bitbucket.org/malb/m4ri. A copy of the old website (except for large files) is available at http://malb.bitbucket.org/m4ri-e-website-2008-2015/.
+* **2015/04/17** Our hosting for http://m4ri.sagemath.org at University of Washington. is discontinued and we’re moving everything over to https://bitbucket.org/malb/m4ri. A copy of the old website (except for large files) is available at http://malb.bitbucket.io/m4ri-e-website-2008-2015/.
 
 * **2014/09/14** A new version of M4RI and M4RIE is available for [download](https://bitbucket.org/malb/m4ri/downloads). The biggest change is that `A->offset` was dropped. Also, various small (multicore) performance improvements were implemented. The update for M4RIE is to maintain compatibility with M4RI. A few improvements were implemented for the mzd_poly module as well.
 
