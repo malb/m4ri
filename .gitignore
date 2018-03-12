@@ -10,6 +10,7 @@ compile
 config.guess
 config.status
 config.sub
+config.log
 configure
 depcomp
 install-sh
