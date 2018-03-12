@@ -6,5 +6,6 @@ includedir=@includedir@
 Name: M4RI
 Description: Dense linear algebra over GF(2).
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lm4ri -lm
-Cflags: -I${includedir} @CFLAGS@ @SIMD_CFLAGS@ @OPENMP_CFLAGS@
+Requires: @M4RI_USE_PNG_PC@
+Libs: -L${libdir} -lm4ri @RAW_LIBPNG@ -lm
+Cflags: -I${includedir} @SIMD_CFLAGS@ @OPENMP_CFLAGS@
