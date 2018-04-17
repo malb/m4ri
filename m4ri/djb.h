@@ -137,7 +137,7 @@ void djb_apply_mzd(djb_t *z, mzd_t *W, const mzd_t *V);
  * Print infomrmation on linear map mA
  */
 
-static inline void djb_info(djb_t *z) {
+static inline void djb_info(const djb_t *z) {
   double save = (double)z->length / (double)(z->nrows * z->ncols);
   printf("%d x %d linear map in %d xors (cost: %.5f)\n", z->nrows, z->ncols, z->length, save);
 }

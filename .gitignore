@@ -1,6 +1,7 @@
 .libs
 *.trs
 *.lo
+*.o
 m4/lt*.m4
 Makefile
 Makefile.in
@@ -21,6 +22,7 @@ m4/libtool.m4
 m4ri.pc
 missing
 test-driver
+test_djb
 test_colswap
 test_elimination
 test_invert
@@ -34,6 +36,7 @@ test_solve
 test_transpose
 test_trsm
 test_alignment
+/tests/*.log
 /bench/bench_elimination
 /bench/bench_elimination_sparse
 /bench/bench_invert
