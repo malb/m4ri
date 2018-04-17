@@ -233,7 +233,7 @@ static word const m4ri_ffff = __M4RI_CONVERT_TO_WORD(-1);
  * \param value Either 0 or 1.
  */
 
-#define __M4RI_WRITE_BIT(w, spot, value) ((w) = (((w) & ~(m4ri_one << (spot))) | (-__M4RI_CONVERT_TO_WORD(value) & (m4ri_one << (spot)))))
+#define __M4RI_WRITE_BIT(w, spot, value) ((w) = (((w) & ~(m4ri_one << (spot))) | (__M4RI_CONVERT_TO_WORD(value) << (spot))))
 
 /**
  * \brief Flip the spot in the word w
