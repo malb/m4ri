@@ -1433,7 +1433,7 @@ mzd_t *mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B) {
 
 mzd_t *mzd_addmul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B) {
   if (C->nrows != A->nrows || C->ncols != B->ncols) {
-    m4ri_die("mzd_mul_naive: Provided return matrix has wrong dimensions.\n");
+    m4ri_die("mzd_addmul_naive: Provided return matrix has wrong dimensions.\n");
   }
 
   if(B->ncols < m4ri_radix-10) { /* this cutoff is rather arbitrary */
