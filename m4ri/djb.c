@@ -13,7 +13,9 @@
 #include <m4ri/djb.h>
 #include <m4ri/xor.h>
 
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 #include <stdlib.h>
 
 static inline int mzd_compare_rows_revlex(const mzd_t *A, rci_t a, rci_t b) {
