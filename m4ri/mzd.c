@@ -594,6 +594,10 @@ static inline void _mzd_copy_transpose_lt64x64(word* RESTRICT dst, word const* R
     t[k] = *wks;
     wks += rowstride_src;
   }
+  // see https://bitbucket.org/malb/m4ri/issues/53
+  for (; k<64; ++k) {
+    t[k] = 0;
+  }
   if (n > 32) {
     while (k < 64)
       t[k++] = 0;
