@@ -1,6 +1,7 @@
 #include <m4ri/config.h>
 #include <stdlib.h>
 #include <m4ri/m4ri.h>
+#include "testing.h"
 
 int elim_test_equality(rci_t nr, rci_t nc) {
   int ret = 0; 
