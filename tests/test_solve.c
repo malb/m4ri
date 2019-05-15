@@ -4,6 +4,7 @@
 #include <m4ri/config.h>
 #include <stdlib.h>
 #include <m4ri/m4ri.h>
+#include "testing.h"
 
 int test_pluq_solve_left(rci_t m, rci_t n, int offsetA, int offsetB){
   mzd_t* Abase = mzd_init(2048, 2048);

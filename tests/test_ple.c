@@ -1,6 +1,7 @@
 #include <m4ri/config.h>
 #include <stdlib.h>
 #include <m4ri/m4ri.h>
+#include "testing.h"
 
 int check_pluq(mzd_t *A, rci_t *r) {
   mzd_t* Acopy = mzd_copy (NULL,A);

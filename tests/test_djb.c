@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <m4ri/m4ri.h>
 #include <m4ri/djb.h>
+#include "testing.h"
 
 /**
  * Check that the results of the implementation of Dan Bernstein's "Optimizing

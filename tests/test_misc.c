@@ -21,6 +21,7 @@
 
 #include <stdarg.h>
 #include <m4ri/m4ri.h>
+#include "testing.h"
 
 #define b(n) (m4ri_one<<(n))
 

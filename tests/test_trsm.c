@@ -1,6 +1,7 @@
 #include <m4ri/config.h>
 #include <stdlib.h>
 #include <m4ri/m4ri.h>
+#include "testing.h"
 
 int test_trsm_upper_right (rci_t m, rci_t n, int offset){
   printf("upper_right:: m: %4d n: %4d offset: %4d ... ", m, n, offset);

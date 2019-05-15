@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include "testing.h"
 #include <m4ri/m4ri.h>
+#include "testing.h"
 
 //#define ABORT_ON_FAIL 1
 
