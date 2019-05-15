@@ -259,6 +259,9 @@ else
    AC_SUBST(M4RI_HAVE_LIBPNG)
 fi
 
+M4RI_BUILDING_M4RI=1
+AC_DEFINE([M4RI_BUILDING_M4RI], [1], [Define to indicate that m4ri is being built instead of being used])
+
 RELEASE="AC_PACKAGE_VERSION"
 AC_SUBST(RELEASE)
 
