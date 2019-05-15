@@ -19,7 +19,7 @@
 #ifdef _WIN32
   #if defined(DLL_EXPORT) && defined(M4RI_BUILDING_M4RI)
     #define M4RI_DLL_EXPORT __declspec(dllexport)
-  #elif defined(M4RI_USE_DLL)
+  #elif defined(M4RI_USE_DLL) && !defined(M4RI_BUILDING_M4RI)
     #define M4RI_DLL_EXPORT __declspec(dllimport)
   #else
     #define M4RI_DLL_EXPORT
