@@ -1,6 +1,7 @@
 #include <m4ri/config.h>
 #include <stdlib.h>
 #include <m4ri/m4ri.h>
+#include "testing.h"
 
 /**
  * Check that inversion works.

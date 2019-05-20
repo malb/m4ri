@@ -4,6 +4,7 @@
 #include <m4ri/config.h>
 #include <stdlib.h>
 #include <m4ri/m4ri.h>
+#include "testing.h"
 
 int test_pluq_solve_left(rci_t m, rci_t n, int offsetA, int offsetB){
   mzd_t* Abase = mzd_init(2048, 2048);
@@ -72,8 +73,8 @@ int main() {
   srandom(17);
 
   for(size_t i=0; i<100; i++) {
-    size_t m = random() & 511;
-    size_t n = random() & 1023;
+    size_t m = m4ri_random_word() & 511;
+    size_t n = m4ri_random_word() & 1023;
     m = m ? (m) : 1;
     n = n ? (n) : 1;
 
