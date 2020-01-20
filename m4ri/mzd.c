@@ -350,7 +350,7 @@ rci_t mzd_echelonize_naive(mzd_t *M, int full) {
  * \note This function also works when dst == src.
  */
 
-static inline void _mzd_copy_transpose_64x64(word* RESTRICT dst, word const* RESTRICT src, wi_t rowstride_dst, wi_t rowstride_src)
+static inline void _mzd_copy_transpose_64x64(word* dst, word const* src, wi_t rowstride_dst, wi_t rowstride_src)
 {
   /*
    * m runs over the values:
