@@ -76,6 +76,31 @@ int test_png(rci_t m, rci_t n) {
   return ret;
 }
 
+int test_submatrix(const rci_t m, const rci_t n, const rci_t lowr, const rci_t lowc, const rci_t highr, const rci_t highc) {
+  printf("submatrix: m: %4d, n: %4d, (%4d, %4d, %4d, %4d)", m, n, lowr, lowc, highr, highc);
+  assert(highr-lowr > 0);
+  assert(highc-lowc > 0);
+  mzd_t *M = mzd_init(m, n);
+  mzd_randomize(M);
+  mzd_t *S = mzd_init(highr-lowr, highc-lowc);
+  mzd_submatrix(S, M, lowr, lowc, highr, highc);
+  int ret = 0;
+  for(rci_t i=0; i<highr-lowr; i++) {
+    for(rci_t j=0; j<highc-lowc; j++) {
+      ret += (mzd_read_bit(M, lowr+i, lowc+j) ^ mzd_read_bit(S, i, j));
+    }
+  }
+
+  mzd_free(M);
+  mzd_free(S);
+
+  if(ret==0) {
+    printf(" ... passed\n");
+  } else {
+    printf(" ... FAILED\n");
+  }
+  return ret;
+}
 
 int main(int argc, char *argv[]) {
   int status = 0;
@@ -98,6 +123,23 @@ int main(int argc, char *argv[]) {
   status += test_png(125,102);
   status += test_png(126,12);
   status += test_png(128,200);
+
+  status += test_submatrix(2, 127, 1, 1, 2, 127);
+  status += test_submatrix(2, 128, 1, 1, 2, 128);
+  status += test_submatrix(2, 129, 1, 1, 2, 129);
+  status += test_submatrix(2, 130, 1, 1, 2, 130);
+  status += test_submatrix(2, 131, 1, 1, 2, 131);
+
+  status += test_submatrix(2, 63, 1, 1, 1, 63);
+  status += test_submatrix(2, 64, 1, 1, 1, 64);
+  status += test_submatrix(2, 65, 1, 1, 1, 65);
+  status += test_submatrix(2, 66, 1, 1, 1, 66);
+  status += test_submatrix(2, 67, 1, 1, 1, 67);
+
+  status += test_submatrix(2, 127, 1, 63, 2, 127);
+  status += test_submatrix(2, 128, 1, 64, 2, 128);
+  status += test_submatrix(2, 129, 1, 65, 2, 129);
+  status += test_submatrix(2, 130, 1, 66, 2, 130);
 
   if (!status) {
     printf("All tests passed.\n");

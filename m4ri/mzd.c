@@ -1894,7 +1894,7 @@ mzd_t *mzd_submatrix(mzd_t *S, mzd_t const *M, rci_t const startrow, rci_t const
   } else {
     wi_t j;
     for(rci_t i=0; i<nrows; i++) {
-      for(j=0; j+m4ri_radix<=ncols; j+=m4ri_radix)
+      for(j=0; j+m4ri_radix<ncols; j+=m4ri_radix)
         S->rows[i][j/m4ri_radix] = mzd_read_bits(M, startrow+i, startcol+j, m4ri_radix);
       S->rows[i][j/m4ri_radix] &= ~S->high_bitmask;
       S->rows[i][j/m4ri_radix] |= mzd_read_bits(M, startrow+i, startcol+j, ncols - j) & S->high_bitmask;
