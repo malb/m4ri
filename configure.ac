@@ -15,7 +15,7 @@ AC_CONFIG_MACRO_DIR([m4])
 dnl Compiling with per-target flags (test_elimination.c) requires AM_PROG_CC_C_O.
 AM_PROG_CC_C_O
 
-AC_PROG_LIBTOOL
+LT_INIT
 
 AC_PROG_INSTALL
 
@@ -25,6 +25,10 @@ AC_PROG_CC_C99()
 if test "$ac_cv_prog_cc_c99" = "no"; then
   AC_MSG_ERROR([C99 support is required but not found.])
 fi
+
+# Find and set LIBM on the platform.
+LT_LIB_M
+AC_SUBST(LIBM)
 
 # SSE2 support
 AC_ARG_ENABLE([sse2],

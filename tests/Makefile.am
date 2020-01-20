@@ -15,7 +15,7 @@ DEFINES =
 AM_CFLAGS = -I$(TOPSRCDIR) -I$(TOPBUILDDIR) -D_XOPEN_SOURCE=600 $(DEFINES) @OPENMP_CFLAGS@ @PAPI_CFLAGS@
 
 STAGEDIR := $(realpath -s $(TOPBUILDDIR)/.libs)
-AM_LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri -lm @PAPI_LDFLAGS@ @PAPI_LIBS@ -no-install
+AM_LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri $(LIBM) @PAPI_LDFLAGS@ @PAPI_LIBS@ -no-install
 
 test_smallops_SOURCES = test_smallops.c testing.c testing.h
 
