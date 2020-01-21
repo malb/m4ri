@@ -58,7 +58,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = m4ri.pc
 
 libm4ri_la_LDFLAGS = -release 0.0.$(RELEASE) -no-undefined
-libm4ri_la_LIBADD = $(LIBPNG_LIBADD)
+libm4ri_la_LIBADD = $(LIBPNG_LIBADD) $(LIBM)
 
 SUBDIRS = . tests
 DIST_SUBDIRS = $(SUBDIRS) bench
