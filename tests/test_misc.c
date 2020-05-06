@@ -130,11 +130,11 @@ int main(int argc, char *argv[]) {
   status += test_submatrix(2, 130, 1, 1, 2, 130);
   status += test_submatrix(2, 131, 1, 1, 2, 131);
 
-  status += test_submatrix(2, 63, 1, 1, 1, 63);
-  status += test_submatrix(2, 64, 1, 1, 1, 64);
-  status += test_submatrix(2, 65, 1, 1, 1, 65);
-  status += test_submatrix(2, 66, 1, 1, 1, 66);
-  status += test_submatrix(2, 67, 1, 1, 1, 67);
+  status += test_submatrix(2, 63, 1, 1, 2, 63);
+  status += test_submatrix(2, 64, 1, 1, 2, 64);
+  status += test_submatrix(2, 65, 1, 1, 2, 65);
+  status += test_submatrix(2, 66, 1, 1, 2, 66);
+  status += test_submatrix(2, 67, 1, 1, 2, 67);
 
   status += test_submatrix(2, 127, 1, 63, 2, 127);
   status += test_submatrix(2, 128, 1, 64, 2, 128);
