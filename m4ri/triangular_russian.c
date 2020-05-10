@@ -364,10 +364,13 @@ void mzd_make_table_trtri(mzd_t const *M, rci_t r, rci_t c, int k, ple_table_t *
 
     L[m4ri_codebook[k]->ord[i]] = i;
   }
+
+  // we might not have m4ri_radix entries to read
+  const int toread = MIN(m4ri_radix, T->ncols - startcol);
   Tb->B[0] = 0;
   for (int i = 1; i < twokay; ++i) {
     mzd_xor_bits(T, i, c, k, (word)m4ri_codebook[k]->ord[i]);
-    Tb->B[i] = mzd_read_bits(T, i, startcol, m4ri_radix);
+    Tb->B[i] = mzd_read_bits(T, i, startcol, toread);
   }
 }
 
