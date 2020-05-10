@@ -1,36 +1,34 @@
 /******************************************************************************
-*
-*                 M4RI: Linear Algebra over GF(2)
-*
-*    Copyright (C) 2008 Martin Albrecht <malb@informatik.uni-bremen.de> 
-*
-*  Distributed under the terms of the GNU General Public License (GPL)
-*  version 2 or higher.
-*
-*    This code is distributed in the hope that it will be useful,
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*    General Public License for more details.
-*
-*  The full text of the GPL is available at:
-*
-*                  http://www.gnu.org/licenses/
-******************************************************************************/
+ *
+ *                 M4RI: Linear Algebra over GF(2)
+ *
+ *    Copyright (C) 2008 Martin Albrecht <malb@informatik.uni-bremen.de>
+ *
+ *  Distributed under the terms of the GNU General Public License (GPL)
+ *  version 2 or higher.
+ *
+ *    This code is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    General Public License for more details.
+ *
+ *  The full text of the GPL is available at:
+ *
+ *                  http://www.gnu.org/licenses/
+ ******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include "mzp.h"
 #include "mzd.h"
+#include "mzp.h"
 
 mzp_t *mzp_init(rci_t length) {
-  mzp_t *P = (mzp_t*)m4ri_mm_malloc(sizeof(mzp_t));
-  P->values = (rci_t*)m4ri_mm_malloc(sizeof(rci_t) * length);
+  mzp_t *P  = (mzp_t *)m4ri_mm_malloc(sizeof(mzp_t));
+  P->values = (rci_t *)m4ri_mm_malloc(sizeof(rci_t) * length);
   P->length = length;
-  for (rci_t i = 0; i < length; ++i) {
-    P->values[i] = i;
-  }
+  for (rci_t i = 0; i < length; ++i) { P->values[i] = i; }
   return P;
 }
 
@@ -39,36 +37,29 @@ void mzp_free(mzp_t *P) {
   m4ri_mm_free(P);
 }
 
-mzp_t *mzp_init_window(mzp_t *P, rci_t begin, rci_t end){
-  mzp_t *window = (mzp_t *)m4ri_mm_malloc(sizeof(mzp_t));
+mzp_t *mzp_init_window(mzp_t *P, rci_t begin, rci_t end) {
+  mzp_t *window  = (mzp_t *)m4ri_mm_malloc(sizeof(mzp_t));
   window->values = P->values + begin;
   window->length = end - begin;
   __M4RI_DD_MZP(window);
   return window;
 }
 
-void mzp_free_window(mzp_t *condemned){
-  m4ri_mm_free(condemned);
-}
+void mzp_free_window(mzp_t *condemned) { m4ri_mm_free(condemned); }
 
 mzp_t *mzp_copy(mzp_t *P, const mzp_t *Q) {
-  if(P == NULL)
-    P = mzp_init(Q->length);
-  for(rci_t i=0; i<Q->length; i++)
-    P->values[i] = Q->values[i];
+  if (P == NULL) P = mzp_init(Q->length);
+  for (rci_t i = 0; i < Q->length; i++) P->values[i] = Q->values[i];
   return P;
 }
 
 void mzp_set_ui(mzp_t *P, unsigned int value) {
   assert(value == 1);
-  for (rci_t i = 0; i < P->length; ++i) {
-    P->values[i] = i;
-  }
+  for (rci_t i = 0; i < P->length; ++i) { P->values[i] = i; }
 }
 
 void mzd_apply_p_left(mzd_t *A, mzp_t const *P) {
-  if(A->ncols == 0)
-    return;
+  if (A->ncols == 0) return;
   rci_t const length = MIN(P->length, A->nrows);
   for (rci_t i = 0; i < length; ++i) {
     assert(P->values[i] >= i);
@@ -77,8 +68,7 @@ void mzd_apply_p_left(mzd_t *A, mzp_t const *P) {
 }
 
 void mzd_apply_p_left_trans(mzd_t *A, mzp_t const *P) {
-  if(A->ncols == 0)
-    return;
+  if (A->ncols == 0) return;
   rci_t const length = MIN(P->length, A->nrows);
   for (rci_t i = length - 1; i >= 0; --i) {
     assert(P->values[i] >= i);
@@ -88,32 +78,33 @@ void mzd_apply_p_left_trans(mzd_t *A, mzp_t const *P) {
 
 /* optimised column swap operations */
 
-static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t const *B, rci_t const *permutation, word const *write_mask, rci_t const start_row, rci_t const stop_row, rci_t length) {
-  for(rci_t i = 0; i < length; i += m4ri_radix) {
+static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t const *B, rci_t const *permutation,
+                                                word const *write_mask, rci_t const start_row,
+                                                rci_t const stop_row, rci_t length) {
+  for (rci_t i = 0; i < length; i += m4ri_radix) {
     /* optimisation for identity permutations */
-    if (write_mask[i / m4ri_radix] == m4ri_ffff)
-      continue;
-    int const todo = MIN(m4ri_radix, length - i);
+    if (write_mask[i / m4ri_radix] == m4ri_ffff) continue;
+    int const todo    = MIN(m4ri_radix, length - i);
     wi_t const a_word = i / m4ri_radix;
     wi_t words[m4ri_radix];
     int bits[m4ri_radix];
     word bitmasks[m4ri_radix];
 
     /* we pre-compute bit access in advance */
-    for(int k = 0; k < todo; ++k) {
-        rci_t const colb = permutation[i + k];
-        words[k] = colb / m4ri_radix;
-        bits[k] = colb % m4ri_radix;
-        bitmasks[k] = m4ri_one << bits[k];
+    for (int k = 0; k < todo; ++k) {
+      rci_t const colb = permutation[i + k];
+      words[k]         = colb / m4ri_radix;
+      bits[k]          = colb % m4ri_radix;
+      bitmasks[k]      = m4ri_one << bits[k];
     }
 
     for (rci_t r = start_row; r < stop_row; ++r) {
-      word const *Brow = B->rows[r-start_row];
-      word *Arow = A->rows[r];
+      word const *Brow    = B->rows[r - start_row];
+      word *Arow          = A->rows[r];
       register word value = 0;
 
       /* we gather the bits in a register word */
-      switch(todo-1) {
+      switch (todo - 1) {
       case 63: value |= ((Brow[words[63]] & bitmasks[63]) >> bits[63]) << 63;
       case 62: value |= ((Brow[words[62]] & bitmasks[62]) >> bits[62]) << 62;
       case 61: value |= ((Brow[words[61]] & bitmasks[61]) >> bits[61]) << 61;
@@ -168,22 +159,21 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t const *B, rci_t 
       case 12: value |= ((Brow[words[12]] & bitmasks[12]) >> bits[12]) << 12;
       case 11: value |= ((Brow[words[11]] & bitmasks[11]) >> bits[11]) << 11;
       case 10: value |= ((Brow[words[10]] & bitmasks[10]) >> bits[10]) << 10;
-      case  9: value |= ((Brow[words[ 9]] & bitmasks[ 9]) >> bits[ 9]) <<  9;
-      case  8: value |= ((Brow[words[ 8]] & bitmasks[ 8]) >> bits[ 8]) <<  8;
-      case  7: value |= ((Brow[words[ 7]] & bitmasks[ 7]) >> bits[ 7]) <<  7;
-      case  6: value |= ((Brow[words[ 6]] & bitmasks[ 6]) >> bits[ 6]) <<  6;
-      case  5: value |= ((Brow[words[ 5]] & bitmasks[ 5]) >> bits[ 5]) <<  5;
-      case  4: value |= ((Brow[words[ 4]] & bitmasks[ 4]) >> bits[ 4]) <<  4;
-      case  3: value |= ((Brow[words[ 3]] & bitmasks[ 3]) >> bits[ 3]) <<  3;
-      case  2: value |= ((Brow[words[ 2]] & bitmasks[ 2]) >> bits[ 2]) <<  2;
-      case  1: value |= ((Brow[words[ 1]] & bitmasks[ 1]) >> bits[ 1]) <<  1;
-      case  0: value |= ((Brow[words[ 0]] & bitmasks[ 0]) >> bits[ 0]) <<  0;
-      default:
-        break;
+      case 9: value |= ((Brow[words[9]] & bitmasks[9]) >> bits[9]) << 9;
+      case 8: value |= ((Brow[words[8]] & bitmasks[8]) >> bits[8]) << 8;
+      case 7: value |= ((Brow[words[7]] & bitmasks[7]) >> bits[7]) << 7;
+      case 6: value |= ((Brow[words[6]] & bitmasks[6]) >> bits[6]) << 6;
+      case 5: value |= ((Brow[words[5]] & bitmasks[5]) >> bits[5]) << 5;
+      case 4: value |= ((Brow[words[4]] & bitmasks[4]) >> bits[4]) << 4;
+      case 3: value |= ((Brow[words[3]] & bitmasks[3]) >> bits[3]) << 3;
+      case 2: value |= ((Brow[words[2]] & bitmasks[2]) >> bits[2]) << 2;
+      case 1: value |= ((Brow[words[1]] & bitmasks[1]) >> bits[1]) << 1;
+      case 0: value |= ((Brow[words[0]] & bitmasks[0]) >> bits[0]) << 0;
+      default: break;
       }
-/*       for(int k = 0; k < todo; ++k) { */
-/*         value |= ((Brow[words[k]] & bitmasks[k]) << bits[k]) >> k; */
-/*       } */
+      /*       for(int k = 0; k < todo; ++k) { */
+      /*         value |= ((Brow[words[k]] & bitmasks[k]) << bits[k]) >> k; */
+      /*       } */
       /* and write the word once */
       Arow[a_word] |= value;
     }
@@ -195,12 +185,12 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t const *B, rci_t 
 /**
  * Implements both apply_p_right and apply_p_right_trans.
  */
-void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t start_col, int notrans) {
-  if(A->nrows - start_row == 0)
-    return;
+void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t start_col,
+                             int notrans) {
+  if (A->nrows - start_row == 0) return;
   rci_t const length = MIN(P->length, A->ncols);
-  wi_t const width = A->width;
-  int step_size = MIN(A->nrows - start_row, MAX((__M4RI_CPU_L1_CACHE >> 3) / A->width, 1));
+  wi_t const width   = A->width;
+  int step_size      = MIN(A->nrows - start_row, MAX((__M4RI_CPU_L1_CACHE >> 3) / A->width, 1));
 
   /* our temporary where we store the columns we want to swap around */
   mzd_t *B = mzd_init(step_size, A->ncols);
@@ -208,44 +198,41 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t st
   word *Brow;
 
   /* setup mathematical permutation */
-  rci_t *permutation = (rci_t*)m4ri_mm_calloc(A->ncols, sizeof(rci_t));
-  for(rci_t i = 0; i < A->ncols; ++i)
-    permutation[i] = i;
+  rci_t *permutation = (rci_t *)m4ri_mm_calloc(A->ncols, sizeof(rci_t));
+  for (rci_t i = 0; i < A->ncols; ++i) permutation[i] = i;
 
   if (!notrans) {
-    for(rci_t i = start_col; i < length; ++i) {
-      rci_t t = permutation[i];
-      permutation[i] = permutation[P->values[i]];
+    for (rci_t i = start_col; i < length; ++i) {
+      rci_t t                   = permutation[i];
+      permutation[i]            = permutation[P->values[i]];
       permutation[P->values[i]] = t;
     }
   } else {
-    for(rci_t i = start_col; i < length; ++i) {
-      rci_t t = permutation[length - i - 1];
-      permutation[length - i - 1] = permutation[P->values[length - i - 1]];
+    for (rci_t i = start_col; i < length; ++i) {
+      rci_t t                                = permutation[length - i - 1];
+      permutation[length - i - 1]            = permutation[P->values[length - i - 1]];
       permutation[P->values[length - i - 1]] = t;
     }
   }
 
   /* we have a bitmask to encode where to write to */
-  word *write_mask = (word*)m4ri_mm_calloc(width, sizeof(word));
-  for(rci_t i = 0; i < A->ncols; i += m4ri_radix) {
+  word *write_mask = (word *)m4ri_mm_calloc(width, sizeof(word));
+  for (rci_t i = 0; i < A->ncols; i += m4ri_radix) {
     int const todo = MIN(m4ri_radix, A->ncols - i);
-    for(int k = 0; k < todo; ++k) {
-      if(permutation[i + k] == i + k) {
-        write_mask[i / m4ri_radix] |= m4ri_one << k;
-      }
+    for (int k = 0; k < todo; ++k) {
+      if (permutation[i + k] == i + k) { write_mask[i / m4ri_radix] |= m4ri_one << k; }
     }
   }
-  write_mask[width-1] |= ~A->high_bitmask;
+  write_mask[width - 1] |= ~A->high_bitmask;
 
-  for(rci_t i = start_row; i < A->nrows; i += step_size) {
+  for (rci_t i = start_row; i < A->nrows; i += step_size) {
     step_size = MIN(step_size, A->nrows - i);
-    for(int k = 0; k < step_size; ++k) {
-      Arow = A->rows[i+k];
+    for (int k = 0; k < step_size; ++k) {
+      Arow = A->rows[i + k];
       Brow = B->rows[k];
 
       /*copy row & clear those values which will be overwritten */
-      for(wi_t j = 0; j < width; ++j) {
+      for (wi_t j = 0; j < width; ++j) {
         Brow[j] = Arow[j];
         Arow[j] = Arow[j] & write_mask[j];
       }
@@ -261,75 +248,67 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t st
 }
 
 void _mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P) {
-  if(A->nrows == 0)
-    return;
-  rci_t const length = MIN(P->length, A->ncols);
+  if (A->nrows == 0) return;
+  rci_t const length  = MIN(P->length, A->ncols);
   int const step_size = MAX((__M4RI_CPU_L1_CACHE >> 3) / A->width, 1);
-  for(rci_t j = 0; j < A->nrows; j += step_size) {
+  for (rci_t j = 0; j < A->nrows; j += step_size) {
     rci_t stop_row = MIN(j + step_size, A->nrows);
     for (rci_t i = 0; i < length; ++i) {
       assert(P->values[i] >= i);
       mzd_col_swap_in_rows(A, i, P->values[i], j, stop_row);
     }
   }
-/*   for (i=0; i<P->length; i++) { */
-/*     assert(P->values[i] >= i); */
-/*     mzd_col_swap(A, i, P->values[i]); */
-/*   } */
+  /*   for (i=0; i<P->length; i++) { */
+  /*     assert(P->values[i] >= i); */
+  /*     mzd_col_swap(A, i, P->values[i]); */
+  /*   } */
 
   __M4RI_DD_MZD(A);
 }
 
 void _mzd_apply_p_right(mzd_t *A, mzp_t const *P) {
-  if(A->nrows == 0)
-    return;
+  if (A->nrows == 0) return;
   int const step_size = MAX((__M4RI_CPU_L1_CACHE >> 3) / A->width, 1);
-  for(rci_t j = 0; j < A->nrows; j += step_size) {
+  for (rci_t j = 0; j < A->nrows; j += step_size) {
     rci_t stop_row = MIN(j + step_size, A->nrows);
     for (rci_t i = P->length - 1; i >= 0; --i) {
       assert(P->values[i] >= i);
       mzd_col_swap_in_rows(A, i, P->values[i], j, stop_row);
     }
   }
-/*   long i; */
-/*   for (i=P->length-1; i>=0; i--) { */
-/*     assert(P->values[i] >= i); */
-/*     mzd_col_swap(A, i, P->values[i]); */
-/*   } */
+  /*   long i; */
+  /*   for (i=P->length-1; i>=0; i--) { */
+  /*     assert(P->values[i] >= i); */
+  /*     mzd_col_swap(A, i, P->values[i]); */
+  /*   } */
 
   __M4RI_DD_MZD(A);
 }
 
-
 void mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P) {
-  if(!A->nrows)
-    return;
-  _mzd_apply_p_right_even(A, P, 0, 0, 0); 
+  if (!A->nrows) return;
+  _mzd_apply_p_right_even(A, P, 0, 0, 0);
 }
 
 void mzd_apply_p_right(mzd_t *A, mzp_t const *P) {
-  if(!A->nrows)
-    return;
-  _mzd_apply_p_right_even(A, P, 0, 0, 1); 
+  if (!A->nrows) return;
+  _mzd_apply_p_right_even(A, P, 0, 0, 1);
 }
 
-void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t start_col) {
-  if(!A->nrows)
-    return;
-  _mzd_apply_p_right_even(A, P, start_row, start_col, 0); 
+void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t const *P, rci_t start_row,
+                                         rci_t start_col) {
+  if (!A->nrows) return;
+  _mzd_apply_p_right_even(A, P, start_row, start_col, 0);
 }
 
 void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t start_col) {
-  if(!A->nrows)
-    return;
-  _mzd_apply_p_right_even(A, P, start_row, start_col, 1); 
+  if (!A->nrows) return;
+  _mzd_apply_p_right_even(A, P, start_row, start_col, 1);
 }
 
 void mzp_print(mzp_t const *P) {
   printf("[ ");
-  for(rci_t i = 0; i < P->length; ++i) {
-    printf("%zd ", (size_t)P->values[i]);
-  }
+  for (rci_t i = 0; i < P->length; ++i) { printf("%zd ", (size_t)P->values[i]); }
   printf("]");
 }
 
@@ -337,9 +316,9 @@ void mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t const *P) {
   assert(P->length == A->ncols);
   int const step_size = MAX((__M4RI_CPU_L1_CACHE >> 2) / A->width, 1);
 
-  for(rci_t r = 0; r < A->nrows; r += step_size) {
+  for (rci_t r = 0; r < A->nrows; r += step_size) {
     rci_t const row_bound = MIN(r + step_size, A->nrows);
-    for (rci_t i =0 ; i < A->ncols; ++i) {
+    for (rci_t i = 0; i < A->ncols; ++i) {
       assert(P->values[i] >= i);
       mzd_col_swap_in_rows(A, i, P->values[i], r, MIN(row_bound, i));
     }
@@ -356,7 +335,7 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
    ------------------------------------------
    | \ \____|___        | A01               |
    |  \     |   \       |                   |
- r1------------------------------------------ 
+ r1------------------------------------------
    |   |    |           | \  \_____         |
    | L1|    |           |  \       \________|
    |   |    |           | L2|               |
@@ -370,7 +349,7 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
    ------------------------------------------
    | \ \____|___        | A01               |
    |  \     |   \       |                   |
- r1------------------------------------------ 
+ r1------------------------------------------
    |    \   |           |    \_____         |
    |     \  |           |          \________|
    |      | |           |                   |
@@ -378,8 +357,7 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
 \endverbatim
   */
 
-  if (r1 == n1)
-    return;
+  if (r1 == n1) return;
 
 #if 0
 
@@ -394,14 +372,12 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
 
 #else
 
-  for (rci_t i = r1, j = n1; i < r1 + r2; ++i, ++j){
-    mzd_col_swap_in_rows(A, i, j, i, r1 + r2);
-  }
-  
+  for (rci_t i = r1, j = n1; i < r1 + r2; ++i, ++j) { mzd_col_swap_in_rows(A, i, j, i, r1 + r2); }
+
   word tmp;
   wi_t block;
 
-  for(rci_t i = r1 + r2; i < A->nrows; ++i) {
+  for (rci_t i = r1 + r2; i < A->nrows; ++i) {
 
     rci_t j = r1;
 
@@ -412,7 +388,7 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
     tmp = mzd_read_bits(A, i, n1, rest);
     mzd_clear_bits(A, i, j, rest);
     mzd_xor_bits(A, i, j, rest, tmp);
-    
+
     j += rest;
 
     /* now each write is simply a word write */
@@ -420,13 +396,13 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
     block = (n1 + j - r1) / m4ri_radix;
 
     if (rest % m4ri_radix == 0) {
-      for( ; j + m4ri_radix <= r1 + r2; j += m4ri_radix, ++block) {
-        tmp = A->rows[i][block];
+      for (; j + m4ri_radix <= r1 + r2; j += m4ri_radix, ++block) {
+        tmp                        = A->rows[i][block];
         A->rows[i][j / m4ri_radix] = tmp;
       }
     } else {
-      for(; j + m4ri_radix <= r1 + r2; j += m4ri_radix, ++block) {
-        tmp = (A->rows[i][block] >> rest) | ( A->rows[i][block + 1] << (m4ri_radix - rest)); 
+      for (; j + m4ri_radix <= r1 + r2; j += m4ri_radix, ++block) {
+        tmp = (A->rows[i][block] >> rest) | (A->rows[i][block + 1] << (m4ri_radix - rest));
         A->rows[i][j / m4ri_radix] = tmp;
       }
     }
@@ -436,7 +412,7 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
        past the end of n1+r2. */
 
     if (j < r1 + r2) {
-      tmp = mzd_read_bits(A, i, n1 + j - r1, r1 + r2 - j);
+      tmp                        = mzd_read_bits(A, i, n1 + j - r1, r1 + r2 - j);
       A->rows[i][j / m4ri_radix] = tmp;
     }
 
@@ -450,13 +426,10 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
        everything is zero there anyway. Thus, we can omit the code
        which deals with last few bits. */
 
-    for(; j < n1 + r2; j += m4ri_radix) {
-      A->rows[i][j / m4ri_radix] = 0;
-    }
+    for (; j < n1 + r2; j += m4ri_radix) { A->rows[i][j / m4ri_radix] = 0; }
   }
- 
+
 #endif
 
   __M4RI_DD_MZD(A);
 }
-

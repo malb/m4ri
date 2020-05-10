@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include "m4ri/m4ri.h"
+#include <stdio.h>
 
 int main(int argc, char const *argv[]) {
   int rows    = 16;

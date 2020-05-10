@@ -1,7 +1,7 @@
-#include <m4ri/config.h>
-#include <stdlib.h>
-#include <m4ri/m4ri.h>
 #include "testing.h"
+#include <m4ri/config.h>
+#include <m4ri/m4ri.h>
+#include <stdlib.h>
 
 /**
  * Check that inversion works.
@@ -10,18 +10,17 @@
  * \param k Parameter k of M4RM algorithm, may be 0 for automatic choice.
  */
 int invert_test(rci_t n, int k) {
-  int ret  = 0;
+  int ret = 0;
   printf("invert: n: %4d, k: %2d", n, k);
 
   mzd_t *I2 = mzd_init(n, n);
   mzd_set_ui(I2, 1);
 
-  mzd_t *U = mzd_init(n,n);
+  mzd_t *U = mzd_init(n, n);
   mzd_randomize(U);
-  for(rci_t i=0; i<n; i++) {
+  for (rci_t i = 0; i < n; i++) {
     mzd_write_bit(U, i, i, 1);
-    for (rci_t j=0; j<i; j++)
-      mzd_write_bit(U, i, j, 0);
+    for (rci_t j = 0; j < i; j++) mzd_write_bit(U, i, j, 0);
   }
 
   mzd_t *B = mzd_copy(NULL, U);
@@ -37,9 +36,8 @@ int invert_test(rci_t n, int k) {
   mzd_t *L = mzd_init(n, n);
   mzd_randomize(L);
   for (rci_t i = 0; i < n; ++i) {
-    for (rci_t j = i + 1; j < n; ++j)
-      mzd_write_bit(L,i,j, 0);
-    mzd_write_bit(L,i,i, 1);
+    for (rci_t j = i + 1; j < n; ++j) mzd_write_bit(L, i, j, 0);
+    mzd_write_bit(L, i, i, 1);
   }
   mzd_t *A = mzd_mul(NULL, L, U, 0);
 
@@ -52,7 +50,7 @@ int invert_test(rci_t n, int k) {
     printf(" A*~A != 1 ");
   }
 
-  if(ret == 0) {
+  if (ret == 0) {
     printf(" ... passed\n");
   } else {
     printf(" ... FAILED\n");
@@ -65,27 +63,26 @@ int invert_test(rci_t n, int k) {
   mzd_free(I2);
 
   return ret;
-
 }
 
 int main() {
   int status = 0;
   srandom(17);
 
-  for(int k=0; k<5; k++) {
-    status += invert_test(   1,k);
-    status += invert_test(   2,k);
-    status += invert_test(   3,k);
-    status += invert_test(  21,k);
-    status += invert_test(  64,k);
-    status += invert_test( 128,k);
-    status += invert_test( 193,k);
-    status += invert_test(1000,k);
-    status += invert_test(1024,k);
-    status += invert_test(1025,k);
-    status += invert_test(1290,k);
-    status += invert_test(1710,k);
-    status += invert_test(2048,k);
+  for (int k = 0; k < 5; k++) {
+    status += invert_test(1, k);
+    status += invert_test(2, k);
+    status += invert_test(3, k);
+    status += invert_test(21, k);
+    status += invert_test(64, k);
+    status += invert_test(128, k);
+    status += invert_test(193, k);
+    status += invert_test(1000, k);
+    status += invert_test(1024, k);
+    status += invert_test(1025, k);
+    status += invert_test(1290, k);
+    status += invert_test(1710, k);
+    status += invert_test(2048, k);
   }
   if (status == 0) {
     printf("All tests passed.\n");

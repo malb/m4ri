@@ -9,24 +9,24 @@
 #define M4RI_IO_H
 
 /*******************************************************************
-*
-*                M4RI: Linear Algebra over GF(2)
-*
-*    Copyright (C) 2011 Martin Albrecht <martinralbrecht@googlemail.com>
-*
-*  Distributed under the terms of the GNU General Public License (GPL)
-*  version 2 or higher.
-*
-*    This code is distributed in the hope that it will be useful,
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*    General Public License for more details.
-*
-*  The full text of the GPL is available at:
-*
-*                  http://www.gnu.org/licenses/
-*
-********************************************************************/
+ *
+ *                M4RI: Linear Algebra over GF(2)
+ *
+ *    Copyright (C) 2011 Martin Albrecht <martinralbrecht@googlemail.com>
+ *
+ *  Distributed under the terms of the GNU General Public License (GPL)
+ *  version 2 or higher.
+ *
+ *    This code is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    General Public License for more details.
+ *
+ *  The full text of the GPL is available at:
+ *
+ *                  http://www.gnu.org/licenses/
+ *
+ ********************************************************************/
 
 #include <m4ri/m4ri_config.h>
 #include <m4ri/mzd.h>
@@ -41,10 +41,10 @@
  * \param i Row to print
  */
 
-void mzd_fprint_row(FILE* stream, mzd_t const *M, const rci_t i);
+void mzd_fprint_row(FILE *stream, mzd_t const *M, const rci_t i);
 
 /**
- * \brief Print row i of M to stdout. 
+ * \brief Print row i of M to stdout.
  *
  * The output will contain colons between every 4-th column.
  *
@@ -52,9 +52,7 @@ void mzd_fprint_row(FILE* stream, mzd_t const *M, const rci_t i);
  * \param i Row to print
  */
 
-static inline void mzd_print_row(mzd_t const *M, const rci_t i) {
-  mzd_fprint_row(stdout, M, i);
-}
+static inline void mzd_print_row(mzd_t const *M, const rci_t i) { mzd_fprint_row(stdout, M, i); }
 
 /**
  * \brief Print a matrix to an output stream.
@@ -65,26 +63,22 @@ static inline void mzd_print_row(mzd_t const *M, const rci_t i) {
  * \param M Matrix
  */
 
-static inline void mzd_fprint(FILE* stream, mzd_t const *M) {
-  for (rci_t i = 0; i < M->nrows; ++i) {
-    mzd_fprint_row(stream, M, i);
-  }
+static inline void mzd_fprint(FILE *stream, mzd_t const *M) {
+  for (rci_t i = 0; i < M->nrows; ++i) { mzd_fprint_row(stream, M, i); }
 }
 
 /**
- * \brief Print a matrix to stdout. 
+ * \brief Print a matrix to stdout.
  *
  * The output will contain colons between every 4-th column.
  *
  * \param M Matrix
  */
 
-static inline void mzd_print(mzd_t const *M) {
-  mzd_fprint(stdout, M);
-}
+static inline void mzd_print(mzd_t const *M) { mzd_fprint(stdout, M); }
 
 /**
- * \brief Print compact information about the matrix to stdout. 
+ * \brief Print compact information about the matrix to stdout.
  *
  * Prints number of rows, number of columns, density (and rank).
  *
@@ -106,7 +100,7 @@ void mzd_info(const mzd_t *A, int do_rank);
  * \param verbose Print error message to stdout if != 0
  */
 
-mzd_t * mzd_from_png(const char *fn, int verbose);
+mzd_t *mzd_from_png(const char *fn, int verbose);
 
 /**
  * \brief Write matrix to 1-bit PNG image.
@@ -122,9 +116,9 @@ mzd_t * mzd_from_png(const char *fn, int verbose);
 #define Z_DEFAULT_COMPRESSION  (-1)
 \endverbatim
  *
- * The optional comment string is written as a PNG comment. 
+ * The optional comment string is written as a PNG comment.
  *
- * 
+ *
  * \param A Matrix
  * \param fn Filename (must have write permission)
  * \param compression_level Zlib compression level (see above)
@@ -132,10 +126,10 @@ mzd_t * mzd_from_png(const char *fn, int verbose);
  * \param verbose Print error message to stdout if != 0
  */
 
-int mzd_to_png(const mzd_t *A, const char *fn, int compression_level, const char *comment, int verbose);
+int mzd_to_png(const mzd_t *A, const char *fn, int compression_level, const char *comment,
+               int verbose);
 
-#endif //__M4RI_HAVE_LIBPNG
-
+#endif  //__M4RI_HAVE_LIBPNG
 
 /**
  * \brief Read matrix from ASCII file in JCF format.
@@ -187,8 +181,8 @@ mzd_t *mzd_from_jcf(const char *fn, int verbose);
 \verbatim
 mzd_t *A = mzd_from_str(4, 4, "1000010000100001");
 \endverbatim
- * 
- * would create a 4 x 4 identity matrix. 
+ *
+ * would create a 4 x 4 identity matrix.
  *
  * \param m Number of rows
  * \param n Nimber of columns
@@ -197,4 +191,4 @@ mzd_t *A = mzd_from_str(4, 4, "1000010000100001");
 
 mzd_t *mzd_from_str(rci_t m, rci_t n, const char *str);
 
-#endif //M4RI_IO_H
+#endif  // M4RI_IO_H

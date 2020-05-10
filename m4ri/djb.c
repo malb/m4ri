@@ -7,10 +7,10 @@
 #include "config.h"
 #endif
 
-#include <m4ri/mzd.h>
+#include <m4ri/djb.h>
 #include <m4ri/io.h>
 #include <m4ri/misc.h>
-#include <m4ri/djb.h>
+#include <m4ri/mzd.h>
 #include <m4ri/xor.h>
 
 #ifndef _MSC_VER
@@ -19,11 +19,9 @@
 #include <stdlib.h>
 
 static inline int mzd_compare_rows_revlex(const mzd_t *A, rci_t a, rci_t b) {
-  for(wi_t j=A->width-1; j>=0; j--)  {
-    if (A->rows[a][j] < A->rows[b][j])
-      return 0;
-    if (A->rows[a][j] > A->rows[b][j])
-      return 1;
+  for (wi_t j = A->width - 1; j >= 0; j--) {
+    if (A->rows[a][j] < A->rows[b][j]) return 0;
+    if (A->rows[a][j] > A->rows[b][j]) return 1;
   }
   return 1;
 }
@@ -33,30 +31,26 @@ static inline int mzd_compare_rows_revlex(const mzd_t *A, rci_t a, rci_t b) {
  */
 
 typedef struct heap {
-  unsigned int size; /*!< Size of the allocated memory (in number of items) */
+  unsigned int size;  /*!< Size of the allocated memory (in number of items) */
   unsigned int count; /*!<  Count of the elements in the heap */
-  rci_t *data; /*!< Array with the elements */
+  rci_t *data;        /*!< Array with the elements */
 } heap_t;
-  
+
 // Returns the biggest element in the heap
 #define heap_front(h) (*(h)->data)
- 
-void heap_free(heap_t *h) { 
+
+void heap_free(heap_t *h) {
   free(h->data);
   free(h);
 }
- 
+
 static const unsigned int heap_base_size = 4;
 
 // Prepares the heap for use
 heap_t *heap_init() {
-  heap_t * h = (heap_t*)malloc(sizeof(heap_t));
+  heap_t *h = (heap_t *)malloc(sizeof(heap_t));
   if (h == NULL) m4ri_die("malloc failed.\n");
-  *h = (heap_t){
-    .size = heap_base_size,
-    .count = 0,
-    .data = malloc(sizeof(rci_t) * heap_base_size)
-  };
+  *h = (heap_t){.size = heap_base_size, .count = 0, .data = malloc(sizeof(rci_t) * heap_base_size)};
   if (h->data == NULL) m4ri_die("malloc failed.\n");
   return h;
 }
@@ -73,10 +67,9 @@ void heap_push(struct heap *restrict h, rci_t value, const mzd_t *A) {
   }
 
   // Find out where to put the element and put it
-  for(index = h->count++; index; index = parent) {
+  for (index = h->count++; index; index = parent) {
     parent = (index - 1) >> 1;
-    if (mzd_compare_rows_revlex(A, h->data[parent], value)) 
-      break;
+    if (mzd_compare_rows_revlex(A, h->data[parent], value)) break;
     h->data[index] = h->data[parent];
   }
   h->data[index] = value;
@@ -97,15 +90,16 @@ void heap_pop(struct heap *restrict h, const mzd_t *A) {
   }
 
   // Reorder the elements
-  for(index = 0; 1; index = swap) {
+  for (index = 0; 1; index = swap) {
     // Find the child to swap with
     swap = (index << 1) + 1;
-    if (swap >= h->count) break; // If there are no children, the heap is reordered
+    if (swap >= h->count) break;  // If there are no children, the heap is reordered
     other = swap + 1;
-    if ((other < h->count) && mzd_compare_rows_revlex(A, h->data[other], h->data[swap])) swap = other;
+    if ((other < h->count) && mzd_compare_rows_revlex(A, h->data[other], h->data[swap]))
+      swap = other;
     if (mzd_compare_rows_revlex(A, temp, h->data[swap]))
-      break; // If the bigger child is less than or equal to its parent, the heap is reordered
-    
+      break;  // If the bigger child is less than or equal to its parent, the heap is reordered
+
     h->data[index] = h->data[swap];
   }
   h->data[index] = temp;
@@ -113,13 +107,12 @@ void heap_pop(struct heap *restrict h, const mzd_t *A) {
 
 djb_t *djb_compile(mzd_t *A) {
   heap_t *h = heap_init();
-  rci_t m = A->nrows;
-  rci_t n = A->ncols;
+  rci_t m   = A->nrows;
+  rci_t n   = A->ncols;
 
   djb_t *z = djb_init(m, n);
 
-  for (rci_t i=0; i < m; i++)
-    heap_push(h, i, A); // sort by mzd_compare_rows_revlex
+  for (rci_t i = 0; i < m; i++) heap_push(h, i, A);  // sort by mzd_compare_rows_revlex
 
   while (n > 0) {
     if (mzd_read_bit(A, heap_front(h), n - 1) == 0) {
@@ -134,13 +127,13 @@ djb_t *djb_compile(mzd_t *A) {
       mzd_row_add(A, heap_front(h), temp);
       djb_push_back(z, temp, heap_front(h), source_target);
     } else {
-      mzd_write_bit(A, temp, n-1, 0);
-      djb_push_back(z, temp, n-1, source_source);
+      mzd_write_bit(A, temp, n - 1, 0);
+      djb_push_back(z, temp, n - 1, source_source);
     }
     heap_push(h, temp, A);
   }
   heap_free(h);
- 
+
   return z;
 }
 
@@ -151,16 +144,15 @@ void djb_apply_mzd(djb_t *m, mzd_t *W, const mzd_t *V) {
     --i;
     if (m->srctyp[i] == source_source) {
       _mzd_combine(mzd_row(W, m->target[i]), mzd_row(V, m->source[i]), W->width);
-      } else {
+    } else {
       _mzd_combine(mzd_row(W, m->target[i]), mzd_row(W, m->source[i]), W->width);
     }
   }
 }
- 
+
 void djb_print(djb_t *m) {
-  int *iszero = m4ri_mm_malloc(sizeof(int)*m->nrows);
-  for(int i = 0; i < m->nrows; ++i) 
-    iszero[i] = 1;
+  int *iszero = m4ri_mm_malloc(sizeof(int) * m->nrows);
+  for (int i = 0; i < m->nrows; ++i) iszero[i] = 1;
 
   rci_t i = m->length;
   while (i > 0) {

@@ -7,7 +7,7 @@
  *
  * Given a matrix A djb_compile(A) will compute a djb_t data structure which realises A with
  * (heuristically) (m * n)/(log m - loglog m) XORs.
- * 
+ *
  * It makes use of a binary heap written by Martin Kunev which is available at
  * https://gist.github.com/martinkunev/1365481
  *
@@ -24,22 +24,22 @@
  */
 
 typedef enum {
-  source_target, //< add from target matrix
-  source_source //< add from source matrix
+  source_target,  //< add from target matrix
+  source_source   //< add from source matrix
 } srctyp_t;
 
 /**
  * \brief DJB's optimized linear maps mod 2
  */
- 
+
 typedef struct {
-  rci_t nrows; /*!< Number of rows of map */
-  rci_t ncols; /*!< Number of columns of map */
-  rci_t *target; /*!< target row at index i */
-  rci_t *source; /*!< source row at index i */
+  rci_t nrows;      /*!< Number of rows of map */
+  rci_t ncols;      /*!< Number of columns of map */
+  rci_t *target;    /*!< target row at index i */
+  rci_t *source;    /*!< source row at index i */
   srctyp_t *srctyp; /*!< source type at index i */
-  rci_t length; /*!< length of target, source and srctype */
-  wi_t allocated; /*!< how much did we allocate already */
+  rci_t length;     /*!< length of target, source and srctype */
+  wi_t allocated;   /*!< how much did we allocate already */
 } djb_t;
 
 /**
@@ -52,25 +52,23 @@ typedef struct {
  * Allocate a new DJB linear map
  *
  * \param nrows Number of rows
- * \param ncols Number of columns 
+ * \param ncols Number of columns
  */
 
 static inline djb_t *djb_init(rci_t nrows, rci_t ncols) {
   /* we want to use realloc, so we call unaligned malloc */
-  djb_t *m = (djb_t*)malloc(sizeof(djb_t));
-  if (m == NULL)
-    m4ri_die("malloc failed.\n");
+  djb_t *m = (djb_t *)malloc(sizeof(djb_t));
+  if (m == NULL) m4ri_die("malloc failed.\n");
 
-  m->nrows = nrows;
-  m->ncols = ncols;
-  m->target = (rci_t*)malloc(sizeof(rci_t)    * M4RI_DJB_BASE_SIZE);
-  m->source = (rci_t*)malloc(sizeof(rci_t)    * M4RI_DJB_BASE_SIZE);
-  m->srctyp = (srctyp_t*)malloc(sizeof(srctyp_t) * M4RI_DJB_BASE_SIZE);
-  m->length = 0;
+  m->nrows     = nrows;
+  m->ncols     = ncols;
+  m->target    = (rci_t *)malloc(sizeof(rci_t) * M4RI_DJB_BASE_SIZE);
+  m->source    = (rci_t *)malloc(sizeof(rci_t) * M4RI_DJB_BASE_SIZE);
+  m->srctyp    = (srctyp_t *)malloc(sizeof(srctyp_t) * M4RI_DJB_BASE_SIZE);
+  m->length    = 0;
   m->allocated = M4RI_DJB_BASE_SIZE;
 
-  if (m->target == NULL || m->source == NULL || m->srctyp == NULL)
-    m4ri_die("malloc failed.\n");
+  if (m->target == NULL || m->source == NULL || m->srctyp == NULL) m4ri_die("malloc failed.\n");
   return m;
 }
 
@@ -97,14 +95,13 @@ static inline void djb_free(djb_t *m) {
  */
 
 static inline void djb_push_back(djb_t *z, rci_t target, rci_t source, srctyp_t srctyp) {
-  assert((target < z->nrows) && 
-         ((source < z->ncols) | (srctyp != source_source)) &&
+  assert((target < z->nrows) && ((source < z->ncols) | (srctyp != source_source)) &&
          ((source < z->nrows) | (srctyp != source_target)));
   if (z->length >= z->allocated) {
     z->allocated += M4RI_DJB_BASE_SIZE;
-    z->target = (rci_t*)realloc(z->target, z->allocated*sizeof(rci_t));
-    z->source = (rci_t*)realloc(z->source, z->allocated*sizeof(rci_t));
-    z->srctyp = (srctyp_t*)realloc(z->srctyp, z->allocated*sizeof(srctyp_t));
+    z->target = (rci_t *)realloc(z->target, z->allocated * sizeof(rci_t));
+    z->source = (rci_t *)realloc(z->source, z->allocated * sizeof(rci_t));
+    z->srctyp = (srctyp_t *)realloc(z->srctyp, z->allocated * sizeof(srctyp_t));
   }
   z->target[z->length] = target;
   z->source[z->length] = source;
@@ -132,7 +129,6 @@ djb_t *djb_compile(mzd_t *A);
 
 void djb_apply_mzd(djb_t *z, mzd_t *W, const mzd_t *V);
 
-
 /**
  * Print infomrmation on linear map mA
  */
@@ -142,5 +138,4 @@ static inline void djb_info(const djb_t *z) {
   printf("%d x %d linear map in %d xors (cost: %.5f)\n", z->nrows, z->ncols, z->length, save);
 }
 
-
-#endif //M4RI_DJB_H
+#endif  // M4RI_DJB_H

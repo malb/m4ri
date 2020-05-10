@@ -4,31 +4,31 @@
  * \brief PLE and PLUQ matrix decomposition routines.
  *
  * \author Clement Pernet <clement.pernet@gmail.com>
- * 
+ *
  */
 
 #ifndef M4RI_PLUQ_H
 #define M4RI_PLUQ_H
 
 /*******************************************************************
-*
-*                 M4RI: Linear Algebra over GF(2)
-*
-*    Copyright (C) 2008, 2009 Clement Pernet <clement.pernet@gmail.com>
-*
-*  Distributed under the terms of the GNU General Public License (GPL)
-*  version 2 or higher.
-*
-*    This code is distributed in the hope that it will be useful,
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*    General Public License for more details.
-*
-*  The full text of the GPL is available at:
-*
-*                  http://www.gnu.org/licenses/
-*
-********************************************************************/
+ *
+ *                 M4RI: Linear Algebra over GF(2)
+ *
+ *    Copyright (C) 2008, 2009 Clement Pernet <clement.pernet@gmail.com>
+ *
+ *  Distributed under the terms of the GNU General Public License (GPL)
+ *  version 2 or higher.
+ *
+ *    This code is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    General Public License for more details.
+ *
+ *  The full text of the GPL is available at:
+ *
+ *                  http://www.gnu.org/licenses/
+ *
+ ********************************************************************/
 
 #include <m4ri/mzd.h>
 #include <m4ri/mzp.h>
@@ -53,7 +53,7 @@
  *
  * The row echelon form (not reduced) can be read from the upper
  * triangular matrix U. See mzd_echelonize_pluq() for details.
- * 
+ *
  * This is the wrapper function including bounds checks. See
  * _mzd_pluq() for implementation details.
  *
@@ -68,7 +68,6 @@
  */
 
 rci_t mzd_pluq(mzd_t *A, mzp_t *P, mzp_t *Q, const int cutoff);
-
 
 /**
  * \brief PLE matrix decomposition.
@@ -141,7 +140,7 @@ rci_t _mzd_ple(mzd_t *A, mzp_t *P, mzp_t *Qt, const int cutoff);
  * \brief PLUQ matrix decomposition (naive base case).
  *
  * See mzd_pluq() for details.
- * 
+ *
  * \param A Input matrix
  * \param P Output row mzp_t matrix
  * \param Q Output column mzp_t matrix
@@ -157,7 +156,7 @@ rci_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q);
  * \brief PLE matrix decomposition (naive base case).
  *
  * See mzd_ple() for details.
- * 
+ *
  * \param A Input matrix
  * \param P Output row mzp_t matrix
  * \param Qt Output column mzp_t matrix
@@ -169,4 +168,4 @@ rci_t _mzd_pluq_naive(mzd_t *A, mzp_t *P, mzp_t *Q);
 
 rci_t _mzd_ple_naive(mzd_t *A, mzp_t *P, mzp_t *Qt);
 
-#endif // M4RI_PLUQ_H
+#endif  // M4RI_PLUQ_H

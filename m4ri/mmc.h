@@ -1,6 +1,7 @@
 /**
  * \file mmc.h
- * \brief The mmc memory management functions check a cache for re-usable unused memory before asking the system for it.
+ * \brief The mmc memory management functions check a cache for re-usable unused memory before
+ * asking the system for it.
  *
  * \author Gregory Bard <bard@fordham.edu>
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
@@ -10,25 +11,25 @@
 #define M4RI_MMC_H
 
 /*******************************************************************
-*
-*                 M4RI: Linear Algebra over GF(2)
-*
-*    Copyright (C) 2007, 2008 Gregory Bard <bard@fordham.edu>
-*    Copyright (C) 2008 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
-*
-*  Distributed under the terms of the GNU General Public License (GPL)
-*  version 2 or higher.
-*
-*    This code is distributed in the hope that it will be useful,
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*    General Public License for more details.
-*
-*  The full text of the GPL is available at:
-*
-*                  http://www.gnu.org/licenses/
-*
-********************************************************************/
+ *
+ *                 M4RI: Linear Algebra over GF(2)
+ *
+ *    Copyright (C) 2007, 2008 Gregory Bard <bard@fordham.edu>
+ *    Copyright (C) 2008 Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
+ *
+ *  Distributed under the terms of the GNU General Public License (GPL)
+ *  version 2 or higher.
+ *
+ *    This code is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    General Public License for more details.
+ *
+ *  The full text of the GPL is available at:
+ *
+ *                  http://www.gnu.org/licenses/
+ *
+ ********************************************************************/
 
 #include <m4ri/misc.h>
 
@@ -72,9 +73,9 @@ typedef struct _mm_block {
  */
 static inline void *m4ri_mmc_calloc(size_t count, size_t size) {
   size_t total_size = count * size;
-  void *ret = m4ri_mmc_malloc(total_size);
-  memset((char*)ret, 0, total_size);
+  void *ret         = m4ri_mmc_malloc(total_size);
+  memset((char *)ret, 0, total_size);
   return ret;
 }
 
-#endif // M4RI_MMC_H
+#endif  // M4RI_MMC_H

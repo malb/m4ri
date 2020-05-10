@@ -63,3 +63,8 @@ libm4ri_la_LIBADD = $(LIBPNG_LIBADD) $(LIBM)
 SUBDIRS = . tests
 DIST_SUBDIRS = $(SUBDIRS) bench
 
+
+CLANGFORMAT       ?= clang-format
+.PHONY: check-style
+check-style:
+	$(CLANGFORMAT) -i --style=file m4ri/*.{c,h} tests/*.{c,h} bench/*.{c,h}

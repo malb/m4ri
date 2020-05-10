@@ -12,4 +12,4 @@ mzd_t *mzd_init_test_matrix_random(rci_t M, rci_t N, rci_t m, rci_t n, word patt
 void mzd_free_test_matrix_random(mzd_t *A, mzd_t *a);
 int mzd_check_pattern(mzd_t *A, rci_t m, rci_t n, word pattern);
 
-#endif //TESTING_H
+#endif  // TESTING_H

@@ -22,19 +22,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "testing.h"
 #include <m4ri/config.h>
+#include <m4ri/m4ri.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <m4ri/m4ri.h>
-#include "testing.h"
 
-static word custom_random(void *data)
-{
-  return m4ri_random_word();
-}
+static word custom_random(void *data) { return m4ri_random_word(); }
 
-int test_random(rci_t m, rci_t n)
-{
+int test_random(rci_t m, rci_t n) {
   mzd_t *A = mzd_init(m + 3, n + 64);
   mzd_t *W = mzd_init_window(A, 1, 0, m + 1, n);
   mzd_t *M = mzd_init(m, n);
@@ -47,8 +43,7 @@ int test_random(rci_t m, rci_t n)
   srandom(17);
   mzd_randomize_custom(N, &custom_random, NULL);
   int failure = !mzd_equal(M, W) | !mzd_equal(M, N);
-  if (failure)
-  {
+  if (failure) {
 #if 1
     printf("FAILED\n");
 #else
@@ -58,8 +53,7 @@ int test_random(rci_t m, rci_t n)
     printf("W %dx%d:\n", m, n);
     mzd_print(W);
 #endif
-  }
-  else
+  } else
     printf("passed\n");
   mzd_free(N);
   mzd_free(M);
@@ -72,8 +66,7 @@ int main() {
 
   srandom(17);
 
-  for (rci_t n = 0; n < 3 * m4ri_radix; n += m4ri_radix)
-  {
+  for (rci_t n = 0; n < 3 * m4ri_radix; n += m4ri_radix) {
     status += test_random(20, n + 1);
     status += test_random(20, n + 2);
     status += test_random(20, n + 32);

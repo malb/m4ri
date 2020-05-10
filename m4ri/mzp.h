@@ -2,28 +2,28 @@
  * \file mzp.h
  *
  * \brief Permutation matrices.
- * 
+ *
  * \author Martin Albrecht <M.R.Albrecht@rhul.ac.uk>
  *
  */
 /******************************************************************************
-*
-*                 M4RI: Linear Algebra over GF(2)
-*
-*    Copyright (C) 2008 Martin Albrecht <malb@informatik.uni-bremen.de> 
-*
-*  Distributed under the terms of the GNU General Public License (GPL)
-*  version 2 or higher.
-*
-*    This code is distributed in the hope that it will be useful,
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*    General Public License for more details.
-*
-*  The full text of the GPL is available at:
-*
-*                  http://www.gnu.org/licenses/
-******************************************************************************/
+ *
+ *                 M4RI: Linear Algebra over GF(2)
+ *
+ *    Copyright (C) 2008 Martin Albrecht <malb@informatik.uni-bremen.de>
+ *
+ *  Distributed under the terms of the GNU General Public License (GPL)
+ *  version 2 or higher.
+ *
+ *    This code is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    General Public License for more details.
+ *
+ *  The full text of the GPL is available at:
+ *
+ *                  http://www.gnu.org/licenses/
+ ******************************************************************************/
 
 #ifndef M4RI_MZP
 #define M4RI_MZP
@@ -46,11 +46,11 @@ typedef struct mzp_t {
 
   rci_t length;
 
-} mzp_t; // note that this is NOT mpz_t
+} mzp_t;  // note that this is NOT mpz_t
 
 /**
  * Construct an identity permutation.
- * 
+ *
  * \param length Length of the permutation.
  */
 
@@ -58,7 +58,7 @@ mzp_t *mzp_init(rci_t length);
 
 /**
  * Free a mzp_t.
- * 
+ *
  * \param P Permutation to free.
  */
 
@@ -80,12 +80,11 @@ mzp_t *mzp_init_window(mzp_t *P, rci_t begin, rci_t end);
 /**
  * \brief Free a permutation window created with
  * mzp_init_mzp_t_window().
- * 
+ *
  * \param condemned Permutation Matrix
  */
 
 void mzp_free_window(mzp_t *condemned);
-
 
 /**
  * \brief copy permutation Q to P
@@ -177,7 +176,8 @@ void mzd_apply_p_right_even_capped(mzd_t *A, mzp_t const *P, rci_t start_row, rc
  * \param start_col Start swapping at this column.
  */
 
-void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t start_col);
+void mzd_apply_p_right_trans_even_capped(mzd_t *A, mzp_t const *P, rci_t start_row,
+                                         rci_t start_col);
 
 /**
  * Apply the mzp_t P to A from the right but transpose P before.
@@ -199,7 +199,7 @@ void mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P);
  * \param A Matrix.
  * \param Q Permutation.
  */
-void  mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t const *Q);
+void mzd_apply_p_right_trans_tri(mzd_t *A, mzp_t const *Q);
 
 /**
  * Print the mzp_t P
@@ -221,4 +221,4 @@ void mzp_print(mzp_t const *P);
 
 void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2);
 
-#endif // M4RI_MZP
+#endif  // M4RI_MZP

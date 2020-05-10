@@ -1,15 +1,15 @@
 #include <stdlib.h>
 
+#include "benchmarking.h"
+#include "cpucycles.h"
 #include <m4ri/config.h>
 #include <m4ri/m4ri.h>
-#include "cpucycles.h"
-#include "benchmarking.h"
 
 #ifdef HAVE_LIBPAPI
 #define _GNU_SOURCE
-#include <sys/types.h>          // papi.h needs caddr_t
-#include <papi.h>
 #include <errno.h>
+#include <papi.h>
+#include <sys/types.h>  // papi.h needs caddr_t
 #endif
 
 struct elim_params {
@@ -26,7 +26,7 @@ int run_nothing(void *_p, unsigned long long *data, int *data_len) {
 
   mzd_t *A = mzd_init(p->m, p->n);
 
-  if(p->r != 0) {
+  if (p->r != 0) {
     mzd_t *L, *U;
     L = mzd_init(p->m, p->m);
     U = mzd_init(p->m, p->n);
@@ -34,26 +34,26 @@ int run_nothing(void *_p, unsigned long long *data, int *data_len) {
     mzd_randomize(L);
     for (rci_t i = 0; i < p->m; ++i) {
 
-      for (rci_t j = i + 1; j < p->m; j+=m4ri_radix) {
+      for (rci_t j = i + 1; j < p->m; j += m4ri_radix) {
         int const length = MIN(m4ri_radix, p->m - j);
         mzd_clear_bits(L, i, j, length);
       }
-      mzd_write_bit(L,i,i, 1);
+      mzd_write_bit(L, i, i, 1);
 
-      for (rci_t j = 0; j < i && j <p->n; j+=m4ri_radix) {
+      for (rci_t j = 0; j < i && j < p->n; j += m4ri_radix) {
         int const length = MIN(m4ri_radix, i - j);
         mzd_clear_bits(U, i, j, length);
       }
-      if(i < p->r) {
+      if (i < p->r) {
         mzd_write_bit(U, i, i, 1);
       } else {
-        for (rci_t j = i; j < p->n; j+=m4ri_radix) {
+        for (rci_t j = i; j < p->n; j += m4ri_radix) {
           int const length = MIN(m4ri_radix, p->n - j);
           mzd_clear_bits(U, i, j, length);
         }
       }
     }
-    mzd_mul(A,L,U,0);
+    mzd_mul(A, L, U, 0);
     mzd_free(L);
     mzd_free(U);
   } else {
@@ -63,7 +63,7 @@ int run_nothing(void *_p, unsigned long long *data, int *data_len) {
 #ifndef HAVE_LIBPAPI
   *data_len = 2;
 #else
-  *data_len = MIN(papi_array_len + 1, *data_len);
+  *data_len             = MIN(papi_array_len + 1, *data_len);
 #endif
   int papi_res;
 
@@ -71,23 +71,21 @@ int run_nothing(void *_p, unsigned long long *data, int *data_len) {
   data[0] = walltime(0);
   data[1] = cpucycles();
 #else
-  int array_len = *data_len - 1;
+  int array_len         = *data_len - 1;
   unsigned long long t0 = PAPI_get_virt_usec();
-  papi_res = PAPI_start_counters((int*)papi_events, array_len);
-  if(papi_res)
-    m4ri_die("");
+  papi_res              = PAPI_start_counters((int *)papi_events, array_len);
+  if (papi_res) m4ri_die("");
 #endif
 
 #ifndef HAVE_LIBPAPI
   data[1] = cpucycles() - data[1];
   data[0] = walltime(data[0]);
 #else
-  PAPI_stop_counters((long long*)&data[1], array_len);
-  t0 = PAPI_get_virt_usec() - t0;
+  PAPI_stop_counters((long long *)&data[1], array_len);
+  t0      = PAPI_get_virt_usec() - t0;
   data[0] = t0;
   for (int nv = 0; nv <= array_len; ++nv) {
-    if (data[nv] < loop_calibration[nv])
-      loop_calibration[nv] = data[nv];
+    if (data[nv] < loop_calibration[nv]) loop_calibration[nv] = data[nv];
   }
 #endif
 
@@ -96,19 +94,18 @@ int run_nothing(void *_p, unsigned long long *data, int *data_len) {
   return (0);
 }
 
-
 int run(void *_p, unsigned long long *data, int *data_len) {
   struct elim_params *p = (struct elim_params *)_p;
 #ifndef HAVE_LIBPAPI
   *data_len = 2;
 #else
-  *data_len = MIN(papi_array_len + 1, *data_len);
+  *data_len             = MIN(papi_array_len + 1, *data_len);
 #endif
   int papi_res;
 
   mzd_t *A = mzd_init(p->m, p->n);
 
-  if(p->r != 0) {
+  if (p->r != 0) {
     mzd_t *L, *U;
     L = mzd_init(p->m, p->m);
     U = mzd_init(p->m, p->n);
@@ -116,26 +113,26 @@ int run(void *_p, unsigned long long *data, int *data_len) {
     mzd_randomize(L);
     for (rci_t i = 0; i < p->m; ++i) {
 
-      for (rci_t j = i + 1; j < p->m; j+=m4ri_radix) {
+      for (rci_t j = i + 1; j < p->m; j += m4ri_radix) {
         int const length = MIN(m4ri_radix, p->m - j);
         mzd_clear_bits(L, i, j, length);
       }
-      mzd_write_bit(L,i,i, 1);
+      mzd_write_bit(L, i, i, 1);
 
-      for (rci_t j = 0; j < i && j < p->n; j+=m4ri_radix) {
+      for (rci_t j = 0; j < i && j < p->n; j += m4ri_radix) {
         int const length = MIN(m4ri_radix, i - j);
         mzd_clear_bits(U, i, j, length);
       }
-      if(i < p->r) {
+      if (i < p->r) {
         mzd_write_bit(U, i, i, 1);
       } else {
-        for (rci_t j = i; j < p->n; j+=m4ri_radix) {
+        for (rci_t j = i; j < p->n; j += m4ri_radix) {
           int const length = MIN(m4ri_radix, p->n - i);
           mzd_clear_bits(U, i, j, length);
         }
       }
     }
-    mzd_mul(A,L,U,0);
+    mzd_mul(A, L, U, 0);
     mzd_free(L);
     mzd_free(U);
   } else {
@@ -149,20 +146,19 @@ int run(void *_p, unsigned long long *data, int *data_len) {
   data[0] = walltime(0);
   data[1] = cpucycles();
 #else
-  int array_len = *data_len - 1;
+  int array_len         = *data_len - 1;
   unsigned long long t0 = PAPI_get_virt_usec();
-  papi_res = PAPI_start_counters((int*)papi_events, array_len);
-  if (papi_res)
-    m4ri_die("");
+  papi_res              = PAPI_start_counters((int *)papi_events, array_len);
+  if (papi_res) m4ri_die("");
 #endif
-  if(strcmp(p->algorithm, "m4ri") == 0)
+  if (strcmp(p->algorithm, "m4ri") == 0)
     p->r = mzd_echelonize_m4ri(A, 0, 0);
-  else if(strcmp(p->algorithm, "ple") == 0)
+  else if (strcmp(p->algorithm, "ple") == 0)
     p->r = mzd_ple(A, P, Q, 0);
-  else if(strcmp(p->algorithm, "mmpf") == 0)
+  else if (strcmp(p->algorithm, "mmpf") == 0)
     p->r = _mzd_ple_russian(A, P, Q, 0);
   else
-    m4ri_die("unknown algorithm %s",p->algorithm);
+    m4ri_die("unknown algorithm %s", p->algorithm);
 #ifndef HAVE_LIBPAPI
   data[1] = cpucycles() - data[1];
   data[0] = walltime(data[0]);
@@ -170,12 +166,10 @@ int run(void *_p, unsigned long long *data, int *data_len) {
   mzp_free(P);
   mzp_free(Q);
 
-  PAPI_stop_counters((long long*)&data[1], array_len);
-  t0 = PAPI_get_virt_usec() - t0;
+  PAPI_stop_counters((long long *)&data[1], array_len);
+  t0      = PAPI_get_virt_usec() - t0;
   data[0] = t0;
-  for (int nv = 0; nv <= array_len; ++nv) {
-    data[nv] -= loop_calibration[nv];
-  }
+  for (int nv = 0; nv <= array_len; ++nv) { data[nv] -= loop_calibration[nv]; }
 #endif
   mzd_free(A);
   return 0;
@@ -199,22 +193,19 @@ int main(int argc, char **argv) {
 #ifdef HAVE_LIBPAPI
   int papi_counters = PAPI_num_counters();
   if (papi_counters < papi_array_len) {
-    fprintf(stderr, "%s: Warning: there are only %d hardware counters available!\n", progname, papi_counters);
+    fprintf(stderr, "%s: Warning: there are only %d hardware counters available!\n", progname,
+            papi_counters);
     papi_array_len = papi_counters;
   }
-  if (papi_test(papi_events, papi_array_len))
-    exit(1);
+  if (papi_test(papi_events, papi_array_len)) exit(1);
 
-  for (int nv = 0; nv <= papi_array_len; ++nv)
-    loop_calibration[nv] = 100000000;
+  for (int nv = 0; nv <= papi_array_len; ++nv) loop_calibration[nv] = 100000000;
 
   data_len = papi_array_len + 1;
 #else
   data_len = 2;
 #endif
-  if (opts < 0 || argc < 2 || argc > 5) {
-    print_help_and_exit();
-  }
+  if (opts < 0 || argc < 2 || argc > 5) { print_help_and_exit(); }
 
   struct elim_params params;
   params.m = atoi(argv[1]);
@@ -235,22 +226,24 @@ int main(int argc, char **argv) {
   srandom(17);
   unsigned long long data[16];
 
-  for (int i = 0; i < 4; ++i)
-    run_nothing((void*)&params, data, &data_len);
+  for (int i = 0; i < 4; ++i) run_nothing((void *)&params, data, &data_len);
 
-  run_bench(run, (void*)&params, data, data_len);
+  run_bench(run, (void *)&params, data, data_len);
 
-  double cc_per_op = ((double)data[1])/ ( (double)params.m * (double)params.n * powl((double)params.r,0.807) );
+  double cc_per_op =
+      ((double)data[1]) / ((double)params.m * (double)params.n * powl((double)params.r, 0.807));
 
-  printf("m: %5d, n: %5d, last r: %5d, cpu cycles: %12llu, cc/(mnr^0.807): %.5lf, ", params.m, params.n, params.r, data[1], cc_per_op);
+  printf("m: %5d, n: %5d, last r: %5d, cpu cycles: %12llu, cc/(mnr^0.807): %.5lf, ", params.m,
+         params.n, params.r, data[1], cc_per_op);
   print_wall_time(data[0] / 1000000.0);
   printf(", ");
   print_cpu_time(data[1] / (double)cpucycles_persecond());
   printf("\n");
 #ifdef HAVE_LIBPAPI
   for (int n = 1; n < data_len; ++n) {
-    double tmp = ((double)data[n]) / powl((double)params.n,2.807);
-    printf("%20s (%20llu) per bit (divided by n^2.807): %15.5f\n", papi_event_name(papi_events[n - 1]), data[n], tmp);
+    double tmp = ((double)data[n]) / powl((double)params.n, 2.807);
+    printf("%20s (%20llu) per bit (divided by n^2.807): %15.5f\n",
+           papi_event_name(papi_events[n - 1]), data[n], tmp);
   }
 #endif
 }

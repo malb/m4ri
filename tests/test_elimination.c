@@ -1,10 +1,10 @@
-#include <m4ri/config.h>
-#include <stdlib.h>
-#include <m4ri/m4ri.h>
 #include "testing.h"
+#include <m4ri/config.h>
+#include <m4ri/m4ri.h>
+#include <stdlib.h>
 
 int elim_test_equality(rci_t nr, rci_t nc) {
-  int ret = 0; 
+  int ret = 0;
 
   printf("elim: m: %4d, n: %4d ", nr, nc);
 
@@ -41,40 +41,39 @@ int elim_test_equality(rci_t nr, rci_t nc) {
   /* PLUQ */
   rci_t rg = mzd_echelonize_pluq(G, 1);
 
-  if(mzd_equal(A, B) != TRUE || ra != rb) {
+  if (mzd_equal(A, B) != TRUE || ra != rb) {
     printf("A != B ");
     ret -= 1;
   }
- 
-  if(mzd_equal(B, C) != TRUE || rb != rc) {
+
+  if (mzd_equal(B, C) != TRUE || rb != rc) {
     printf("B != C ");
     ret -= 1;
   }
 
-  if(mzd_equal(C, D) != TRUE || rc != rd) {
+  if (mzd_equal(C, D) != TRUE || rc != rd) {
     printf("C != D ");
     ret -= 1;
   }
 
-  if(mzd_equal(D, E) != TRUE || rd != re) {
+  if (mzd_equal(D, E) != TRUE || rd != re) {
     printf("D != E ");
     ret -= 1;
   }
 
-  if(mzd_equal(E, F) != TRUE || re != rf) {
+  if (mzd_equal(E, F) != TRUE || re != rf) {
     printf("E != F ");
     ret -= 1;
   }
 
-  if(mzd_equal(F, G) != TRUE || rf != rg) {
+  if (mzd_equal(F, G) != TRUE || rf != rg) {
     printf("F != G ");
     ret -= 1;
   }
-  if(mzd_equal(G, A) != TRUE || rg != ra) {
+  if (mzd_equal(G, A) != TRUE || rg != ra) {
     printf("G != A ");
     ret -= 1;
   }
-
 
   mzd_free(A);
   mzd_free(B);
@@ -84,7 +83,7 @@ int elim_test_equality(rci_t nr, rci_t nc) {
   mzd_free(F);
   mzd_free(G);
 
-  if(ret == 0) {
+  if (ret == 0) {
     printf(" ... passed\n");
   } else {
     printf(" ... FAILED\n");

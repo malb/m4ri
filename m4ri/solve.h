@@ -10,7 +10,7 @@
 #ifndef M4RI_SOLVE_H
 #define M4RI_SOLVE_H
 
- /*******************************************************************
+/*******************************************************************
  *
  *            M4RI: Linear Algebra over GF(2)
  *
@@ -29,11 +29,11 @@
  *
  ********************************************************************/
 
-#include <m4ri/mzp.h>
 #include <m4ri/mzd.h>
+#include <m4ri/mzp.h>
 
 /**
- * \brief Solves A X = B with A and B matrices. 
+ * \brief Solves A X = B with A and B matrices.
  *
  * The solution X is stored inplace on B.
  *
@@ -49,7 +49,7 @@ int mzd_solve_left(mzd_t *A, mzd_t *B, int const cutoff, int const inconsistency
 
 /**
  * \brief Solves (P L U Q) X = B
- * 
+ *
  * A is an input matrix supposed to store both:
  * \li  an upper right triangular matrix U
  * \li  a lower left unitary triangular matrix L.
@@ -71,9 +71,8 @@ int mzd_solve_left(mzd_t *A, mzd_t *B, int const cutoff, int const inconsistency
  *        found, -1 otherwise
  * \return 0 if a solution was found, -1 otherwise
  */
-int mzd_pluq_solve_left (mzd_t const *A, rci_t rank, 
-                         mzp_t const *P, mzp_t const *Q, 
-                         mzd_t *B, int const cutoff, int const inconsistency_check);
+int mzd_pluq_solve_left(mzd_t const *A, rci_t rank, mzp_t const *P, mzp_t const *Q, mzd_t *B,
+                        int const cutoff, int const inconsistency_check);
 
 /**
  * \brief  Solves (P L U Q) X = B
@@ -99,9 +98,8 @@ int mzd_pluq_solve_left (mzd_t const *A, rci_t rank,
  *        found, -1 otherwise
  * \return 0 if a solution was found, -1 otherwise
  */
-int _mzd_pluq_solve_left(mzd_t const *A, rci_t rank, 
-                         mzp_t const *P, mzp_t const *Q, 
-                         mzd_t *B, int const cutoff, int const inconsistency_check);
+int _mzd_pluq_solve_left(mzd_t const *A, rci_t rank, mzp_t const *P, mzp_t const *Q, mzd_t *B,
+                         int const cutoff, int const inconsistency_check);
 
 /**
  * \brief Solves A X = B with A and B matrices.
@@ -139,4 +137,4 @@ int _mzd_solve_left(mzd_t *A, mzd_t *B, int const cutoff, int const inconsistenc
 
 mzd_t *mzd_kernel_left_pluq(mzd_t *A, int const cutoff);
 
-#endif // M4RI_SOLVE_H
+#endif  // M4RI_SOLVE_H

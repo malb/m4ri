@@ -13,7 +13,7 @@
 #ifndef M4RI_BRILLIANTRUSSIAN_H
 #define M4RI_BRILLIANTRUSSIAN_H
 
- /*******************************************************************
+/*******************************************************************
  *
  *                 M4RI:  Linear Algebra over GF(2)
  *
@@ -35,8 +35,8 @@
  ********************************************************************/
 
 #include <math.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <m4ri/mzd.h>
 #include <m4ri/mzp.h>
@@ -44,7 +44,7 @@
 /**
  * \brief Constructs all possible \f$2^k\f$ row combinations using the gray
  * code table.
- * 
+ *
  * \param M matrix to generate the tables from
  * \param r the starting row
  * \param c the starting column (only exact up to block)
@@ -71,7 +71,8 @@ void mzd_make_table(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L)
  * \param L Contains row number to be added
  */
 
-void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k, mzd_t const *T, rci_t const *L);
+void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k, mzd_t const *T,
+                      rci_t const *L);
 
 /**
  * \brief Same as mzd_process_rows but works with two Gray code tables
@@ -88,7 +89,8 @@ void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, in
  * \param L1 Contains row number to be added
  */
 
-void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k, mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1);
+void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k,
+                       mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1);
 
 /**
  * \brief Same as mzd_process_rows but works with three Gray code tables
@@ -107,7 +109,7 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, i
  * \param L2 Contains row number to be added
  */
 
-void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k, 
+void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, int k,
                        mzd_t const *T0, rci_t const *L0, mzd_t const *T1, rci_t const *L1,
                        mzd_t const *T2, rci_t const *L2);
 
@@ -199,14 +201,14 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t endrow, rci_t startcol, i
  * Our implementatation is discussed in in Martin Albrecht and Clément
  * Pernet; Efficient Decomposition of Dense Matrices over GF(2);
  * http://arxiv.org/abs/1006.1744
- * 
+ *
  * \param M Matrix to be reduced.
  * \param full Return the reduced row echelon form, not only upper triangular form.
  * \param k M4RI parameter, may be 0 for auto-choose.
  *
  * \example tests/test_elimination.c
  * \example tests/bench_elimination.c
- * 
+ *
  * \return Rank of A.
  */
 
@@ -215,7 +217,7 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, const int full, int k, int heuristic, const
 /**
  * \brief Given a matrix in upper triangular form compute the reduced row
  * echelon form of that matrix.
- * 
+ *
  * \param M Matrix to be reduced.
  * \param k M4RI parameter, may be 0 for auto-choose.
  *
@@ -228,7 +230,7 @@ void mzd_top_echelonize_m4ri(mzd_t *M, int k);
  * \brief Given a matrix in upper triangular form compute the reduced
  * row echelon form of that matrix but only start to do anything for
  * the pivot at (r,c).
- * 
+ *
  * \param A Matrix to be reduced.
  * \param k M4RI parameter, may be 0 for auto-choose.
  * \param r Row index.
@@ -251,12 +253,12 @@ rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r);
  * \return Inverse of src if src has full rank
  */
 
-mzd_t *mzd_inv_m4ri(mzd_t *dst, const mzd_t* src, int k);
+mzd_t *mzd_inv_m4ri(mzd_t *dst, const mzd_t *src, int k);
 
 /**
  * \brief Matrix multiplication using Konrod's method, i.e. compute C
- * such that C == AB. 
- * 
+ * such that C == AB.
+ *
  * This is the convenient wrapper function, please see _mzd_mul_m4rm
  * for authors and implementation details.
  *
@@ -270,7 +272,6 @@ mzd_t *mzd_inv_m4ri(mzd_t *dst, const mzd_t* src, int k);
  */
 
 mzd_t *mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k);
-
 
 /**
  * Set C to C + AB using Konrod's method.
@@ -292,9 +293,9 @@ mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k);
 /**
  * \brief Matrix multiplication using Konrod's method, i.e. compute C such
  * that C == AB.
- * 
+ *
  * This is the actual implementation.
- * 
+ *
  * This function is described in Martin Albrecht, Gregory Bard and
  * William Hart; Efficient Multiplication of Dense Matrices over
  * GF(2); pre-print available at http://arxiv.org/abs/0811.1714
@@ -315,5 +316,4 @@ mzd_t *mzd_addmul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k);
 
 mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear);
 
-
-#endif // M4RI_BRILLIANTRUSSIAN_H
+#endif  // M4RI_BRILLIANTRUSSIAN_H
