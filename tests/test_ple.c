@@ -252,6 +252,10 @@ int test_pluq_string(rci_t m, rci_t n, const char *str) {
     printf (" ... passed\n");
 
   mzd_free(A);
+  mzp_free(P);
+  mzp_free(Q);
+  mzd_free(Acopy);
+
   return status;
 }
 
