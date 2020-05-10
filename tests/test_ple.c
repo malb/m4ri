@@ -4,14 +4,14 @@
 #include "testing.h"
 
 int check_pluq(mzd_t *A, rci_t *r) {
-  mzd_t* Acopy = mzd_copy (NULL,A);
+  mzd_t* Acopy = mzd_copy(NULL, A);
 
   const rci_t m = A->nrows;
   const rci_t n = A->ncols;
-  
+
   mzd_t* L = mzd_init(m, m);
   mzd_t* U = mzd_init(m, n);
-  
+
   mzp_t* P = mzp_init(m);
   mzp_t* Q = mzp_init(n);
   r[0] = mzd_pluq(A, P, Q, 0);
@@ -42,13 +42,13 @@ int check_pluq(mzd_t *A, rci_t *r) {
 	status = 1;
         break;
       }
-    }  
+    }
   mzd_free(U);
   mzd_free(L);
   mzd_free(Acopy);
   mzp_free(P);
   mzp_free(Q);
-  
+
   return status;
 }
 
@@ -72,7 +72,7 @@ int test_pluq_full_rank (rci_t m, rci_t n){
       mzd_write_bit(U,i,i, 1);
     mzd_write_bit(L,i,i, 1);
   }
-  
+
   mzd_mul(A, L, U, 2048);
 
   mzd_t* Acopy = mzd_copy (NULL,A);
@@ -87,7 +87,7 @@ int test_pluq_full_rank (rci_t m, rci_t n){
     for (rci_t j = i + 1; j < n; ++j)
       mzd_write_bit (U2, i, j, mzd_read_bit(A,i,j));
   }
-  
+
   for (rci_t i = 0; i < n && i < m; ++i){
     mzd_write_bit(L2,i,i, 1);
     mzd_write_bit(U2,i,i, 1);
@@ -137,7 +137,7 @@ int test_pluq_half_rank(rci_t m, rci_t n) {
       mzd_write_bit(L,i,j, 0);
     mzd_write_bit(L,i,i, 1);
   }
-  
+
   mzd_mul(A, L, U, 0);
 
   mzd_t* Acopy = mzd_copy (NULL,A);
@@ -205,7 +205,7 @@ int test_pluq_structured(rci_t m, rci_t n) {
   rci_t r = 0;
   int status = check_pluq(A, &r);
   printf(", rank: %5d ",r);
-  
+
   if (status) {
     printf(" ... FAILED\n");
   }  else
@@ -223,7 +223,7 @@ int test_pluq_random(rci_t m, rci_t n) {
   rci_t r = 0;
   int status = check_pluq(A, &r);
   printf(", rank: %5d ",r);
-  
+
   if (status) {
     printf(" ... FAILED\n");
   }  else
@@ -234,8 +234,8 @@ int test_pluq_random(rci_t m, rci_t n) {
 
 int test_pluq_string(rci_t m, rci_t n, const char *str) {
   printf("pluq: testing string m: %5d, n: %5d", m, n);
-  
-  
+
+
   mzd_t *A = mzd_from_str(m, n, str);
 
   mzd_t *Acopy = mzd_copy(NULL, A);
@@ -245,11 +245,12 @@ int test_pluq_string(rci_t m, rci_t n, const char *str) {
   rci_t r = 0;
   int status = check_pluq(A, &r);
   printf(", rank: %5d ",r);
-  
+
   if (status) {
     printf(" ... FAILED\n");
   }  else
     printf (" ... passed\n");
+
   mzd_free(A);
   return status;
 }
@@ -261,7 +262,7 @@ int main() {
   srandom(17);
 
   status += test_pluq_string(4, 4, "0101011100010110");
-  
+
   status += test_pluq_structured(37, 37);
   status += test_pluq_structured(63, 63);
   status += test_pluq_structured(64, 64);
@@ -277,7 +278,7 @@ int main() {
   status += test_pluq_full_rank(63, 63);
   status += test_pluq_full_rank(64, 64);
   status += test_pluq_full_rank(65, 65);
-  status += test_pluq_full_rank(97, 97); 
+  status += test_pluq_full_rank(97, 97);
   status += test_pluq_full_rank(128, 128);
   status += test_pluq_full_rank(150, 150);
   status += test_pluq_full_rank(256, 256);
