@@ -1,4 +1,4 @@
-image: gcc:6.1
+image: gcc:10
 
 pipelines:
   default:
@@ -6,5 +6,5 @@ pipelines:
         script:
           - autoreconf -i
           - CFLAGS="-fsanitize=address" ./configure --enable-debug
-          - make
+          - make check
           - make distcheck
