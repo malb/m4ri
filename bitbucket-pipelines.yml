@@ -5,6 +5,6 @@ pipelines:
     - step:
         script:
           - autoreconf -i
-          - ./configure --enable-debug
+          - CFLAGS="-fsanitize=address" ./configure --enable-debug
           - make
           - make distcheck
