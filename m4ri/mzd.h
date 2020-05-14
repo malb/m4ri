@@ -280,10 +280,10 @@ static inline wi_t mzd_rows_in_block(mzd_t const *M, int n) {
 
 static inline wi_t mzd_remaining_rows_in_block(mzd_t const *M, rci_t r) {
   const int n = mzd_row_to_block(M, r);
-  r           = (r - (n << M->blockrows_log));
+  r           = (r + M->row_offset - (n << M->blockrows_log));
   if (__M4RI_UNLIKELY(M->flags & mzd_flag_multiple_blocks)) {
     if (__M4RI_UNLIKELY(n == 0)) {
-      return (1 << M->blockrows_log) - M->row_offset - r;
+      return (1 << M->blockrows_log) - r;
     } else {
       int const last_block = mzd_row_to_block(M, M->nrows - 1);
       if (n < last_block) { return (1 << M->blockrows_log) - r; }
