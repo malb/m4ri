@@ -226,6 +226,7 @@ if test "x${want_png}" = "xyes" ; then
    PKG_CHECK_MODULES([PNG], [libpng],
       [have_libpng="yes"; 
        LIBPNG_LIBADD=${PNG_LIBS};
+       LIBPNG_CFLAGS=${PNG_CFLAGS};
        M4RI_USE_PNG_PC=libpng],
       [have_libpng="no"])
    if ! test "x${have_libpng}" = "xyes" ; then
@@ -256,6 +257,7 @@ if test "x${have_libpng}" = "xyes" ; then
    M4RI_HAVE_LIBPNG=1
    AC_SUBST(M4RI_HAVE_LIBPNG)
    AC_SUBST(LIBPNG_LIBADD)
+   AC_SUBST(LIBPNG_CFLAGS)
    AC_SUBST(M4RI_USE_PNG_PC)
    AC_SUBST(RAW_LIBPNG)
 else
