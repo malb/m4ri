@@ -96,7 +96,7 @@ If you use our libraries in a non-trivial part of your research please consider 
 	    organization = "The M4RI~Team",
 	    title        = "{The M4RI Library -- Version **version**}",
 	    year         = **year**,
-	    url          = "\url{http://m4ri.sagemath.org}",
+	    url          = "\url{https://bitbucket.org/malb/m4ri}",
 	}
 
 and cite the appropriate publications mentioned in [Further Reading](https://bitbucket.org/malb/m4ri/wiki/Further%20Reading).
