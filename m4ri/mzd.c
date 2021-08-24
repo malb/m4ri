@@ -2117,7 +2117,7 @@ rci_t mzd_first_zero_row(mzd_t const *A) {
 
 mzd_t *mzd_extract_u(mzd_t *U, mzd_t const *A) {
   rci_t k = MIN(A->nrows, A->ncols);
-  if (U == NULL) { assert(U->nrows == k && U->ncols == k); }
+  if (U != NULL) { assert(U->nrows == k && U->ncols == k); }
   U = mzd_submatrix(U, A, 0, 0, k, k);
   for (rci_t i = 1; i < U->nrows; i++) {
     for (wi_t j = 0; j < i / m4ri_radix; j++) { U->rows[i][j] = 0; }
