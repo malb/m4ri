@@ -2117,10 +2117,8 @@ rci_t mzd_first_zero_row(mzd_t const *A) {
 
 mzd_t *mzd_extract_u(mzd_t *U, mzd_t const *A) {
   rci_t k = MIN(A->nrows, A->ncols);
-  if (U == NULL)
-    U = mzd_submatrix(NULL, A, 0, 0, k, k);
-  else
-    assert(U->nrows == k && U->ncols == k);
+  if (U == NULL) { assert(U->nrows == k && U->ncols == k); }
+  U = mzd_submatrix(U, A, 0, 0, k, k);
   for (rci_t i = 1; i < U->nrows; i++) {
     for (wi_t j = 0; j < i / m4ri_radix; j++) { U->rows[i][j] = 0; }
     if (i % m4ri_radix) mzd_clear_bits(U, i, (i / m4ri_radix) * m4ri_radix, i % m4ri_radix);
@@ -2130,10 +2128,8 @@ mzd_t *mzd_extract_u(mzd_t *U, mzd_t const *A) {
 
 mzd_t *mzd_extract_l(mzd_t *L, mzd_t const *A) {
   rci_t k = MIN(A->nrows, A->ncols);
-  if (L == NULL)
-    L = mzd_submatrix(NULL, A, 0, 0, k, k);
-  else
-    assert(L->nrows == k && L->ncols == k);
+  if (L != NULL) { assert(L->nrows == k && L->ncols == k); }
+  L = mzd_submatrix(L, A, 0, 0, k, k);
   for (rci_t i = 0; i < L->nrows - 1; i++) {
     if (m4ri_radix - (i + 1) % m4ri_radix)
       mzd_clear_bits(L, i, i + 1, m4ri_radix - (i + 1) % m4ri_radix);

@@ -57,3 +57,4 @@ test_alignment
 /bench/bench_m4rm
 /m4ri/config.h.in~
 
+/compile_commands.json
