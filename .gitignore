@@ -58,3 +58,4 @@ test_alignment
 /m4ri/config.h.in~
 
 /compile_commands.json
+/.cache/
