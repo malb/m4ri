@@ -34,10 +34,13 @@ int test_trsm_upper_right(rci_t m, rci_t n, int offset) {
   mzd_addmul(W, B, U, 2048);
   mzd_copy(B, W);
 
-  for (rci_t i = 0; i < 2048; ++i)
+  for (rci_t i = 0; i < 2048; ++i) {
+    word const *row = mzd_row_const(Bbase, i);
+    word const *copy = mzd_row_const(Bbasecopy, i);
     for (wi_t j = 0; j < 2048 / m4ri_radix; ++j) {
-      if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]) { status = 1; }
+      if (row[j] != copy[j]) { status = 1; }
     }
+  }
   mzd_free_window(U);
   mzd_free_window(B);
   mzd_free(W);
@@ -82,10 +85,13 @@ int test_trsm_lower_right(rci_t m, rci_t n, int offset) {
   mzd_addmul(W, B, L, 2048);
   mzd_copy(B, W);
 
-  for (rci_t i = 0; i < 2048; ++i)
+  for (rci_t i = 0; i < 2048; ++i) {
+    word const *row = mzd_row_const(Bbase, i);
+    word const *copy = mzd_row_const(Bbasecopy, i);
     for (wi_t j = 0; j < 2048 / m4ri_radix; ++j) {
-      if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]) { status = 1; }
+      if (row[j] != copy[j]) { status = 1; }
     }
+  }
   mzd_free_window(L);
   mzd_free_window(B);
   mzd_free(W);
@@ -131,10 +137,13 @@ int test_trsm_lower_left(rci_t m, rci_t n, int offsetL, int offsetB) {
 
   mzd_copy(B, W);
 
-  for (rci_t i = 0; i < 2048; ++i)
+  for (rci_t i = 0; i < 2048; ++i) {
+    word const *row = mzd_row_const(Bbase, i);
+    word const *copy = mzd_row_const(Bbasecopy, i);
     for (wi_t j = 0; j < 2048 / m4ri_radix; ++j) {
-      if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]) { status = 1; }
+      if (row[j] != copy[j]) { status = 1; }
     }
+  }
   mzd_free_window(L);
   mzd_free_window(B);
   mzd_free_window(W);
@@ -179,10 +188,13 @@ int test_trsm_upper_left(rci_t m, rci_t n, int offsetU, int offsetB) {
 
   mzd_copy(B, W);
 
-  for (rci_t i = 0; i < 2048; ++i)
+  for (rci_t i = 0; i < 2048; ++i) {
+    word const *row = mzd_row_const(Bbase, i);
+    word const *copy = mzd_row_const(Bbasecopy, i);
     for (wi_t j = 0; j < 2048 / m4ri_radix; ++j) {
-      if (Bbase->rows[i][j] != Bbasecopy->rows[i][j]) { status = 1; }
+      if (row[j] != copy[j]) { status = 1; }
     }
+  }
   mzd_free_window(U);
   mzd_free_window(B);
   mzd_free_window(W);
