@@ -153,8 +153,6 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
   A->offset_vector = 0;
   A->row_offset    = 0;
 
-  A->rows = (word **)m4ri_mmc_calloc(r + 1, sizeof(word *));  // We're overcomitting here.
-
   if (r && c) {
     int blockrows    = __M4RI_MAX_MZD_BLOCKSIZE / A->rowstride;
     A->blockrows_log = 0;
@@ -172,10 +170,6 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
       A->blocks[i].begin = (word *)m4ri_mmc_calloc(1, A->blocks[i].size);
       A->blocks[i].end   = A->blocks[i].begin + block_words;
       block_words        = blockrows * A->rowstride;
-    }
-
-    for (rci_t i = 0; i < A->nrows; ++i) {
-      A->rows[i] = A->blocks[i >> A->blockrows_log].begin + (i & blockrows_mask) * A->rowstride;
     }
 
   } else {
@@ -247,11 +241,6 @@ mzd_t *mzd_init_window(mzd_t *M, const rci_t lowr, const rci_t lowc, const rci_t
   wi_t const wrd_offset = lowc / m4ri_radix;
   W->offset_vector =
       (M->offset_vector + wrd_offset) + (W->row_offset - M->row_offset) * W->rowstride;
-  if (nrows)
-    W->rows = (word **)m4ri_mmc_calloc(nrows + 1, sizeof(word *));
-  else
-    W->rows = NULL;
-  for (rci_t i = 0; i < nrows; ++i) { W->rows[i] = mzd_row(M, lowr + i) + wrd_offset; }
   if (mzd_row_to_block(W, nrows - 1) > 0) W->flags |= M->flags & mzd_flag_multiple_blocks;
 
   /* offset_vector is the distance from the start of the first block to the first word of the first
@@ -263,7 +252,6 @@ mzd_t *mzd_init_window(mzd_t *M, const rci_t lowr, const rci_t lowc, const rci_t
 }
 
 void mzd_free(mzd_t *A) {
-  if (A->rows) m4ri_mmc_free(A->rows, (A->nrows + 1) * sizeof(word *));
   if (mzd_owns_blocks(A)) {
     int i;
     for (i = 0; A->blocks[i].size; ++i) { m4ri_mmc_free(A->blocks[i].begin, A->blocks[i].size); }

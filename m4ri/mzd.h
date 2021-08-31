@@ -101,7 +101,6 @@ typedef struct mzd_t {
    * Offset in words from start of block to first word.
    *
    * rows[0] = blocks[0].begin + offset_vector;
-   * This, together with rowstride, makes the rows array obsolete.
    */
 
   wi_t offset_vector;
@@ -131,17 +130,11 @@ typedef struct mzd_t {
   uint8_t blockrows_log;
 
   /* ensures sizeof(mzd_t) == 64 */
-  uint8_t padding[62 - 2 * sizeof(rci_t) - 4 * sizeof(wi_t) - sizeof(word) - 2 * sizeof(void *)];
+  uint8_t padding[62 - 2 * sizeof(rci_t) - 4 * sizeof(wi_t) - sizeof(word) - sizeof(void *)];
 
   word high_bitmask;   /*!< Mask for valid bits in the word with the highest index (width - 1). */
   mzd_block_t *blocks; /*!< Pointers to the actual blocks of memory containing the values packed
                           into words. */
-  /**
-   * Address of first word in each row, so the first word of row i is is m->rows[i]
-   */
-
-  word **rows;
-
 } mzd_t;
 
 /**
@@ -211,7 +204,6 @@ static inline int mzd_owns_blocks(mzd_t const *M) {
 
 static inline word *mzd_first_row(mzd_t const *M) {
   word *result = M->blocks[0].begin + M->offset_vector;
-  assert(M->nrows == 0 || result == M->rows[0]);
   return result;
 }
 
@@ -307,9 +299,8 @@ static inline word *mzd_row(mzd_t *M, rci_t row) {
   word *result    = M->blocks[0].begin + big_vector;
   if (__M4RI_UNLIKELY(M->flags & mzd_flag_multiple_blocks)) {
     int const n = (M->row_offset + row) >> M->blockrows_log;
-    result      = M->blocks[n].begin + big_vector - n * (M->blocks[0].size / sizeof(word));
+    result = M->blocks[n].begin + big_vector - n * (M->blocks[0].size / sizeof(word));
   }
-  assert(result == M->rows[row]);
   return result;
 }
 
@@ -320,7 +311,6 @@ static inline word const * mzd_row_const(mzd_t const *M, rci_t row) {
     int const n = (M->row_offset + row) >> M->blockrows_log;
     result      = M->blocks[n].begin + big_vector - n * (M->blocks[0].size / sizeof(word));
   }
-  assert(result == M->rows[row]);
   return result;
 }
 
