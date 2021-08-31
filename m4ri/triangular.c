@@ -418,8 +418,8 @@ void _mzd_trsm_lower_left(mzd_t const *L, mzd_t *B, const int cutoff) {
 
       for (rci_t k = 0; k < i; ++k) {
         if (__M4RI_GET_BIT(Lrow[0], k)) {
-          for (wi_t j = 0; j < B->width - 1; ++j) Brow[j] ^= B->rows[k][j];
-          Brow[B->width - 1] ^= mzd_row(B, k)[B->width - 1] & mask_end;
+          for (wi_t j = 0; j < B->width - 1; ++j) Brow[j] ^= mzd_row_const(B, k)[j];
+          Brow[B->width - 1] ^= mzd_row_const(B, k)[B->width - 1] & mask_end;
         }
       }
     }
@@ -482,8 +482,8 @@ void _mzd_trsm_upper_left(mzd_t const *U, mzd_t *B, const int cutoff) {
 
       for (rci_t k = i + 1; k < mb; ++k) {
         if (__M4RI_GET_BIT(Urow[0], k)) {
-          for (wi_t j = 0; j < B->width - 1; ++j) Brow[j] ^= B->rows[k][j];
-          Brow[B->width - 1] ^= mzd_row(B, k)[B->width - 1] & mask_end;
+          for (wi_t j = 0; j < B->width - 1; ++j) Brow[j] ^= mzd_row_const(B, k)[j];
+          Brow[B->width - 1] ^= mzd_row_const(B, k)[B->width - 1] & mask_end;
         }
       }
     }
