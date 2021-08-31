@@ -110,6 +110,155 @@ void _mzd_trsm_upper_right(mzd_t const *U, mzd_t *B, const int cutoff) {
   __M4RI_DD_MZD(B);
 }
 
+void _mzd_trsm_pack(word *tmp, mzd_t const *B, rci_t giantstep, word ucol)
+{
+#if 0
+  for(int babystep = 0; babystep < m4ri_radix; ++babystep) 
+    tmp[babystep] = mzd_row(B, giantstep + babystep)[0] & ucol;
+#else
+  assert(m4ri_radix == 64);
+  tmp[ 0] = mzd_row_const(B, giantstep +  0)[0] & ucol; 
+  tmp[ 1] = mzd_row_const(B, giantstep +  1)[0] & ucol;
+  tmp[ 2] = mzd_row_const(B, giantstep +  2)[0] & ucol;
+  tmp[ 3] = mzd_row_const(B, giantstep +  3)[0] & ucol;
+  tmp[ 4] = mzd_row_const(B, giantstep +  4)[0] & ucol; 
+  tmp[ 5] = mzd_row_const(B, giantstep +  5)[0] & ucol;
+  tmp[ 6] = mzd_row_const(B, giantstep +  6)[0] & ucol;
+  tmp[ 7] = mzd_row_const(B, giantstep +  7)[0] & ucol;
+  tmp[ 8] = mzd_row_const(B, giantstep +  8)[0] & ucol;
+  tmp[ 9] = mzd_row_const(B, giantstep +  9)[0] & ucol;
+  tmp[10] = mzd_row_const(B, giantstep + 10)[0] & ucol;
+  tmp[11] = mzd_row_const(B, giantstep + 11)[0] & ucol;
+  tmp[12] = mzd_row_const(B, giantstep + 12)[0] & ucol;
+  tmp[13] = mzd_row_const(B, giantstep + 13)[0] & ucol;
+  tmp[14] = mzd_row_const(B, giantstep + 14)[0] & ucol;
+  tmp[15] = mzd_row_const(B, giantstep + 15)[0] & ucol;
+  tmp[16] = mzd_row_const(B, giantstep + 16)[0] & ucol;
+  tmp[17] = mzd_row_const(B, giantstep + 17)[0] & ucol;
+  tmp[18] = mzd_row_const(B, giantstep + 18)[0] & ucol;
+  tmp[19] = mzd_row_const(B, giantstep + 19)[0] & ucol;
+  tmp[20] = mzd_row_const(B, giantstep + 20)[0] & ucol;
+  tmp[21] = mzd_row_const(B, giantstep + 21)[0] & ucol;
+  tmp[22] = mzd_row_const(B, giantstep + 22)[0] & ucol;
+  tmp[23] = mzd_row_const(B, giantstep + 23)[0] & ucol;
+  tmp[24] = mzd_row_const(B, giantstep + 24)[0] & ucol;
+  tmp[25] = mzd_row_const(B, giantstep + 25)[0] & ucol;
+  tmp[26] = mzd_row_const(B, giantstep + 26)[0] & ucol;
+  tmp[27] = mzd_row_const(B, giantstep + 27)[0] & ucol;
+  tmp[28] = mzd_row_const(B, giantstep + 28)[0] & ucol;
+  tmp[29] = mzd_row_const(B, giantstep + 29)[0] & ucol;
+  tmp[30] = mzd_row_const(B, giantstep + 30)[0] & ucol;
+  tmp[31] = mzd_row_const(B, giantstep + 31)[0] & ucol;
+  tmp[32] = mzd_row_const(B, giantstep + 32)[0] & ucol;
+  tmp[33] = mzd_row_const(B, giantstep + 33)[0] & ucol;
+  tmp[34] = mzd_row_const(B, giantstep + 34)[0] & ucol;
+  tmp[35] = mzd_row_const(B, giantstep + 35)[0] & ucol;
+  tmp[36] = mzd_row_const(B, giantstep + 36)[0] & ucol;
+  tmp[37] = mzd_row_const(B, giantstep + 37)[0] & ucol;
+  tmp[38] = mzd_row_const(B, giantstep + 38)[0] & ucol;
+  tmp[39] = mzd_row_const(B, giantstep + 39)[0] & ucol;
+  tmp[40] = mzd_row_const(B, giantstep + 40)[0] & ucol;
+  tmp[41] = mzd_row_const(B, giantstep + 41)[0] & ucol;
+  tmp[42] = mzd_row_const(B, giantstep + 42)[0] & ucol;
+  tmp[43] = mzd_row_const(B, giantstep + 43)[0] & ucol;
+  tmp[44] = mzd_row_const(B, giantstep + 44)[0] & ucol;
+  tmp[45] = mzd_row_const(B, giantstep + 45)[0] & ucol;
+  tmp[46] = mzd_row_const(B, giantstep + 46)[0] & ucol;
+  tmp[47] = mzd_row_const(B, giantstep + 47)[0] & ucol;
+  tmp[48] = mzd_row_const(B, giantstep + 48)[0] & ucol;
+  tmp[49] = mzd_row_const(B, giantstep + 49)[0] & ucol;
+  tmp[50] = mzd_row_const(B, giantstep + 50)[0] & ucol;
+  tmp[51] = mzd_row_const(B, giantstep + 51)[0] & ucol;
+  tmp[52] = mzd_row_const(B, giantstep + 52)[0] & ucol;
+  tmp[53] = mzd_row_const(B, giantstep + 53)[0] & ucol;
+  tmp[54] = mzd_row_const(B, giantstep + 54)[0] & ucol;
+  tmp[55] = mzd_row_const(B, giantstep + 55)[0] & ucol;
+  tmp[56] = mzd_row_const(B, giantstep + 56)[0] & ucol;
+  tmp[57] = mzd_row_const(B, giantstep + 57)[0] & ucol;
+  tmp[58] = mzd_row_const(B, giantstep + 58)[0] & ucol;
+  tmp[59] = mzd_row_const(B, giantstep + 59)[0] & ucol;
+  tmp[60] = mzd_row_const(B, giantstep + 60)[0] & ucol;
+  tmp[61] = mzd_row_const(B, giantstep + 61)[0] & ucol;
+  tmp[62] = mzd_row_const(B, giantstep + 62)[0] & ucol;
+  tmp[63] = mzd_row_const(B, giantstep + 63)[0] & ucol;
+#endif
+}
+
+void _mzd_trsm_unpack(mzd_t *B, rci_t giantstep, word dotprod, rci_t i)
+{
+#if 0
+  for(int babystep = 0; babystep < m4ri_radix; ++babystep)
+    if(__M4RI_GET_BIT(dotprod, babystep)) 
+      __M4RI_FLIP_BIT(mzd_row(B, giantstep + babystep)[0], i);
+#else
+  assert(m4ri_radix == 64);
+  mzd_row(B, giantstep +  0)[0] ^= ((dotprod >>  0) & m4ri_one) << i;
+  mzd_row(B, giantstep +  1)[0] ^= ((dotprod >>  1) & m4ri_one) << i;
+  mzd_row(B, giantstep +  2)[0] ^= ((dotprod >>  2) & m4ri_one) << i;
+  mzd_row(B, giantstep +  3)[0] ^= ((dotprod >>  3) & m4ri_one) << i;
+  mzd_row(B, giantstep +  4)[0] ^= ((dotprod >>  4) & m4ri_one) << i;
+  mzd_row(B, giantstep +  5)[0] ^= ((dotprod >>  5) & m4ri_one) << i;
+  mzd_row(B, giantstep +  6)[0] ^= ((dotprod >>  6) & m4ri_one) << i;
+  mzd_row(B, giantstep +  7)[0] ^= ((dotprod >>  7) & m4ri_one) << i;
+  mzd_row(B, giantstep +  8)[0] ^= ((dotprod >>  8) & m4ri_one) << i;
+  mzd_row(B, giantstep +  9)[0] ^= ((dotprod >>  9) & m4ri_one) << i;
+  mzd_row(B, giantstep + 10)[0] ^= ((dotprod >> 10) & m4ri_one) << i;
+  mzd_row(B, giantstep + 11)[0] ^= ((dotprod >> 11) & m4ri_one) << i;
+  mzd_row(B, giantstep + 12)[0] ^= ((dotprod >> 12) & m4ri_one) << i;
+  mzd_row(B, giantstep + 13)[0] ^= ((dotprod >> 13) & m4ri_one) << i;
+  mzd_row(B, giantstep + 14)[0] ^= ((dotprod >> 14) & m4ri_one) << i;
+  mzd_row(B, giantstep + 15)[0] ^= ((dotprod >> 15) & m4ri_one) << i;
+  mzd_row(B, giantstep + 16)[0] ^= ((dotprod >> 16) & m4ri_one) << i;
+  mzd_row(B, giantstep + 17)[0] ^= ((dotprod >> 17) & m4ri_one) << i;
+  mzd_row(B, giantstep + 18)[0] ^= ((dotprod >> 18) & m4ri_one) << i;
+  mzd_row(B, giantstep + 19)[0] ^= ((dotprod >> 19) & m4ri_one) << i;
+  mzd_row(B, giantstep + 20)[0] ^= ((dotprod >> 20) & m4ri_one) << i;
+  mzd_row(B, giantstep + 21)[0] ^= ((dotprod >> 21) & m4ri_one) << i;
+  mzd_row(B, giantstep + 22)[0] ^= ((dotprod >> 22) & m4ri_one) << i;
+  mzd_row(B, giantstep + 23)[0] ^= ((dotprod >> 23) & m4ri_one) << i;
+  mzd_row(B, giantstep + 24)[0] ^= ((dotprod >> 24) & m4ri_one) << i;
+  mzd_row(B, giantstep + 25)[0] ^= ((dotprod >> 25) & m4ri_one) << i;
+  mzd_row(B, giantstep + 26)[0] ^= ((dotprod >> 26) & m4ri_one) << i;
+  mzd_row(B, giantstep + 27)[0] ^= ((dotprod >> 27) & m4ri_one) << i;
+  mzd_row(B, giantstep + 28)[0] ^= ((dotprod >> 28) & m4ri_one) << i;
+  mzd_row(B, giantstep + 29)[0] ^= ((dotprod >> 29) & m4ri_one) << i;
+  mzd_row(B, giantstep + 30)[0] ^= ((dotprod >> 30) & m4ri_one) << i;
+  mzd_row(B, giantstep + 31)[0] ^= ((dotprod >> 31) & m4ri_one) << i;
+  mzd_row(B, giantstep + 32)[0] ^= ((dotprod >> 32) & m4ri_one) << i;
+  mzd_row(B, giantstep + 33)[0] ^= ((dotprod >> 33) & m4ri_one) << i;
+  mzd_row(B, giantstep + 34)[0] ^= ((dotprod >> 34) & m4ri_one) << i;
+  mzd_row(B, giantstep + 35)[0] ^= ((dotprod >> 35) & m4ri_one) << i;
+  mzd_row(B, giantstep + 36)[0] ^= ((dotprod >> 36) & m4ri_one) << i;
+  mzd_row(B, giantstep + 37)[0] ^= ((dotprod >> 37) & m4ri_one) << i;
+  mzd_row(B, giantstep + 38)[0] ^= ((dotprod >> 38) & m4ri_one) << i;
+  mzd_row(B, giantstep + 39)[0] ^= ((dotprod >> 39) & m4ri_one) << i;
+  mzd_row(B, giantstep + 40)[0] ^= ((dotprod >> 40) & m4ri_one) << i;
+  mzd_row(B, giantstep + 41)[0] ^= ((dotprod >> 41) & m4ri_one) << i;
+  mzd_row(B, giantstep + 42)[0] ^= ((dotprod >> 42) & m4ri_one) << i;
+  mzd_row(B, giantstep + 43)[0] ^= ((dotprod >> 43) & m4ri_one) << i;
+  mzd_row(B, giantstep + 44)[0] ^= ((dotprod >> 44) & m4ri_one) << i;
+  mzd_row(B, giantstep + 45)[0] ^= ((dotprod >> 45) & m4ri_one) << i;
+  mzd_row(B, giantstep + 46)[0] ^= ((dotprod >> 46) & m4ri_one) << i;
+  mzd_row(B, giantstep + 47)[0] ^= ((dotprod >> 47) & m4ri_one) << i;
+  mzd_row(B, giantstep + 48)[0] ^= ((dotprod >> 48) & m4ri_one) << i;
+  mzd_row(B, giantstep + 49)[0] ^= ((dotprod >> 49) & m4ri_one) << i;
+  mzd_row(B, giantstep + 50)[0] ^= ((dotprod >> 50) & m4ri_one) << i;
+  mzd_row(B, giantstep + 51)[0] ^= ((dotprod >> 51) & m4ri_one) << i;
+  mzd_row(B, giantstep + 52)[0] ^= ((dotprod >> 52) & m4ri_one) << i;
+  mzd_row(B, giantstep + 53)[0] ^= ((dotprod >> 53) & m4ri_one) << i;
+  mzd_row(B, giantstep + 54)[0] ^= ((dotprod >> 54) & m4ri_one) << i;
+  mzd_row(B, giantstep + 55)[0] ^= ((dotprod >> 55) & m4ri_one) << i;
+  mzd_row(B, giantstep + 56)[0] ^= ((dotprod >> 56) & m4ri_one) << i;
+  mzd_row(B, giantstep + 57)[0] ^= ((dotprod >> 57) & m4ri_one) << i;
+  mzd_row(B, giantstep + 58)[0] ^= ((dotprod >> 58) & m4ri_one) << i;
+  mzd_row(B, giantstep + 59)[0] ^= ((dotprod >> 59) & m4ri_one) << i;
+  mzd_row(B, giantstep + 60)[0] ^= ((dotprod >> 60) & m4ri_one) << i;
+  mzd_row(B, giantstep + 61)[0] ^= ((dotprod >> 61) & m4ri_one) << i;
+  mzd_row(B, giantstep + 62)[0] ^= ((dotprod >> 62) & m4ri_one) << i;
+  mzd_row(B, giantstep + 63)[0] ^= ((dotprod >> 63) & m4ri_one) << i;
+#endif  
+}
+
 void _mzd_trsm_upper_right_base(mzd_t const *U, mzd_t *B) {
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
@@ -126,112 +275,9 @@ void _mzd_trsm_upper_right_base(mzd_t const *U, mzd_t *B) {
     word tmp[64];
 
     for (giantstep = 0; giantstep + m4ri_radix < mb; giantstep += m4ri_radix) {
-#if 0
-      for(int babystep = 0; babystep < m4ri_radix; ++babystep) 
-           tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
-#else
-      word **src = B->rows + giantstep;
-      tmp[0] = src[0][0] & ucol, tmp[1] = src[1][0] & ucol, tmp[2] = src[2][0] & ucol,
-      tmp[3] = src[3][0] & ucol;
-      tmp[4] = src[4][0] & ucol, tmp[5] = src[5][0] & ucol, tmp[6] = src[6][0] & ucol,
-      tmp[7] = src[7][0] & ucol;
-      tmp[8] = src[8][0] & ucol, tmp[9] = src[9][0] & ucol, tmp[10] = src[10][0] & ucol,
-      tmp[11] = src[11][0] & ucol;
-      tmp[12] = src[12][0] & ucol, tmp[13] = src[13][0] & ucol, tmp[14] = src[14][0] & ucol,
-      tmp[15] = src[15][0] & ucol;
-      tmp[16] = src[16][0] & ucol, tmp[17] = src[17][0] & ucol, tmp[18] = src[18][0] & ucol,
-      tmp[19] = src[19][0] & ucol;
-      tmp[20] = src[20][0] & ucol, tmp[21] = src[21][0] & ucol, tmp[22] = src[22][0] & ucol,
-      tmp[23] = src[23][0] & ucol;
-      tmp[24] = src[24][0] & ucol, tmp[25] = src[25][0] & ucol, tmp[26] = src[26][0] & ucol,
-      tmp[27] = src[27][0] & ucol;
-      tmp[28] = src[28][0] & ucol, tmp[29] = src[29][0] & ucol, tmp[30] = src[30][0] & ucol,
-      tmp[31] = src[31][0] & ucol;
-      tmp[32] = src[32][0] & ucol, tmp[33] = src[33][0] & ucol, tmp[34] = src[34][0] & ucol,
-      tmp[35] = src[35][0] & ucol;
-      tmp[36] = src[36][0] & ucol, tmp[37] = src[37][0] & ucol, tmp[38] = src[38][0] & ucol,
-      tmp[39] = src[39][0] & ucol;
-      tmp[40] = src[40][0] & ucol, tmp[41] = src[41][0] & ucol, tmp[42] = src[42][0] & ucol,
-      tmp[43] = src[43][0] & ucol;
-      tmp[44] = src[44][0] & ucol, tmp[45] = src[45][0] & ucol, tmp[46] = src[46][0] & ucol,
-      tmp[47] = src[47][0] & ucol;
-      tmp[48] = src[48][0] & ucol, tmp[49] = src[49][0] & ucol, tmp[50] = src[50][0] & ucol,
-      tmp[51] = src[51][0] & ucol;
-      tmp[52] = src[52][0] & ucol, tmp[53] = src[53][0] & ucol, tmp[54] = src[54][0] & ucol,
-      tmp[55] = src[55][0] & ucol;
-      tmp[56] = src[56][0] & ucol, tmp[57] = src[57][0] & ucol, tmp[58] = src[58][0] & ucol,
-      tmp[59] = src[59][0] & ucol;
-      tmp[60] = src[60][0] & ucol, tmp[61] = src[61][0] & ucol, tmp[62] = src[62][0] & ucol,
-      tmp[63] = src[63][0] & ucol;
-#endif
-      word const dotprod = m4ri_parity64(tmp);
-#if 0
-      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
-         if(__M4RI_GET_BIT(dotprod, babystep)) 
-           __M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i);
-#else
-      src[0][0] ^= ((dotprod >> 0) & m4ri_one) << i, src[1][0] ^= ((dotprod >> 1) & m4ri_one) << i,
-          src[2][0] ^= ((dotprod >> 2) & m4ri_one) << i,
-          src[3][0] ^= ((dotprod >> 3) & m4ri_one) << i;
-      src[4][0] ^= ((dotprod >> 4) & m4ri_one) << i, src[5][0] ^= ((dotprod >> 5) & m4ri_one) << i,
-          src[6][0] ^= ((dotprod >> 6) & m4ri_one) << i,
-          src[7][0] ^= ((dotprod >> 7) & m4ri_one) << i;
-      src[8][0] ^= ((dotprod >> 8) & m4ri_one) << i, src[9][0] ^= ((dotprod >> 9) & m4ri_one) << i,
-          src[10][0] ^= ((dotprod >> 10) & m4ri_one) << i,
-          src[11][0] ^= ((dotprod >> 11) & m4ri_one) << i;
-      src[12][0] ^= ((dotprod >> 12) & m4ri_one) << i,
-          src[13][0] ^= ((dotprod >> 13) & m4ri_one) << i,
-          src[14][0] ^= ((dotprod >> 14) & m4ri_one) << i,
-          src[15][0] ^= ((dotprod >> 15) & m4ri_one) << i;
-      src[16][0] ^= ((dotprod >> 16) & m4ri_one) << i,
-          src[17][0] ^= ((dotprod >> 17) & m4ri_one) << i,
-          src[18][0] ^= ((dotprod >> 18) & m4ri_one) << i,
-          src[19][0] ^= ((dotprod >> 19) & m4ri_one) << i;
-      src[20][0] ^= ((dotprod >> 20) & m4ri_one) << i,
-          src[21][0] ^= ((dotprod >> 21) & m4ri_one) << i,
-          src[22][0] ^= ((dotprod >> 22) & m4ri_one) << i,
-          src[23][0] ^= ((dotprod >> 23) & m4ri_one) << i;
-      src[24][0] ^= ((dotprod >> 24) & m4ri_one) << i,
-          src[25][0] ^= ((dotprod >> 25) & m4ri_one) << i,
-          src[26][0] ^= ((dotprod >> 26) & m4ri_one) << i,
-          src[27][0] ^= ((dotprod >> 27) & m4ri_one) << i;
-      src[28][0] ^= ((dotprod >> 28) & m4ri_one) << i,
-          src[29][0] ^= ((dotprod >> 29) & m4ri_one) << i,
-          src[30][0] ^= ((dotprod >> 30) & m4ri_one) << i,
-          src[31][0] ^= ((dotprod >> 31) & m4ri_one) << i;
-      src[32][0] ^= ((dotprod >> 32) & m4ri_one) << i,
-          src[33][0] ^= ((dotprod >> 33) & m4ri_one) << i,
-          src[34][0] ^= ((dotprod >> 34) & m4ri_one) << i,
-          src[35][0] ^= ((dotprod >> 35) & m4ri_one) << i;
-      src[36][0] ^= ((dotprod >> 36) & m4ri_one) << i,
-          src[37][0] ^= ((dotprod >> 37) & m4ri_one) << i,
-          src[38][0] ^= ((dotprod >> 38) & m4ri_one) << i,
-          src[39][0] ^= ((dotprod >> 39) & m4ri_one) << i;
-      src[40][0] ^= ((dotprod >> 40) & m4ri_one) << i,
-          src[41][0] ^= ((dotprod >> 41) & m4ri_one) << i,
-          src[42][0] ^= ((dotprod >> 42) & m4ri_one) << i,
-          src[43][0] ^= ((dotprod >> 43) & m4ri_one) << i;
-      src[44][0] ^= ((dotprod >> 44) & m4ri_one) << i,
-          src[45][0] ^= ((dotprod >> 45) & m4ri_one) << i,
-          src[46][0] ^= ((dotprod >> 46) & m4ri_one) << i,
-          src[47][0] ^= ((dotprod >> 47) & m4ri_one) << i;
-      src[48][0] ^= ((dotprod >> 48) & m4ri_one) << i,
-          src[49][0] ^= ((dotprod >> 49) & m4ri_one) << i,
-          src[50][0] ^= ((dotprod >> 50) & m4ri_one) << i,
-          src[51][0] ^= ((dotprod >> 51) & m4ri_one) << i;
-      src[52][0] ^= ((dotprod >> 52) & m4ri_one) << i,
-          src[53][0] ^= ((dotprod >> 53) & m4ri_one) << i,
-          src[54][0] ^= ((dotprod >> 54) & m4ri_one) << i,
-          src[55][0] ^= ((dotprod >> 55) & m4ri_one) << i;
-      src[56][0] ^= ((dotprod >> 56) & m4ri_one) << i,
-          src[57][0] ^= ((dotprod >> 57) & m4ri_one) << i,
-          src[58][0] ^= ((dotprod >> 58) & m4ri_one) << i,
-          src[59][0] ^= ((dotprod >> 59) & m4ri_one) << i;
-      src[60][0] ^= ((dotprod >> 60) & m4ri_one) << i,
-          src[61][0] ^= ((dotprod >> 61) & m4ri_one) << i,
-          src[62][0] ^= ((dotprod >> 62) & m4ri_one) << i,
-          src[63][0] ^= ((dotprod >> 63) & m4ri_one) << i;
-#endif
+      _mzd_trsm_pack(tmp, B, giantstep, ucol);
+      word dotprod = m4ri_parity64(tmp);
+      _mzd_trsm_unpack(B, giantstep, dotprod, i);
     }
 
     for (int babystep = 0; giantstep + babystep < mb; ++babystep)
@@ -327,114 +373,9 @@ void _mzd_trsm_lower_right_base(mzd_t const *L, mzd_t *B) {
     rci_t giantstep;
     word tmp[64];
     for (giantstep = 0; giantstep + m4ri_radix < mb; giantstep += m4ri_radix) {
-#if 0
-      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
-           tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
-#else
-      word **src = B->rows + giantstep;
-      tmp[0] = src[0][0] & ucol, tmp[1] = src[1][0] & ucol, tmp[2] = src[2][0] & ucol,
-      tmp[3] = src[3][0] & ucol;
-      tmp[4] = src[4][0] & ucol, tmp[5] = src[5][0] & ucol, tmp[6] = src[6][0] & ucol,
-      tmp[7] = src[7][0] & ucol;
-      tmp[8] = src[8][0] & ucol, tmp[9] = src[9][0] & ucol, tmp[10] = src[10][0] & ucol,
-      tmp[11] = src[11][0] & ucol;
-      tmp[12] = src[12][0] & ucol, tmp[13] = src[13][0] & ucol, tmp[14] = src[14][0] & ucol,
-      tmp[15] = src[15][0] & ucol;
-      tmp[16] = src[16][0] & ucol, tmp[17] = src[17][0] & ucol, tmp[18] = src[18][0] & ucol,
-      tmp[19] = src[19][0] & ucol;
-      tmp[20] = src[20][0] & ucol, tmp[21] = src[21][0] & ucol, tmp[22] = src[22][0] & ucol,
-      tmp[23] = src[23][0] & ucol;
-      tmp[24] = src[24][0] & ucol, tmp[25] = src[25][0] & ucol, tmp[26] = src[26][0] & ucol,
-      tmp[27] = src[27][0] & ucol;
-      tmp[28] = src[28][0] & ucol, tmp[29] = src[29][0] & ucol, tmp[30] = src[30][0] & ucol,
-      tmp[31] = src[31][0] & ucol;
-      tmp[32] = src[32][0] & ucol, tmp[33] = src[33][0] & ucol, tmp[34] = src[34][0] & ucol,
-      tmp[35] = src[35][0] & ucol;
-      tmp[36] = src[36][0] & ucol, tmp[37] = src[37][0] & ucol, tmp[38] = src[38][0] & ucol,
-      tmp[39] = src[39][0] & ucol;
-      tmp[40] = src[40][0] & ucol, tmp[41] = src[41][0] & ucol, tmp[42] = src[42][0] & ucol,
-      tmp[43] = src[43][0] & ucol;
-      tmp[44] = src[44][0] & ucol, tmp[45] = src[45][0] & ucol, tmp[46] = src[46][0] & ucol,
-      tmp[47] = src[47][0] & ucol;
-      tmp[48] = src[48][0] & ucol, tmp[49] = src[49][0] & ucol, tmp[50] = src[50][0] & ucol,
-      tmp[51] = src[51][0] & ucol;
-      tmp[52] = src[52][0] & ucol, tmp[53] = src[53][0] & ucol, tmp[54] = src[54][0] & ucol,
-      tmp[55] = src[55][0] & ucol;
-      tmp[56] = src[56][0] & ucol, tmp[57] = src[57][0] & ucol, tmp[58] = src[58][0] & ucol,
-      tmp[59] = src[59][0] & ucol;
-      tmp[60] = src[60][0] & ucol, tmp[61] = src[61][0] & ucol, tmp[62] = src[62][0] & ucol,
-      tmp[63] = src[63][0] & ucol;
-#endif
-
-      word const dotprod = m4ri_parity64(tmp);
-
-#if 0
-      for(int babystep = 0; babystep < m4ri_radix; ++babystep)
-           if(__M4RI_GET_BIT(dotprod, babystep))
-             __M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i);
-#else
-      src[0][0] ^= ((dotprod >> 0) & m4ri_one) << i, src[1][0] ^= ((dotprod >> 1) & m4ri_one) << i,
-          src[2][0] ^= ((dotprod >> 2) & m4ri_one) << i,
-          src[3][0] ^= ((dotprod >> 3) & m4ri_one) << i;
-      src[4][0] ^= ((dotprod >> 4) & m4ri_one) << i, src[5][0] ^= ((dotprod >> 5) & m4ri_one) << i,
-          src[6][0] ^= ((dotprod >> 6) & m4ri_one) << i,
-          src[7][0] ^= ((dotprod >> 7) & m4ri_one) << i;
-      src[8][0] ^= ((dotprod >> 8) & m4ri_one) << i, src[9][0] ^= ((dotprod >> 9) & m4ri_one) << i,
-          src[10][0] ^= ((dotprod >> 10) & m4ri_one) << i,
-          src[11][0] ^= ((dotprod >> 11) & m4ri_one) << i;
-      src[12][0] ^= ((dotprod >> 12) & m4ri_one) << i,
-          src[13][0] ^= ((dotprod >> 13) & m4ri_one) << i,
-          src[14][0] ^= ((dotprod >> 14) & m4ri_one) << i,
-          src[15][0] ^= ((dotprod >> 15) & m4ri_one) << i;
-      src[16][0] ^= ((dotprod >> 16) & m4ri_one) << i,
-          src[17][0] ^= ((dotprod >> 17) & m4ri_one) << i,
-          src[18][0] ^= ((dotprod >> 18) & m4ri_one) << i,
-          src[19][0] ^= ((dotprod >> 19) & m4ri_one) << i;
-      src[20][0] ^= ((dotprod >> 20) & m4ri_one) << i,
-          src[21][0] ^= ((dotprod >> 21) & m4ri_one) << i,
-          src[22][0] ^= ((dotprod >> 22) & m4ri_one) << i,
-          src[23][0] ^= ((dotprod >> 23) & m4ri_one) << i;
-      src[24][0] ^= ((dotprod >> 24) & m4ri_one) << i,
-          src[25][0] ^= ((dotprod >> 25) & m4ri_one) << i,
-          src[26][0] ^= ((dotprod >> 26) & m4ri_one) << i,
-          src[27][0] ^= ((dotprod >> 27) & m4ri_one) << i;
-      src[28][0] ^= ((dotprod >> 28) & m4ri_one) << i,
-          src[29][0] ^= ((dotprod >> 29) & m4ri_one) << i,
-          src[30][0] ^= ((dotprod >> 30) & m4ri_one) << i,
-          src[31][0] ^= ((dotprod >> 31) & m4ri_one) << i;
-      src[32][0] ^= ((dotprod >> 32) & m4ri_one) << i,
-          src[33][0] ^= ((dotprod >> 33) & m4ri_one) << i,
-          src[34][0] ^= ((dotprod >> 34) & m4ri_one) << i,
-          src[35][0] ^= ((dotprod >> 35) & m4ri_one) << i;
-      src[36][0] ^= ((dotprod >> 36) & m4ri_one) << i,
-          src[37][0] ^= ((dotprod >> 37) & m4ri_one) << i,
-          src[38][0] ^= ((dotprod >> 38) & m4ri_one) << i,
-          src[39][0] ^= ((dotprod >> 39) & m4ri_one) << i;
-      src[40][0] ^= ((dotprod >> 40) & m4ri_one) << i,
-          src[41][0] ^= ((dotprod >> 41) & m4ri_one) << i,
-          src[42][0] ^= ((dotprod >> 42) & m4ri_one) << i,
-          src[43][0] ^= ((dotprod >> 43) & m4ri_one) << i;
-      src[44][0] ^= ((dotprod >> 44) & m4ri_one) << i,
-          src[45][0] ^= ((dotprod >> 45) & m4ri_one) << i,
-          src[46][0] ^= ((dotprod >> 46) & m4ri_one) << i,
-          src[47][0] ^= ((dotprod >> 47) & m4ri_one) << i;
-      src[48][0] ^= ((dotprod >> 48) & m4ri_one) << i,
-          src[49][0] ^= ((dotprod >> 49) & m4ri_one) << i,
-          src[50][0] ^= ((dotprod >> 50) & m4ri_one) << i,
-          src[51][0] ^= ((dotprod >> 51) & m4ri_one) << i;
-      src[52][0] ^= ((dotprod >> 52) & m4ri_one) << i,
-          src[53][0] ^= ((dotprod >> 53) & m4ri_one) << i,
-          src[54][0] ^= ((dotprod >> 54) & m4ri_one) << i,
-          src[55][0] ^= ((dotprod >> 55) & m4ri_one) << i;
-      src[56][0] ^= ((dotprod >> 56) & m4ri_one) << i,
-          src[57][0] ^= ((dotprod >> 57) & m4ri_one) << i,
-          src[58][0] ^= ((dotprod >> 58) & m4ri_one) << i,
-          src[59][0] ^= ((dotprod >> 59) & m4ri_one) << i;
-      src[60][0] ^= ((dotprod >> 60) & m4ri_one) << i,
-          src[61][0] ^= ((dotprod >> 61) & m4ri_one) << i,
-          src[62][0] ^= ((dotprod >> 62) & m4ri_one) << i,
-          src[63][0] ^= ((dotprod >> 63) & m4ri_one) << i;
-#endif
+      _mzd_trsm_pack(tmp, B, giantstep, ucol);
+      word dotprod = m4ri_parity64(tmp);
+      _mzd_trsm_unpack(B, giantstep, dotprod, i);
     }
     for (int babystep = 0; giantstep + babystep < mb; ++babystep)
       tmp[babystep] = mzd_row(B, giantstep + babystep)[0] & ucol;
