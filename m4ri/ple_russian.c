@@ -149,7 +149,7 @@ int _mzd_ple_submatrix(mzd_t *A, rci_t const start_row, rci_t const stop_row, rc
     for (i = start_row + rank; i < stop_row; ++i) {
       word const tmp = mzd_read_bits(A, i, start_col, curr_pos + 1);
       if (tmp) {
-        word *Arow = A->rows[i];
+        word *Arow = mzd_row(A, i);
         /* clear before but preserve transformation matrix */
         for (rci_t l = 0; l < rank; ++l)
           if (done[l] < i) {
@@ -222,8 +222,7 @@ void mzd_make_table_ple(mzd_t const *A, rci_t r, rci_t writecol, int k, int knar
   int const entry_point      = wide % 8;
   wi_t const next_row_offset = writeblock + T->rowstride - T->width;
 
-  word *a;
-  word *ti1 = T->rows[0] + writeblock;
+  word *ti1 = mzd_row(T, 0) + writeblock;
   word *ti  = ti1 + T->rowstride;
 
   if (!fullrank) {
@@ -232,10 +231,10 @@ void mzd_make_table_ple(mzd_t const *A, rci_t r, rci_t writecol, int k, int knar
      */
     M[0] = 0;
     for (int i = 1; i < twokay; ++i) {
-      T->rows[i][readblock] = 0; /* we make sure that we can safely add from readblock */
+      mzd_row(T, i)[readblock] = 0; /* we make sure that we can safely add from readblock */
 
       rci_t rowneeded = r + m4ri_codebook[knar]->inc[i - 1];
-      a               = A->rows[rowneeded] + writeblock;
+      word const *a = mzd_row_const(A, rowneeded) + writeblock;
 
       /* Duff's device loop unrolling */
       wi_t n = count;
@@ -263,10 +262,10 @@ void mzd_make_table_ple(mzd_t const *A, rci_t r, rci_t writecol, int k, int knar
     E[0] = 0;
     B[0] = 0;
     for (int i = 1; i < twokay; ++i) {
-      T->rows[i][readblock] = 0; /* we make sure that we can safely add from readblock */
+      mzd_row(T, i)[readblock] = 0; /* we make sure that we can safely add from readblock */
 
       rci_t rowneeded = r + m4ri_codebook[knar]->inc[i - 1];
-      a               = A->rows[rowneeded] + writeblock;
+      word const *a = mzd_row_const(A, rowneeded) + writeblock;
 
       /* Duff's device loop unrolling */
       wi_t n = count;
@@ -344,10 +343,10 @@ void _mzd_ple_a10(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const s
 
   for (int i = 1; i < k; ++i) {
     word const tmp = mzd_read_bits(A, start_row + i, start_col, pivots[i]);
-    word *target   = A->rows[start_row + i];
+    word *target = mzd_row(A, start_row + i);
     for (int j = 0; j < i; ++j) {
       if ((tmp & m4ri_one << pivots[j])) {
-        word const *source = A->rows[start_row + j];
+        word const *source = mzd_row(A, start_row + j);
         for (wi_t w = addblock; w < A->width; ++w) { target[w] ^= source[w]; }
       }
     }
@@ -365,8 +364,8 @@ void _mzd_ple_a11_1(mzd_t *A, rci_t const start_row, rci_t const stop_row, rci_t
 
   for (rci_t i = start_row; i < stop_row; ++i) {
     rci_t x0       = T0->M[mzd_read_bits_int(A, i, start_col, k)];
-    word const *s0 = T0->T->rows[x0] + addblock;
-    word *t        = A->rows[i] + addblock;
+    word const *s0 = mzd_row_const(T0->T, x0) + addblock;
+    word *t = mzd_row(A, i) + addblock;
     _mzd_combine(t, s0, wide);
   }
 
@@ -495,7 +494,7 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
         word const bm  = m4ri_one << (j % m4ri_radix);
         if (j + 1 < A->ncols)
           for (rci_t l = curr_row + 1; l < nrows; ++l)
-            if (A->rows[l][wrd] & bm) mzd_row_add_offset(A, l, curr_row, j + 1);
+            if (mzd_row(A, l)[wrd] & bm) mzd_row_add_offset(A, l, curr_row, j + 1);
         curr_col = j + 1;
         ++curr_row;
       } else {

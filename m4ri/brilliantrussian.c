@@ -153,8 +153,8 @@ static inline void _mzd_copy_back_rows(mzd_t *A, mzd_t const *U, rci_t r, rci_t 
   wi_t const startblock = c / m4ri_radix;
   wi_t const width      = A->width - startblock;
   for (int i = 0; i < k; ++i) {
-    word const *const src = U->rows[i] + startblock;
-    word *const dst       = A->rows[r + i] + startblock;
+    word const * src = mzd_row_const(U, i) + startblock;
+    word * dst       = mzd_row(A, r + i) + startblock;
     for (wi_t j = 0; j < width; ++j) { dst[j] = src[j]; }
   }
   __M4RI_DD_MZD(A);
@@ -171,8 +171,8 @@ void mzd_make_table(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L)
   int const twokay = __M4RI_TWOPOW(k);
   L[0]             = 0;
   for (rci_t i = 1; i < twokay; ++i) {
-    word *ti  = T->rows[i] + homeblock;
-    word *ti1 = T->rows[i - 1] + homeblock;
+    word *ti  = mzd_row(T, i) + homeblock;
+    word *ti1 = mzd_row(T, i - 1) + homeblock;
 
     rci_t const rowneeded = r + m4ri_codebook[k]->inc[i - 1];
     int const id          = m4ri_codebook[k]->ord[i];
@@ -180,7 +180,7 @@ void mzd_make_table(mzd_t const *M, rci_t r, rci_t c, int k, mzd_t *T, rci_t *L)
 
     if (rowneeded >= M->nrows) continue;
 
-    word *m = M->rows[rowneeded] + homeblock;
+    word const *m = mzd_row_const(M, rowneeded) + homeblock;
 
     *ti++ = (*m++ ^ *ti1++) & mask_begin;
 
@@ -222,12 +222,12 @@ void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, i
 
     rci_t r;
     for (r = startrow; r + 2 <= stoprow; r += 2) {
-      word const b0 = M->rows[r + 0][block] & bm;
-      word const b1 = M->rows[r + 1][block] & bm;
+      word const b0 = mzd_row(M, r + 0)[block] & bm;
+      word const b1 = mzd_row(M, r + 1)[block] & bm;
 
-      word *m0 = M->rows[r + 0] + block;
-      word *m1 = M->rows[r + 1] + block;
-      word *t  = T->rows[1] + block;
+      word *m0 = mzd_row(M, r + 0) + block;
+      word *m1 = mzd_row(M, r + 1) + block;
+      word const *t  = mzd_row_const(T, 1) + block;
 
       wi_t n = count;
       if ((b0 & b1)) {
@@ -276,8 +276,8 @@ void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, i
     for (; r < stoprow; ++r) {
       rci_t const x0 = L[mzd_read_bits_int(M, r, startcol, k)];
 
-      word *m0 = M->rows[r] + block;
-      word *t0 = T->rows[x0] + block;
+      word *m0 = mzd_row(M, r) + block;
+      word const *t0 = mzd_row_const(T, x0) + block;
 
       wi_t n = count;
       switch (entry_point) {
@@ -301,11 +301,11 @@ void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, i
     rci_t const x0 = L[mzd_read_bits_int(M, r + 0, startcol, k)];
     rci_t const x1 = L[mzd_read_bits_int(M, r + 1, startcol, k)];
 
-    word *m0 = M->rows[r + 0] + block;
-    word *t0 = T->rows[x0] + block;
+    word *m0 = mzd_row(M, r + 0) + block;
+    word const *t0 = mzd_row_const(T, x0) + block;
 
-    word *m1 = M->rows[r + 1] + block;
-    word *t1 = T->rows[x1] + block;
+    word *m1 = mzd_row(M, r + 1) + block;
+    word const *t1 = mzd_row_const(T, x1) + block;
 
     wi_t n = count;
     switch (entry_point) {
@@ -327,8 +327,8 @@ void mzd_process_rows(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, i
   for (; r < stoprow; ++r) {
     rci_t const x0 = L[mzd_read_bits_int(M, r, startcol, k)];
 
-    word *m0 = M->rows[r] + block;
-    word *t0 = T->rows[x0] + block;
+    word *m0 = mzd_row(M, r) + block;
+    word const *t0 = mzd_row_const(T, x0) + block;
 
     wi_t n = count;
     switch (entry_point) {
@@ -372,10 +372,10 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
     rci_t const x1 = L1[bits & kb_bm];
     if ((x0 | x1) == 0)  // x0 == 0 && x1 == 0
       continue;
-    word *m0 = M->rows[r] + blocknum;
+    word *m0 = mzd_row(M, r) + blocknum;
     word const *t[2];
-    t[0] = T0->rows[x0] + blocknum;
-    t[1] = T1->rows[x1] + blocknum;
+    t[0] = mzd_row_const(T0, x0) + blocknum;
+    t[1] = mzd_row_const(T1, x1) + blocknum;
 
     _mzd_combine_2(m0, t, wide);
   }
@@ -416,11 +416,11 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
     if ((x0 | x1 | x2) == 0)  // x0 == 0 && x1 == 0 && x2 == 0
       continue;
 
-    word *m0 = M->rows[r] + blocknum;
+    word *m0 = mzd_row(M, r) + blocknum;
     word const *t[3];
-    t[0] = T0->rows[x0] + blocknum;
-    t[1] = T1->rows[x1] + blocknum;
-    t[2] = T2->rows[x2] + blocknum;
+    t[0] =  mzd_row_const(T0, x0) + blocknum;
+    t[1] =  mzd_row_const(T1, x1) + blocknum;
+    t[2] =  mzd_row_const(T2, x2) + blocknum;
 
     _mzd_combine_3(m0, t, wide);
   }
@@ -465,12 +465,12 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
     if (((x0 | x1) | (x2 | x3)) == 0)  // x0 == 0 && x1 == 0 && x2 == 0 && x3 == 0
       continue;
 
-    word *m0 = M->rows[r] + blocknum;
+    word *m0 = mzd_row(M, r) + blocknum;
     word const *t[4];
-    t[0] = T0->rows[x0] + blocknum;
-    t[1] = T1->rows[x1] + blocknum;
-    t[2] = T2->rows[x2] + blocknum;
-    t[3] = T3->rows[x3] + blocknum;
+    t[0] =  mzd_row_const(T0, x0) + blocknum;
+    t[1] =  mzd_row_const(T1, x1) + blocknum;
+    t[2] =  mzd_row_const(T2, x2) + blocknum;
+    t[3] =  mzd_row_const(T3, x3) + blocknum;
 
     _mzd_combine_4(m0, t, wide);
   }
@@ -520,13 +520,13 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
     if (((x0 | x1 | x2) | (x3 | x4)) == 0)  // x0 == 0 && x1 == 0 && x2 == 0 && x3 == 0 && x4 == 0
       continue;
 
-    word *m0 = M->rows[r] + blocknum;
+    word *m0 = mzd_row(M, r) + blocknum;
     word const *t[5];
-    t[0] = T0->rows[x0] + blocknum;
-    t[1] = T1->rows[x1] + blocknum;
-    t[2] = T2->rows[x2] + blocknum;
-    t[3] = T3->rows[x3] + blocknum;
-    t[4] = T4->rows[x4] + blocknum;
+    t[0] =  mzd_row_const(T0, x0) + blocknum;
+    t[1] =  mzd_row_const(T1, x1) + blocknum;
+    t[2] =  mzd_row_const(T2, x2) + blocknum;
+    t[3] =  mzd_row_const(T3, x3) + blocknum;
+    t[4] =  mzd_row_const(T4, x4) + blocknum;
 
     _mzd_combine_5(m0, t, wide);
   }
@@ -585,14 +585,14 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
         0)  // x0 == 0 && x1 == 0 && x2 == 0 && x3 == 0 && x4 == 0 && x5 == 0
       continue;
 
-    word *m0 = M->rows[r] + blocknum;
+    word *m0 = mzd_row(M, r) + blocknum;
     word const *t[6];
-    t[0] = T0->rows[x0] + blocknum;
-    t[1] = T1->rows[x1] + blocknum;
-    t[2] = T2->rows[x2] + blocknum;
-    t[3] = T3->rows[x3] + blocknum;
-    t[4] = T4->rows[x4] + blocknum;
-    t[5] = T5->rows[x5] + blocknum;
+    t[0] =  mzd_row_const(T0, x0) + blocknum;
+    t[1] =  mzd_row_const(T1, x1) + blocknum;
+    t[2] =  mzd_row_const(T2, x2) + blocknum;
+    t[3] =  mzd_row_const(T3, x3) + blocknum;
+    t[4] =  mzd_row_const(T4, x4) + blocknum;
+    t[5] =  mzd_row_const(T5, x5) + blocknum;
 
     _mzd_combine_6(m0, t, wide);
   }
@@ -650,8 +650,8 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
   mzd_t *T = mzd_init(6 * __M4RI_TWOPOW(k), ncols + m4ri_radix);
 
 #if __M4RI_HAVE_SSE2
-  assert((__M4RI_ALIGNMENT(A->rows[0], 16) == 8) | (__M4RI_ALIGNMENT(A->rows[0], 16) == 0));
-  const rci_t align_offset = __M4RI_ALIGNMENT(A->rows[0], 16) * 8;
+  assert((__M4RI_ALIGNMENT(mzd_row(A, 0), 16) == 8) | (__M4RI_ALIGNMENT(mzd_row(A, 0), 16) == 0));
+  const rci_t align_offset = __M4RI_ALIGNMENT(mzd_row(A, 0), 16) * 8;
 #else
   const rci_t align_offset = 0;
 #endif
@@ -1053,10 +1053,8 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
   mzd_t *T[__M4RI_M4RM_NTABLES];
 #ifdef __M4RI_HAVE_SSE2
   mzd_t *Talign[__M4RI_M4RM_NTABLES];
-  int c_align = (__M4RI_ALIGNMENT(C->rows[0], 16) == 8);
+  int c_align = (__M4RI_ALIGNMENT(mzd_row(C, 0), 16) == 8);
 #endif
-
-  word *c;
 
   rci_t const a_nr = A->nrows;
   rci_t const a_nc = A->ncols;
@@ -1127,18 +1125,18 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
         const word a = mzd_read_bits(A, j, kk * i, kk);
 
         switch (__M4RI_M4RM_NTABLES) {
-        case 8: t[7] = T[7]->rows[L[7][(a >> 7 * k) & bm]];
-        case 7: t[6] = T[6]->rows[L[6][(a >> 6 * k) & bm]];
-        case 6: t[5] = T[5]->rows[L[5][(a >> 5 * k) & bm]];
-        case 5: t[4] = T[4]->rows[L[4][(a >> 4 * k) & bm]];
-        case 4: t[3] = T[3]->rows[L[3][(a >> 3 * k) & bm]];
-        case 3: t[2] = T[2]->rows[L[2][(a >> 2 * k) & bm]];
-        case 2: t[1] = T[1]->rows[L[1][(a >> 1 * k) & bm]];
-        case 1: t[0] = T[0]->rows[L[0][(a >> 0 * k) & bm]]; break;
+        case 8: t[7] = mzd_row_const(T[7], L[7][(a >> 7 * k) & bm]);
+        case 7: t[6] = mzd_row_const(T[6], L[6][(a >> 6 * k) & bm]);
+        case 6: t[5] = mzd_row_const(T[5], L[5][(a >> 5 * k) & bm]);
+        case 5: t[4] = mzd_row_const(T[4], L[4][(a >> 4 * k) & bm]);
+        case 4: t[3] = mzd_row_const(T[3], L[3][(a >> 3 * k) & bm]);
+        case 3: t[2] = mzd_row_const(T[2], L[2][(a >> 2 * k) & bm]);
+        case 2: t[1] = mzd_row_const(T[1], L[1][(a >> 1 * k) & bm]);
+        case 1: t[0] = mzd_row_const(T[0], L[0][(a >> 0 * k) & bm]); break;
         default: m4ri_die("__M4RI_M4RM_NTABLES must be <= 8 but got %d", __M4RI_M4RM_NTABLES);
         }
 
-        c = C->rows[j];
+        word *c = mzd_row(C, j);
 
         switch (__M4RI_M4RM_NTABLES) {
         case 8: _mzd_combine_8(c, t, wide); break;
@@ -1162,8 +1160,8 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
       mzd_make_table(B, k * i, 0, k, T[0], L[0]);
       for (rci_t j = 0; j < a_nr; ++j) {
         x[0] = L[0][mzd_read_bits_int(A, j, k * i, k)];
-        c    = C->rows[j];
-        t[0] = T[0]->rows[x[0]];
+        word *c = mzd_row(C, j);
+        t[0] = mzd_row_const(T[0], x[0]);
         for (wi_t ii = 0; ii < wide; ++ii) { c[ii] ^= t[0][ii]; }
       }
     }
@@ -1172,8 +1170,8 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
       mzd_make_table(B, k * (a_nc / k), 0, a_nc % k, T[0], L[0]);
       for (rci_t j = 0; j < a_nr; ++j) {
         x[0] = L[0][mzd_read_bits_int(A, j, k * i, a_nc % k)];
-        c    = C->rows[j];
-        t[0] = T[0]->rows[x[0]];
+        word *c = mzd_row(C, j);
+        t[0] = mzd_row_const(T[0], x[0]);
         for (wi_t ii = 0; ii < wide; ++ii) { c[ii] ^= t[0][ii]; }
       }
     }

@@ -118,7 +118,7 @@ void _mzd_trsm_upper_right_base(mzd_t const *U, mzd_t *B) {
     /* Computes X_i = B_i + X_{0..i-1} U_{0..i-1,i} */
     register word ucol = 0;
     for (rci_t k = 0; k < i; ++k) {
-      if (__M4RI_GET_BIT(U->rows[k][0], i)) __M4RI_SET_BIT(ucol, k);
+      if (__M4RI_GET_BIT(mzd_row_const(U, k)[0], i)) __M4RI_SET_BIT(ucol, k);
     }
 
     /* doing 64 dotproducts at a time, to use the m4ri_parity64 parallelism */
@@ -235,12 +235,12 @@ void _mzd_trsm_upper_right_base(mzd_t const *U, mzd_t *B) {
     }
 
     for (int babystep = 0; giantstep + babystep < mb; ++babystep)
-      tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
+      tmp[babystep] = mzd_row(B, giantstep + babystep)[0] & ucol;
     for (int babystep = mb - giantstep; babystep < 64; ++babystep) tmp[babystep] = 0;
 
     word const dotprod = m4ri_parity64(tmp);
     for (int babystep = 0; giantstep + babystep < mb; ++babystep)
-      if (__M4RI_GET_BIT(dotprod, babystep)) __M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i);
+      if (__M4RI_GET_BIT(dotprod, babystep)) __M4RI_FLIP_BIT(mzd_row(B, giantstep + babystep)[0], i);
   }
 
   __M4RI_DD_MZD(B);
@@ -320,7 +320,7 @@ void _mzd_trsm_lower_right_base(mzd_t const *L, mzd_t *B) {
     /* Computes X_i = B_i + X_{i+1,n} L_{i+1..n,i} */
     register word ucol = 0;
     for (rci_t k = i + 1; k < nb; ++k) {
-      if (__M4RI_GET_BIT(L->rows[k][0], i)) __M4RI_SET_BIT(ucol, k);
+      if (__M4RI_GET_BIT(mzd_row_const(L, k)[0], i)) __M4RI_SET_BIT(ucol, k);
     }
 
     /* doing 64 dotproducts at a time, to use the parity64 parallelism */
@@ -437,12 +437,12 @@ void _mzd_trsm_lower_right_base(mzd_t const *L, mzd_t *B) {
 #endif
     }
     for (int babystep = 0; giantstep + babystep < mb; ++babystep)
-      tmp[babystep] = B->rows[giantstep + babystep][0] & ucol;
+      tmp[babystep] = mzd_row(B, giantstep + babystep)[0] & ucol;
     for (int babystep = mb - giantstep; babystep < 64; ++babystep) tmp[babystep] = 0;
 
     word const dotprod = m4ri_parity64(tmp);
     for (int babystep = 0; giantstep + babystep < mb; ++babystep)
-      if (__M4RI_GET_BIT(dotprod, babystep)) __M4RI_FLIP_BIT(B->rows[giantstep + babystep][0], i);
+      if (__M4RI_GET_BIT(dotprod, babystep)) __M4RI_FLIP_BIT(mzd_row(B, giantstep + babystep)[0], i);
   }
 
   __M4RI_DD_MZD(B);
@@ -472,13 +472,13 @@ void _mzd_trsm_lower_left(mzd_t const *L, mzd_t *B, const int cutoff) {
     word const mask_end = __M4RI_LEFT_BITMASK(nbrest);
     for (rci_t i = 1; i < mb; ++i) {
       /* Computes X_i = B_i + L_{i,0..i-1} X_{0..i-1}  */
-      word *Lrow = L->rows[i];
-      word *Brow = B->rows[i];
+      word const *Lrow = mzd_row_const(L, i);
+      word *Brow = mzd_row(B, i);
 
       for (rci_t k = 0; k < i; ++k) {
         if (__M4RI_GET_BIT(Lrow[0], k)) {
           for (wi_t j = 0; j < B->width - 1; ++j) Brow[j] ^= B->rows[k][j];
-          Brow[B->width - 1] ^= B->rows[k][B->width - 1] & mask_end;
+          Brow[B->width - 1] ^= mzd_row(B, k)[B->width - 1] & mask_end;
         }
       }
     }
@@ -536,13 +536,13 @@ void _mzd_trsm_upper_left(mzd_t const *U, mzd_t *B, const int cutoff) {
     for (rci_t i = mb - 2; i >= 0; --i) {
 
       /* Computes X_i = B_i + U_{i,i+1..mb} X_{i+1..mb}  */
-      word *Urow = U->rows[i];
-      word *Brow = B->rows[i];
+      word const *Urow = mzd_row_const(U, i);
+      word *Brow = mzd_row(B, i);
 
       for (rci_t k = i + 1; k < mb; ++k) {
         if (__M4RI_GET_BIT(Urow[0], k)) {
           for (wi_t j = 0; j < B->width - 1; ++j) Brow[j] ^= B->rows[k][j];
-          Brow[B->width - 1] ^= B->rows[k][B->width - 1] & mask_end;
+          Brow[B->width - 1] ^= mzd_row(B, k)[B->width - 1] & mask_end;
         }
       }
     }

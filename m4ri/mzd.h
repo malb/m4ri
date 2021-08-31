@@ -302,7 +302,18 @@ static inline wi_t mzd_remaining_rows_in_block(mzd_t const *M, rci_t r) {
  * \return pointer to first word of the row.
  */
 
-static inline word *mzd_row(mzd_t const *M, rci_t row) {
+static inline word *mzd_row(mzd_t *M, rci_t row) {
+  wi_t big_vector = M->offset_vector + row * M->rowstride;
+  word *result    = M->blocks[0].begin + big_vector;
+  if (__M4RI_UNLIKELY(M->flags & mzd_flag_multiple_blocks)) {
+    int const n = (M->row_offset + row) >> M->blockrows_log;
+    result      = M->blocks[n].begin + big_vector - n * (M->blocks[0].size / sizeof(word));
+  }
+  assert(result == M->rows[row]);
+  return result;
+}
+
+static inline word const * mzd_row_const(mzd_t const *M, rci_t row) {
   wi_t big_vector = M->offset_vector + row * M->rowstride;
   word *result    = M->blocks[0].begin + big_vector;
   if (__M4RI_UNLIKELY(M->flags & mzd_flag_multiple_blocks)) {
@@ -390,8 +401,8 @@ static inline void _mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb,
   if ((rowa == rowb) || (startblock >= M->width)) { return; }
 
   wi_t width = M->width - startblock - 1;
-  word *a    = M->rows[rowa] + startblock;
-  word *b    = M->rows[rowb] + startblock;
+  word *a    = mzd_row(M, rowa) + startblock;
+  word *b    = mzd_row(M, rowb) + startblock;
   word tmp;
   word const mask_end = M->high_bitmask;
 
@@ -566,7 +577,8 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
  */
 
 static inline BIT mzd_read_bit(mzd_t const *M, rci_t const row, rci_t const col) {
-  return __M4RI_GET_BIT(M->rows[row][col / m4ri_radix], col % m4ri_radix);
+  word const * truerow = mzd_row_const(M, row);
+  return __M4RI_GET_BIT(truerow[col / m4ri_radix], col % m4ri_radix);
 }
 
 /**
@@ -582,7 +594,8 @@ static inline BIT mzd_read_bit(mzd_t const *M, rci_t const row, rci_t const col)
  */
 
 static inline void mzd_write_bit(mzd_t *M, rci_t const row, rci_t const col, BIT const value) {
-  __M4RI_WRITE_BIT(M->rows[row][col / m4ri_radix], col % m4ri_radix, value);
+    word * truerow = mzd_row(M, row);
+  __M4RI_WRITE_BIT(truerow[col / m4ri_radix], col % m4ri_radix, value);
 }
 
 /**
@@ -595,13 +608,14 @@ static inline void mzd_write_bit(mzd_t *M, rci_t const row, rci_t const col, BIT
  * \param values Word with values;
  */
 
-static inline void mzd_xor_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n,
+static inline void mzd_xor_bits(mzd_t *M, rci_t const x, rci_t const y, int const n,
                                 word values) {
   int const spot   = y % m4ri_radix;
   wi_t const block = y / m4ri_radix;
-  M->rows[x][block] ^= values << spot;
+  word *row = mzd_row(M, x);
+  row[block] ^= values << spot;
   int const space = m4ri_radix - spot;
-  if (n > space) { M->rows[x][block + 1] ^= values >> space; }
+  if (n > space) { row[block + 1] ^= values >> space; }
 }
 
 /**
@@ -614,16 +628,17 @@ static inline void mzd_xor_bits(mzd_t const *M, rci_t const x, rci_t const y, in
  * \param values Word with values;
  */
 
-static inline void mzd_and_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n,
+static inline void mzd_and_bits(mzd_t *M, rci_t const x, rci_t const y, int const n,
                                 word values) {
   /* This is the best way, since this will drop out once we inverse the bits in values: */
   values >>= (m4ri_radix - n); /* Move the bits to the lowest columns */
 
   int const spot   = y % m4ri_radix;
   wi_t const block = y / m4ri_radix;
-  M->rows[x][block] &= values << spot;
+  word *row = mzd_row(M, x);
+  row[block] &= values << spot;
   int const space = m4ri_radix - spot;
-  if (n > space) { M->rows[x][block + 1] &= values >> space; }
+  if (n > space) { row[block + 1] &= values >> space; }
 }
 
 /**
@@ -635,14 +650,15 @@ static inline void mzd_and_bits(mzd_t const *M, rci_t const x, rci_t const y, in
  * \param n Number of bits (0 < n <= m4ri_radix);
  */
 
-static inline void mzd_clear_bits(mzd_t const *M, rci_t const x, rci_t const y, int const n) {
+static inline void mzd_clear_bits(mzd_t *M, rci_t const x, rci_t const y, int const n) {
   assert(n > 0 && n <= m4ri_radix);
   word values      = m4ri_ffff >> (m4ri_radix - n);
   int const spot   = y % m4ri_radix;
   wi_t const block = y / m4ri_radix;
-  M->rows[x][block] &= ~(values << spot);
+  word *row = mzd_row(M, x);
+  row[block] &= ~(values << spot);
   int const space = m4ri_radix - spot;
-  if (n > space) { M->rows[x][block + 1] &= ~(values >> space); }
+  if (n > space) { row[block + 1] &= ~(values >> space); }
 }
 
 /**
@@ -661,8 +677,8 @@ static inline void mzd_row_add_offset(mzd_t *M, rci_t dstrow, rci_t srcrow, rci_
   assert(dstrow < M->nrows && srcrow < M->nrows && coloffset < M->ncols);
   wi_t const startblock = coloffset / m4ri_radix;
   wi_t wide             = M->width - startblock;
-  word *src             = M->rows[srcrow] + startblock;
-  word *dst             = M->rows[dstrow] + startblock;
+  word *src             = mzd_row(M, srcrow) + startblock;
+  word *dst             = mzd_row(M, dstrow) + startblock;
   word const mask_begin = __M4RI_RIGHT_BITMASK(m4ri_radix - coloffset % m4ri_radix);
   word const mask_end   = M->high_bitmask;
 
@@ -1016,9 +1032,10 @@ static inline word mzd_read_bits(mzd_t const *M, rci_t const x, rci_t const y, i
   int const spot   = y % m4ri_radix;
   wi_t const block = y / m4ri_radix;
   int const spill  = spot + n - m4ri_radix;
+  word const *row = mzd_row_const(M, x);
   word temp        = (spill <= 0)
-                  ? M->rows[x][block] << -spill
-                  : (M->rows[x][block + 1] << (m4ri_radix - spill)) | (M->rows[x][block] >> spill);
+                  ? row[block] << -spill
+                  : (row[block + 1] << (m4ri_radix - spill)) | (row[block] >> spill);
   return temp >> (m4ri_radix - n);
 }
 
@@ -1044,8 +1061,8 @@ static inline void mzd_combine_even_in_place(mzd_t *A, rci_t const a_row, wi_t c
 
   wi_t wide = A->width - a_startblock - 1;
 
-  word *a = A->rows[a_row] + a_startblock;
-  word *b = B->rows[b_row] + b_startblock;
+  word *a = mzd_row(A, a_row) + a_startblock;
+  word const *b = mzd_row_const(B, b_row) + b_startblock;
 
 #if __M4RI_HAVE_SSE2
   if (wide > 2) {
@@ -1117,9 +1134,9 @@ static inline void mzd_combine_even(mzd_t *C, rci_t const c_row, wi_t const c_st
                                     mzd_t const *B, rci_t const b_row, wi_t const b_startblock) {
 
   wi_t wide = A->width - a_startblock - 1;
-  word *a   = A->rows[a_row] + a_startblock;
-  word *b   = B->rows[b_row] + b_startblock;
-  word *c   = C->rows[c_row] + c_startblock;
+  word const *a = mzd_row_const(A, a_row) + a_startblock;
+  word const *b = mzd_row_const(B, b_row) + b_startblock;
+  word *c   = mzd_row(C, c_row) + c_startblock;
 
 #if __M4RI_HAVE_SSE2
   if (wide > 2) {
@@ -1296,7 +1313,7 @@ rci_t mzd_first_zero_row(mzd_t const *A);
 static inline word mzd_hash(mzd_t const *A) {
   word hash = 0;
   for (rci_t r = 0; r < A->nrows; ++r) {
-    hash ^= rotate_word(calculate_hash(A->rows[r], A->width), r % m4ri_radix);
+    hash ^= rotate_word(calculate_hash(mzd_row_const(A, r), A->width), r % m4ri_radix);
   }
   return hash;
 }

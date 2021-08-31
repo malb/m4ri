@@ -99,8 +99,8 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t const *B, rci_t 
     }
 
     for (rci_t r = start_row; r < stop_row; ++r) {
-      word const *Brow    = B->rows[r - start_row];
-      word *Arow          = A->rows[r];
+      word const *Brow    = mzd_row_const(B, r - start_row);
+      word *Arow          = mzd_row(A, r);
       register word value = 0;
 
       /* we gather the bits in a register word */
@@ -194,8 +194,6 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t st
 
   /* our temporary where we store the columns we want to swap around */
   mzd_t *B = mzd_init(step_size, A->ncols);
-  word *Arow;
-  word *Brow;
 
   /* setup mathematical permutation */
   rci_t *permutation = (rci_t *)m4ri_mm_calloc(A->ncols, sizeof(rci_t));
@@ -228,8 +226,8 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t st
   for (rci_t i = start_row; i < A->nrows; i += step_size) {
     step_size = MIN(step_size, A->nrows - i);
     for (int k = 0; k < step_size; ++k) {
-      Arow = A->rows[i + k];
-      Brow = B->rows[k];
+      word *Arow = mzd_row(A, i + k);
+      word *Brow = mzd_row(B, k);
 
       /*copy row & clear those values which will be overwritten */
       for (wi_t j = 0; j < width; ++j) {
@@ -392,18 +390,18 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
     j += rest;
 
     /* now each write is simply a word write */
-
     block = (n1 + j - r1) / m4ri_radix;
+    word *row = mzd_row(A, i);
 
     if (rest % m4ri_radix == 0) {
       for (; j + m4ri_radix <= r1 + r2; j += m4ri_radix, ++block) {
-        tmp                        = A->rows[i][block];
-        A->rows[i][j / m4ri_radix] = tmp;
+        tmp = row[block];
+        row[j / m4ri_radix] = tmp;
       }
     } else {
       for (; j + m4ri_radix <= r1 + r2; j += m4ri_radix, ++block) {
-        tmp = (A->rows[i][block] >> rest) | (A->rows[i][block + 1] << (m4ri_radix - rest));
-        A->rows[i][j / m4ri_radix] = tmp;
+        tmp = (row[block] >> rest) | (row[block + 1] << (m4ri_radix - rest));
+        row[j / m4ri_radix] = tmp;
       }
     }
 
@@ -412,8 +410,8 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
        past the end of n1+r2. */
 
     if (j < r1 + r2) {
-      tmp                        = mzd_read_bits(A, i, n1 + j - r1, r1 + r2 - j);
-      A->rows[i][j / m4ri_radix] = tmp;
+      tmp = mzd_read_bits(A, i, n1 + j - r1, r1 + r2 - j);
+      row[j / m4ri_radix] = tmp;
     }
 
     /* now clear the rest of L2 */
@@ -426,7 +424,7 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
        everything is zero there anyway. Thus, we can omit the code
        which deals with last few bits. */
 
-    for (; j < n1 + r2; j += m4ri_radix) { A->rows[i][j / m4ri_radix] = 0; }
+    for (; j < n1 + r2; j += m4ri_radix) { row[j / m4ri_radix] = 0; }
   }
 
 #endif

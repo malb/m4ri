@@ -48,7 +48,7 @@ void mzd_info(const mzd_t *A, int do_rank) {
 void mzd_fprint_row(FILE *stream, mzd_t const *M, const rci_t i) {
   char temp[SAFECHAR];
   fprintf(stream, "[");
-  word *row = M->rows[i];
+  word const *row = mzd_row_const(M, i);
   for (wi_t j = 0; j < M->width - 1; ++j) {
     m4ri_word_to_str(temp, row[j], 1);
     fprintf(stream, "%s|", temp);
