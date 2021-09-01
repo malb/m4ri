@@ -58,15 +58,6 @@
 
 #define __M4RI_MUL_BLOCKSIZE MIN(((int)sqrt((double)(4 * __M4RI_CPU_L3_CACHE))) / 2, 2048)
 
-/**
- * \brief Data containers containing the values packed into words
- */
-
-typedef struct {
-  size_t size; /*!< number of words */
-  word *begin; /*!< first word */
-  word *end;   /*!< last word */
-} mzd_block_t;
 
 /**
  * \brief Dense matrices over GF(2).
@@ -90,17 +81,6 @@ typedef struct mzd_t {
   wi_t rowstride;
 
   /**
-   * Offset in words from start of block to first word.
-   *
-   * rows[0] = blocks[0].begin + offset_vector;
-   */
-
-  wi_t offset_vector;
-
-  wi_t row_offset; /*!< Number of rows to the first row counting from the start of the first block.
-                    */
-
-  /**
    * Booleans to speed up things.
    *
    * The bits have the following meaning:
@@ -114,17 +94,11 @@ typedef struct mzd_t {
 
   uint8_t flags;
 
-  /**
-   * blockrows_log = log2(blockrows);
-   * where blockrows is the number of rows in one block, which is a power of 2.
-   */
-
   /* ensures sizeof(mzd_t) == 64 */
-  uint8_t padding[63 - 2 * sizeof(rci_t) - 4 * sizeof(wi_t) - sizeof(word) - sizeof(void *)];
+  uint8_t padding[63 - 2 * sizeof(rci_t) - 4 * sizeof(wi_t) - sizeof(word) - 2*sizeof(void *)];
 
   word high_bitmask;   /*!< Mask for valid bits in the word with the highest index (width - 1). */
-  mzd_block_t *blocks; /*!< Pointers to the actual blocks of memory containing the values packed
-                          into words. */
+  word *data;
 } mzd_t;
 
 /**
@@ -181,7 +155,7 @@ static inline int mzd_is_windowed(mzd_t const *M) {
  * \return TRUE iff blocks is non-zero and should be freed upon a call to mzd_free.
  */
 static inline int mzd_owns_blocks(mzd_t const *M) {
-  return M->blocks && (!mzd_is_windowed(M) || ((M->flags & mzd_flag_windowed_ownsblocks)));
+  return !mzd_is_windowed(M);
 }
 
 /**
@@ -194,9 +168,7 @@ static inline int mzd_owns_blocks(mzd_t const *M) {
  */
 
 static inline word *mzd_row(mzd_t *M, rci_t row) {
-  wi_t big_vector = M->offset_vector + row * M->rowstride;
-  word *result    = M->blocks[0].begin + big_vector;
-  return result;
+  return M->data + M->rowstride * row;
 }
 
 static inline word const * mzd_row_const(mzd_t const *M, rci_t row) {
