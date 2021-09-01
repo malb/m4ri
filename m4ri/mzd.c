@@ -1010,8 +1010,8 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
   rci_t ncols   = A->ncols;
   rci_t maxsize = MAX(nrows, ncols);
 
-  word *RESTRICT fwd       = mzd_first_row(DST);
-  word const *RESTRICT fws = mzd_first_row(A);
+  word *RESTRICT fwd       = mzd_row(DST, 0);
+  word const *RESTRICT fws = mzd_row_const(A, 0);
 
   if (maxsize >= 64) {
 

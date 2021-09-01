@@ -185,78 +185,6 @@ static inline int mzd_owns_blocks(mzd_t const *M) {
 }
 
 /**
- * \brief Get a pointer the first word.
- *
- * \param M Matrix
- *
- * \return a pointer to the first word of the first row.
- */
-
-static inline word *mzd_first_row(mzd_t const *M) {
-  word *result = M->blocks[0].begin + M->offset_vector;
-  return result;
-}
-
-/**
- * \brief Get a pointer to the first word in block n.
- *
- * Use mzd_first_row for block number 0.
- *
- * \param M Matrix
- * \param n The block number. Must be larger than 0.
- *
- * \return a pointer to the first word of the first row in block n.
- */
-static inline word *mzd_first_row_next_block(mzd_t const *M, int n) {
-  assert(n > 0);
-  return M->blocks[n].begin + M->offset_vector - M->row_offset * M->rowstride;
-}
-
-/**
- * \brief Convert row to blocks index.
- *
- * \param M Matrix.
- * \param row The row to convert.
- *
- * \return the block number that contains this row.
- */
-
-static inline int mzd_row_to_block(mzd_t const *M, rci_t row) {
-  return 0;
-}
-
-/**
- * \brief Total number of rows in this block.
- *
- * Should be called with a constant n=0, or with
- * n > 0 when n is a variable, for optimization
- * reasons.
- *
- * \param M Matrix
- * \param n The block number.
- *
- * \return the total number of rows in this block.
- */
-
-static inline wi_t mzd_rows_in_block(mzd_t const *M, int n) {
-  assert(n == 0);
-  return M->nrows;
-}
-
-/**
- * \brief Number of rows in this block including r
- *
- * \param M Matrix
- * \param r row
- *
- * \return the number of rows with index >= r in this block
- */
-
-static inline wi_t mzd_remaining_rows_in_block(mzd_t const *M, rci_t r) {
-  return M->nrows - r;
-}
-
-/**
  * \brief Get pointer to first word of row.
  *
  * \param M Matrix
@@ -433,10 +361,9 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
   int max_bit         = MAX(a_bit, b_bit);
   int count_remaining = stop_row - start_row;
   int min_bit         = a_bit + b_bit - max_bit;
-  int block           = mzd_row_to_block(M, start_row);
   int offset          = max_bit - min_bit;
   word mask           = m4ri_one << min_bit;
-  int count           = MIN(mzd_remaining_rows_in_block(M, start_row), count_remaining);
+  int count           = count_remaining;
 
   // Apparently we're calling with start_row == stop_row sometimes (seems a bug to me).
   if (count <= 0) { return; }
@@ -444,6 +371,7 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
   if (a_word == b_word) {
     while (1) {
       count_remaining -= count;
+      assert(count_remaining == 0);
       ptr += a_word;
       int fast_count = count / 4;
       int rest_count = count - 4 * fast_count;
@@ -479,9 +407,7 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
         *ptr ^= xor_v | (xor_v << offset);
         ptr += rowstride;
       }
-      block++;
-      if ((count = MIN(mzd_rows_in_block(M, block), count_remaining)) <= 0) { break; }
-      ptr = mzd_first_row_next_block(M, block);
+      break;
     }
   } else {
     word *RESTRICT min_ptr;
@@ -495,6 +421,7 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
     }
     while (1) {
       count_remaining -= count;
+      assert(count_remaining == 0);
       wi_t const rowstride = M->rowstride;
       while (count--) {
         word xor_v = (min_ptr[0] ^ (min_ptr[max_offset] >> offset)) & mask;
@@ -502,14 +429,7 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
         min_ptr[max_offset] ^= xor_v << offset;
         min_ptr += rowstride;
       }
-      block++;
-      if ((count = MIN(mzd_rows_in_block(M, +block), count_remaining)) <= 0) { break; }
-      ptr = mzd_first_row_next_block(M, block);
-      if (min_bit == a_bit) {
-        min_ptr = ptr + a_word;
-      } else {
-        min_ptr = ptr + b_word;
-      }
+      break;
     }
   }
 
