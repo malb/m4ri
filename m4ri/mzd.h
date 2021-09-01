@@ -324,15 +324,6 @@ static inline void mzd_row_swap(mzd_t *M, rci_t const rowa, rci_t const rowb) {
 
 void mzd_copy_row(mzd_t *B, rci_t i, mzd_t const *A, rci_t j);
 
-/**
- * \brief Swap the two columns cola and colb.
- *
- * \param M Matrix.
- * \param cola Column index.
- * \param colb Column index.
- */
-
-void mzd_col_swap(mzd_t *M, rci_t const cola, rci_t const colb);
 
 /**
  * \brief Swap the two columns cola and colb but only between start_row and stop_row.
@@ -435,6 +426,18 @@ static inline void mzd_col_swap_in_rows(mzd_t *M, rci_t const cola, rci_t const 
 
   __M4RI_DD_MZD(M);
 }
+
+/**
+ * \brief Swap the two columns cola and colb.
+ *
+ * \param M Matrix.
+ * \param cola Column index.
+ * \param colb Column index.
+ */
+static inline void mzd_col_swap(mzd_t *M, rci_t const cola, rci_t const colb) {
+  mzd_col_swap_in_rows(M, cola, colb, 0, M->nrows);
+}
+
 
 /**
  * \brief Read the bit at position M[row,col].
