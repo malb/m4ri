@@ -154,13 +154,14 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
   A->row_offset    = 0;
 
   if (r && c) {
-    int blockrows    = __M4RI_MAX_MZD_BLOCKSIZE / A->rowstride;
+    size_t blockrows    = __M4RI_MAX_MZD_BLOCKSIZE / A->rowstride;
     A->blockrows_log = 0;
     while (blockrows >>= 1) A->blockrows_log++;
     blockrows = 1 << A->blockrows_log;
 
     int const blockrows_mask = blockrows - 1;
     int const nblocks        = (r + blockrows - 1) / blockrows;
+    assert(nblocks == 1);
     A->flags |= (nblocks > 1) ? mzd_flag_multiple_blocks : 0;
     A->blocks = (mzd_block_t *)m4ri_mmc_calloc(nblocks + 1, sizeof(mzd_block_t));
 
@@ -235,6 +236,7 @@ mzd_t *mzd_init_window(mzd_t *M, const rci_t lowr, const rci_t lowc, const rci_t
 
   wi_t const blockrows_mask = (1 << W->blockrows_log) - 1;
   int const skipped_blocks  = (M->row_offset + lowr) >> W->blockrows_log;
+  assert(skipped_blocks == 0);
   assert(skipped_blocks == 0 || ((M->flags & mzd_flag_multiple_blocks)));
   W->row_offset         = (M->row_offset + lowr) & blockrows_mask;
   W->blocks             = &M->blocks[skipped_blocks];

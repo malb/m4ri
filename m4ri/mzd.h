@@ -49,14 +49,6 @@
 #include <m4ri/debug_dump.h>
 
 /**
- * Maximum number of words allocated for one mzd_t block.
- *
- * \note This value must fit in an int, even though it's type is size_t.
- */
-
-#define __M4RI_MAX_MZD_BLOCKSIZE (((size_t)1) << 27)
-
-/**
  * \brief Matrix multiplication block-ing dimension.
  *
  * Defines the number of rows of the matrix A that are
