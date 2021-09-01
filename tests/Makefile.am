@@ -23,6 +23,7 @@ TESTS = test_elimination \
 	test_multiplication \
 	test_trsm \
 	test_ple \
+	test_pluq \
 	test_solve \
 	test_kernel \
 	test_random \
