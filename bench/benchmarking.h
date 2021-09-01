@@ -2,7 +2,7 @@
 #define BENCHMARKETING_H
 
 #include <stdint.h>
-
+#include <stdio.h>
 /*
  * Command line options. See benchmarking.h for documentation.
  */
