@@ -245,44 +245,6 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t st
   __M4RI_DD_MZD(A);
 }
 
-void _mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P) {
-  if (A->nrows == 0) return;
-  rci_t const length  = MIN(P->length, A->ncols);
-  int const step_size = MAX((__M4RI_CPU_L1_CACHE >> 3) / A->width, 1);
-  for (rci_t j = 0; j < A->nrows; j += step_size) {
-    rci_t stop_row = MIN(j + step_size, A->nrows);
-    for (rci_t i = 0; i < length; ++i) {
-      assert(P->values[i] >= i);
-      mzd_col_swap_in_rows(A, i, P->values[i], j, stop_row);
-    }
-  }
-  /*   for (i=0; i<P->length; i++) { */
-  /*     assert(P->values[i] >= i); */
-  /*     mzd_col_swap(A, i, P->values[i]); */
-  /*   } */
-
-  __M4RI_DD_MZD(A);
-}
-
-void _mzd_apply_p_right(mzd_t *A, mzp_t const *P) {
-  if (A->nrows == 0) return;
-  int const step_size = MAX((__M4RI_CPU_L1_CACHE >> 3) / A->width, 1);
-  for (rci_t j = 0; j < A->nrows; j += step_size) {
-    rci_t stop_row = MIN(j + step_size, A->nrows);
-    for (rci_t i = P->length - 1; i >= 0; --i) {
-      assert(P->values[i] >= i);
-      mzd_col_swap_in_rows(A, i, P->values[i], j, stop_row);
-    }
-  }
-  /*   long i; */
-  /*   for (i=P->length-1; i>=0; i--) { */
-  /*     assert(P->values[i] >= i); */
-  /*     mzd_col_swap(A, i, P->values[i]); */
-  /*   } */
-
-  __M4RI_DD_MZD(A);
-}
-
 void mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P) {
   if (!A->nrows) return;
   _mzd_apply_p_right_even(A, P, 0, 0, 0);
