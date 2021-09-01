@@ -95,7 +95,7 @@ typedef struct mzd_t {
   uint8_t flags;
 
   /* ensures sizeof(mzd_t) == 64 */
-  uint8_t padding[63 - 2 * sizeof(rci_t) - 4 * sizeof(wi_t) - sizeof(word) - 2*sizeof(void *)];
+  uint8_t padding[63 - 2 * sizeof(rci_t) - 2 * sizeof(wi_t) - sizeof(word) - sizeof(void *)];
 
   word high_bitmask;   /*!< Mask for valid bits in the word with the highest index (width - 1). */
   word *data;
