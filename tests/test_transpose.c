@@ -91,9 +91,9 @@ int main() {
   mzd_free(CT);
   mzd_free(CTT);
 
-  /* for (int i = 0; i < 18; ++i) { */
-  /*     status += test_transpose(i); */
-  /* } */
+  for (int i = 0; i < 18; ++i) {
+      status += test_transpose(i);
+  }
 
   if (!status) {
     printf("All tests passed.\n");
