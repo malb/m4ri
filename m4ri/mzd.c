@@ -154,25 +154,12 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
   A->row_offset    = 0;
 
   if (r && c) {
-    size_t blockrows    = __M4RI_MAX_MZD_BLOCKSIZE / A->rowstride;
-    A->blockrows_log = 0;
-    while (blockrows >>= 1) A->blockrows_log++;
-    blockrows = 1 << A->blockrows_log;
-
-    int const blockrows_mask = blockrows - 1;
-    int const nblocks        = (r + blockrows - 1) / blockrows;
-    assert(nblocks == 1);
-    A->flags |= (nblocks > 1) ? mzd_flag_multiple_blocks : 0;
-    A->blocks = (mzd_block_t *)m4ri_mmc_calloc(nblocks + 1, sizeof(mzd_block_t));
-
-    size_t block_words = (r - (nblocks - 1) * blockrows) * A->rowstride;
-    for (int i = nblocks - 1; i >= 0; --i) {
-      A->blocks[i].size  = block_words * sizeof(word);
-      A->blocks[i].begin = (word *)m4ri_mmc_calloc(1, A->blocks[i].size);
-      A->blocks[i].end   = A->blocks[i].begin + block_words;
-      block_words        = blockrows * A->rowstride;
-    }
-
+    A->blockrows_log = 62;
+    A->blocks = m4ri_mmc_calloc(2, sizeof(mzd_block_t));
+    size_t block_words = r * A->rowstride;
+    A->blocks[0].size  = block_words * sizeof(word);
+    A->blocks[0].begin = m4ri_mmc_calloc(1, A->blocks[0].size);
+    A->blocks[0].end   = A->blocks[0].begin + block_words;
   } else {
     A->blocks = NULL;
   }
@@ -234,12 +221,9 @@ mzd_t *mzd_init_window(mzd_t *M, const rci_t lowr, const rci_t lowc, const rci_t
   W->flags |= (ncols % m4ri_radix == 0) ? mzd_flag_windowed_zeroexcess : mzd_flag_nonzero_excess;
   W->blockrows_log = M->blockrows_log;
 
-  wi_t const blockrows_mask = (1 << W->blockrows_log) - 1;
-  int const skipped_blocks  = (M->row_offset + lowr) >> W->blockrows_log;
-  assert(skipped_blocks == 0);
-  assert(skipped_blocks == 0 || ((M->flags & mzd_flag_multiple_blocks)));
-  W->row_offset         = (M->row_offset + lowr) & blockrows_mask;
-  W->blocks             = &M->blocks[skipped_blocks];
+  int const skipped_blocks  = 0; 
+  W->row_offset         = M->row_offset + lowr;
+  W->blocks             = &M->blocks[0];
   wi_t const wrd_offset = lowc / m4ri_radix;
   W->offset_vector =
       (M->offset_vector + wrd_offset) + (W->row_offset - M->row_offset) * W->rowstride;
