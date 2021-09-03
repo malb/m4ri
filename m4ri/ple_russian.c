@@ -122,20 +122,10 @@ int _mzd_ple_submatrix(mzd_t *A, rci_t const start_row, rci_t const stop_row, rc
   word bm[__M4RI_PLE_NTABLES * __M4RI_MAXKAY];
   wi_t os[__M4RI_PLE_NTABLES * __M4RI_MAXKAY];
 
-  /* we're essentially constructing a submatrix but cheaply */
-  wi_t const width  = A->width;
-  rci_t const ncols = A->ncols;
-  int const flags   = A->flags;
-  word high_bitmask = A->high_bitmask;
-
+  mzd_t *B = A;
   if (A->width > splitblock) {
-    A->width = splitblock;
-    A->ncols = splitblock * m4ri_radix;
-    A->flags &= mzd_flag_multiple_blocks;
-    A->flags |= (mzd_flag_windowed_zerooffset | mzd_flag_windowed_zeroexcess);
-    A->high_bitmask = m4ri_ffff;
-    /* No need to set mzd_flag_windowed_ownsblocks, because we won't free A until it's elements are
-     * restored below. */
+    A = mzd_init_window(A, 0, 0, A->nrows, splitblock * m4ri_radix);
+    assert(!(A->flags & mzd_flag_nonzero_excess));
   }
 
   int curr_pos;
@@ -184,12 +174,7 @@ int _mzd_ple_submatrix(mzd_t *A, rci_t const start_row, rci_t const stop_row, rc
       if (mzd_read_bit(A, r2, start_col + pivots[c2]))
         mzd_row_add_offset(A, r2, start_row + c2, start_col + pivots[c2] + 1);
 
-  /* reset to original size */
-  A->ncols        = ncols;
-  A->width        = width;
-  A->flags        = flags;
-  A->high_bitmask = high_bitmask;
-
+  A = B;
   __M4RI_DD_MZD(A);
   __M4RI_DD_MZP(P);
   __M4RI_DD_MZP(Q);
