@@ -145,7 +145,7 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
   A->nrows         = r;
   A->ncols         = c;
   A->width         = (c + m4ri_radix - 1) / m4ri_radix;
-  A->rowstride     = (A->width < mzd_paddingwidth || (A->width & 1) == 0) ? A->width : A->width + 1;
+  A->rowstride     = ((A->width & 1) == 0) ? A->width : A->width + 1;
   A->high_bitmask  = __M4RI_LEFT_BITMASK(c % m4ri_radix);
   A->flags         = (A->high_bitmask != m4ri_ffff) ? mzd_flag_nonzero_excess : 0;
   if (r && c) {
@@ -165,20 +165,20 @@ mzd_t *mzd_init_window(mzd_t *M, const rci_t lowr, const rci_t lowc, const rci_t
 
   rci_t nrows = MIN(highr - lowr, M->nrows - lowr);
   rci_t ncols = highc - lowc;
-  W->nrows        = nrows;
-  W->ncols        = ncols;
-  W->rowstride    = M->rowstride;
-  W->width        = (ncols + m4ri_radix - 1) / m4ri_radix;
+  W->nrows = nrows;
+  W->ncols = ncols;
+  W->rowstride = M->rowstride;
+  W->width = (ncols + m4ri_radix - 1) / m4ri_radix;
   W->high_bitmask = __M4RI_LEFT_BITMASK(ncols % m4ri_radix);
-  W->flags = mzd_flag_windowed_zerooffset;
-  W->flags |= (ncols % m4ri_radix == 0) ? mzd_flag_windowed_zeroexcess : mzd_flag_nonzero_excess;
-  W->data               = M->data + lowr * M->rowstride + (lowc / m4ri_radix);
+  W->flags = mzd_flag_windowed;
+  if (ncols % m4ri_radix != 0) W->flags |= mzd_flag_nonzero_excess;
+  W->data = M->data + lowr * M->rowstride + (lowc / m4ri_radix);
   __M4RI_DD_MZD(W);
   return W;
 }
 
 void mzd_free(mzd_t *A) {
-  if (mzd_owns_blocks(A)) {
+  if (!mzd_is_windowed(A)) {
     size_t block_words = A->nrows * A->rowstride;
     m4ri_mmc_free(A->data, block_words * sizeof(word));
   }

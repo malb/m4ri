@@ -194,7 +194,6 @@ void mzd_make_table_ple(mzd_t const *A, rci_t r, rci_t writecol, int k, int knar
 
   // Note that this restricts the number of columns of any matrix to __M4RI_MAX_MZD_BLOCKSIZE *
   // radix / twokay = 268 million.
-  assert(!(T->flags & mzd_flag_multiple_blocks));
 
   wi_t const writeblock = writecol / m4ri_radix;
   wi_t const readblock  = readcol / m4ri_radix;

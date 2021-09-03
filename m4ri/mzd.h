@@ -73,9 +73,6 @@ typedef struct mzd_t {
 
   /**
    * Offset in words between rows.
-   *
-   * rowstride = (width < mzd_paddingwidth || (width & 1) == 0) ? width : width + 1;
-   * where width is the width of the underlying non-windowed matrix.
    */
 
   wi_t rowstride;
@@ -102,39 +99,15 @@ typedef struct mzd_t {
 } mzd_t;
 
 /**
- * \brief The minimum width where padding occurs.
+ * \brief flag when ncols%64 != 0
  */
-static wi_t const mzd_paddingwidth = 1;
-
-/**
- * \brief flag when ncols%64 == 0
- */
-
 static uint8_t const mzd_flag_nonzero_excess = 0x2;
 
 /**
  * \brief flag for windowed matrix
  */
 
-static uint8_t const mzd_flag_windowed_zerooffset = 0x4;
-
-/**
- * \brief flag for windowed matrix where ncols%64 == 0
- */
-
-static uint8_t const mzd_flag_windowed_zeroexcess = 0x8;
-
-/**
- * \brief flag for windowed matrix wich owns its memory
- */
-
-static uint8_t const mzd_flag_windowed_ownsblocks = 0x10;
-
-/**
- * \brief flag for multiply blocks
- */
-
-static uint8_t const mzd_flag_multiple_blocks = 0x20;
+static uint8_t const mzd_flag_windowed = 0x4;
 
 /**
  * \brief Test if a matrix is windowed.
@@ -144,7 +117,7 @@ static uint8_t const mzd_flag_multiple_blocks = 0x20;
  * \return a non-zero value if the matrix is windowed, otherwise return zero.
  */
 static inline int mzd_is_windowed(mzd_t const *M) {
-  return M->flags & (mzd_flag_windowed_zerooffset);
+  return M->flags & mzd_flag_windowed;
 }
 
 /**

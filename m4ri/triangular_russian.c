@@ -324,7 +324,6 @@ void mzd_make_table_trtri(mzd_t const *M, rci_t r, rci_t c, int k, ple_table_t *
   mzd_t *T = Tb->T;
   rci_t *L = Tb->E;
 
-  assert(!(T->flags & mzd_flag_multiple_blocks));
   wi_t const blockoffset  = c / m4ri_radix;
   wi_t const blockoffset0 = startcol / m4ri_radix;
 
