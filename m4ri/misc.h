@@ -75,9 +75,10 @@ typedef int rci_t;
  * \brief Type of word indexes.
  *
  * This type is used for the array of words that make up a row.
+ * Beware, some functions expect this type to be a signed integer.
  */
 
-typedef int wi_t;
+typedef int64_t wi_t;
 
 /**
  * \brief A word is the typical packed data structure to represent packed bits.
