@@ -120,16 +120,6 @@ static inline int mzd_is_windowed(mzd_t const *M) {
   return M->flags & mzd_flag_windowed;
 }
 
-/**
- * \brief Test if this mzd_t should free blocks.
- *
- * \param M Matrix
- *
- * \return TRUE iff blocks is non-zero and should be freed upon a call to mzd_free.
- */
-static inline int mzd_owns_blocks(mzd_t const *M) {
-  return !mzd_is_windowed(M);
-}
 
 /**
  * \brief Get pointer to first word of row.
