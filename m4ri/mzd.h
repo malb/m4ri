@@ -98,6 +98,46 @@ typedef struct mzd_t {
   word *data;
 } mzd_t;
 
+/* clang-format off */
+/*
+  The rows are stacked consecutively in memory.  The first word of the first row
+  is given by M->data.
+
+  Each row start M->rowstride words after the previous row (see the mzd_row function).
+
+  Windows are "views" into an underlying matrix, with potentially a smaller number
+  of rows and columns.  The window has the same rowstride as the underlying matrix,
+  but they have a different data pointer.  Because a window may start anywhere,
+  M->data cannot be expected to be aligned, at least not in windows.
+
+  There may or may not be extra (full) words between rows (always when the matrix
+  is a window, not necessarily when the matrix is not a window, depending on what
+  we do about alignment).
+
+  If (M->ncols % m4ri_radix != 0), then there are "excess bits" at the end of the row.
+  M->high_bitmask tells which bits are meaningful.  M4RI policy is the following:
+  * if the matrix is not a window, the excess bits MUST be zero. In this case, they
+    MAY be overwritten (with fresh zeroes).
+  * if the matrix is a window with non-zero excess, then the excess bits MUST be
+    preserved (because they may be significant in the underlying matrix).
+
+
+                  <------------------------ M->rowstride (in words) -------------------->
+
+                  .-----------------------------------------------------------------------.
+    M->data ----> |                                                        [excess 0 bits]|
+                  |                                                        [excess 0 bits]|
+                  |      .-------------------------------------.           [excess 0 bits]|
+    W->data ------+----> |window                  [excess bits]|           [excess 0 bits]|
+                  |      |                        [excess bits]|           [excess 0 bits]|
+                  |      |                        [excess bits]|           [excess 0 bits]|
+                  |      |                        [excess bits]|           [excess 0 bits]|
+                  |      .-------------------------------------'           [excess 0 bits]|
+                  |                                                        [excess 0 bits]|
+                  `-----------------------------------------------------------------------'
+*/
+/* clang-format on */
+
 /**
  * \brief flag when ncols%64 != 0
  */
