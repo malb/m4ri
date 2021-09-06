@@ -39,9 +39,7 @@ AS_IF([test "x$enable_sse2" != "xno"], [
    if test "$m4ri_wrapword" = "yes"; then
       AC_MSG_ERROR([SSE2 cannot be supported when wrapping word in a C++ class.])
    fi
-   case $host_cpu in i[[3456]]86*|x86_64*)
-          AX_EXT()
-   esac
+   AX_EXT()
 ])
 if test x"$ax_cv_have_sse2_ext" = x"yes"; then
   M4RI_HAVE_SSE2=1
