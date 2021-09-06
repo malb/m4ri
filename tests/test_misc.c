@@ -97,6 +97,30 @@ int test_submatrix(const rci_t m, const rci_t n, const rci_t lowr, const rci_t l
   return ret;
 }
 
+int test_extract(const rci_t m, const rci_t n) {
+  int ret  = 0;
+  mzd_t *A = mzd_init(m, n);
+  mzd_randomize(A);
+  mzd_t *L0 = mzd_extract_l(NULL, A);
+  mzd_t *L1 = mzd_init(MIN(m, n), MIN(m, n));
+  mzd_extract_l(L1, A);
+
+  if (mzd_equal(L0, L1) != TRUE) { ret += 1; }
+
+  mzd_t *U0 = mzd_extract_u(NULL, A);
+  mzd_t *U1 = mzd_init(MIN(m, n), MIN(m, n));
+  mzd_extract_u(U1, A);
+
+  if (mzd_equal(U0, U1) != TRUE) { ret += 1; }
+
+  mzd_free(U1);
+  mzd_free(U0);
+  mzd_free(L1);
+  mzd_free(L0);
+  mzd_free(A);
+  return ret;
+}
+
 int main(int argc, char *argv[]) {
   int status = 0;
 
@@ -135,6 +159,10 @@ int main(int argc, char *argv[]) {
   status += test_submatrix(2, 128, 1, 64, 2, 128);
   status += test_submatrix(2, 129, 1, 65, 2, 129);
   status += test_submatrix(2, 130, 1, 66, 2, 130);
+
+  status += test_extract(64, 64);
+  status += test_extract(63, 65);
+  status += test_extract(65, 63);
 
   if (!status) {
     printf("All tests passed.\n");

@@ -48,7 +48,11 @@ mzp_t *mzp_init_window(mzp_t *P, rci_t begin, rci_t end) {
 void mzp_free_window(mzp_t *condemned) { m4ri_mm_free(condemned); }
 
 mzp_t *mzp_copy(mzp_t *P, const mzp_t *Q) {
-  if (P == NULL) P = mzp_init(Q->length);
+  if (P == NULL) {
+    P = mzp_init(Q->length);
+  } else if (P->length < Q->length) {
+    m4ri_die("mzp_copy: Target permutation is too small.");
+  }
   for (rci_t i = 0; i < Q->length; i++) P->values[i] = Q->values[i];
   return P;
 }

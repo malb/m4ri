@@ -14,8 +14,8 @@
 #define __M4RI_HAVE_LIBPNG              @M4RI_HAVE_LIBPNG@
 
 #define __M4RI_CC                       "@CC@"
-#define __M4RI_CFLAGS                   "@SIMD_CFLAGS@ @OPENMP_CFLAGS@ @CFLAGS@"
-#define __M4RI_SIMD_CFLAGS              "@SIMD_CFLAGS@"
+#define __M4RI_CFLAGS                   "@SIMD_FLAGS@ @OPENMP_CFLAGS@ @CFLAGS@"
+#define __M4RI_SIMD_CFLAGS              "@SIMD_FLAGS@"
 #define __M4RI_OPENMP_CFLAGS            "@OPENMP_CFLAGS@"
 
 // Helper macros.
