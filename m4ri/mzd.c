@@ -944,9 +944,6 @@ void _mzd_transpose_multiblock(mzd_t *DST, mzd_t const *A, word *RESTRICT *fwdp,
 
 mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
   assert(!mzd_is_windowed(DST) && !mzd_is_windowed(A));
-  // We assume that there fit at least 64 rows in a block, if
-  // that is the case then each block will contain a multiple
-  // of 64 rows, since blockrows is a power of 2.
 
   rci_t nrows   = A->nrows;
   rci_t ncols   = A->ncols;
@@ -956,8 +953,6 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
   word const *RESTRICT fws = mzd_row_const(A, 0);
 
   if (maxsize >= 64) {
-
-    // This is the most non-intrusive way to deal with the case of multiple blocks.
     // Note that this code is VERY sensitive. ANY change to _mzd_transpose can easily
     // reduce the speed for small matrices (up to 64x64) by 5 to 10%.   
     if (nrows >= 64) {
