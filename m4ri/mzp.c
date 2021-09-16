@@ -103,8 +103,8 @@ static inline void mzd_write_col_to_rows_blockd(mzd_t *A, mzd_t const *B, rci_t 
     }
 
     for (rci_t r = start_row; r < stop_row; ++r) {
-      word const *Brow    = B->rows[r - start_row];
-      word *Arow          = A->rows[r];
+      word const *Brow    = mzd_row_const(B, r - start_row);
+      word *Arow          = mzd_row(A, r);
       register word value = 0;
 
       /* we gather the bits in a register word */
@@ -198,8 +198,6 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t st
 
   /* our temporary where we store the columns we want to swap around */
   mzd_t *B = mzd_init(step_size, A->ncols);
-  word *Arow;
-  word *Brow;
 
   /* setup mathematical permutation */
   rci_t *permutation = (rci_t *)m4ri_mm_calloc(A->ncols, sizeof(rci_t));
@@ -232,8 +230,8 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t st
   for (rci_t i = start_row; i < A->nrows; i += step_size) {
     step_size = MIN(step_size, A->nrows - i);
     for (int k = 0; k < step_size; ++k) {
-      Arow = A->rows[i + k];
-      Brow = B->rows[k];
+      word *Arow = mzd_row(A, i + k);
+      word *Brow = mzd_row(B, k);
 
       /*copy row & clear those values which will be overwritten */
       for (wi_t j = 0; j < width; ++j) {
@@ -247,44 +245,6 @@ void _mzd_apply_p_right_even(mzd_t *A, mzp_t const *P, rci_t start_row, rci_t st
   m4ri_mm_free(permutation);
   m4ri_mm_free(write_mask);
   mzd_free(B);
-
-  __M4RI_DD_MZD(A);
-}
-
-void _mzd_apply_p_right_trans(mzd_t *A, mzp_t const *P) {
-  if (A->nrows == 0) return;
-  rci_t const length  = MIN(P->length, A->ncols);
-  int const step_size = MAX((__M4RI_CPU_L1_CACHE >> 3) / A->width, 1);
-  for (rci_t j = 0; j < A->nrows; j += step_size) {
-    rci_t stop_row = MIN(j + step_size, A->nrows);
-    for (rci_t i = 0; i < length; ++i) {
-      assert(P->values[i] >= i);
-      mzd_col_swap_in_rows(A, i, P->values[i], j, stop_row);
-    }
-  }
-  /*   for (i=0; i<P->length; i++) { */
-  /*     assert(P->values[i] >= i); */
-  /*     mzd_col_swap(A, i, P->values[i]); */
-  /*   } */
-
-  __M4RI_DD_MZD(A);
-}
-
-void _mzd_apply_p_right(mzd_t *A, mzp_t const *P) {
-  if (A->nrows == 0) return;
-  int const step_size = MAX((__M4RI_CPU_L1_CACHE >> 3) / A->width, 1);
-  for (rci_t j = 0; j < A->nrows; j += step_size) {
-    rci_t stop_row = MIN(j + step_size, A->nrows);
-    for (rci_t i = P->length - 1; i >= 0; --i) {
-      assert(P->values[i] >= i);
-      mzd_col_swap_in_rows(A, i, P->values[i], j, stop_row);
-    }
-  }
-  /*   long i; */
-  /*   for (i=P->length-1; i>=0; i--) { */
-  /*     assert(P->values[i] >= i); */
-  /*     mzd_col_swap(A, i, P->values[i]); */
-  /*   } */
 
   __M4RI_DD_MZD(A);
 }
@@ -396,18 +356,18 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
     j += rest;
 
     /* now each write is simply a word write */
-
     block = (n1 + j - r1) / m4ri_radix;
+    word *row = mzd_row(A, i);
 
     if (rest % m4ri_radix == 0) {
       for (; j + m4ri_radix <= r1 + r2; j += m4ri_radix, ++block) {
-        tmp                        = A->rows[i][block];
-        A->rows[i][j / m4ri_radix] = tmp;
+        tmp = row[block];
+        row[j / m4ri_radix] = tmp;
       }
     } else {
       for (; j + m4ri_radix <= r1 + r2; j += m4ri_radix, ++block) {
-        tmp = (A->rows[i][block] >> rest) | (A->rows[i][block + 1] << (m4ri_radix - rest));
-        A->rows[i][j / m4ri_radix] = tmp;
+        tmp = (row[block] >> rest) | (row[block + 1] << (m4ri_radix - rest));
+        row[j / m4ri_radix] = tmp;
       }
     }
 
@@ -416,8 +376,8 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
        past the end of n1+r2. */
 
     if (j < r1 + r2) {
-      tmp                        = mzd_read_bits(A, i, n1 + j - r1, r1 + r2 - j);
-      A->rows[i][j / m4ri_radix] = tmp;
+      tmp = mzd_read_bits(A, i, n1 + j - r1, r1 + r2 - j);
+      row[j / m4ri_radix] = tmp;
     }
 
     /* now clear the rest of L2 */
@@ -430,7 +390,7 @@ void _mzd_compress_l(mzd_t *A, rci_t r1, rci_t n1, rci_t r2) {
        everything is zero there anyway. Thus, we can omit the code
        which deals with last few bits. */
 
-    for (; j < n1 + r2; j += m4ri_radix) { A->rows[i][j / m4ri_radix] = 0; }
+    for (; j < n1 + r2; j += m4ri_radix) { row[j / m4ri_radix] = 0; }
   }
 
 #endif

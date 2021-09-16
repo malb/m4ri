@@ -69,41 +69,41 @@ void __M4RI_TEMPLATE_NAME(_mzd_process_rows_ple)(mzd_t *M, rci_t startrow, rci_t
 
   for (rci_t r = startrow; r < stoprow; ++r) {
     word bits = mzd_read_bits(M, r, startcol, sh[N - 1] + k[N - 1]);
-    word *m   = M->rows[r] + block;
+    word *m   = mzd_row(M, r) + block;
 
     switch (N) { /* we rely on the compiler to optimise this switch away, it reads nicer than #if */
     case 8:
       x[N - 8] = E[N - 8][(bits >> sh[N - 8]) & bm[N - 8]];
       bits ^= B[N - 8][x[N - 8]];
-      t[N - 8] = T[N - 8]->rows[x[N - 8]] + block;
+      t[N - 8] = mzd_row_const(T[N - 8], x[N - 8]) + block;
     case 7:
       x[N - 7] = E[N - 7][(bits >> sh[N - 7]) & bm[N - 7]];
       bits ^= B[N - 7][x[N - 7]];
-      t[N - 7] = T[N - 7]->rows[x[N - 7]] + block;
+      t[N - 7] = mzd_row_const(T[N - 7], x[N - 7]) + block;
     case 6:
       x[N - 6] = E[N - 6][(bits >> sh[N - 6]) & bm[N - 6]];
       bits ^= B[N - 6][x[N - 6]];
-      t[N - 6] = T[N - 6]->rows[x[N - 6]] + block;
+      t[N - 6] = mzd_row_const(T[N - 6], x[N - 6]) + block;
     case 5:
       x[N - 5] = E[N - 5][(bits >> sh[N - 5]) & bm[N - 5]];
       bits ^= B[N - 5][x[N - 5]];
-      t[N - 5] = T[N - 5]->rows[x[N - 5]] + block;
+      t[N - 5] = mzd_row_const(T[N - 5], x[N - 5]) + block;
     case 4:
       x[N - 4] = E[N - 4][(bits >> sh[N - 4]) & bm[N - 4]];
       bits ^= B[N - 4][x[N - 4]];
-      t[N - 4] = T[N - 4]->rows[x[N - 4]] + block;
+      t[N - 4] = mzd_row_const(T[N - 4], x[N - 4]) + block;
     case 3:
       x[N - 3] = E[N - 3][(bits >> sh[N - 3]) & bm[N - 3]];
       bits ^= B[N - 3][x[N - 3]];
-      t[N - 3] = T[N - 3]->rows[x[N - 3]] + block;
+      t[N - 3] = mzd_row_const(T[N - 3], x[N - 3]) + block;
     case 2:
       x[N - 2] = E[N - 2][(bits >> sh[N - 2]) & bm[N - 2]];
       bits ^= B[N - 2][x[N - 2]];
-      t[N - 2] = T[N - 2]->rows[x[N - 2]] + block;
+      t[N - 2] = mzd_row_const(T[N - 2], x[N - 2]) + block;
     case 1:
       x[N - 1] = E[N - 1][(bits >> sh[N - 1]) & bm[N - 1]];
       bits ^= B[N - 1][x[N - 1]];
-      t[N - 1] = T[N - 1]->rows[x[N - 1]] + block;
+      t[N - 1] = mzd_row_const(T[N - 1], x[N - 1]) + block;
     }
 
     __M4RI_TEMPLATE_NAME(_mzd_combine)(m, t, wide);
@@ -174,33 +174,33 @@ void __M4RI_TEMPLATE_NAME(_mzd_ple_a11)(mzd_t *A, rci_t const start_row, rci_t c
 
   for (rci_t i = start_row; i < stop_row; ++i) {
     const word bits = mzd_read_bits(A, i, start_col, bits_to_read);
-    word *m         = A->rows[i] + block;
+    word *m         = mzd_row(A, i) + block;
 
     switch (N) { /* we rely on the compiler to optimise this switch away, it reads nicer than #if */
     case 8:
       x[N - 8] = M[N - 8][(bits >> sh[N - 8]) & bm[N - 8]];
-      t[N - 8] = T[N - 8]->rows[x[N - 8]] + block;
+      t[N - 8] = mzd_row_const(T[N - 8], x[N - 8]) + block;
     case 7:
       x[N - 7] = M[N - 7][(bits >> sh[N - 7]) & bm[N - 7]];
-      t[N - 7] = T[N - 7]->rows[x[N - 7]] + block;
+      t[N - 7] = mzd_row_const(T[N - 7], x[N - 7]) + block;
     case 6:
       x[N - 6] = M[N - 6][(bits >> sh[N - 6]) & bm[N - 6]];
-      t[N - 6] = T[N - 6]->rows[x[N - 6]] + block;
+      t[N - 6] = mzd_row_const(T[N - 6], x[N - 6]) + block;
     case 5:
       x[N - 5] = M[N - 5][(bits >> sh[N - 5]) & bm[N - 5]];
-      t[N - 5] = T[N - 5]->rows[x[N - 5]] + block;
+      t[N - 5] = mzd_row_const(T[N - 5], x[N - 5]) + block;
     case 4:
       x[N - 4] = M[N - 4][(bits >> sh[N - 4]) & bm[N - 4]];
-      t[N - 4] = T[N - 4]->rows[x[N - 4]] + block;
+      t[N - 4] = mzd_row_const(T[N - 4], x[N - 4]) + block;
     case 3:
       x[N - 3] = M[N - 3][(bits >> sh[N - 3]) & bm[N - 3]];
-      t[N - 3] = T[N - 3]->rows[x[N - 3]] + block;
+      t[N - 3] = mzd_row_const(T[N - 3], x[N - 3]) + block;
     case 2:
       x[N - 2] = M[N - 2][(bits >> sh[N - 2]) & bm[N - 2]];
-      t[N - 2] = T[N - 2]->rows[x[N - 2]] + block;
+      t[N - 2] = mzd_row_const(T[N - 2], x[N - 2]) + block;
     case 1:
       x[N - 1] = M[N - 1][(bits >> sh[N - 1]) & bm[N - 1]];
-      t[N - 1] = T[N - 1]->rows[x[N - 1]] + block;
+      t[N - 1] = mzd_row_const(T[N - 1], x[N - 1]) + block;
     }
     __M4RI_TEMPLATE_NAME(_mzd_combine)(m, t, wide);
   }

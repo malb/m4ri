@@ -32,6 +32,10 @@ int mzd_solve_left(mzd_t *A, mzd_t *B, int const cutoff, int const inconsistency
     m4ri_die("mzd_solve_left: A ncols (%d) must be smaller than B nrows (%d).\n", A->ncols,
              B->nrows);
 
+  if (A->nrows != B->nrows)
+    m4ri_die("mzd_solve_left: A nrows (%d) must be equal to B nrows (%d).\n", A->nrows,
+             B->nrows);
+
   return _mzd_solve_left(A, B, cutoff, inconsistency_check);
 }
 

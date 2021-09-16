@@ -635,8 +635,9 @@ void bench_randomize(mzd_t *A) {
   int const offset    = 0;
   word const mask_end = __M4RI_LEFT_BITMASK(A->ncols % m4ri_radix);
   for (rci_t i = 0; i < A->nrows; ++i) {
-    for (wi_t j = 0; j < width; ++j) A->rows[i][j] = bench_random_word();
-    A->rows[i][width] ^= (A->rows[i][width] ^ bench_random_word()) & mask_end;
+    word *row = mzd_row(A, i);
+    for (wi_t j = 0; j < width; ++j) row[j] = bench_random_word();
+    row[width] ^= (row[width] ^ bench_random_word()) & mask_end;
   }
 }
 

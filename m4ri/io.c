@@ -48,7 +48,7 @@ void mzd_info(const mzd_t *A, int do_rank) {
 void mzd_fprint_row(FILE *stream, mzd_t const *M, const rci_t i) {
   char temp[SAFECHAR];
   fprintf(stream, "[");
-  word *row = M->rows[i];
+  word const *row = mzd_row_const(M, i);
   for (wi_t j = 0; j < M->width - 1; ++j) {
     m4ri_word_to_str(temp, row[j], 1);
     fprintf(stream, "%s|", temp);
@@ -148,13 +148,14 @@ mzd_t *mzd_from_png(const char *fn, int verbose) {
   // png_set_invert_mono(png_ptr);
 
   for (rci_t i = 0; i < m; i++) {
+    word *rowa = mzd_row(A, i);
     png_read_row(png_ptr, row, NULL);
     for (j = 0; j < A->width - 1; j++) {
       tmp = ((word)row[8 * j + 7]) << 56 | ((word)row[8 * j + 6]) << 48 |
             ((word)row[8 * j + 5]) << 40 | ((word)row[8 * j + 4]) << 32 |
             ((word)row[8 * j + 3]) << 24 | ((word)row[8 * j + 2]) << 16 |
             ((word)row[8 * j + 1]) << 8 | ((word)row[8 * j + 0]) << 0;
-      A->rows[i][j] = ~tmp;
+      rowa[j] = ~tmp;
     }
     tmp = 0;
     switch ((n / 8 + ((n % 8) ? 1 : 0)) % 8) {
@@ -167,7 +168,7 @@ mzd_t *mzd_from_png(const char *fn, int verbose) {
     case 2: tmp |= ((word)row[8 * j + 1]) << 8;
     case 1: tmp |= ((word)row[8 * j + 0]) << 0;
     };
-    A->rows[i][j] |= (~tmp & bitmask_end);
+    rowa[j] |= (~tmp & bitmask_end);
   }
 
   m4ri_mm_free(row);
@@ -257,7 +258,7 @@ int mzd_to_png(const mzd_t *A, const char *fn, int compression_level, const char
   wi_t j   = 0;
   word tmp = 0;
   for (rci_t i = 0; i < A->nrows; i++) {
-    word *rowptr = A->rows[i];
+    word const *rowptr = mzd_row_const(A, i);
     for (j = 0; j < A->width - 1; j++) {
       tmp            = rowptr[j];
       row[8 * j + 0] = (png_byte)((tmp >> 0) & 0xff);

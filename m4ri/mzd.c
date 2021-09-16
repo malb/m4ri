@@ -141,84 +141,21 @@ static void mzd_t_free(mzd_t *M) {
 
 mzd_t *mzd_init(rci_t r, rci_t c) {
   assert(sizeof(mzd_t) == 64);
-
   mzd_t *A = mzd_t_malloc();
-
   A->nrows         = r;
   A->ncols         = c;
   A->width         = (c + m4ri_radix - 1) / m4ri_radix;
-  A->rowstride     = (A->width < mzd_paddingwidth || (A->width & 1) == 0) ? A->width : A->width + 1;
+  A->rowstride     = ((A->width & 1) == 0) ? A->width : A->width + 1;
   A->high_bitmask  = __M4RI_LEFT_BITMASK(c % m4ri_radix);
   A->flags         = (A->high_bitmask != m4ri_ffff) ? mzd_flag_nonzero_excess : 0;
-  A->offset_vector = 0;
-  A->row_offset    = 0;
-
-  A->rows = (word **)m4ri_mmc_calloc(r + 1, sizeof(word *));  // We're overcomitting here.
-
   if (r && c) {
-    int blockrows    = __M4RI_MAX_MZD_BLOCKSIZE / A->rowstride;
-    A->blockrows_log = 0;
-    while (blockrows >>= 1) A->blockrows_log++;
-    blockrows = 1 << A->blockrows_log;
-
-    int const blockrows_mask = blockrows - 1;
-    int const nblocks        = (r + blockrows - 1) / blockrows;
-    A->flags |= (nblocks > 1) ? mzd_flag_multiple_blocks : 0;
-    A->blocks = (mzd_block_t *)m4ri_mmc_calloc(nblocks + 1, sizeof(mzd_block_t));
-
-    size_t block_words = (r - (nblocks - 1) * blockrows) * A->rowstride;
-    for (int i = nblocks - 1; i >= 0; --i) {
-      A->blocks[i].size  = block_words * sizeof(word);
-      A->blocks[i].begin = (word *)m4ri_mmc_calloc(1, A->blocks[i].size);
-      A->blocks[i].end   = A->blocks[i].begin + block_words;
-      block_words        = blockrows * A->rowstride;
-    }
-
-    for (rci_t i = 0; i < A->nrows; ++i) {
-      A->rows[i] = A->blocks[i >> A->blockrows_log].begin + (i & blockrows_mask) * A->rowstride;
-    }
-
+    size_t block_words = r * A->rowstride;
+    A->data = m4ri_mmc_calloc(block_words, sizeof(word));
   } else {
-    A->blocks = NULL;
+    A->data = NULL;
   }
-
   return A;
 }
-
-/* clang-format off */
-/*
-   Explanation of offset_vector (in words), and row_offset.
-
-   <------------------------------- row_stride (in words)--------------------->
-   .---------------------------------------------------------------------------.  <-- m->blocks[0].begin   ^
-   |                                 ^                                        /|                           |
-   |                    m->row_offset|                      m->offset_vector_/ |                           |
-   |                                 v                                      /  |                           |
-   |  .--------------------------------------------------------------------v<--|---- m->rows[0]            |_ skipped_blocks (in blocks)
-   |  |m (also a window)             ^                                     |   |                           |
-   |  |                              |                                     |   |                           |
-   `---------------------------------|-----------------------------------------'                           v
-   .---------------------------------|----------------------------------------_.  <-- m->blocks[1].begin <-- windows.blocks[0].begin
-   |  |                      ^   lowr|                                     |_^ |
-   |  |    window->row_offset|       |            window->offset_vector _-^|   |
-   |  |                      v       v                               _-^   |   |
-   |  |  .----------------------------------------------------------v<--.  |<--|---- m->rows[lowr]
-   |  |  |window                                                    |    `-|---|---- window->rows[0]
-   |  |  |                                                          |      |   |
-   `---------------------------------------------------------------------------'
-   .---------------------------------------------------------------------------.  <-- m->blocks[2].begin <-- windows.blocks[1].begin
-   |  |  |                                                          |      |   |
-   |  |  |                                                          | lowc |   |
-   |  |  |                                                          |<---->|   |
-   |  |  |                                                          |   \__|___|__ also wrd_offset (in words)
-   |  |  `----------------------------------------------------------'      |   |
-   |  `--------------------------------------------------------------------'   |
-   `---------------------------------------------------------------------------'
-   .---------------------------------------------------------------------------.
-   |                                                                           |
-
-*/
-/* clang-format on */
 
 mzd_t *mzd_init_window(mzd_t *M, const rci_t lowr, const rci_t lowc, const rci_t highr,
                        const rci_t highc) {
@@ -228,46 +165,22 @@ mzd_t *mzd_init_window(mzd_t *M, const rci_t lowr, const rci_t lowc, const rci_t
 
   rci_t nrows = MIN(highr - lowr, M->nrows - lowr);
   rci_t ncols = highc - lowc;
-
-  W->nrows        = nrows;
-  W->ncols        = ncols;
-  W->rowstride    = M->rowstride;
-  W->width        = (ncols + m4ri_radix - 1) / m4ri_radix;
+  W->nrows = nrows;
+  W->ncols = ncols;
+  W->rowstride = M->rowstride;
+  W->width = (ncols + m4ri_radix - 1) / m4ri_radix;
   W->high_bitmask = __M4RI_LEFT_BITMASK(ncols % m4ri_radix);
-
-  W->flags = mzd_flag_windowed_zerooffset;
-  W->flags |= (ncols % m4ri_radix == 0) ? mzd_flag_windowed_zeroexcess : mzd_flag_nonzero_excess;
-  W->blockrows_log = M->blockrows_log;
-
-  wi_t const blockrows_mask = (1 << W->blockrows_log) - 1;
-  int const skipped_blocks  = (M->row_offset + lowr) >> W->blockrows_log;
-  assert(skipped_blocks == 0 || ((M->flags & mzd_flag_multiple_blocks)));
-  W->row_offset         = (M->row_offset + lowr) & blockrows_mask;
-  W->blocks             = &M->blocks[skipped_blocks];
-  wi_t const wrd_offset = lowc / m4ri_radix;
-  W->offset_vector =
-      (M->offset_vector + wrd_offset) + (W->row_offset - M->row_offset) * W->rowstride;
-  if (nrows)
-    W->rows = (word **)m4ri_mmc_calloc(nrows + 1, sizeof(word *));
-  else
-    W->rows = NULL;
-  for (rci_t i = 0; i < nrows; ++i) { W->rows[i] = M->rows[lowr + i] + wrd_offset; }
-  if (mzd_row_to_block(W, nrows - 1) > 0) W->flags |= M->flags & mzd_flag_multiple_blocks;
-
-  /* offset_vector is the distance from the start of the first block to the first word of the first
-   * row. */
-  assert(nrows == 0 || W->blocks[0].begin + W->offset_vector == W->rows[0]);
-
+  W->flags = mzd_flag_windowed;
+  if (ncols % m4ri_radix != 0) W->flags |= mzd_flag_nonzero_excess;
+  W->data = M->data + lowr * M->rowstride + (lowc / m4ri_radix);
   __M4RI_DD_MZD(W);
   return W;
 }
 
 void mzd_free(mzd_t *A) {
-  if (A->rows) m4ri_mmc_free(A->rows, (A->nrows + 1) * sizeof(word *));
-  if (mzd_owns_blocks(A)) {
-    int i;
-    for (i = 0; A->blocks[i].size; ++i) { m4ri_mmc_free(A->blocks[i].begin, A->blocks[i].size); }
-    m4ri_mmc_free(A->blocks, (i + 1) * sizeof(mzd_block_t));
+  if (!mzd_is_windowed(A)) {
+    size_t block_words = A->nrows * A->rowstride;
+    m4ri_mmc_free(A->data, block_words * sizeof(word));
   }
   mzd_t_free(A);
 }
@@ -279,16 +192,16 @@ void mzd_row_add(mzd_t *M, rci_t sourcerow, rci_t destrow) {
 void mzd_row_clear_offset(mzd_t *M, rci_t row, rci_t coloffset) {
   wi_t const startblock = coloffset / m4ri_radix;
   word temp;
-
+  word *truerow = mzd_row(M, row);
   /* make sure to start clearing at coloffset */
   if (coloffset % m4ri_radix) {
-    temp = M->rows[row][startblock];
+    temp = truerow[startblock];
     temp &= __M4RI_RIGHT_BITMASK(m4ri_radix - coloffset);
   } else {
     temp = 0;
   }
-  M->rows[row][startblock] = temp;
-  for (wi_t i = startblock + 1; i < M->width; ++i) { M->rows[row][i] = 0; }
+  truerow[startblock] = temp;
+  for (wi_t i = startblock + 1; i < M->width; ++i) { truerow[i] = 0; }
 
   __M4RI_DD_ROW(M, row);
 }
@@ -1026,42 +939,27 @@ static inline void _mzd_copy_transpose_le64xle64(word *RESTRICT dst, word const 
   return;
 }
 
-void _mzd_transpose_multiblock(mzd_t *DST, mzd_t const *A, word *RESTRICT *fwdp,
-                               word const *RESTRICT *fwsp, rci_t *nrowsp, rci_t *ncolsp);
+static inline void _mzd_copy_transpose_small(word *RESTRICT fwd, word const *RESTRICT fws,
+                                                 wi_t rowstride_dst, wi_t rowstride_src, rci_t nrows,
+                                                 rci_t ncols, rci_t maxsize) {
+  assert(maxsize < 64);
+  if (maxsize <= 8) {
+    _mzd_copy_transpose_le8xle8(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols, maxsize);
+  } else if (maxsize <= 16) {
+    _mzd_copy_transpose_le16xle16(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols, maxsize);
+  } else if (maxsize <= 32) {
+    _mzd_copy_transpose_le32xle32(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols);
+  } else {
+    _mzd_copy_transpose_le64xle64(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols);
+  }
+}
 
-mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
-  assert(!mzd_is_windowed(DST) && !mzd_is_windowed(A));
-  // We assume that there fit at least 64 rows in a block, if
-  // that is the case then each block will contain a multiple
-  // of 64 rows, since blockrows is a power of 2.
-  assert(A->blockrows_log >= 6 && DST->blockrows_log >= 6);
 
-  rci_t nrows   = A->nrows;
-  rci_t ncols   = A->ncols;
-  rci_t maxsize = MAX(nrows, ncols);
-
-  word *RESTRICT fwd       = mzd_first_row(DST);
-  word const *RESTRICT fws = mzd_first_row(A);
-
-  if (maxsize >= 64) {
-
-    // This is the most non-intrusive way to deal with the case of multiple blocks.
+void _mzd_transpose_base(word *RESTRICT fwd, word const *RESTRICT fws, wi_t rowstride_dst, 
+                            wi_t rowstride_src, rci_t nrows, rci_t ncols, rci_t maxsize) {
+  assert(maxsize >= 64);
     // Note that this code is VERY sensitive. ANY change to _mzd_transpose can easily
-    // reduce the speed for small matrices (up to 64x64) by 5 to 10%.
-    int const multiple_blocks = (A->flags | DST->flags) & mzd_flag_multiple_blocks;
-    if (__M4RI_UNLIKELY(multiple_blocks)) {
-      word *RESTRICT non_register_fwd;
-      word const *RESTRICT non_register_fws;
-      rci_t non_register_nrows;
-      rci_t non_register_ncols;
-      _mzd_transpose_multiblock(DST, A, &non_register_fwd, &non_register_fws, &non_register_nrows,
-                                &non_register_ncols);
-      fwd   = non_register_fwd;
-      fws   = non_register_fws;
-      nrows = non_register_nrows;
-      ncols = non_register_ncols;
-    }
-
+    // reduce the speed for small matrices (up to 64x64) by 5 to 10%.   
     if (nrows >= 64) {
       /*
        * This is an interesting #if ...
@@ -1080,15 +978,14 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
        */
 #if 1
       int js = ncols & nrows & 64;  // True if the total number of whole 64x64 matrices is odd.
-      wi_t const rowstride_64_dst      = 64 * DST->rowstride;
+      wi_t const rowstride_64_dst      = 64 * rowstride_dst;
       word *RESTRICT fwd_current       = fwd;
       word const *RESTRICT fws_current = fws;
       if (js) {
         js = 1;
-        _mzd_copy_transpose_64x64(fwd, fws, DST->rowstride, A->rowstride);
+        _mzd_copy_transpose_64x64(fwd, fws, rowstride_dst, rowstride_src);
         if ((nrows | ncols) == 64) {
-          __M4RI_DD_MZD(DST);
-          return DST;
+          return;
         }
         fwd_current += rowstride_64_dst;
         ++fws_current;
@@ -1106,7 +1003,7 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
             fws_delayed = fws_current;
           } else {
             _mzd_copy_transpose_64x64_2(fwd_delayed, fwd_current, fws_delayed, fws_current,
-                                        DST->rowstride, A->rowstride);
+                                        rowstride_dst, rowstride_src);
           }
           fwd_current += rowstride_64_dst;
           ++fws_current;
@@ -1115,10 +1012,10 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
         nrows -= 64;
         if (ncols % 64) {
           _mzd_copy_transpose_64xlt64(fwd + whole_64cols * rowstride_64_dst, fws + whole_64cols,
-                                      DST->rowstride, A->rowstride, ncols % 64);
+                                      rowstride_dst, rowstride_src, ncols % 64);
         }
         fwd += 1;
-        fws += 64 * A->rowstride;
+        fws += 64 * rowstride_src;
         if (nrows < 64) break;
         js          = 0;
         fws_current = fws;
@@ -1146,208 +1043,99 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
     }
 
     if (nrows == 0) {
-      __M4RI_DD_MZD(DST);
-      return DST;
+      return;
     }
 
     // Transpose the remaining top rows. Now 0 < nrows < 64.
 
     while (ncols >= 64) {
-      _mzd_copy_transpose_lt64x64(fwd, fws, DST->rowstride, A->rowstride, nrows);
+      _mzd_copy_transpose_lt64x64(fwd, fws, rowstride_dst, rowstride_src, nrows);
       ncols -= 64;
-      fwd += 64 * DST->rowstride;
+      fwd += 64 * rowstride_dst;
       fws += 1;
     }
 
     if (ncols == 0) {
-      __M4RI_DD_MZD(DST);
-      return DST;
+      return ;
     }
 
-    maxsize = MAX(nrows, ncols);
-  }
-
+  maxsize = MAX(nrows, ncols);
+  
   // Transpose the remaining corner. Now both 0 < nrows < 64 and 0 < ncols < 64.
-
-  if (maxsize <= 8) {
-    _mzd_copy_transpose_le8xle8(fwd, fws, DST->rowstride, A->rowstride, nrows, ncols, maxsize);
-  } else if (maxsize <= 16) {
-    _mzd_copy_transpose_le16xle16(fwd, fws, DST->rowstride, A->rowstride, nrows, ncols, maxsize);
-  } else if (maxsize <= 32) {
-    _mzd_copy_transpose_le32xle32(fwd, fws, DST->rowstride, A->rowstride, nrows, ncols);
-  } else {
-    _mzd_copy_transpose_le64xle64(fwd, fws, DST->rowstride, A->rowstride, nrows, ncols);
-  }
-
-  __M4RI_DD_MZD(DST);
-  return DST;
+  _mzd_copy_transpose_small(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols, maxsize);
 }
 
-void _mzd_transpose_multiblock(mzd_t *DST, mzd_t const *A, word *RESTRICT *fwdp,
-                               word const *RESTRICT *fwsp, rci_t *nrowsp, rci_t *ncolsp) {
+/* return the smallest multiple of k larger than n/2 */
+static inline rci_t split_round(rci_t n, rci_t k) {
+  rci_t half = n / 2;
+  return ((half + (k - 1)) / k) * k;
+}
 
-  rci_t nrows = A->nrows;
-  rci_t ncols = A->ncols;
+static void _mzd_transpose_notsmall(word *RESTRICT fwd, word const *RESTRICT fws, wi_t rowstride_dst, 
+                            wi_t rowstride_src, rci_t nrows, rci_t ncols, rci_t maxsize) {
+  assert(maxsize >= 64);
 
-  rci_t blockrows_dst = 1 << DST->blockrows_log;  // The maximum number of rows in a block of DST.
-  rci_t blockrows_src = 1 << A->blockrows_log;    // The maximum number of rows in a block of A.
-
-  /* We're deviding the source matrix into blocks of multiples of 64x64, such that each
-   * block fits entirely inside a single memory allocation block, both in the source
-   * as well as the corresponding destination.
-   *
-   *                      <-------------------ncols----------------->
-   *                                  <---------blockrows_dst------->
-   * .---------------------------------------------------------------.
-   * |P      ^  Matrix A:|   .       |Q      .       .       .       |<-^---- A->blocks[0].begin
-   * |       |           |   .       |       .       .       .       |  |
-   * |       |           |   .       |       .       .       .       |  |
-   * |       |           |- - - - - -|- - - - - - - - - - - - - - - -|  |
-   * |       |           |   .       |       .   ^   .       .       |  |
-   * |       |           |   .       |       .<64x64>.       .       |  |
-   * |       |           |   .       |       .   v   .       .       |  |
-   * |       |           |- - - - - -|- - - - - - - - - - - - - - - -|  |- blockrows_src
-   * |       |           |   .       |       .       .       .       |  |
-   * |       |           |   .       |       .       .       .       |  |
-   * |       |           |   .       |       .       .       .       |  |
-   * |       |nrows      |- - - - - -|- - - - - - - - - - - - - - - -|  |
-   * |       |           |   .       |       .       .       .       |  |
-   * |       |           |   .       |       .       .       .       |  |
-   * |       |           |   .       |       .       .       .       |  v
-   * |===================+===========================================|
-   * |R      |           |   .       |S      .       .       .       |<------ A->blocks[1].begin
-   * |       |           |   .       |       .       .       .       |
-   * |       |           |   .       |       .       .       .       |
-   * |       |           |- - - - - -|- - - - - - - - - - - - - - - -|
-   * |       |           |   .       |       .       .       .       |
-   * |       |           |   .       |       .       .       .       |
-   * |       |           |   .       |       .       .       .       |
-   * |       |           |- - - - - -|- - - - - - - - - - - - - - - -|
-   * |       v           |   .       |       .       .       .       |
-   * |                   `-------------------------------------------|
-   * |                               |                               |
-   * |                               |                               |
-   * |                               |                               |
-   * |                               |                               |
-   * |                               |                               |
-   * `---------------------------------------------------------------'
-   *
-   * Imagine this also to be the memory map of DST, which then would be
-   * mirrored in the diagonal line from the top/right to the bottom/left.
-   * Then each of the squares P, Q, R and S lay entirely inside one
-   * memory block in both the source as well as the destination matrix.
-   * P and Q are really the same block for matrix A (as are R and S),
-   * while P and R (and Q and S) are really the same block for DST.
-   *
-   * We're going to run over the top/right corners of each of these
-   * memory "blocks" and then transpose it, one by one, running
-   * from right to left and top to bottom. The last one (R) will be
-   * done by the calling function, so we just return when we get there.
-   */
-
-  rci_t R_top   = (nrows >> A->blockrows_log) << A->blockrows_log;
-  rci_t R_right = (ncols >> DST->blockrows_log) << DST->blockrows_log;
-  for (rci_t col = 0; col < ncols; col += blockrows_dst) {
-    rci_t end = (col == R_right) ? R_top : nrows;
-    for (rci_t row = 0; row < end; row += blockrows_src) {
-
-      rci_t nrowsb             = (row < R_top) ? blockrows_src : (nrows - R_top);
-      rci_t ncolsb             = (col < R_right) ? blockrows_dst : (ncols - R_right);
-      word const *RESTRICT fws = mzd_row(A, row) + col / m4ri_radix;
-      word *RESTRICT fwd       = mzd_row(DST, col) + row / m4ri_radix;
-
-      // The following code is (almost) duplicated from _mzd_transpose.
-      if (nrowsb >= 64) {
-
-        int js = ncolsb & nrowsb & 64;  // True if the total number of whole 64x64 matrices is odd.
-        wi_t const rowstride_64_dst      = 64 * DST->rowstride;
-        word *RESTRICT fwd_current       = fwd;
-        word const *RESTRICT fws_current = fws;
-        if (js) {
-          js = 1;
-          _mzd_copy_transpose_64x64(fwd, fws, DST->rowstride, A->rowstride);
-          fwd_current += rowstride_64_dst;
-          ++fws_current;
-        }
-        rci_t const whole_64cols = ncolsb / 64;
-        // The use of delayed and even, is to avoid calling _mzd_copy_transpose_64x64_2 twice.
-        // This way it can be inlined without duplicating the amount of code that has to be loaded.
-        word *RESTRICT fwd_delayed       = NULL;
-        word const *RESTRICT fws_delayed = NULL;
-        int even                         = 0;
-        while (1) {
-          for (int j = js; j < whole_64cols; ++j) {
-            if (!even) {
-              fwd_delayed = fwd_current;
-              fws_delayed = fws_current;
-            } else {
-              _mzd_copy_transpose_64x64_2(fwd_delayed, fwd_current, fws_delayed, fws_current,
-                                          DST->rowstride, A->rowstride);
-            }
-            fwd_current += rowstride_64_dst;
-            ++fws_current;
-            even = !even;
-          }
-          nrowsb -= 64;
-          if (ncolsb % 64) {
-            _mzd_copy_transpose_64xlt64(fwd + whole_64cols * rowstride_64_dst, fws + whole_64cols,
-                                        DST->rowstride, A->rowstride, ncolsb % 64);
-          }
-          fwd += 1;
-          fws += 64 * A->rowstride;
-          if (nrowsb < 64) break;
-          js          = 0;
-          fws_current = fws;
-          fwd_current = fwd;
-        }
-      }
-
-      if (nrowsb == 0) continue;
-
-      // Transpose the remaining top rows. Now 0 < nrowsb < 64.
-
-      while (ncolsb >= 64) {
-        _mzd_copy_transpose_lt64x64(fwd, fws, DST->rowstride, A->rowstride, nrowsb);
-        ncolsb -= 64;
-        fwd += 64 * DST->rowstride;
-        fws += 1;
-      }
-
-      // This is true because if it wasn't then nrowsb has to be 0 and we continued before already.
-      assert(ncolsb == 0);
+  if (maxsize <= 512) {  // just one big block
+    _mzd_transpose_base(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols, maxsize);
+  } else {
+    rci_t large_size = split_round(maxsize, (maxsize <= 768) ? 64 : 512);
+    wi_t offset = large_size / m4ri_radix;
+      if (nrows >= ncols) {
+        word const *RESTRICT fws_up = fws; 
+        word const *RESTRICT fws_down = fws + large_size * rowstride_src;
+        word *RESTRICT fwd_left = fwd;
+        word *RESTRICT fwd_right = fwd + offset; 
+        rci_t maxsize_up = MAX(large_size, ncols);
+        rci_t maxsize_down = MAX(nrows - large_size, ncols);
+        _mzd_transpose_notsmall(fwd_left, fws_up, rowstride_dst, rowstride_src, large_size, ncols, maxsize_up);
+        _mzd_transpose_notsmall(fwd_right, fws_down, rowstride_dst, rowstride_src, nrows - large_size, ncols, maxsize_down);
+      } else {
+        word const *RESTRICT fws_left = fws; 
+        word const *RESTRICT fws_right = fws + offset;
+        word *RESTRICT fwd_up = fwd;
+        word *RESTRICT fwd_down = fwd + large_size * rowstride_dst; 
+        rci_t maxsize_left = MAX(nrows, large_size);
+        rci_t maxsize_right = MAX(nrows, ncols - large_size);
+        _mzd_transpose_notsmall(fwd_up, fws_left, rowstride_dst, rowstride_src, nrows, large_size, maxsize_left);
+        _mzd_transpose_notsmall(fwd_down, fws_right, rowstride_dst, rowstride_src, nrows, ncols - large_size, maxsize_right);
     }
   }
-
-  *nrowsp = nrows - R_top;
-  *ncolsp = ncols - R_right;
-  if (R_top < nrows) *fwsp = mzd_row(A, R_top) + R_right / m4ri_radix;
-  if (R_right < ncols) *fwdp = mzd_row(DST, R_right) + R_top / m4ri_radix;
 }
+
+static void _mzd_transpose(word *RESTRICT fwd, word const *RESTRICT fws, wi_t rowstride_dst, 
+                            wi_t rowstride_src, rci_t nrows, rci_t ncols, rci_t maxsize) {
+  // rationale: small blocks corresponds to the word size
+  //            two big blocks fit in L1 cache (512 --> 8KB).
+  
+  if (maxsize < 64) {  // super-fast path for very small matrices
+    _mzd_copy_transpose_small(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols, maxsize);
+  } else {
+    _mzd_transpose_notsmall(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols, maxsize);
+  }
+}
+
+
 
 mzd_t *mzd_transpose(mzd_t *DST, mzd_t const *A) {
   if (DST == NULL) {
     DST = mzd_init(A->ncols, A->nrows);
   } else if (__M4RI_UNLIKELY(DST->nrows != A->ncols || DST->ncols != A->nrows)) {
     m4ri_die("mzd_transpose: Wrong size for return matrix.\n");
-  } else {
-    /** it seems this is taken care of in the subroutines, re-enable if running into problems **/
-    // mzd_set_ui(DST,0);
   }
 
-  if (A->nrows == 0 || A->ncols == 0) return mzd_copy(DST, A);
+  if (A->nrows == 0 || A->ncols == 0)
+    return mzd_copy(DST, A);
 
-  if (__M4RI_LIKELY(!mzd_is_windowed(DST) && !mzd_is_windowed(A))) return _mzd_transpose(DST, A);
-  int A_windowed = mzd_is_windowed(A);
-  if (A_windowed) A = mzd_copy(NULL, A);
-  if (__M4RI_LIKELY(!mzd_is_windowed(DST)))
-    _mzd_transpose(DST, A);
-  else {
-    mzd_t *D = mzd_init(DST->nrows, DST->ncols);
-    _mzd_transpose(D, A);
-    mzd_copy(DST, D);
-    mzd_free(D);
+  rci_t maxsize = MAX(A->nrows, A->ncols);
+  if (__M4RI_LIKELY(!mzd_is_dangerous_window(DST))) {
+    _mzd_transpose(DST->data, A->data, DST->rowstride, A->rowstride, A->nrows, A->ncols, maxsize);
+    return DST;
   }
-  if (A_windowed) mzd_free((mzd_t *)A);
+  
+  mzd_t *D = mzd_init(DST->nrows, DST->ncols);
+  _mzd_transpose(D->data, A->data, D->rowstride, A->rowstride, A->nrows, A->ncols, maxsize);
+  mzd_copy(DST, D);
+  mzd_free(D);
   return DST;
 }
 
@@ -1386,7 +1174,6 @@ mzd_t *mzd_addmul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B) {
 
 mzd_t *_mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B, const int clear) {
   wi_t eol;
-  word *a, *b, *c;
 
   if (clear) {
     word const mask_end = C->high_bitmask;
@@ -1394,8 +1181,9 @@ mzd_t *_mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B, const int clear)
     /* asm __volatile__ (".p2align 4\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop"); */
     for (rci_t i = 0; i < C->nrows; ++i) {
       wi_t j = 0;
-      for (; j < C->width - 1; ++j) { C->rows[i][j] = 0; }
-      C->rows[i][j] &= ~mask_end;
+      word *row = mzd_row(C, i);
+      for (; j < C->width - 1; ++j) { row[j] = 0; }
+      row[j] &= ~mask_end;
     }
   }
 
@@ -1411,11 +1199,11 @@ mzd_t *_mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B, const int clear)
   int const blocksize = __M4RI_MUL_BLOCKSIZE;
   for (rci_t start = 0; start + blocksize <= C->nrows; start += blocksize) {
     for (rci_t i = start; i < start + blocksize; ++i) {
-      a = A->rows[i];
-      c = C->rows[i];
+      word const *a = mzd_row_const(A, i);
+      word *c = mzd_row(C, i);
       for (rci_t j = 0; j < m4ri_radix * eol; j += m4ri_radix) {
         for (int k = 0; k < m4ri_radix; ++k) {
-          b         = B->rows[j + k];
+          word const *b = mzd_row_const(B, j + k);
           parity[k] = a[0] & b[0];
           for (wi_t ii = wide - 1; ii >= 1; --ii) parity[k] ^= a[ii] & b[ii];
         }
@@ -1428,7 +1216,7 @@ mzd_t *_mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B, const int clear)
         /* asm __volatile__ (".p2align 4\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop");
          */
         for (int k = 0; k < (C->ncols % m4ri_radix); ++k) {
-          b         = B->rows[m4ri_radix * eol + k];
+          word const *b = mzd_row_const(B, m4ri_radix * eol + k);
           parity[k] = a[0] & b[0];
           for (wi_t ii = 1; ii < A->width; ++ii) parity[k] ^= a[ii] & b[ii];
         }
@@ -1438,11 +1226,11 @@ mzd_t *_mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B, const int clear)
   }
 
   for (rci_t i = C->nrows - (C->nrows % blocksize); i < C->nrows; ++i) {
-    a = A->rows[i];
-    c = C->rows[i];
+    word const *a = mzd_row_const(A, i);
+    word *c = mzd_row(C, i);
     for (rci_t j = 0; j < m4ri_radix * eol; j += m4ri_radix) {
       for (int k = 0; k < m4ri_radix; ++k) {
-        b         = B->rows[j + k];
+        word const *b = mzd_row_const(B, j + k);
         parity[k] = a[0] & b[0];
         for (wi_t ii = wide - 1; ii >= 1; --ii) parity[k] ^= a[ii] & b[ii];
       }
@@ -1454,7 +1242,7 @@ mzd_t *_mzd_mul_naive(mzd_t *C, mzd_t const *A, mzd_t const *B, const int clear)
       /* improves performance on x86_64 but is not cross plattform */
       /* asm __volatile__ (".p2align 4\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop"); */
       for (int k = 0; k < (C->ncols % m4ri_radix); ++k) {
-        b         = B->rows[m4ri_radix * eol + k];
+        word const *b = mzd_row_const(B, m4ri_radix * eol + k);
         parity[k] = a[0] & b[0];
         for (wi_t ii = 1; ii < A->width; ++ii) parity[k] ^= a[ii] & b[ii];
       }
@@ -1484,8 +1272,9 @@ void mzd_randomize(mzd_t *A) {
   wi_t const width    = A->width - 1;
   word const mask_end = A->high_bitmask;
   for (rci_t i = 0; i < A->nrows; ++i) {
-    for (wi_t j = 0; j < width; ++j) A->rows[i][j] = m4ri_random_word();
-    A->rows[i][width] ^= (A->rows[i][width] ^ m4ri_random_word()) & mask_end;
+    word *row = mzd_row(A, i);
+    for (wi_t j = 0; j < width; ++j) row[j] = m4ri_random_word();
+    row[width] ^= (row[width] ^ m4ri_random_word()) & mask_end;
   }
 
   __M4RI_DD_MZD(A);
@@ -1495,8 +1284,9 @@ void mzd_randomize_custom(mzd_t *A, m4ri_random_callback rc, void *data) {
   wi_t const width    = A->width - 1;
   word const mask_end = A->high_bitmask;
   for (rci_t i = 0; i < A->nrows; ++i) {
-    for (wi_t j = 0; j < width; ++j) A->rows[i][j] = rc(data);
-    A->rows[i][width] ^= (A->rows[i][width] ^ rc(data)) & mask_end;
+    word *row = mzd_row(A, i);
+    for (wi_t j = 0; j < width; ++j) row[j] = rc(data);
+    row[width] ^= (row[width] ^ rc(data)) & mask_end;
   }
 
   __M4RI_DD_MZD(A);
@@ -1506,7 +1296,7 @@ void mzd_set_ui(mzd_t *A, unsigned int value) {
   word const mask_end = A->high_bitmask;
 
   for (rci_t i = 0; i < A->nrows; ++i) {
-    word *row = A->rows[i];
+    word *row = mzd_row(A, i);
     for (wi_t j = 0; j < A->width - 1; ++j) row[j] = 0;
     row[A->width - 1] &= ~mask_end;
   }
@@ -1528,16 +1318,15 @@ int mzd_equal(mzd_t const *A, mzd_t const *B) {
   if (A == B) return TRUE;
 
   wi_t Awidth = A->width - 1;
-
-  for (rci_t i = 0; i < A->nrows; ++i) {
-    for (wi_t j = 0; j < Awidth; ++j) {
-      if (A->rows[i][j] != B->rows[i][j]) return FALSE;
-    }
-  }
-
   word const mask_end = A->high_bitmask;
+
   for (rci_t i = 0; i < A->nrows; ++i) {
-    if (((A->rows[i][Awidth] ^ B->rows[i][Awidth]) & mask_end)) return FALSE;
+    word const *rowa = mzd_row_const(A, i);
+    word const *rowb = mzd_row_const(B, i);
+    for (wi_t j = 0; j < Awidth; ++j) {
+      if (rowa[j] != rowb[j]) return FALSE;
+    }
+    if (((rowa[Awidth] ^ rowb[Awidth]) & mask_end)) return FALSE;
   }
   return TRUE;
 }
@@ -1555,15 +1344,17 @@ int mzd_cmp(mzd_t const *A, mzd_t const *B) {
      are more important than with large index. */
 
   for (rci_t i = 0; i < A->nrows; i++) {
-    if ((A->rows[i][n] & mask_end) < (B->rows[i][n] & mask_end))
+    word const *rowa = mzd_row_const(A, i);
+    word const *rowb = mzd_row_const(B, i);
+    if ((rowa[n] & mask_end) < (rowb[n] & mask_end))
       return -1;
-    else if ((A->rows[i][n] & mask_end) > (B->rows[i][n] & mask_end))
+    else if ((rowa[n] & mask_end) > (rowb[n] & mask_end))
       return 1;
 
     for (wi_t j = n - 1; j >= 0; j--) {
-      if (A->rows[i][j] < B->rows[i][j])
+      if (rowa[j] < rowb[j])
         return -1;
-      else if (A->rows[i][j] > B->rows[i][j])
+      else if (rowa[j] > rowb[j])
         return 1;
     }
   }
@@ -1579,12 +1370,11 @@ mzd_t *mzd_copy(mzd_t *N, mzd_t const *P) {
     if (N->nrows < P->nrows || N->ncols < P->ncols)
       m4ri_die("mzd_copy: Target matrix is too small.");
   }
-  word *p_truerow, *n_truerow;
   wi_t const wide = P->width - 1;
   word mask_end   = P->high_bitmask;
   for (rci_t i = 0; i < P->nrows; ++i) {
-    p_truerow = P->rows[i];
-    n_truerow = N->rows[i];
+    word const *p_truerow = mzd_row_const(P, i);
+    word *n_truerow = mzd_row(N, i);
     for (wi_t j = 0; j < wide; ++j) n_truerow[j] = p_truerow[j];
     n_truerow[wide] = (n_truerow[wide] & ~mask_end) | (p_truerow[wide] & mask_end);
   }
@@ -1603,8 +1393,8 @@ mzd_t *mzd_concat(mzd_t *C, mzd_t const *A, mzd_t const *B) {
   }
 
   for (rci_t i = 0; i < A->nrows; ++i) {
-    word *dst_truerow = C->rows[i];
-    word *src_truerow = A->rows[i];
+    word *dst_truerow = mzd_row(C, i);
+    word const *src_truerow = mzd_row_const(A, i);
     for (wi_t j = 0; j < A->width; ++j) { dst_truerow[j] = src_truerow[j]; }
   }
 
@@ -1630,14 +1420,14 @@ mzd_t *mzd_stack(mzd_t *C, mzd_t const *A, mzd_t const *B) {
   }
 
   for (rci_t i = 0; i < A->nrows; ++i) {
-    word *src_truerow = A->rows[i];
-    word *dst_truerow = C->rows[i];
+    word const *src_truerow = mzd_row_const(A, i);
+    word *dst_truerow = mzd_row(C, i);
     for (wi_t j = 0; j < A->width; ++j) { dst_truerow[j] = src_truerow[j]; }
   }
 
   for (rci_t i = 0; i < B->nrows; ++i) {
-    word *dst_truerow = C->rows[A->nrows + i];
-    word *src_truerow = B->rows[i];
+    word *dst_truerow = mzd_row(C, A->nrows + i);
+    word const *src_truerow = mzd_row_const(B, i);
     for (wi_t j = 0; j < B->width; ++j) { dst_truerow[j] = src_truerow[j]; }
   }
 
@@ -1694,70 +1484,94 @@ mzd_t *_mzd_add(mzd_t *C, mzd_t const *A, mzd_t const *B) {
   case 0: return C;
   case 1:
     for (rci_t i = 0; i < nrows; ++i) {
-      C->rows[i][0] ^= ((A->rows[i][0] ^ B->rows[i][0] ^ C->rows[i][0]) & mask_end);
+      word const * rowa = mzd_row_const(A, i);
+      word const * rowb = mzd_row_const(B, i);
+      word * rowc = mzd_row(C, i);
+      rowc[0] ^= ((rowa[0] ^ rowb[0] ^ rowc[0]) & mask_end);
     }
     break;
   case 2:
     for (rci_t i = 0; i < nrows; ++i) {
-      C->rows[i][0] = A->rows[i][0] ^ B->rows[i][0];
-      C->rows[i][1] ^= ((A->rows[i][1] ^ B->rows[i][1] ^ C->rows[i][1]) & mask_end);
+      word const * rowa = mzd_row_const(A, i);
+      word const * rowb = mzd_row_const(B, i);
+      word * rowc = mzd_row(C, i);
+      rowc[0] = rowa[0] ^ rowb[0];
+      rowc[1] ^= ((rowa[1] ^ rowb[1] ^ rowc[1]) & mask_end);
     }
     break;
   case 3:
     for (rci_t i = 0; i < nrows; ++i) {
-      C->rows[i][0] = A->rows[i][0] ^ B->rows[i][0];
-      C->rows[i][1] = A->rows[i][1] ^ B->rows[i][1];
-      C->rows[i][2] ^= ((A->rows[i][2] ^ B->rows[i][2] ^ C->rows[i][2]) & mask_end);
+      word const * rowa = mzd_row_const(A, i);
+      word const * rowb = mzd_row_const(B, i);
+      word * rowc = mzd_row(C, i);
+      rowc[0] = rowa[0] ^ rowb[0];
+      rowc[1] = rowa[1] ^ rowb[1];
+      rowc[2] ^= ((rowa[2] ^ rowb[2] ^ rowc[2]) & mask_end);
     }
     break;
   case 4:
     for (rci_t i = 0; i < nrows; ++i) {
-      C->rows[i][0] = A->rows[i][0] ^ B->rows[i][0];
-      C->rows[i][1] = A->rows[i][1] ^ B->rows[i][1];
-      C->rows[i][2] = A->rows[i][2] ^ B->rows[i][2];
-      C->rows[i][3] ^= ((A->rows[i][3] ^ B->rows[i][3] ^ C->rows[i][3]) & mask_end);
+      word const * rowa = mzd_row_const(A, i);
+      word const * rowb = mzd_row_const(B, i);
+      word * rowc = mzd_row(C, i);
+      rowc[0] = rowa[0] ^ rowb[0];
+      rowc[1] = rowa[1] ^ rowb[1];
+      rowc[2] = rowa[2] ^ rowb[2];
+      rowc[3] ^= ((rowa[3] ^ rowb[3] ^ rowc[3]) & mask_end);
     }
     break;
   case 5:
     for (rci_t i = 0; i < nrows; ++i) {
-      C->rows[i][0] = A->rows[i][0] ^ B->rows[i][0];
-      C->rows[i][1] = A->rows[i][1] ^ B->rows[i][1];
-      C->rows[i][2] = A->rows[i][2] ^ B->rows[i][2];
-      C->rows[i][3] = A->rows[i][3] ^ B->rows[i][3];
-      C->rows[i][4] ^= ((A->rows[i][4] ^ B->rows[i][4] ^ C->rows[i][4]) & mask_end);
+      word const * rowa = mzd_row_const(A, i);
+      word const * rowb = mzd_row_const(B, i);
+      word * rowc = mzd_row(C, i);
+      rowc[0] = rowa[0] ^ rowb[0];
+      rowc[1] = rowa[1] ^ rowb[1];
+      rowc[2] = rowa[2] ^ rowb[2];
+      rowc[3] = rowa[3] ^ rowb[3];
+      rowc[4] ^= ((rowa[4] ^ rowb[4] ^ rowc[4]) & mask_end);
     }
     break;
   case 6:
     for (rci_t i = 0; i < nrows; ++i) {
-      C->rows[i][0] = A->rows[i][0] ^ B->rows[i][0];
-      C->rows[i][1] = A->rows[i][1] ^ B->rows[i][1];
-      C->rows[i][2] = A->rows[i][2] ^ B->rows[i][2];
-      C->rows[i][3] = A->rows[i][3] ^ B->rows[i][3];
-      C->rows[i][4] = A->rows[i][4] ^ B->rows[i][4];
-      C->rows[i][5] ^= ((A->rows[i][5] ^ B->rows[i][5] ^ C->rows[i][5]) & mask_end);
+      word const * rowa = mzd_row_const(A, i);
+      word const * rowb = mzd_row_const(B, i);
+      word * rowc = mzd_row(C, i);
+      rowc[0] = rowa[0] ^ rowb[0];
+      rowc[1] = rowa[1] ^ rowb[1];
+      rowc[2] = rowa[2] ^ rowb[2];
+      rowc[3] = rowa[3] ^ rowb[3];
+      rowc[4] = rowa[4] ^ rowb[4];
+      rowc[5] ^= ((rowa[5] ^ rowb[5] ^ rowc[5]) & mask_end);
     }
     break;
   case 7:
     for (rci_t i = 0; i < nrows; ++i) {
-      C->rows[i][0] = A->rows[i][0] ^ B->rows[i][0];
-      C->rows[i][1] = A->rows[i][1] ^ B->rows[i][1];
-      C->rows[i][2] = A->rows[i][2] ^ B->rows[i][2];
-      C->rows[i][3] = A->rows[i][3] ^ B->rows[i][3];
-      C->rows[i][4] = A->rows[i][4] ^ B->rows[i][4];
-      C->rows[i][5] = A->rows[i][5] ^ B->rows[i][5];
-      C->rows[i][6] ^= ((A->rows[i][6] ^ B->rows[i][6] ^ C->rows[i][6]) & mask_end);
+      word const * rowa = mzd_row_const(A, i);
+      word const * rowb = mzd_row_const(B, i);
+      word * rowc = mzd_row(C, i);
+      rowc[0] = rowa[0] ^ rowb[0];
+      rowc[1] = rowa[1] ^ rowb[1];
+      rowc[2] = rowa[2] ^ rowb[2];
+      rowc[3] = rowa[3] ^ rowb[3];
+      rowc[4] = rowa[4] ^ rowb[4];
+      rowc[5] = rowa[5] ^ rowb[5];
+      rowc[6] ^= ((rowa[6] ^ rowb[6] ^ rowc[6]) & mask_end);
     }
     break;
   case 8:
     for (rci_t i = 0; i < nrows; ++i) {
-      C->rows[i][0] = A->rows[i][0] ^ B->rows[i][0];
-      C->rows[i][1] = A->rows[i][1] ^ B->rows[i][1];
-      C->rows[i][2] = A->rows[i][2] ^ B->rows[i][2];
-      C->rows[i][3] = A->rows[i][3] ^ B->rows[i][3];
-      C->rows[i][4] = A->rows[i][4] ^ B->rows[i][4];
-      C->rows[i][5] = A->rows[i][5] ^ B->rows[i][5];
-      C->rows[i][6] = A->rows[i][6] ^ B->rows[i][6];
-      C->rows[i][7] ^= ((A->rows[i][7] ^ B->rows[i][7] ^ C->rows[i][7]) & mask_end);
+      word const * rowa = mzd_row_const(A, i);
+      word const * rowb = mzd_row_const(B, i);
+      word * rowc = mzd_row(C, i);
+      rowc[0] = rowa[0] ^ rowb[0];
+      rowc[1] = rowa[1] ^ rowb[1];
+      rowc[2] = rowa[2] ^ rowb[2];
+      rowc[3] = rowa[3] ^ rowb[3];
+      rowc[4] = rowa[4] ^ rowb[4];
+      rowc[5] = rowa[5] ^ rowb[5];
+      rowc[6] = rowa[6] ^ rowb[6];
+      rowc[7] ^= ((rowa[7] ^ rowb[7] ^ rowc[7]) & mask_end);
     }
     break;
 
@@ -1787,24 +1601,25 @@ mzd_t *mzd_submatrix(mzd_t *S, mzd_t const *M, rci_t const startrow, rci_t const
     /* we start at the beginning of a word */
     if (ncols / m4ri_radix != 0) {
       for (rci_t x = startrow, i = 0; i < nrows; ++i, ++x) {
-        memcpy(S->rows[i], M->rows[x] + startword, sizeof(word) * (ncols / m4ri_radix));
+        memcpy(mzd_row(S, i), mzd_row_const(M, x) + startword, sizeof(word) * (ncols / m4ri_radix));
       }
     }
     if (ncols % m4ri_radix) {
       word const mask_end = __M4RI_LEFT_BITMASK(ncols % m4ri_radix);
       for (rci_t x = startrow, i = 0; i < nrows; ++i, ++x) {
         /* process remaining bits */
-        word temp                      = M->rows[x][startword + ncols / m4ri_radix] & mask_end;
-        S->rows[i][ncols / m4ri_radix] = temp;
+        word temp                      = mzd_row_const(M, x)[startword + ncols / m4ri_radix] & mask_end;
+        mzd_row(S, i)[ncols / m4ri_radix] = temp;
       }
     }
   } else {
     wi_t j;
     for (rci_t i = 0; i < nrows; i++) {
+      word *srow = mzd_row(S, i);
       for (j = 0; j + m4ri_radix < ncols; j += m4ri_radix)
-        S->rows[i][j / m4ri_radix] = mzd_read_bits(M, startrow + i, startcol + j, m4ri_radix);
-      S->rows[i][j / m4ri_radix] &= ~S->high_bitmask;
-      S->rows[i][j / m4ri_radix] |=
+        srow[j / m4ri_radix] = mzd_read_bits(M, startrow + i, startcol + j, m4ri_radix);
+      srow[j / m4ri_radix] &= ~S->high_bitmask;
+      srow[j / m4ri_radix] |=
           mzd_read_bits(M, startrow + i, startcol + j, ncols - j) & S->high_bitmask;
     }
   }
@@ -1812,103 +1627,13 @@ mzd_t *mzd_submatrix(mzd_t *S, mzd_t const *M, rci_t const startrow, rci_t const
   return S;
 }
 
-void mzd_col_swap(mzd_t *M, rci_t const cola, rci_t const colb) {
-  if (cola == colb) return;
-
-  rci_t const _cola = cola;
-  rci_t const _colb = colb;
-
-  wi_t const a_word = _cola / m4ri_radix;
-  wi_t const b_word = _colb / m4ri_radix;
-
-  int const a_bit = _cola % m4ri_radix;
-  int const b_bit = _colb % m4ri_radix;
-
-  word *RESTRICT ptr = mzd_first_row(M);
-  int max_bit        = MAX(a_bit, b_bit);
-  int count          = mzd_rows_in_block(M, 0);
-  assert(count > 0);
-  int min_bit = a_bit + b_bit - max_bit;
-  int block   = 0;
-  int offset  = max_bit - min_bit;
-  word mask   = m4ri_one << min_bit;
-
-  if (a_word == b_word) {
-    while (1) {
-      ptr += a_word;
-      int fast_count = count / 4;
-      int rest_count = count - 4 * fast_count;
-      word xor [4];
-      wi_t const rowstride = M->rowstride;
-      while (fast_count--) {
-        xor[0] = ptr[0];
-        xor[1] = ptr[rowstride];
-        xor[2] = ptr[2 * rowstride];
-        xor[3] = ptr[3 * rowstride];
-        xor[0] ^= xor[0] >> offset;
-        xor[1] ^= xor[1] >> offset;
-        xor[2] ^= xor[2] >> offset;
-        xor[3] ^= xor[3] >> offset;
-        xor[0] &= mask;
-        xor[1] &= mask;
-        xor[2] &= mask;
-        xor[3] &= mask;
-        xor[0] |= xor[0] << offset;
-        xor[1] |= xor[1] << offset;
-        xor[2] |= xor[2] << offset;
-        xor[3] |= xor[3] << offset;
-        ptr[0] ^= xor[0];
-        ptr[rowstride] ^= xor[1];
-        ptr[2 * rowstride] ^= xor[2];
-        ptr[3 * rowstride] ^= xor[3];
-        ptr += 4 * rowstride;
-      }
-      while (rest_count--) {
-        word xor = *ptr;
-        xor ^= xor >> offset;
-        xor &= mask;
-        *ptr ^= xor | (xor << offset);
-        ptr += rowstride;
-      }
-      if ((count = mzd_rows_in_block(M, ++block)) <= 0) break;
-      ptr = mzd_first_row_next_block(M, block);
-    }
-  } else {
-    word *RESTRICT min_ptr;
-    wi_t max_offset;
-    if (min_bit == a_bit) {
-      min_ptr    = ptr + a_word;
-      max_offset = b_word - a_word;
-    } else {
-      min_ptr    = ptr + b_word;
-      max_offset = a_word - b_word;
-    }
-    while (1) {
-      wi_t const rowstride = M->rowstride;
-      while (count--) {
-        word xor = (min_ptr[0] ^ (min_ptr[max_offset] >> offset)) & mask;
-        min_ptr[0] ^= xor;
-        min_ptr[max_offset] ^= xor << offset;
-        min_ptr += rowstride;
-      }
-      if ((count = mzd_rows_in_block(M, ++block)) <= 0) break;
-      ptr = mzd_first_row_next_block(M, block);
-      if (min_bit == a_bit)
-        min_ptr = ptr + a_word;
-      else
-        min_ptr = ptr + b_word;
-    }
-  }
-
-  __M4RI_DD_MZD(M);
-}
-
 int mzd_is_zero(mzd_t const *A) {
   word status   = 0;
   word mask_end = A->high_bitmask;
   for (rci_t i = 0; i < A->nrows; ++i) {
-    for (wi_t j = 0; j < A->width - 1; ++j) status |= A->rows[i][j];
-    status |= A->rows[i][A->width - 1] & mask_end;
+    word const *row = mzd_row_const(A, i);
+    for (wi_t j = 0; j < A->width - 1; ++j) status |= row[j];
+    status |= row[A->width - 1] & mask_end;
     if (status) return 0;
   }
   return !status;
@@ -1918,8 +1643,8 @@ void mzd_copy_row(mzd_t *B, rci_t i, mzd_t const *A, rci_t j) {
   assert(B->ncols >= A->ncols);
   wi_t const width = MIN(B->width, A->width) - 1;
 
-  word const *a = A->rows[j];
-  word *b       = B->rows[i];
+  word const *a = mzd_row_const(A, j);
+  word *b       = mzd_row(B, i);
 
   word const mask_end = __M4RI_LEFT_BITMASK(A->ncols % m4ri_radix);
 
@@ -1970,7 +1695,8 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
     wi_t const word_offset = start_col / m4ri_radix;
     word const mask_begin  = __M4RI_RIGHT_BITMASK(m4ri_radix - bit_offset);
     for (rci_t i = start_row; i < nrows; ++i) {
-      word const curr_data = A->rows[i][word_offset] & mask_begin;
+      word const *row = mzd_row_const(A, i);
+      word const curr_data = row[word_offset] & mask_begin;
       if (m4ri_lesser_LSB(curr_data, data)) {
         row_candidate = i;
         data          = curr_data;
@@ -1995,7 +1721,8 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
     /* handle complete words */
     for (wi_t wi = word_offset + 1; wi < A->width - 1; ++wi) {
       for (rci_t i = start_row; i < nrows; ++i) {
-        word const curr_data = A->rows[i][wi];
+        word const *row = mzd_row_const(A, i);
+        word const curr_data = row[wi];
         if (m4ri_lesser_LSB(curr_data, data)) {
           row_candidate = i;
           data          = curr_data;
@@ -2021,7 +1748,8 @@ int mzd_find_pivot(mzd_t const *A, rci_t start_row, rci_t start_col, rci_t *r, r
     word const mask_end  = __M4RI_LEFT_BITMASK(end_offset % m4ri_radix);
     wi_t wi              = A->width - 1;
     for (rci_t i = start_row; i < nrows; ++i) {
-      word const curr_data = A->rows[i][wi] & mask_end;
+      word const *row = mzd_row_const(A, i);
+      word const curr_data = row[wi] & mask_end;
       if (m4ri_lesser_LSB(curr_data, data)) {
         row_candidate = i;
         data          = curr_data;
@@ -2077,7 +1805,7 @@ double _mzd_density(mzd_t const *A, wi_t res, rci_t r, rci_t c) {
   if (res < 1) res = 1;
 
   for (rci_t i = r; i < A->nrows; ++i) {
-    word *truerow = A->rows[i];
+    word const *truerow = mzd_row_const(A, i);
     for (rci_t j = c; j < m4ri_radix; ++j)
       if (mzd_read_bit(A, i, j)) ++count;
     total += m4ri_radix;
@@ -2099,10 +1827,8 @@ double mzd_density(mzd_t const *A, wi_t res) { return _mzd_density(A, res, 0, 0)
 rci_t mzd_first_zero_row(mzd_t const *A) {
   word const mask_end = __M4RI_LEFT_BITMASK(A->ncols % m4ri_radix);
   wi_t const end      = A->width - 1;
-  word *row;
-
   for (rci_t i = A->nrows - 1; i >= 0; --i) {
-    row      = A->rows[i];
+    word const *row = mzd_row_const(A, i);
     word tmp = row[0];
     for (wi_t j = 1; j < end; ++j) tmp |= row[j];
     tmp |= row[end] & mask_end;
@@ -2120,7 +1846,8 @@ mzd_t *mzd_extract_u(mzd_t *U, mzd_t const *A) {
   if (U != NULL) { assert(U->nrows == k && U->ncols == k); }
   U = mzd_submatrix(U, A, 0, 0, k, k);
   for (rci_t i = 1; i < U->nrows; i++) {
-    for (wi_t j = 0; j < i / m4ri_radix; j++) { U->rows[i][j] = 0; }
+    word *row = mzd_row(U, i);
+    for (wi_t j = 0; j < i / m4ri_radix; j++) { row[j] = 0; }
     if (i % m4ri_radix) mzd_clear_bits(U, i, (i / m4ri_radix) * m4ri_radix, i % m4ri_radix);
   }
   return U;
@@ -2131,9 +1858,10 @@ mzd_t *mzd_extract_l(mzd_t *L, mzd_t const *A) {
   if (L != NULL) { assert(L->nrows == k && L->ncols == k); }
   L = mzd_submatrix(L, A, 0, 0, k, k);
   for (rci_t i = 0; i < L->nrows - 1; i++) {
+    word *row = mzd_row(L, i);
     if (m4ri_radix - (i + 1) % m4ri_radix)
       mzd_clear_bits(L, i, i + 1, m4ri_radix - (i + 1) % m4ri_radix);
-    for (wi_t j = (i / m4ri_radix + 1); j < L->width; j++) { L->rows[i][j] = 0; }
+    for (wi_t j = (i / m4ri_radix + 1); j < L->width; j++) { row[j] = 0; }
   }
   return L;
 }

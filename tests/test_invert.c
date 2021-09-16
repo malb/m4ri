@@ -69,6 +69,10 @@ int main() {
   int status = 0;
   srandom(17);
 
+  int n = 0;
+  while (n * n < __M4RI_CPU_L3_CACHE << 1)
+    n += 10;
+
   for (int k = 0; k < 5; k++) {
     status += invert_test(1, k);
     status += invert_test(2, k);
@@ -83,6 +87,8 @@ int main() {
     status += invert_test(1290, k);
     status += invert_test(1710, k);
     status += invert_test(2048, k);
+
+    status += invert_test(n + 17, k);
   }
   if (status == 0) {
     printf("All tests passed.\n");

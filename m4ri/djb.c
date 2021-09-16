@@ -19,9 +19,11 @@
 #include <stdlib.h>
 
 static inline int mzd_compare_rows_revlex(const mzd_t *A, rci_t a, rci_t b) {
+  word const *rowa = mzd_row_const(A, a);
+  word const *rowb = mzd_row_const(A, b);
   for (wi_t j = A->width - 1; j >= 0; j--) {
-    if (A->rows[a][j] < A->rows[b][j]) return 0;
-    if (A->rows[a][j] > A->rows[b][j]) return 1;
+    if (rowa[j] < rowb[j]) return 0;
+    if (rowa[j] > rowb[j]) return 1;
   }
   return 1;
 }
@@ -143,9 +145,9 @@ void djb_apply_mzd(djb_t *m, mzd_t *W, const mzd_t *V) {
   while (i > 0) {
     --i;
     if (m->srctyp[i] == source_source) {
-      _mzd_combine(mzd_row(W, m->target[i]), mzd_row(V, m->source[i]), W->width);
+      _mzd_combine(mzd_row(W, m->target[i]), mzd_row_const(V, m->source[i]), W->width);
     } else {
-      _mzd_combine(mzd_row(W, m->target[i]), mzd_row(W, m->source[i]), W->width);
+      _mzd_combine(mzd_row(W, m->target[i]), mzd_row_const(W, m->source[i]), W->width);
     }
   }
 }

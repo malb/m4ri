@@ -37,12 +37,12 @@ static void entry(char const *function, char const *file, int line) {
 
 static inline void consistency_check_row(mzd_t const *M, rci_t row) {
   assert(row >= 0 && row < M->nrows);
-  assert(M->rows[row] == mzd_row(M, row));
+  word const *truerow = mzd_row_const(M, row);
   if (mzd_is_windowed(M)) return;
   // Check that the excess bits are zero.
-  assert((M->rows[row][M->width - 1] & ~M->high_bitmask) == 0);
+  assert((truerow[M->width - 1] & ~M->high_bitmask) == 0);
   // Check that the padding bits are zero, if any.
-  assert(M->width == M->rowstride || M->rows[row][M->width] == 0);
+  assert(M->width == M->rowstride || truerow[M->width] == 0);
 }
 
 static void consistency_check(mzd_t const *M) {
@@ -65,7 +65,7 @@ static void consistency_check(mzd_t const *M) {
   int row_count = mzd_rows_in_block(M, 0);
   while (1) {
     while (row_count--) {
-      assert(ptr == M->rows[counted++]);
+      assert(ptr == mzd_row_const(M, counted++));
       ptr += M->rowstride;
     }
     ++n;
@@ -116,7 +116,7 @@ void m4ri_dd_row(char const *function, char const *file, int line, mzd_t const *
   entry(function, file, line);
   consistency_check_row(M, row);
 #if !__M4RI_DD_QUIET
-  word hash = calculate_hash(M->rows[row], M->width);
+  word hash = calculate_hash(mzd_row_const(M, row), M->width);
   printf("row %d hash: %llx\n", row, hash);
 #endif
 }
@@ -127,7 +127,7 @@ void m4ri_dd_mzd(char const *function, char const *file, int line, mzd_t const *
 #if !__M4RI_DD_QUIET
   word hash = 0;
   for (rci_t r = 0; r < M->nrows; ++r)
-    hash ^= rotate_word(calculate_hash(M->rows[r], M->width), r % m4ri_radix);
+    hash ^= rotate_word(calculate_hash(mzd_row_const(M, r), M->width), r % m4ri_radix);
   printf("mzd hash: %llx\n", hash);
 #endif
 }
