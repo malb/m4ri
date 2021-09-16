@@ -23,16 +23,17 @@
 
 #include <m4ri/m4ri.h>
 
-int test_size[18] = {1, 3, 4, 7, 8, 11, 16, 17, 32, 40, 64, 80, 128, 160, 192, 240, 256, 512};
+#define NSIZE 27
+int test_size[NSIZE] = {1, 3, 4, 7, 8, 11, 16, 17, 32, 40, 63, 64, 65, 80, 128, 160, 192, 240, 256, 512, 513, 769, 1000, 2000, 3000, 4000, 5000};
 
 int test_transpose(int i) {
   int failure = 0;
   rci_t m     = test_size[i];
   printf("transpose m: %4d, n: ", m);
-  for (int j = 0; j < 18 && !failure; ++j) {
+  for (int j = 0; j < NSIZE && !failure; ++j) {
     rci_t n = test_size[j];
     printf("%d", n);
-    if (j != 17) printf(",");
+    if (j != NSIZE - 1) printf(",");
     int size      = m * n;
     int loop_size = MAX(64 * 64 / size, 2);
     for (int i = 0; i < loop_size && !failure; ++i) {
@@ -48,6 +49,16 @@ int test_transpose(int i) {
       mzd_t *CT  = mzd_add(NULL, AT, BT);
       mzd_t *CTT = mzd_transpose(NULL, CT);
       if (!mzd_equal(C, CTT)) ++failure;
+
+      // check ATT = A
+      mzd_t *ATT = B;
+      mzd_randomize(A);
+      mzd_randomize(AT);
+      mzd_randomize(ATT);
+      mzd_transpose(AT, A);
+      mzd_transpose(ATT, AT);
+      if (!mzd_equal(A, ATT)) ++failure;
+
       mzd_free(A);
       mzd_free(B);
       mzd_free(C);
@@ -68,30 +79,7 @@ int test_transpose(int i) {
 int main() {
   int status = 0;
 
-  int m = 3;
-  int n = 64;
-
-  mzd_t *A = mzd_init(m, n);
-  mzd_t *B = mzd_init(m, n);
-  mzd_randomize(A);
-  mzd_randomize(B);
-  mzd_t *C  = mzd_add(NULL, A, B);
-  mzd_t *AT = mzd_init(n, m);
-  mzd_randomize(AT);
-  mzd_transpose(AT, A);
-  mzd_t *BT  = mzd_transpose(NULL, B);
-  mzd_t *CT  = mzd_add(NULL, AT, BT);
-  mzd_t *CTT = mzd_transpose(NULL, CT);
-  if (!mzd_equal(C, CTT)) ++status;
-  mzd_free(A);
-  mzd_free(B);
-  mzd_free(C);
-  mzd_free(AT);
-  mzd_free(BT);
-  mzd_free(CT);
-  mzd_free(CTT);
-
-  for (int i = 0; i < 18; ++i) {
+  for (int i = 0; i < NSIZE; ++i) {
       status += test_transpose(i);
   }
 

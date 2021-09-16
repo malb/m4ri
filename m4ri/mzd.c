@@ -939,20 +939,25 @@ static inline void _mzd_copy_transpose_le64xle64(word *RESTRICT dst, word const 
   return;
 }
 
-void _mzd_transpose_multiblock(mzd_t *DST, mzd_t const *A, word *RESTRICT *fwdp,
-                               word const *RESTRICT *fwsp, rci_t *nrowsp, rci_t *ncolsp);
+static inline void _mzd_copy_transpose_small(word *RESTRICT fwd, word const *RESTRICT fws,
+                                                 wi_t rowstride_dst, wi_t rowstride_src, rci_t nrows,
+                                                 rci_t ncols, rci_t maxsize) {
+  assert(maxsize < 64);
+  if (maxsize <= 8) {
+    _mzd_copy_transpose_le8xle8(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols, maxsize);
+  } else if (maxsize <= 16) {
+    _mzd_copy_transpose_le16xle16(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols, maxsize);
+  } else if (maxsize <= 32) {
+    _mzd_copy_transpose_le32xle32(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols);
+  } else {
+    _mzd_copy_transpose_le64xle64(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols);
+  }
+}
 
-mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
-  assert(!mzd_is_windowed(DST) && !mzd_is_windowed(A));
 
-  rci_t nrows   = A->nrows;
-  rci_t ncols   = A->ncols;
-  rci_t maxsize = MAX(nrows, ncols);
-
-  word *RESTRICT fwd       = mzd_row(DST, 0);
-  word const *RESTRICT fws = mzd_row_const(A, 0);
-
-  if (maxsize >= 64) {
+void _mzd_transpose_base(word *RESTRICT fwd, word const *RESTRICT fws, wi_t rowstride_dst, 
+                            wi_t rowstride_src, rci_t nrows, rci_t ncols, rci_t maxsize) {
+  assert(maxsize >= 64);
     // Note that this code is VERY sensitive. ANY change to _mzd_transpose can easily
     // reduce the speed for small matrices (up to 64x64) by 5 to 10%.   
     if (nrows >= 64) {
@@ -973,15 +978,14 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
        */
 #if 1
       int js = ncols & nrows & 64;  // True if the total number of whole 64x64 matrices is odd.
-      wi_t const rowstride_64_dst      = 64 * DST->rowstride;
+      wi_t const rowstride_64_dst      = 64 * rowstride_dst;
       word *RESTRICT fwd_current       = fwd;
       word const *RESTRICT fws_current = fws;
       if (js) {
         js = 1;
-        _mzd_copy_transpose_64x64(fwd, fws, DST->rowstride, A->rowstride);
+        _mzd_copy_transpose_64x64(fwd, fws, rowstride_dst, rowstride_src);
         if ((nrows | ncols) == 64) {
-          __M4RI_DD_MZD(DST);
-          return DST;
+          return;
         }
         fwd_current += rowstride_64_dst;
         ++fws_current;
@@ -999,7 +1003,7 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
             fws_delayed = fws_current;
           } else {
             _mzd_copy_transpose_64x64_2(fwd_delayed, fwd_current, fws_delayed, fws_current,
-                                        DST->rowstride, A->rowstride);
+                                        rowstride_dst, rowstride_src);
           }
           fwd_current += rowstride_64_dst;
           ++fws_current;
@@ -1008,10 +1012,10 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
         nrows -= 64;
         if (ncols % 64) {
           _mzd_copy_transpose_64xlt64(fwd + whole_64cols * rowstride_64_dst, fws + whole_64cols,
-                                      DST->rowstride, A->rowstride, ncols % 64);
+                                      rowstride_dst, rowstride_src, ncols % 64);
         }
         fwd += 1;
-        fws += 64 * A->rowstride;
+        fws += 64 * rowstride_src;
         if (nrows < 64) break;
         js          = 0;
         fws_current = fws;
@@ -1039,67 +1043,99 @@ mzd_t *_mzd_transpose(mzd_t *DST, mzd_t const *A) {
     }
 
     if (nrows == 0) {
-      __M4RI_DD_MZD(DST);
-      return DST;
+      return;
     }
 
     // Transpose the remaining top rows. Now 0 < nrows < 64.
 
     while (ncols >= 64) {
-      _mzd_copy_transpose_lt64x64(fwd, fws, DST->rowstride, A->rowstride, nrows);
+      _mzd_copy_transpose_lt64x64(fwd, fws, rowstride_dst, rowstride_src, nrows);
       ncols -= 64;
-      fwd += 64 * DST->rowstride;
+      fwd += 64 * rowstride_dst;
       fws += 1;
     }
 
     if (ncols == 0) {
-      __M4RI_DD_MZD(DST);
-      return DST;
+      return ;
     }
 
-    maxsize = MAX(nrows, ncols);
-  }
-
+  maxsize = MAX(nrows, ncols);
+  
   // Transpose the remaining corner. Now both 0 < nrows < 64 and 0 < ncols < 64.
-
-  if (maxsize <= 8) {
-    _mzd_copy_transpose_le8xle8(fwd, fws, DST->rowstride, A->rowstride, nrows, ncols, maxsize);
-  } else if (maxsize <= 16) {
-    _mzd_copy_transpose_le16xle16(fwd, fws, DST->rowstride, A->rowstride, nrows, ncols, maxsize);
-  } else if (maxsize <= 32) {
-    _mzd_copy_transpose_le32xle32(fwd, fws, DST->rowstride, A->rowstride, nrows, ncols);
-  } else {
-    _mzd_copy_transpose_le64xle64(fwd, fws, DST->rowstride, A->rowstride, nrows, ncols);
-  }
-
-  __M4RI_DD_MZD(DST);
-  return DST;
+  _mzd_copy_transpose_small(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols, maxsize);
 }
+
+/* return the smallest multiple of k larger than n/2 */
+static inline rci_t split_round(rci_t n, rci_t k) {
+  rci_t half = n / 2;
+  return ((half + (k - 1)) / k) * k;
+}
+
+static void _mzd_transpose_notsmall(word *RESTRICT fwd, word const *RESTRICT fws, wi_t rowstride_dst, 
+                            wi_t rowstride_src, rci_t nrows, rci_t ncols, rci_t maxsize) {
+  assert(maxsize >= 64);
+
+  if (maxsize <= 512) {  // just one big block
+    _mzd_transpose_base(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols, maxsize);
+  } else {
+    rci_t large_size = split_round(maxsize, (maxsize <= 768) ? 64 : 512);
+    wi_t offset = large_size / m4ri_radix;
+      if (nrows >= ncols) {
+        word const *RESTRICT fws_up = fws; 
+        word const *RESTRICT fws_down = fws + large_size * rowstride_src;
+        word *RESTRICT fwd_left = fwd;
+        word *RESTRICT fwd_right = fwd + offset; 
+        rci_t maxsize_up = MAX(large_size, ncols);
+        rci_t maxsize_down = MAX(nrows - large_size, ncols);
+        _mzd_transpose_notsmall(fwd_left, fws_up, rowstride_dst, rowstride_src, large_size, ncols, maxsize_up);
+        _mzd_transpose_notsmall(fwd_right, fws_down, rowstride_dst, rowstride_src, nrows - large_size, ncols, maxsize_down);
+      } else {
+        word const *RESTRICT fws_left = fws; 
+        word const *RESTRICT fws_right = fws + offset;
+        word *RESTRICT fwd_up = fwd;
+        word *RESTRICT fwd_down = fwd + large_size * rowstride_dst; 
+        rci_t maxsize_left = MAX(nrows, large_size);
+        rci_t maxsize_right = MAX(nrows, ncols - large_size);
+        _mzd_transpose_notsmall(fwd_up, fws_left, rowstride_dst, rowstride_src, nrows, large_size, maxsize_left);
+        _mzd_transpose_notsmall(fwd_down, fws_right, rowstride_dst, rowstride_src, nrows, ncols - large_size, maxsize_right);
+    }
+  }
+}
+
+static void _mzd_transpose(word *RESTRICT fwd, word const *RESTRICT fws, wi_t rowstride_dst, 
+                            wi_t rowstride_src, rci_t nrows, rci_t ncols, rci_t maxsize) {
+  // rationale: small blocks corresponds to the word size
+  //            two big blocks fit in L1 cache (512 --> 8KB).
+  
+  if (maxsize < 64) {  // super-fast path for very small matrices
+    _mzd_copy_transpose_small(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols, maxsize);
+  } else {
+    _mzd_transpose_notsmall(fwd, fws, rowstride_dst, rowstride_src, nrows, ncols, maxsize);
+  }
+}
+
+
 
 mzd_t *mzd_transpose(mzd_t *DST, mzd_t const *A) {
   if (DST == NULL) {
     DST = mzd_init(A->ncols, A->nrows);
   } else if (__M4RI_UNLIKELY(DST->nrows != A->ncols || DST->ncols != A->nrows)) {
     m4ri_die("mzd_transpose: Wrong size for return matrix.\n");
-  } else {
-    /** it seems this is taken care of in the subroutines, re-enable if running into problems **/
-    // mzd_set_ui(DST,0);
   }
 
-  if (A->nrows == 0 || A->ncols == 0) return mzd_copy(DST, A);
+  if (A->nrows == 0 || A->ncols == 0)
+    return mzd_copy(DST, A);
 
-  if (__M4RI_LIKELY(!mzd_is_windowed(DST) && !mzd_is_windowed(A))) return _mzd_transpose(DST, A);
-  int A_windowed = mzd_is_windowed(A);
-  if (A_windowed) A = mzd_copy(NULL, A);
-  if (__M4RI_LIKELY(!mzd_is_windowed(DST)))
-    _mzd_transpose(DST, A);
-  else {
-    mzd_t *D = mzd_init(DST->nrows, DST->ncols);
-    _mzd_transpose(D, A);
-    mzd_copy(DST, D);
-    mzd_free(D);
+  rci_t maxsize = MAX(A->nrows, A->ncols);
+  if (__M4RI_LIKELY(!mzd_is_dangerous_window(DST))) {
+    _mzd_transpose(DST->data, A->data, DST->rowstride, A->rowstride, A->nrows, A->ncols, maxsize);
+    return DST;
   }
-  if (A_windowed) mzd_free((mzd_t *)A);
+  
+  mzd_t *D = mzd_init(DST->nrows, DST->ncols);
+  _mzd_transpose(D->data, A->data, D->rowstride, A->rowstride, A->nrows, A->ncols, maxsize);
+  mzd_copy(DST, D);
+  mzd_free(D);
   return DST;
 }
 

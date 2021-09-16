@@ -160,6 +160,18 @@ static inline int mzd_is_windowed(mzd_t const *M) {
   return M->flags & mzd_flag_windowed;
 }
 
+/**
+ * \brief Test if a matrix is windowed with non-zero excess.
+ *
+ * \param M Matrix
+ *
+ * \return a non-zero value if the matrix is windowed with non-zero excess, otherwise return zero.
+ */
+static inline int mzd_is_dangerous_window(mzd_t const *M) {
+  uint8_t const danger = mzd_flag_windowed | mzd_flag_nonzero_excess;
+  return (M->flags & danger) == danger;
+}
+
 
 /**
  * \brief Get pointer to first word of row.
