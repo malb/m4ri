@@ -1,4 +1,4 @@
-AC_INIT(m4ri,20200125)
+AC_INIT([m4ri],[20200125])
 
 AC_CANONICAL_HOST
 
@@ -21,7 +21,7 @@ AC_PROG_INSTALL
 
 AC_CONFIG_HEADERS(m4ri/config.h)
 
-AC_PROG_CC_C99()
+AC_PROG_CC
 if test "$ac_cv_prog_cc_c99" = "no"; then
   AC_MSG_ERROR([C99 support is required but not found.])
 fi
@@ -207,7 +207,7 @@ fi
 
 have_libpng="no"
 AC_ARG_ENABLE([png],
-   [AC_HELP_STRING([--disable-png], [disable PNG support @<:@default=enabled@:>@])],
+   [AS_HELP_STRING([--disable-png],[disable PNG support @<:@default=enabled@:>@])],
    [
     if test "x${enableval}" = "xyes" ; then
        want_png="yes"
