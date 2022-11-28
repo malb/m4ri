@@ -4,8 +4,8 @@
  * \brief Matrix transpose using a variant of the cache-oblivious algorithm
  */
 
-#ifndef M4RI_STRASSEN_H
-#define M4RI_STRASSEN_H
+#ifndef M4RI_TRANSPOSE_H
+#define M4RI_TRANSPOSE_H
 
 /*******************************************************************
  *
@@ -30,6 +30,19 @@
 
 #include <m4ri/mzd.h>
 
+/**
+ * \brief Transpose a matrix.
+ *
+ * This function uses the fact that:
+\verbatim
+   [ A B ]T    [AT CT]
+   [ C D ]  =  [BT DT]
+ \endverbatim
+ * and thus rearranges the blocks recursively.
+ *
+ * \param DST Preallocated return matrix, may be NULL for automatic creation.
+ * \param A Matrix
+ */
 mzd_t *mzd_transpose(mzd_t *DST, mzd_t const *A);
 
 #endif  // M4RI_TRANSPOSE_H
