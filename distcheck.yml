@@ -1,0 +1,30 @@
+name: Distcheck
+
+on: 
+  push:
+  pull_request:
+
+env:
+  JOBS: 2
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v2
+      - name: Install prerequisites
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install autoconf automake libtool
+      - name: Configure
+        run: |
+          autoreconf -i
+          ASAN_OPTIONS=detect_leaks=0 CFLAGS="-fsanitize=address" ./configure --enable-debug
+
+      - name: Check
+        run: ASAN_OPTIONS=detect_leaks=0 make -j $JOBS check
+      - name: Distcheck
+        run: make -j $JOBS distcheck
+
