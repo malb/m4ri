@@ -108,6 +108,8 @@ Please contact our [mailinglist](http://groups.google.com/group/m4ri-devel) if t
 
 # History
 
+* **2024/07/29** A new version of M4RI is available. It is available at https://github.com/malb/m4ri/tags. Charles Bouillaguet made a series of improvements, see: https://github.com/malb/m4ri/compare/release-20200125...release-20240729
+
 * **2020/01/25** A new version of M4RI is available with a few bugfixes. It is available at https://bitbucket.org/malb/m4ri/downloads.
 
 * **2020/01/15** A new version of M4RI is available with a few small build system tweaks. It is available at https://bitbucket.org/malb/m4ri/downloads.
