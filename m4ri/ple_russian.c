@@ -123,9 +123,11 @@ int _mzd_ple_submatrix(mzd_t *A, rci_t const start_row, rci_t const stop_row, rc
   wi_t os[__M4RI_PLE_NTABLES * __M4RI_MAXKAY];
 
   mzd_t *B = A;
+  int window_used = 0;
   if (A->width > splitblock) {
     A = mzd_init_window(A, 0, 0, A->nrows, splitblock * m4ri_radix);
     assert(!(A->flags & mzd_flag_nonzero_excess));
+    window_used = 1;
   }
 
   int curr_pos;
@@ -173,7 +175,9 @@ int _mzd_ple_submatrix(mzd_t *A, rci_t const start_row, rci_t const stop_row, rc
     for (rci_t r2 = done[c2] + 1; r2 <= *done_row; ++r2)
       if (mzd_read_bit(A, r2, start_col + pivots[c2]))
         mzd_row_add_offset(A, r2, start_row + c2, start_col + pivots[c2] + 1);
-
+  
+  if (window_used)
+    mzd_free_window(A);
   A = B;
   __M4RI_DD_MZD(A);
   __M4RI_DD_MZP(P);
