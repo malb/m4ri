@@ -59,19 +59,33 @@ int test_solve_left_random(rci_t mA, rci_t nA, rci_t nB, int consistent) {
   mzd_t *secret = mzd_init(nA, nB);
   mzd_randomize(A);
   mzd_randomize(secret);
-  mzd_t *B; 
-  if (consistent) {
-    B = mzd_mul(NULL, A, secret, 0); 
+  mzd_t *B;
+  if(consistent) {
+    B = mzd_mul(NULL, A, secret, 0);
     assert(B->nrows == A->nrows);
     assert(B->ncols == nB);
   }
   else {
-    B = mzd_init(mB, nB);
+    B = mzd_init(mA, nB);
     mzd_randomize(B);
   }
+  mzd_free(secret);
+
   // copy A & B
   mzd_t *Acopy = mzd_copy(NULL, A);
   mzd_t *Bcopy = mzd_copy(NULL, B);
+
+  // add rows to B, s.t. X fits into B
+  if(B->nrows < mB) {
+    mzd_t *zeros = mzd_init(nA-mA, nB);
+    mzd_t *B_padded = mzd_stack(NULL, B, zeros);
+    mzd_free(B);
+    B = B_padded;
+    mzd_free(zeros);
+  }
+  assert(B->nrows == mB);
+  assert(B->ncols == nB);
+
   int consistency = !mzd_solve_left(A, B, 0, 1);
 
   if (consistent && !consistency) {
@@ -83,7 +97,7 @@ int test_solve_left_random(rci_t mA, rci_t nA, rci_t nB, int consistent) {
     printf("skipped (OK, no solution found)\n");
     return 0;
   }
-  // copy B
+
   mzd_t *X = mzd_submatrix(NULL, B, 0, 0, A->ncols, B->ncols);
   mzd_t *B1 = mzd_mul(NULL, Acopy, X, 0);
   mzd_t *Z  = mzd_add(NULL, Bcopy, B1);
@@ -114,12 +128,14 @@ int main() {
   status += test_solve_left_random(1100, 1100, 1000, 1);
   status += test_solve_left_random(1000, 1000, 1100, 1);
   status += test_solve_left_random(1100, 1000, 1100, 1);
+  status += test_solve_left_random(1000, 1100, 1000, 1);
 
   status += test_solve_left_random(1100, 1000, 1000, 0);
   status += test_solve_left_random(1000, 1000, 1000, 0);
   status += test_solve_left_random(1100, 1100, 1000, 0);
   status += test_solve_left_random(1000, 1000, 1100, 0);
   status += test_solve_left_random(1100, 1000, 1100, 0);
+  status += test_solve_left_random(1000, 1100, 1000, 0);
 
 
   for (size_t i = 0; i < 100; i++) {
