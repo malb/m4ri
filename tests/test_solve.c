@@ -53,7 +53,10 @@ int test_pluq_solve_left(rci_t m, rci_t n, int offsetA, int offsetB) {
   return status;
 }
 
-int test_solve_left_random(rci_t mA, rci_t nA, rci_t nB, int consistent) {
+int test_solve_left_random(rci_t mA, rci_t nA, rci_t nB, int consistent, int inconsistency_check) {
+  // check consistency if system is not consistent; otherwise mzd_solve_left is undefined
+  if(!consistent) inconsistency_check=1;
+
   int mB = MAX(mA, nA);
   mzd_t *A = mzd_init(mA, nA);
   mzd_t *secret = mzd_init(nA, nB);
@@ -77,16 +80,22 @@ int test_solve_left_random(rci_t mA, rci_t nA, rci_t nB, int consistent) {
 
   // add rows to B, s.t. X fits into B
   if(B->nrows < mB) {
-    mzd_t *zeros = mzd_init(nA-mA, nB);
-    mzd_t *B_padded = mzd_stack(NULL, B, zeros);
+    mzd_t *padding = mzd_init(nA-mA, nB);
+    if(!inconsistency_check)
+      mzd_randomize(padding);
+    mzd_t *B_padded = mzd_stack(NULL, B, padding);
     mzd_free(B);
     B = B_padded;
-    mzd_free(zeros);
+    mzd_free(padding);
+
+    mzd_t const *Bpad = mzd_init_window_const(B, A->nrows+1, 0, B->nrows, B->ncols);
+    mzd_print(Bpad);
+    mzd_free_window((mzd_t *) Bpad);
   }
   assert(B->nrows == mB);
   assert(B->ncols == nB);
 
-  int consistency = !mzd_solve_left(A, B, 0, 1);
+  int consistency = !mzd_solve_left(A, B, 0, inconsistency_check);
 
   if (consistent && !consistency) {
     printf("failed (solution should have been found)\n");
@@ -98,7 +107,7 @@ int test_solve_left_random(rci_t mA, rci_t nA, rci_t nB, int consistent) {
     return 0;
   }
 
-  mzd_t *X = mzd_submatrix(NULL, B, 0, 0, A->ncols, B->ncols);
+  mzd_t const *X = mzd_init_window_const(B, 0, 0, A->ncols, B->ncols);
   mzd_t *B1 = mzd_mul(NULL, Acopy, X, 0);
   mzd_t *Z  = mzd_add(NULL, Bcopy, B1);
 
@@ -113,8 +122,8 @@ int test_solve_left_random(rci_t mA, rci_t nA, rci_t nB, int consistent) {
   mzd_free(B1);
   mzd_free(Z);
   mzd_free(A);
+  mzd_free((mzd_t*) X);
   mzd_free(B);
-  mzd_free(X);
   return status;
 }
 
@@ -123,19 +132,16 @@ int main() {
 
   srandom(17);
 
-  status += test_solve_left_random(1100, 1000, 1000, 1);
-  status += test_solve_left_random(1000, 1000, 1000, 1);
-  status += test_solve_left_random(1100, 1100, 1000, 1);
-  status += test_solve_left_random(1000, 1000, 1100, 1);
-  status += test_solve_left_random(1100, 1000, 1100, 1);
-  status += test_solve_left_random(1000, 1100, 1000, 1);
-
-  status += test_solve_left_random(1100, 1000, 1000, 0);
-  status += test_solve_left_random(1000, 1000, 1000, 0);
-  status += test_solve_left_random(1100, 1100, 1000, 0);
-  status += test_solve_left_random(1000, 1000, 1100, 0);
-  status += test_solve_left_random(1100, 1000, 1100, 0);
-  status += test_solve_left_random(1000, 1100, 1000, 0);
+  for(int consistent = 0; consistent <= 1; consistent++) {
+    for(int inconsistency_check = 0; inconsistency_check <= 1; inconsistency_check++) {
+      status += test_solve_left_random(1100, 1000, 1000, consistent, inconsistency_check);
+      status += test_solve_left_random(1000, 1000, 1000, consistent, inconsistency_check);
+      status += test_solve_left_random(1100, 1100, 1000, consistent, inconsistency_check);
+      status += test_solve_left_random(1000, 1000, 1100, consistent, inconsistency_check);
+      status += test_solve_left_random(1100, 1000, 1100, consistent, inconsistency_check);
+      status += test_solve_left_random(1000, 1100, 1000, consistent, inconsistency_check);
+    }
+  }
 
 
   for (size_t i = 0; i < 100; i++) {
