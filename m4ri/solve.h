@@ -36,6 +36,8 @@
  * \brief Solves A X = B with A and B matrices.
  *
  * The solution X is stored inplace on B.
+ * If A->nrows < A->ncols, the matrix A is implicitly padded with zeros to
+ * match B->nrows.
  *
  * \param A Input matrix (overwritten).
  * \param B Input matrix, being overwritten by the solution matrix X
