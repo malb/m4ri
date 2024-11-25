@@ -32,9 +32,9 @@ int mzd_solve_left(mzd_t *A, mzd_t *B, int const cutoff, int const inconsistency
     m4ri_die("mzd_solve_left: A ncols (%d) must be smaller than B nrows (%d).\n", A->ncols,
              B->nrows);
 
-  if (A->nrows != B->nrows)
-    m4ri_die("mzd_solve_left: A nrows (%d) must be equal to B nrows (%d).\n", A->nrows,
-             B->nrows);
+  if (B->nrows != MAX(A->ncols,A->nrows))
+    m4ri_die("mzd_solve_left: B nrows (%d) must be equal to max of A nrows (%d) and A ncols (%d).\n", B->nrows,
+             A->nrows, A->ncols);
 
   return _mzd_solve_left(A, B, cutoff, inconsistency_check);
 }
@@ -120,6 +120,12 @@ int _mzd_pluq_solve_left(mzd_t const *A, rci_t rank, mzp_t const *P, mzp_t const
 }
 
 int _mzd_solve_left(mzd_t *A, mzd_t *B, int const cutoff, int const inconsistency_check) {
+  if (inconsistency_check && B->nrows > A->nrows) {
+    mzd_t const *Bpad = mzd_init_window_const(B, A->nrows+1, 0, B->nrows, B->ncols);
+    if(!mzd_is_zero(Bpad)) return -1;
+    mzd_free_window((mzd_t *) Bpad);
+  }
+
   /**
    *  B is modified in place
    *  (Bi's in the comments are just modified versions of B)
