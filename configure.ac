@@ -39,15 +39,12 @@ AS_IF([test "x$enable_sse2" != "xno"], [
    if test "$m4ri_wrapword" = "yes"; then
       AC_MSG_ERROR([SSE2 cannot be supported when wrapping word in a C++ class.])
    fi
-   AX_EXT()
 ])
-if test x"$ax_cv_have_sse2_ext" = x"yes"; then
-  M4RI_HAVE_SSE2=1
-else
-  M4RI_HAVE_SSE2=0
-fi
-AC_SUBST(M4RI_HAVE_SSE2)
 
+AS_IF([test "x$enable_sse2" = "xno"],
+    [M4RI_HAVE_SSE2=0],
+    [M4RI_HAVE_SSE2="(defined(__SSE2__) && __SSE2__)"])
+AC_SUBST(M4RI_HAVE_SSE2)
 
 AC_ARG_WITH(papi,
     AS_HELP_STRING([--with-papi@<:@=PATH@:>@], [The PAPI install prefix, if configure can't find it.]),
