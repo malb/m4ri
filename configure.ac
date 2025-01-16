@@ -1,5 +1,9 @@
 AC_INIT([m4ri],[20240729])
 
+# See http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+LT_VERSION=1:0:0
+AC_SUBST(LT_VERSION)
+
 AC_CANONICAL_HOST
 
 AC_CONFIG_SRCDIR(m4ri/brilliantrussian.c)
