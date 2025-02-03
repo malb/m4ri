@@ -72,6 +72,10 @@ typedef struct _mm_block {
  * \return Pointer to allocated memory block.
  */
 static inline void *m4ri_mmc_calloc(size_t count, size_t size) {
+  if (size && count > SIZE_MAX/size) {
+      m4ri_die("m4ri_mmc_calloc: overflow in multiplication\n");
+      return NULL; /* unreachable */
+  }
   size_t total_size = count * size;
   void *ret         = m4ri_mmc_malloc(total_size);
   memset((char *)ret, 0, total_size);
