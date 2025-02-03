@@ -144,13 +144,12 @@ mzd_t *mzd_init(rci_t r, rci_t c) {
   mzd_t *A = mzd_t_malloc();
   A->nrows         = r;
   A->ncols         = c;
-  A->width         = (c + m4ri_radix - 1) / m4ri_radix;
+  A->width         = c > 0 ? (c - 1) / m4ri_radix + 1 : 0;
   A->rowstride     = ((A->width & 1) == 0) ? A->width : A->width + 1;
   A->high_bitmask  = __M4RI_LEFT_BITMASK(c % m4ri_radix);
   A->flags         = (A->high_bitmask != m4ri_ffff) ? mzd_flag_nonzero_excess : 0;
   if (r && c) {
-    size_t block_words = r * A->rowstride;
-    A->data = m4ri_mmc_calloc(block_words, sizeof(word));
+    A->data = m4ri_mmc_calloc(r, sizeof(word) * A->rowstride);
   } else {
     A->data = NULL;
   }
