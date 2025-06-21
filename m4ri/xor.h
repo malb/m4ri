@@ -53,7 +53,7 @@ static inline void _mzd_combine(word *c, word const *t1, wi_t wide_in) {
 
   __m128i *__c       = (__m128i *)c;
   __m128i *__t1      = (__m128i *)t1;
-  const __m128i *eof = (__m128i *)((unsigned long)(c + wide) & ~0xFUL);
+  const __m128i *eof = (__m128i *)((uintptr_t)(c + wide) & ~(uintptr_t)0xF);
   __m128i xmm1;
 
   while (__c < eof - 1) {

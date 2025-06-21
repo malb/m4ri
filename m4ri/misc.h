@@ -418,7 +418,7 @@ static inline word m4ri_spread_bits(word const from, rci_t *const Q, int const l
  * \param n
  */
 
-#define __M4RI_ALIGNMENT(addr, n) (((unsigned long)(addr)) % (n))
+#define __M4RI_ALIGNMENT(addr, n) (((uintptr_t)(addr)) % (n))
 
 /**
  * \brief Test for gcc >= maj.min, as per __GNUC_PREREQ in glibc
