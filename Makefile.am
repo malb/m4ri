@@ -1,6 +1,7 @@
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_builddir) -iquote$(top_builddir)/m4ri
 AM_CFLAGS=${SIMD_FLAGS} ${OPENMP_CFLAGS} ${DEBUG_FLAGS} ${LIBPNG_CFLAGS}
 
 lib_LTLIBRARIES = libm4ri.la
