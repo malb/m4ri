@@ -15,7 +15,9 @@ DEFINES =
 AM_CFLAGS = -I$(TOPSRCDIR) -I$(TOPBUILDDIR) -iquote$(TOPBUILDDIR)/m4ri -D_XOPEN_SOURCE=600 $(DEFINES) @OPENMP_CFLAGS@ @PAPI_CFLAGS@ @LIBPNG_CFLAGS@
 
 STAGEDIR := $(realpath -s $(TOPBUILDDIR)/.libs)
-AM_LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) -lm4ri $(LIBM) @PAPI_LDFLAGS@ @PAPI_LIBS@ -no-install
+AM_LDFLAGS = -Wl,-rpath,$(STAGEDIR) $(LIBM) @PAPI_LDFLAGS@ @PAPI_LIBS@ -no-install
+
+LDADD = $(TOPBUILDDIR)/libm4ri.la
 
 test_smallops_SOURCES = test_smallops.c testing.c testing.h
 

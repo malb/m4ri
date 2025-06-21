@@ -34,6 +34,17 @@ fi
 LT_LIB_M
 AC_SUBST(LIBM)
 
+# Check for MinGW to add specific linker flags for DLL symbol exporting
+case "$host_os" in
+  mingw*)
+    M4RI_EXPORT_ALL_SYMBOLS_LDFLAGS="-Wl,--export-all-symbols"
+    ;;
+  *)
+    M4RI_EXPORT_ALL_SYMBOLS_LDFLAGS=""
+    ;;
+esac
+AC_SUBST(M4RI_EXPORT_ALL_SYMBOLS_LDFLAGS)
+
 # SSE2 support
 AC_ARG_ENABLE([sse2],
         AS_HELP_STRING([--disable-sse2], [don't use SSE2 instruction set.]),
