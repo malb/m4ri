@@ -38,12 +38,15 @@ AC_SUBST(LIBM)
 case "$host_os" in
   mingw*)
     M4RI_EXPORT_ALL_SYMBOLS_LDFLAGS="-Wl,--export-all-symbols"
+    M4RI_INSTALL_FLAGS="-no-fast-install"
     ;;
   *)
     M4RI_EXPORT_ALL_SYMBOLS_LDFLAGS=""
+    M4RI_INSTALL_FLAGS="-no-install"
     ;;
 esac
 AC_SUBST(M4RI_EXPORT_ALL_SYMBOLS_LDFLAGS)
+AC_SUBST(M4RI_INSTALL_FLAGS)
 
 # SSE2 support
 AC_ARG_ENABLE([sse2],
