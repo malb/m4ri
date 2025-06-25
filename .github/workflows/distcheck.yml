@@ -26,4 +26,33 @@ jobs:
         run: ASAN_OPTIONS=detect_leaks=0 make -j $JOBS check
       - name: Distcheck
         run: make -j $JOBS distcheck
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-autotools
+            mingw-w64-x86_64-libtool
+            mingw-w64-x86_64-pkg-config
+            autoconf
+            automake
+            make
+      - name: Configure
+        run: |
+          autoreconf -i
+          ./configure --enable-debug
 
+      - name: Check
+        run: make -j $JOBS check
+      - name: Distcheck
+        run: make -j $JOBS distcheck

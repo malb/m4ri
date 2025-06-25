@@ -23,6 +23,7 @@
 #endif
 
 #include "m4ri_config.h"
+#include <inttypes.h>
 
 #if __M4RI_HAVE_LIBPNG
 #include <png.h>
@@ -299,40 +300,39 @@ mzd_t *mzd_from_jcf(const char *fn, int verbose) {
   FILE *fh   = fopen(fn, "r");
 
   rci_t m, n;
-  long p       = 0;
-  long nonzero = 0;
+  int p       = 0;
+  int64_t nonzero = 0;
 
   if (!fh) {
     if (verbose) printf("Could not open file '%s' for reading\n", fn);
     return NULL;
   }
 
-  if (fscanf(fh, "%d %d %ld\n%ld\n\n", &m, &n, &p, &nonzero) != 4) {
+  if (fscanf(fh, "%d %d %d\n%" SCNd64 "\n\n", &m, &n, &p, &nonzero) != 4) {
     if (verbose) printf("File '%s' does not seem to be in JCF format.", fn);
     retval = 1;
     goto from_jcf_close_fh;
   }
 
   if (p != 2) {
-    if (verbose) printf("Expected p==2 but found p==%ld\n", p);
+    if (verbose) printf("Expected p==2 but found p==%d\n", p);
     retval = 1;
     goto from_jcf_close_fh;
   }
 
   if (verbose)
-    printf("reading %lu x %lu matrix with at most %ld non-zero entries (density at most: %6.5f)\n",
-           (unsigned long)m, (unsigned long)n, (unsigned long)nonzero,
-           ((double)nonzero) / ((double)m * n));
+    printf("reading %d x %d matrix with at most %" PRId64 " non-zero entries (density at most: %6.5f)\n",
+           m, n, nonzero, ((double)nonzero) / ((double)m * n));
 
   A = mzd_init(m, n);
 
-  long i = -1;
-  long j = 0;
+  rci_t i = -1;
+  rci_t j = 0;
 
-  while (fscanf(fh, "%ld\n", &j) == 1) {
+  while (fscanf(fh, "%d\n", &j) == 1) {
     if (j < 0) { i++, j = -j; }
     if (((j - 1) >= n) || (i >= m))
-      m4ri_die("trying to write to (%ld,%ld) in %ld x %ld matrix\n", i, j - 1, m, n);
+      m4ri_die("trying to write to (%d,%d) in %d x %d matrix\n", i, j - 1, m, n);
     mzd_write_bit(A, i, j - 1, 1);
   };
 

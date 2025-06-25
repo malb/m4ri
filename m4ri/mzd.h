@@ -557,7 +557,7 @@ static inline void mzd_row_add_offset(mzd_t *M, rci_t dstrow, rci_t srcrow, rci_
     /* Now wide > 1 */
     __m128i *__src     = (__m128i *)src;
     __m128i *__dst     = (__m128i *)dst;
-    __m128i *const eof = (__m128i *)((unsigned long)(src + wide) & ~0xFUL);
+    __m128i *const eof = (__m128i *)((uintptr_t)(src + wide) & ~(uintptr_t)0xF);
     do {
       __m128i xmm1 = _mm_xor_si128(*__dst, *__src);
       *__dst++     = xmm1;
@@ -936,7 +936,7 @@ static inline void mzd_combine_even_in_place(mzd_t *A, rci_t const a_row, wi_t c
     if (__M4RI_ALIGNMENT(a, 16) == 0 && __M4RI_ALIGNMENT(b, 16) == 0) {
       __m128i *a128      = (__m128i *)a;
       __m128i *b128      = (__m128i *)b;
-      const __m128i *eof = (__m128i *)((unsigned long)(a + wide) & ~0xFUL);
+      const __m128i *eof = (__m128i *)((uintptr_t)(a + wide) & ~(uintptr_t)0xF);
 
       do {
         *a128 = _mm_xor_si128(*a128, *b128);
@@ -1011,7 +1011,7 @@ static inline void mzd_combine_even(mzd_t *C, rci_t const c_row, wi_t const c_st
       __m128i *a128      = (__m128i *)a;
       __m128i *b128      = (__m128i *)b;
       __m128i *c128      = (__m128i *)c;
-      const __m128i *eof = (__m128i *)((unsigned long)(a + wide) & ~0xFUL);
+      const __m128i *eof = (__m128i *)((uintptr_t)(a + wide) & ~(uintptr_t)0xF);
 
       do {
         *c128 = _mm_xor_si128(*a128, *b128);

@@ -25,4 +25,9 @@
 #define __M4RI_ENABLE_MZD_CACHE         @M4RI_ENABLE_MZD_CACHE@
 #define __M4RI_ENABLE_MMC               @M4RI_ENABLE_MMC@
 
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#define random rand
+#define srandom srand
+#endif
+
 #endif // M4RI_M4RI_CONFIG_H

@@ -8,7 +8,7 @@ AC_CANONICAL_HOST
 
 AC_CONFIG_SRCDIR(m4ri/brilliantrussian.c)
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([nostdinc])
 
 dnl Include maintainer mode targets.
 AM_MAINTAINER_MODE
@@ -33,6 +33,20 @@ fi
 # Find and set LIBM on the platform.
 LT_LIB_M
 AC_SUBST(LIBM)
+
+# Check for MinGW to add specific linker flags for DLL symbol exporting
+case "$host_os" in
+  mingw*)
+    M4RI_EXPORT_ALL_SYMBOLS_LDFLAGS="-Wl,--export-all-symbols"
+    M4RI_INSTALL_FLAGS="-no-fast-install"
+    ;;
+  *)
+    M4RI_EXPORT_ALL_SYMBOLS_LDFLAGS=""
+    M4RI_INSTALL_FLAGS="-no-install"
+    ;;
+esac
+AC_SUBST(M4RI_EXPORT_ALL_SYMBOLS_LDFLAGS)
+AC_SUBST(M4RI_INSTALL_FLAGS)
 
 # SSE2 support
 AC_ARG_ENABLE([sse2],
