@@ -14,9 +14,9 @@ M4RI is a library for fast arithmetic with dense matrices over F2. The name M4RI
 
 * support for the x86/x86_64 SSE2 instruction set where available;
 
-* preliminary support for parallelisation on shared memory systems via OpenMP;
+* and preliminary support for parallelisation on shared memory systems via OpenMP.
 
-* and support for Linux, Solaris, and OS X (GCC). Support for Windows (MSYS2/MinGW) is provided on a best effort basis and may disappear any time.
+We support M4RI on Linux. Support for Windows (MSYS2/MinGW) and OS X (GCC) is provided on a best effort basis and may disappear any time.
 
 See [Further Reading](https://bitbucket.org/malb/m4ri/wiki/Further%20Reading) for implemented algorithms.
 
