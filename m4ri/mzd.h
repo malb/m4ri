@@ -595,22 +595,6 @@ static inline void mzd_row_add_offset(mzd_t *M, rci_t dstrow, rci_t srcrow, rci_
 void mzd_row_add(mzd_t *M, rci_t const sourcerow, rci_t const destrow);
 
 /**
- * \brief Transpose a matrix.
- *
- * This function uses the fact that:
-\verbatim
-   [ A B ]T    [AT CT]
-   [ C D ]  =  [BT DT]
- \endverbatim
- * and thus rearranges the blocks recursively.
- *
- * \param DST Preallocated return matrix, may be NULL for automatic creation.
- * \param A Matrix
- */
-
-mzd_t *mzd_transpose(mzd_t *DST, mzd_t const *A);
-
-/**
  * \brief Naive cubic matrix multiplication.
  *
  * That is, compute C such that C == AB.
