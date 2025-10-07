@@ -4,7 +4,11 @@
 // Defines determined during configuration of m4ri.
 #define __M4RI_HAVE_MM_MALLOC		@M4RI_HAVE_MM_MALLOC@
 #define __M4RI_HAVE_POSIX_MEMALIGN	@M4RI_HAVE_POSIX_MEMALIGN@
-#define __M4RI_HAVE_SSE2		@M4RI_HAVE_SSE2@
+#define __M4RI_HAVE_SSE2		0
+#if @M4RI_SSE2_ENABLED@ && defined(__SSE2__) && __SSE2__
+#undef __M4RI_HAVE_SSE2
+#define __M4RI_HAVE_SSE2		1
+#endif
 #define __M4RI_HAVE_OPENMP		@M4RI_HAVE_OPENMP@
 #define __M4RI_CPU_L1_CACHE		@M4RI_CPU_L1_CACHE@
 #define __M4RI_CPU_L2_CACHE		@M4RI_CPU_L2_CACHE@

@@ -60,9 +60,9 @@ AS_IF([test "x$enable_sse2" != "xno"], [
 ])
 
 AS_IF([test "x$enable_sse2" = "xno"],
-    [M4RI_HAVE_SSE2=0],
-    [M4RI_HAVE_SSE2="(defined(__SSE2__) && __SSE2__)"])
-AC_SUBST(M4RI_HAVE_SSE2)
+    [M4RI_SSE2_ENABLED=0],
+    [M4RI_SSE2_ENABLED=1])
+AC_SUBST(M4RI_SSE2_ENABLED)
 
 AC_ARG_WITH(papi,
     AS_HELP_STRING([--with-papi@<:@=PATH@:>@], [The PAPI install prefix, if configure can't find it.]),
