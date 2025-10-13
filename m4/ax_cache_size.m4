@@ -75,8 +75,8 @@ AC_DEFUN([AX_CACHE_SIZE],
 
 	if test "x$cpu_exthi" \> "x80000005"; then
           AX_GCC_X86_CPUID(0x80000006) # For L3 cache
-          l2_hexval=`echo $ax_cv_gcc_x86_cpuid_0x80000006 | cut -d ":" -f 4`
-          ax_l2_size=$((0x$l2_hexval >> 18))*512
+          l3_hexval=`echo $ax_cv_gcc_x86_cpuid_0x80000006 | cut -d ":" -f 4`
+          ax_l3_size=$((0x$l3_hexval >> 18))*512
         fi
 
       fi
