@@ -59,21 +59,21 @@ AC_DEFUN([AX_CACHE_SIZE],
     else
       if test "x$ax_cv_cpu_vendor" != "xUnknown"; then
         #Or use CPUID
-	AX_GCC_X86_CPUID(0x80000000)
-	cpu_exthigh=`echo $ax_cv_gcc_x86_cpuid_0x80000000 | cut -d ":" -f 1`
-	if test "x$cpu_exthi" \> "x80000004"; then
+    	AX_GCC_X86_CPUID(0x80000000)
+	    cpu_exthigh=`echo $ax_cv_gcc_x86_cpuid_0x80000000 | cut -d ":" -f 1`
+	    if test "x$cpu_exthi" \> "x80000004"; then
           AX_GCC_X86_CPUID(0x80000005) # For L1 cache
           l1_hexval=`echo $ax_cv_gcc_x86_cpuid_0x80000005 | cut -d ":" -f 4`
           ax_l1_size=$((0x$l1_hexval >> 24))
         fi
 
-	if test "x$cpu_exthi" \> "x80000005"; then
+	    if test "x$cpu_exthi" \> "x80000005"; then
           AX_GCC_X86_CPUID(0x80000006) # For L2 cache
           l2_hexval=`echo $ax_cv_gcc_x86_cpuid_0x80000006 | cut -d ":" -f 3`
           ax_l2_size=$((0x$l2_hexval >> 16))
         fi
 
-	if test "x$cpu_exthi" \> "x80000005"; then
+	    if test "x$cpu_exthi" \> "x80000005"; then
           AX_GCC_X86_CPUID(0x80000006) # For L3 cache
           l3_hexval=`echo $ax_cv_gcc_x86_cpuid_0x80000006 | cut -d ":" -f 4`
           ax_l3_size=$((0x$l3_hexval >> 18))*512
@@ -84,25 +84,31 @@ AC_DEFUN([AX_CACHE_SIZE],
       #Or use sysctl
       sysctl_exe=
       if test -x /usr/sbin/sysctl ; then
-	sysctl_exe=/usr/sbin/sysctl
+      	sysctl_exe=/usr/sbin/sysctl
       elif test -x /sbin/sysctl ; then
-	sysctl_exe=/sbin/sysctl
+	    sysctl_exe=/sbin/sysctl
       fi
+
       if test -n "$sysctl_exe"; then
-	if test -z "$ax_l2_size" -o "$ax_l2_size" = "0"; then
+        if test -z "$ax_l2_size" -o "$ax_l2_size" = "0"; then
           sysctl_out=`$sysctl_exe -n hw.l2cachesize 2>/dev/null`;
           if test ! -z "$sysctl_out"; then
             ax_l2_size=$(($sysctl_out / 1024))
           fi;
-
-	fi
-	if test -z "$ax_l1_size" -o "$ax_l1_size" = "0" ; then
+	    fi
+        if test -z "$ax_l3_size" -o "$ax_l3_size" = "0"; then
+          sysctl_out=`$sysctl_exe -n hw.l3cachesize 2>/dev/null`;
+          if test ! -z "$sysctl_out"; then
+            ax_l3_size=$(($sysctl_out / 1024))
+          fi;
+	    fi
+	    if test -z "$ax_l1_size" -o "$ax_l1_size" = "0" ; then
           sysctl_out=`$sysctl_exe -n hw.l1dcachesize 2>/dev/null`;
           if test ! -z "$sysctl_out"; then
-  	    ax_l1_size=$(($sysctl_out / 1024))
+  	         ax_l1_size=$(($sysctl_out / 1024))
           fi;
-	fi
-	if test -z "$ax_l1_size" -o "ax_l1_size" = "0" ; then
+	    fi
+	    if test -z "$ax_l1_size" -o "ax_l1_size" = "0" ; then
           sysctl_out=`$sysctl_exe -n hw.l1cachesize 2>/dev/null`;
           if test ! -z "$sysctl_out"; then
              ax_l1_size=$(($sysctl_out / 1024))
