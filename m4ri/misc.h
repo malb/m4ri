@@ -138,7 +138,7 @@ typedef uint64_t word;
  * \brief The number of bits in a word.
  */
 
-static int const m4ri_radix = 64;
+#define m4ri_radix 64
 
 /**
  * \brief The number one as a word.
