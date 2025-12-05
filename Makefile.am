@@ -10,6 +10,7 @@ libm4ri_la_SOURCES = \
 	m4ri/brilliantrussian.c \
 	m4ri/misc.c \
 	m4ri/mzd.c \
+	m4ri/transpose.c \
 	m4ri/graycode.c \
 	m4ri/strassen.c \
 	m4ri/mzp.c \
@@ -32,6 +33,7 @@ pkgincludesub_HEADERS = m4ri/m4ri.h \
 	m4ri/brilliantrussian.h \
 	m4ri/misc.h \
 	m4ri/mzd.h \
+	m4ri/transpose.h \
 	m4ri/graycode.h \
 	m4ri/strassen.h \
 	m4ri/parity.h \
