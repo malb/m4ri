@@ -1,14 +1,14 @@
-name: Run Sage CI
+name: Sage portability CI (only informational)
 
 ## This GitHub Actions workflow provides:
 ##
 ##  - portability testing, by building and testing this project on many platforms
-##    (Linux variants)
 ##
-##  - continuous integration, by building and testing other software
-##    that depends on this project.
+## The portability CI is run for info / repro purposes only.
 ##
-## It runs on every push to the GitHub repository.
+## The tests being run is not a promise by the m4ri project
+## to support any particular platforms.
+##
 ##
 ## The testing can be monitored in the "Actions" tab of the GitHub repository.
 ##
