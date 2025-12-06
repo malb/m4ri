@@ -1,7 +1,7 @@
-AC_INIT([m4ri],[20250128])
+AC_INIT([m4ri],[20251206])
 
 # See http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-LT_VERSION=1:0:0
+LT_VERSION=1:1:0
 AC_SUBST(LT_VERSION)
 
 AC_CANONICAL_HOST
