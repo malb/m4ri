@@ -59,7 +59,7 @@ AC_DEFUN([AX_CACHE_SIZE],
 
     else
         # Try CPUID (mostly for Linux without sysfs or during cross-compilation)
-        if test "x$ax_cv_cpu_vendor" != "xIntel"; then
+        if test "x$ax_cv_cpu_vendor" != "xUnknown" && test "x$ax_cv_cpu_vendor" != "xunknown" && test "x$ax_cv_cpu_vendor" != "xIntel"; then
             AX_GCC_X86_CPUID(0x80000000)
             cpu_exthigh=`echo $ax_cv_gcc_x86_cpuid_0x80000000 | cut -d ":" -f 1`
             if test "x$cpu_exthigh" \> "x80000004"; then

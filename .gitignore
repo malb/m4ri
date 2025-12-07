@@ -60,3 +60,4 @@ test_alignment
 /compile_commands.json
 /.cache/
 /scratch.c
+/configure~
