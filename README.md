@@ -4,11 +4,11 @@ M4RI is a library for fast arithmetic with dense matrices over F2. The name M4RI
 
 * basic arithmetic with dense matrices over F2 (addition, equality testing, stacking, augmenting, sub-matrices, randomisation);
 
-* asymptotically fast $O(n^{log_2 7})$ matrix multiplication via the Method of the Four Russians (M4RM) & Strassen-Winograd algorithm;
+* asymptotically fast $O(n^{\log_2 7})$ matrix multiplication via the Method of the Four Russians (M4RM) & Strassen-Winograd algorithm;
 
-* asymptotically fast $O(n^{log_2 7})$ PLE factorisation (Gaussian elimination, system solving, …);
+* asymptotically fast $O(n^{\log_2 7})$ PLE factorisation (Gaussian elimination, system solving, …);
 
-* fast row echelon form computation and matrix inversion via the Method of the Four Russians (M4RI, $O(n^{3/log n})$);
+* fast row echelon form computation and matrix inversion via the Method of the Four Russians (M4RI, $O(n^{3/\log n})$);
 
 * asymptotically fast Triangular System solving with Matrices (upper left, lower left, upper right, lower right),
 
