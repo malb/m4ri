@@ -1,4 +1,4 @@
-AC_INIT([m4ri],[20251206])
+AC_INIT([m4ri],[20251207])
 
 # See http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
 LT_VERSION=1:1:0
