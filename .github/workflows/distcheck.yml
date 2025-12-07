@@ -26,6 +26,22 @@ jobs:
         run: ASAN_OPTIONS=detect_leaks=0 make -j $JOBS check
       - name: Distcheck
         run: make -j $JOBS distcheck
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+      - name: Install prerequisites
+        run: brew install autoconf automake libtool
+      - name: Configure
+        run: |
+          autoreconf -i
+          ./configure --enable-debug
+
+      - name: Check
+        run:  make -j $JOBS check
+      - name: Distcheck
+        run: make -j $JOBS distcheck
   windows:
     runs-on: windows-latest
     defaults:
