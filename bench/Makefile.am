@@ -54,7 +54,7 @@ cpucycles.h: libcpucycles.a
 libcpucycles.a:
 	 (if [ $(srcdir) != $(builddir) ]; then \
 		cp -r $(srcdir)/$(CPUCYCLES_DIR) $(builddir); \
-	        chmod +w -R $(CPUCYCLES_DIR)/; \
+	        chmod -R +w $(CPUCYCLES_DIR)/; \
          fi; \
          cd $(CPUCYCLES_DIR); \
 		 ./configure; \

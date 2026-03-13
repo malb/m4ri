@@ -37,10 +37,16 @@
  * \brief Cache of mzd_t containers
  */
 
-#include <stdalign.h>
+#if defined(_MSC_VER)
+#define M4RI_ALIGN64 __declspec(align(64))
+#elif defined(__GNUC__) || defined(__clang__)
+#define M4RI_ALIGN64 __attribute__((aligned(64)))
+#else
+#define M4RI_ALIGN64
+#endif
 
-typedef struct mzd_t_cache {
-  alignas(64) mzd_t mzd[64]; /*!< cached matrices */
+typedef struct M4RI_ALIGN64 mzd_t_cache {
+  mzd_t mzd[64];            /*!< cached matrices */
   struct mzd_t_cache *prev;  /*!< previous block */
   struct mzd_t_cache *next;  /*!< next block */
   uint64_t used;             /*!< bitmasks which matrices in this block are used */
