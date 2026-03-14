@@ -318,9 +318,11 @@ void mzd_make_table_ple(mzd_t const *A, rci_t r, rci_t writecol, int k, int knar
 #include "ple_russian_template.h"
 #undef N
 
+#if __M4RI_PLE_NTABLES >= 8
 #define N 8
 #include "ple_russian_template.h"
 #undef N
+#endif
 
 void _mzd_ple_a10(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const start_col,
                   wi_t const addblock, int const k, rci_t *pivots) {
@@ -530,6 +532,7 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
     }
 
     switch (ntables) {
+#if __M4RI_PLE_NTABLES >= 8
     case 8:
       /**
        * 5. update A1 = (A01 | A11) */
@@ -540,6 +543,7 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
       if (done_row < nrows)
         _mzd_process_rows_ple_8(A, done_row + 1, nrows, curr_col, k_, (const ple_table_t **)T);
       break;
+#endif
 
     case 7:
       _mzd_ple_a11_7(A, curr_row + knar, done_row + 1, curr_col, splitblock, k_,
