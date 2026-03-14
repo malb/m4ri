@@ -238,10 +238,10 @@ int mzd_to_png_fh(const mzd_t *A, FILE *fh, int compression_level, const char *c
   char pdate[21];
   time_t ptime = time(NULL);
   struct tm ltime;
-#if defined(_WIN32)
-  localtime_s(&ltime, &ptime);
+#if defined(_WIN32) && defined(_MSC_VER)
+    localtime_s(&ltime, &ptime);
 #else
-  ltime = *localtime(&ptime);
+    localtime_r(&ptime, &ltime);
 #endif
   if (strftime(pdate, sizeof(pdate), "%Y/%m/%d %H:%M:%S", &ltime) == 0)
     pdate[0] = '\0';
