@@ -24,6 +24,7 @@
 
 #include "m4ri_config.h"
 #include <inttypes.h>
+#include <time.h>
 
 #if __M4RI_HAVE_LIBPNG
 #include <png.h>
@@ -235,10 +236,29 @@ int mzd_to_png_fh(const mzd_t *A, FILE *fh, int compression_level, const char *c
   png_text txt_ptr[3];
 
   char pdate[21];
-  time_t ptime     = time(NULL);
-  struct tm *ltime = localtime(&ptime);
-  sprintf(pdate, "%04d/%02d/%02d %02d:%02d:%02d", ltime->tm_year + 1900, ltime->tm_mon + 1,
-          ltime->tm_mday, ltime->tm_hour, ltime->tm_min, ltime->tm_sec);
+  time_t ptime = time(NULL);
+  struct tm ltime;
+  int have_local_time = 0;
+
+#if defined(_WIN32)
+  have_local_time = (localtime_s(&ltime, &ptime) == 0);
+#else
+  {
+    struct tm *ltime_ptr = localtime(&ptime);
+    if (ltime_ptr != NULL) {
+      ltime           = *ltime_ptr;
+      have_local_time = 1;
+    }
+  }
+#endif
+
+  if (have_local_time) {
+    if (strftime(pdate, sizeof(pdate), "%Y/%m/%d %H:%M:%S", &ltime) == 0) {
+      pdate[0] = '\0';
+    }
+  } else {
+    pdate[0] = '\0';
+  }
 
   txt_ptr[0].key         = "Software";
   txt_ptr[0].text        = "M4RI";
