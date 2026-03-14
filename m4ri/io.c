@@ -34,7 +34,7 @@
 #include "io.h"
 
 void mzd_info(const mzd_t *A, int do_rank) {
-  printf("nrows: %6d, ncols: %6d, density: %6.5f, hash: 0x%016zx", A->nrows, A->ncols,
+  printf("nrows: %6d, ncols: %6d, density: %6.5f, hash: 0x%016" PRIx64, A->nrows, A->ncols,
          mzd_density(A, 1), mzd_hash(A));
   if (do_rank) {
     mzd_t *AA = mzd_copy(NULL, A);
