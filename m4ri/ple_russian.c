@@ -318,11 +318,9 @@ void mzd_make_table_ple(mzd_t const *A, rci_t r, rci_t writecol, int k, int knar
 #include "ple_russian_template.h"
 #undef N
 
-#if __M4RI_PLE_NTABLES >= 8
 #define N 8
 #include "ple_russian_template.h"
 #undef N
-#endif
 
 void _mzd_ple_a10(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const start_col,
                   wi_t const addblock, int const k, rci_t *pivots) {

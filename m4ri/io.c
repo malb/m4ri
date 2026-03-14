@@ -238,27 +238,13 @@ int mzd_to_png_fh(const mzd_t *A, FILE *fh, int compression_level, const char *c
   char pdate[21];
   time_t ptime = time(NULL);
   struct tm ltime;
-  int have_local_time = 0;
-
 #if defined(_WIN32)
-  have_local_time = (localtime_s(&ltime, &ptime) == 0);
+  localtime_s(&ltime, &ptime);
 #else
-  {
-    struct tm *ltime_ptr = localtime(&ptime);
-    if (ltime_ptr != NULL) {
-      ltime           = *ltime_ptr;
-      have_local_time = 1;
-    }
-  }
+  ltime = *localtime(&ptime);
 #endif
-
-  if (have_local_time) {
-    if (strftime(pdate, sizeof(pdate), "%Y/%m/%d %H:%M:%S", &ltime) == 0) {
-      pdate[0] = '\0';
-    }
-  } else {
+  if (strftime(pdate, sizeof(pdate), "%Y/%m/%d %H:%M:%S", &ltime) == 0)
     pdate[0] = '\0';
-  }
 
   txt_ptr[0].key         = "Software";
   txt_ptr[0].text        = "M4RI";
