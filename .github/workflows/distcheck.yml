@@ -32,11 +32,13 @@ jobs:
       - name: Check out
         uses: actions/checkout@v4
       - name: Install prerequisites
-        run: brew install autoconf automake libtool
+        run: brew install autoconf automake libomp
       - name: Configure
         run: |
           autoreconf -i
-          ./configure --enable-debug
+          export CPATH=$(brew --prefix)/opt/libomp/include
+          export LIBRARY_PATH=$(brew --prefix)/opt/libomp/lib
+          ./configure --enable-openmp --enable-debug
 
       - name: Check
         run:  make -j $JOBS check
