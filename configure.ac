@@ -1,4 +1,4 @@
-AC_PREREQ([2.72])
+AC_PREREQ([2.71])
 AC_INIT([m4ri],[20260122])
 
 # See http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
@@ -21,7 +21,6 @@ AC_CONFIG_MACRO_DIR([m4])
 dnl Compiling with per-target flags (test_elimination.c) requires AM_PROG_CC_C_O.
 AM_PROG_CC_C_O
 
-LT_PREREQ([2.5.4])
 LT_INIT
 
 AC_PROG_INSTALL

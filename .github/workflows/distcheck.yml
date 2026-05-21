@@ -16,12 +16,18 @@ jobs:
       - name: Install prerequisites
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt-get update
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install autoconf automake libtool
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install autoconf automake
+          cd /tmp
+          wget https://ftpmirror.gnu.org/libtool/libtool-2.5.4.tar.gz
+          tar xf libtool-2.5.4.tar.gz
+          cd libtool-2.5.4
+          ./configure
+          make -j $JOBS
+          sudo make install 
       - name: Configure
         run: |
-          autoreconf -i
+          autoreconf -ivf
           ASAN_OPTIONS=detect_leaks=0 CFLAGS="-fsanitize=address" ./configure --enable-debug
-
       - name: Check
         run: ASAN_OPTIONS=detect_leaks=0 make -j $JOBS check
       - name: Distcheck
@@ -32,7 +38,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v4
       - name: Install prerequisites
-        run: brew install autoconf automake libomp
+        run: brew install autoconf automake libomp libtool
       - name: Configure
         run: |
           autoreconf -i
@@ -41,9 +47,15 @@ jobs:
           ./configure --enable-openmp --enable-debug
 
       - name: Check
-        run:  make -j $JOBS check
+        run: |
+          export CPATH=$(brew --prefix)/opt/libomp/include
+          export LIBRARY_PATH=$(brew --prefix)/opt/libomp/lib
+          make -j $JOBS check
       - name: Distcheck
-        run: make -j $JOBS distcheck
+        run: |
+          export CPATH=$(brew --prefix)/opt/libomp/include
+          export LIBRARY_PATH=$(brew --prefix)/opt/libomp/lib
+          make -j $JOBS distcheck
   windows:
     runs-on: windows-latest
     defaults:
