@@ -2,6 +2,10 @@
 *.trs
 *.lo
 *.o
+*~
+*.swp
+build-aux/
+!build-aux/ltmain.sh.in
 m4/lt*.m4
 Makefile
 Makefile.in
