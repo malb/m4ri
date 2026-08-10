@@ -1,8 +1,8 @@
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(top_builddir) -iquote$(top_builddir)/m4ri
-AM_CFLAGS=${SIMD_FLAGS} ${OPENMP_CFLAGS} ${DEBUG_FLAGS} ${LIBPNG_CFLAGS}
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_builddir) -iquote$(top_builddir)/m4ri @OPENMP_CFLAGS@
+AM_CFLAGS=${SIMD_FLAGS} ${OPENMP_CFLAGS} ${DEBUG_FLAGS} ${LIBPNG_CFLAGS} @OPENMP_CFLAGS@
 
 lib_LTLIBRARIES = libm4ri.la
 
@@ -59,7 +59,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = m4ri.pc
 
 libm4ri_la_LDFLAGS = -version-info @LT_VERSION@ -no-undefined @M4RI_EXPORT_ALL_SYMBOLS_LDFLAGS@
-libm4ri_la_LIBADD = $(LIBPNG_LIBADD) $(LIBM)
+libm4ri_la_LIBADD = $(LIBPNG_LIBADD) $(LIBM) @OPENMP_CLIB@
 
 SUBDIRS = . tests
 DIST_SUBDIRS = $(SUBDIRS) bench

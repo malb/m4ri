@@ -1,3 +1,4 @@
+AC_PREREQ([2.71])
 AC_INIT([m4ri],[20260122])
 
 # See http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
@@ -8,10 +9,11 @@ AC_CANONICAL_HOST
 
 AC_CONFIG_SRCDIR(m4ri/brilliantrussian.c)
 
+AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([nostdinc foreign])
 
 dnl Include maintainer mode targets.
-AM_MAINTAINER_MODE
+AM_MAINTAINER_MODE([enable])
 
 dnl Needed when reconfiguring with 'autoreconf -i -s'
 AC_CONFIG_MACRO_DIR([m4])
@@ -286,6 +288,6 @@ AC_SUBST(RELEASE)
 
 AC_PROG_MAKE_SET
 
-AC_CONFIG_FILES([Makefile tests/Makefile bench/Makefile m4ri/m4ri_config.h m4ri.pc])
+AC_CONFIG_FILES([Makefile tests/Makefile bench/Makefile m4ri/m4ri_config.h m4ri.pc build-aux/ltmain.sh])
 AC_OUTPUT
 
