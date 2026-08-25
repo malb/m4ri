@@ -70,7 +70,7 @@ BUILT_SOURCES = libcpucycles.a
 libcpucycles.a:
 	 (if [ $(srcdir) != $(builddir) ]; then \
 		cp -r $(srcdir)/$(CPUCYCLES_DIR) $(builddir); \
-	        chmod +w -R $(CPUCYCLES_DIR)/; \
+	        chmod -R u+w $(CPUCYCLES_DIR)/; \
          fi; \
          cd $(CPUCYCLES_DIR); \
          if [ -z "$(PYTHON3)" ]; then \
@@ -83,7 +83,7 @@ libcpucycles.a:
          cp build/0/package/lib/libcpucycles.a ..; \
          cd ..; \
 	 if [ $(srcdir) != $(builddir) ]; then \
-		rm -r $(CPUCYCLES_DIR); \
+		rm -rf $(CPUCYCLES_DIR); \
          fi)
 
 distclean-local:
