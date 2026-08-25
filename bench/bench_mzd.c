@@ -39,7 +39,7 @@
 #include <stdlib.h>
 
 #include "benchmarking.h"
-#include "cpucycles.h"
+#include <cpucycles.h>
 #include <m4ri/m4ri.h>
 
 struct test_params {

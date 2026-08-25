@@ -1,9 +1,9 @@
 #include <stdlib.h>
 
 #include "benchmarking.h"
-#include "cpucycles.h"
-#include <m4ri/m4ri_config.h>
+#include <cpucycles.h>
 #include <m4ri/m4ri.h>
+#include <m4ri/m4ri_config.h>
 
 struct trsm_params {
   rci_t m;
