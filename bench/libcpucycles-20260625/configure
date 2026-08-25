@@ -12,7 +12,8 @@ clean = True
 darwin = platform.system() == 'Darwin'
 
 def hostsanitize(host):
-  host = host.split('-')[0]
+  # case-insensitive; platform.machine() reports e.g. 'AMD64' on Windows
+  host = host.lower().split('-')[0]
   host = ''.join(c for c in host if c in '_0123456789abcdefghijklmnopqrstuvwxyz')
   for prefix,result in (
     ('amd64','amd64'), ('x86_64','amd64'),
@@ -43,6 +44,10 @@ def log(x):
   print(x)
 
 makefile = ''
+# generated Makefiles invoke the helper scripts as 'sh <script> ...' instead
+# of executing them directly: on Windows os.chmod() cannot mark files as
+# executable (MSYS2 uses an extended attribute for the exec bit), but 'sh'
+# is always available to make recipes.
 
 for arg in sys.argv[1:]:
   if arg.startswith('--prefix='):
@@ -205,7 +210,7 @@ for cpucycles in cpucyclesoptions:
   cpucyclesofiles += ['cpucycles/%s.o' % base]
   dirlinksym('build/%s/cpucycles'%host,'try-%s.c'%base,'../src/cpucycles/%s.c'%base)
   M = 'cpucycles/%s.o: cpucycles/try-%s.c cpucycles/try-default-zero.c\n' % (base,base)
-  M += '\tcd cpucycles && ./compile-ticks %s %s\n' % tuple(cpucycles)
+  M += '\tcd cpucycles && sh compile-ticks %s %s\n' % tuple(cpucycles)
   M += '\n'
   makefile = M + makefile
 
@@ -216,7 +221,7 @@ for fn in sorted(os.listdir('cpucycles')):
   cpucyclesofiles += ['cpucycles/%s.o' % base]
   dirlinksym('build/%s/cpucycles'%host,fn,'../src/cpucycles/%s'%fn)
   M = 'cpucycles/%s.o: cpucycles/%s.c\n' % (base,base)
-  M += '\tscripts/compiledefault cpucycles %s c\n' % base
+  M += '\tsh scripts/compiledefault cpucycles %s c\n' % base
   M += '\n'
   makefile = M + makefile
 
@@ -242,7 +247,7 @@ with open('build/%s/cpucycles/options.inc' % host,'w') as f:
 dirlinksym('build/%s/scripts'%host,'staticlib','../src/scripts-build/staticlib')
 
 M = 'package/lib/libcpucycles.a: scripts/staticlib %s\n' % ' '.join(cpucyclesofiles)
-M += '\tscripts/staticlib %s\n' % ' '.join(cpucyclesofiles)
+M += '\tsh scripts/staticlib %s\n' % ' '.join(cpucyclesofiles)
 M += '\n'
 makefile = M + makefile
 
@@ -259,7 +264,7 @@ with open('build/%s/scripts/sharedlib' % host,'w') as f:
 os.chmod('build/%s/scripts/sharedlib' % host,0o755)
 
 M = f'package/lib/libcpucycles.{so1}: scripts/sharedlib %s\n' % ' '.join(cpucyclesofiles)
-M += '\tscripts/sharedlib %s\n' % ' '.join(cpucyclesofiles)
+M += '\tsh scripts/sharedlib %s\n' % ' '.join(cpucyclesofiles)
 M += '\n'
 makefile = M + makefile
 
@@ -309,7 +314,7 @@ for fn in sorted(os.listdir('command')):
   M += '\n'
   makefile = M + makefile
   M = 'package/bin/%s: command/%s.o%s\n' % (base,base,''.join(' package/lib/%s.%s' % (x,so) for x in libs))
-  M += f'\tcd command && ./link bin/%s %s.o%s {syslibs}\n' % (base,base,''.join(' lib/%s.%s' % (x,so) for x in libs))
+  M += f'\tcd command && sh link bin/%s %s.o%s {syslibs}\n' % (base,base,''.join(' lib/%s.%s' % (x,so) for x in libs))
   M += '\n'
   makefile = M + makefile
   commands += ['package/bin/%s' % base]
@@ -321,7 +326,7 @@ makefile = M + makefile
 # ----- make install
 
 M = 'install: scripts/install default\n'
-M += '\tscripts/install %s\n' % prefix
+M += '\tsh scripts/install %s\n' % prefix
 M += '\n'
 makefile = M + makefile
 

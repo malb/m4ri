@@ -15,9 +15,20 @@ DEFINES =
 # include $(srcdir)/$(CPUCYCLES_DIR)/cpucycles for cpucycles.h
 AM_CFLAGS = -I$(TOPSRCDIR) -I$(TOPBUILDDIR) -I$(srcdir)/$(CPUCYCLES_DIR)/cpucycles -D_XOPEN_SOURCE=600 @CFLAGS@ $(DEFINES) @OPENMP_CFLAGS@ @PAPI_CFLAGS@ @LIBPNG_CFLAGS@
 
-STAGEDIR := $(realpath -s $(TOPBUILDDIR)/.libs)
+# Expanded lazily (with '='): $(TOPBUILDDIR)/.libs does not exist until the
+# m4ri library has been built, and the library prerequisite below may create
+# it during this very make run.
+STAGEDIR = $(realpath -s $(TOPBUILDDIR)/.libs)
 AM_LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) libcpucycles.a -lm4ri -lm @M4RI_RT_LIBS@ @PAPI_LDFLAGS@ @PAPI_LIBS@
 LDFLAGS = -no-install
+
+# The benchmarks link against the m4ri shared library that libtool stages in
+# $(TOPBUILDDIR)/.libs. Build it first if it is missing (fresh configure or
+# after 'make clean'); without it the -L/-rpath above would be empty.
+$(TOPBUILDDIR)/libm4ri.la:
+	$(MAKE) -C $(TOPBUILDDIR) $(AM_MAKEFLAGS) libm4ri.la
+
+$(BENCH): $(TOPBUILDDIR)/libm4ri.la
 
 BENCH = bench_elimination \
 	bench_multiplication \
@@ -30,9 +41,11 @@ BENCH = bench_elimination \
 	bench_rank
 
 # libcpucycles is a cycle counter library that the benchmarks link against.
-# It is built with its own ./configure (a python3 script) and make, which
-# create build/0/package/lib/libcpucycles.a; the public header is
-# cpucycles/cpucycles.h.
+# It is built with its own ./configure (a python3 script) and make. Only the
+# static archive build/0/package/lib/libcpucycles.a is built: the default
+# target additionally builds a shared library and command binaries that need
+# -lrt and symlink support, which are unavailable on Windows. The public
+# header is cpucycles/cpucycles.h.
 CPUCYCLES_DIR = libcpucycles-20260625
 
 PYTHON3 = @PYTHON3@
@@ -79,7 +92,7 @@ libcpucycles.a:
          fi; \
          rm -rf build; \
          $(PYTHON3) configure; \
-         make; \
+         make -C build/0 package/lib/libcpucycles.a; \
          cp build/0/package/lib/libcpucycles.a ..; \
          cd ..; \
 	 if [ $(srcdir) != $(builddir) ]; then \

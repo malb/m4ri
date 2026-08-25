@@ -60,6 +60,7 @@ jobs:
             mingw-w64-x86_64-autotools
             mingw-w64-x86_64-libtool
             mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-python
             autoconf
             automake
             make
