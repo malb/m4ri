@@ -61,3 +61,7 @@ test_alignment
 /scratch.c
 /configure~
 /tests/test_pluq
+
+# libcpucycles ships its own ./configure and Makefile;
+!bench/libcpucycles-20260625/configure
+!bench/libcpucycles-20260625/Makefile
