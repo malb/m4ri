@@ -1,9 +1,9 @@
 #include <stdlib.h>
 
 #include "benchmarking.h"
-#include "cpucycles.h"
-#include <m4ri/m4ri_config.h>
+#include <cpucycles.h>
 #include <m4ri/m4ri.h>
+#include <m4ri/m4ri_config.h>
 
 #ifdef HAVE_LIBPAPI
 #define _GNU_SOURCE
@@ -63,7 +63,7 @@ int run_nothing(void *_p, unsigned long long *data, int *data_len) {
 #ifndef HAVE_LIBPAPI
   *data_len = 2;
 #else
-  *data_len             = MIN(papi_array_len + 1, *data_len);
+  *data_len = MIN(papi_array_len + 1, *data_len);
 #endif
   int papi_res;
 
@@ -99,7 +99,7 @@ int run(void *_p, unsigned long long *data, int *data_len) {
 #ifndef HAVE_LIBPAPI
   *data_len = 2;
 #else
-  *data_len             = MIN(papi_array_len + 1, *data_len);
+  *data_len = MIN(papi_array_len + 1, *data_len);
 #endif
   int papi_res;
 

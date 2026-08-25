@@ -45,9 +45,8 @@ test_alignment
 /bench/bench_ple
 /bench/bench_rank
 /bench/bench_trsm
-/bench/cpucycles-20060326/cpucycles.h
-/bench/cpucycles-20060326/do.notes
-/bench/cpucycles.h
+/bench/libcpucycles.a
+/bench/libcpucycles-20260625/build/
 /*/.deps/
 /*/.dirstamp
 /m4ri/config.h
@@ -62,6 +61,3 @@ test_alignment
 /scratch.c
 /configure~
 /tests/test_pluq
-/bench/cpucycles-20060326/test
-/bench/cpucycles-20060326/cpucycles-impl.c
-/bench/cpucycles-20060326/cpucycles-impl.h

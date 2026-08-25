@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+
+import os
+import datetime
+import markdown
+
+def load(fn):
+  with open(fn) as f:
+    return f.read()
+
+style = load('autogen/html-style')
+sitetitle = load('autogen/html-title').strip()
+
+files = []
+
+os.makedirs('doc/html',exist_ok=True)
+
+with open('autogen/html-files') as f:
+  for line in f:
+    line = line.strip()
+    line = line.split(':')
+    if len(line) != 3: continue
+    files += [line]
+
+class superscripts(markdown.extensions.Extension):
+  def extendMarkdown(self,md):
+    md.inlinePatterns.register(markdown.inlinepatterns.SimpleTagInlineProcessor(r'()\^(.*?)\^','sup'),'sup',175)
+
+# this paragraph derived from python-markdown
+AUTOLINK_RE = r'<((?:[Ff]|[Hh][Tt])[Tt][Pp][Ss]?://[^<>]*)>'
+class ttautolinkprocessor(markdown.inlinepatterns.InlineProcessor):
+  def handleMatch(self,m,data):
+    tt = markdown.inlinepatterns.etree.Element('span')
+    tt.set('class','url')
+    tt.text = markdown.inlinepatterns.util.AtomicString(m.group(1))
+    e = markdown.inlinepatterns.etree.Element('a')
+    e.set('href',self.unescape(m.group(1)))
+    e.append(tt)
+    return e,m.start(0),m.end(0)
+
+class ttautolink(markdown.extensions.Extension):
+  def extendMarkdown(self,md):
+    md.inlinePatterns.register(ttautolinkprocessor(AUTOLINK_RE,md),'autolink',119)
+
+for md,html,pagetitle in files:
+  fnmd = 'doc/%s.md' % md
+  fnhtml = 'doc/html/%s.html' % html
+  output = ''
+
+  x = load(fnmd)
+  x = markdown.markdown(x,extensions=['markdown.extensions.extra','markdown.extensions.tables',superscripts(),ttautolink()])
+  mtime = datetime.datetime.utcfromtimestamp(os.path.getmtime(fnmd)).strftime('%Y.%m.%d')
+
+  output += '<html>\n<head>\n'
+  output += style
+  output += '<title>\n'
+  output += sitetitle
+  output += ': '
+  output += pagetitle
+  output += '</title>\n'
+  output += '</head>\n'
+  output += '<body>\n'
+
+  output += '<label id=headline>\n'
+  output += '<input type=checkbox />\n'
+  output += '<nav id=nav>\n'
+  output += '<div class=navtop>\n'
+  output += '<span class=noselect>≡</span>\n'
+  output += sitetitle
+  output += '</div>\n'
+  output += '<ul id=navbot>\n'
+
+  for submd,subhtml,subpagetitle in files:
+    if subhtml == html:
+      output += '<li class=here>'
+      output += pagetitle+'\n'
+    else:
+      output += '<li class=away>'
+      output += '<a href=%s.html>%s</a>\n' % (subhtml,subpagetitle)
+    output += '</li>'
+  output += '</ul></nav>\n'
+  output += '<div id=hidemenu></div>\n'
+  output += '</label>\n'
+
+  output += '<div class=main>\n'
+  output += '<div class=pagetitle>'+sitetitle+': '+pagetitle+'</div>\n'
+  output += x
+  output += '<hr><font size=1><b>Version:</b>\n'
+  output += 'This is version %s of the "%s" web page.\n' % (mtime,pagetitle)
+  output += '</font>\n'
+  output += '</div>\n'
+
+  output += '</body>\n'
+  output += '</html>\n'
+
+  if not os.path.exists(fnhtml) or output != load(fnhtml):
+    with open(fnhtml+'.new','w') as f:
+      f.write(output)
+    os.chmod(fnhtml+'.new',0o444)
+    os.rename(fnhtml+'.new',fnhtml)

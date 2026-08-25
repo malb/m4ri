@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+import os
+import re
+
+def save(fn,x):
+  if os.path.exists(fn):
+    with open(fn) as f:
+      cur = f.read()
+    if cur == x: return
+  with open(fn,'w') as f:
+    f.write(x)
+
+with open('version') as f:
+  version = f.read().strip()
+
+with open('doc/readme.md') as f:
+  x = f.read()
+
+x = re.sub('Latest release: \[[0-9]*\]\(download.html\)',f'Latest release: [{version}](download.html)',x)
+
+save('doc/readme.md',x)

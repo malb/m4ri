@@ -1,0 +1,209 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+html{overflow-y:scroll;background-color:#10400a}
+body{font-family:"Noto Sans","Droid Sans","DejaVu Sans","Arial",sans-serif;line-height:1.5}
+tt,code{background-color:#f0f0f0;font-family:Consolas,Monaco,"Noto Sans Mono","DejaVu Sans Mono",monospace,sans-serif;font-size:1em;}
+pre{margin-left:3em}
+p,ul,ol,blockquote,pre{font-size:1.0em;line-height:1.6}
+li p{font-size:1.0em}
+blockquote p{font-size:1.0em}
+h1{font-size:1.5em}
+h2{font-size:1.3em}
+h3{font-size:1.0em}
+h1 a{text-decoration:none}
+table{border-collapse:collapse}
+th,td{border:1px solid black}
+table a{text-decoration:none}
+table tr{font-size:1.0em;line-height:1.6em}
+table tr{font-size:1.0em;line-height:1.5}
+tbody tr:nth-child(12n+1){background-color:#f0ffff}
+tbody tr:nth-child(12n+2){background-color:#f0ffff}
+tbody tr:nth-child(12n+3){background-color:#f0ffff}
+tbody tr:nth-child(12n+4){background-color:#f0ffff}
+tbody tr:nth-child(12n+5){background-color:#f0ffff}
+tbody tr:nth-child(12n+6){background-color:#f0ffff}
+tbody tr:nth-child(12n+7){background-color:#fffff0}
+tbody tr:nth-child(12n+8){background-color:#fffff0}
+tbody tr:nth-child(12n+9){background-color:#fffff0}
+tbody tr:nth-child(12n+10){background-color:#fffff0}
+tbody tr:nth-child(12n+11){background-color:#fffff0}
+tbody tr:nth-child(12n+12){background-color:#fffff0}
+
+#headline{display:block;margin:0;padding:0;color:#ffffff;background-color:#10400a}
+#headline .text{font-weight:bold;font-size:1.0em}
+#headline input{display:none}
+#nav ul{margin:0;padding:0}
+#nav li{list-style-type:none;margin:0;padding:0}
+.navtop{padding-bottom:0.5em;font-weight:bold;font-size:1.0em}
+.navtop{background-color:#10400a;color:#ffffff}
+#nav .here{background-color:#10400a;color:#ffffff}
+#nav .away{background-color:#10400a;color:#ffffff}
+#nav .away a{text-decoration:none;display:block;color:#ffffff}
+#nav .away a:hover,.away a:active{text-decoration:underline}
+#hidemenu{visibility:hidden;display:none;overflow:hidden;position:fixed;top:0;left:0;height:100%;width:100%}
+
+.main{padding:5px}
+.main{background-color:#ffffff}
+.pagetitle{font-size:1.4em;font-weight:bold}
+@media only screen and (min-width:512px) {
+  .navtop{padding-top:5px}
+  #headline{top:0;margin:0;width:160px;height:100%;position:fixed;overflow:auto}
+  #headline .noselect{display:none}
+  #headline #nav{visibility:visible;display:block;width:auto;height:auto}
+  .main{margin-left:170px}
+  #headline #hidemenu{visibility:hidden}
+}
+@media not screen and (min-width:512px) {
+  #headline .noselect{-webkit-user-select:none;-ms-user-select:none;user-select:none;}
+  #headline #nav #navbot{visibility:hidden;position:fixed;top:0;left:-70%;z-index:2;transition:0.2s;margin:0;padding:0}
+  #headline input:checked ~ #nav #navbot{height:100%;position:fixed;top:0;left:0;visibility:visible;display:block;box-sizing:border-box;-moz-box-sizing:border-box;-webkit-box-sizing:border-box;vertical-align:center;font-size:1.0em;width:70%;overflow:auto}
+  #headline input:checked ~ #hidemenu{visibility:visible;display:block;background:black;opacity:0.3;z-index:1}
+}
+</style>
+<title>
+libcpucycles: Download</title>
+</head>
+<body>
+<label id=headline>
+<input type=checkbox />
+<nav id=nav>
+<div class=navtop>
+<span class=noselect>≡</span>
+libcpucycles</div>
+<ul id=navbot>
+<li class=away><a href=index.html>Intro</a>
+</li><li class=here>Download
+</li><li class=away><a href=install.html>Install</a>
+</li><li class=away><a href=api.html>API</a>
+</li><li class=away><a href=counters.html>Counters</a>
+</li><li class=away><a href=selection.html>Selection</a>
+</li><li class=away><a href=security.html>Security</a>
+</li><li class=away><a href=license.html>License</a>
+</li></ul></nav>
+<div id=hidemenu></div>
+</label>
+<div class=main>
+<div class=pagetitle>libcpucycles: Download</div>
+<p>To download and unpack the latest version of libcpucycles:</p>
+<pre><code>wget -m https://cpucycles.cr.yp.to/libcpucycles-latest-version.txt
+version=$(cat cpucycles.cr.yp.to/libcpucycles-latest-version.txt)
+wget -m https://cpucycles.cr.yp.to/libcpucycles-$version.tar.gz
+tar -xzf cpucycles.cr.yp.to/libcpucycles-$version.tar.gz
+cd libcpucycles-$version
+</code></pre>
+<p>Then <a href="install.html">install</a>.</p>
+<h3>Archives and changelog (reverse chronological)</h3>
+<p><a href="libcpucycles-20260625.tar.gz"><code>libcpucycles-20260625.tar.gz</code></a> <a href="libcpucycles-20260625.html">browse</a></p>
+<p>In <code>amd64-perfpmcff</code> and <code>default-perfevent</code>,
+to compensate for the Linux kernel
+<a href="https://cr.yp.to/2026/20260624-rdpmc.c">not doing</a>
+what the <code>perf_event_open</code> manual page promises,
+try opening a second fd using PMU type 10 for Intel E-cores.
+This should prevent fallbacks to <code>tsc</code> for programs pinned to E-cores,
+and should let cycle counting continue for programs that migrate from P-cores to E-cores.</p>
+<p>Clear <code>/proc/sys/kernel/nmi_watchdog</code> in <code>cpucycles-open</code>.
+Otherwise the Linux NMI watchdog forces a wraparound after some number of seconds
+in RDPMC cycle counts from <code>amd64-perfpmcff</code>,
+corrupting multi-second cycle counts on Intel machines.
+AMD machines are unaffected.</p>
+<p>Increase bump to 1000 for all off-core counters and fixed-frequency counters.</p>
+<hr />
+<p><a href="libcpucycles-20260105.tar.gz"><code>libcpucycles-20260105.tar.gz</code></a> <a href="libcpucycles-20260105.html">browse</a></p>
+<p>Bigger split of RDPMC-based counters
+to handle not just <code>perf</code> sometimes incorrectly returning index 0 on Intel
+but also AMD not supporting fixed-function counter <code>0x40000001</code>.
+New <code>amd64-perfpmcff</code> tries fixed-function counter <code>0x40000001</code> within <code>perf</code>;
+<code>amd64-perfpmc</code> now goes back to trying index returned by <code>perf</code>;
+<code>amd64-pmcff</code> (renamed from <code>amd64-pmc</code>) tries fixed-function counter <code>0x40000001</code> outside <code>perf</code>.</p>
+<p>Add <code>orderbump</code> mechanism,
+for example to prefer <code>tsc</code> more systematically over <code>tscasm</code>.</p>
+<hr />
+<p><a href="libcpucycles-20251226.tar.gz"><code>libcpucycles-20251226.tar.gz</code></a> <a href="libcpucycles-20251226.html">browse</a></p>
+<p>Split <code>amd64-pmc</code>, <code>arm64-pmc</code>, <code>riscv32-rdcycle</code>, and <code>riscv64-rdcycle</code>
+into <code>perf</code> and non-<code>perf</code> versions,
+with the <code>perf</code> versions tried first.
+Hopefully the <code>perf</code> versions will also eliminate the need to install kernel modules
+for <code>amd64-pmc</code> and <code>arm64-pmc</code>.</p>
+<p>For <code>amd64-pmc</code>,
+always use fixed-function cycle counter <code>(1&lt;&lt;30)|1</code>.
+This works around a bug in, e.g., kernel 6.1.0 <code>perf</code> incorrectly returning index 0 for E-cores.</p>
+<p>For all <code>perf</code>-based counters,
+use <code>PERF_FLAG_FD_CLOEXEC</code> if it is available.</p>
+<p>For <code>*tsc*</code> counters,
+return invariant TSC frequency if that is clear from CPUID information.
+Thanks to Tee-Kiah Chia for the suggestion and a prototype patch.</p>
+<p>Add internal <code>ticks_close()</code>,
+most importantly for closing <code>perf</code> descriptors.
+(An alternative would be to unify the <code>perf</code> handling
+inside a single <code>perf_event_open</code> in <code>wrapper</code> conditioned on Linux,
+but this raises the question of how to handle <code>perf</code> platform variations
+such as <code>arm64-pmc</code> needing <code>3</code> in <code>config1</code>.)</p>
+<p>Increase penalty for <code>EXTEND32</code> counters.
+(It might be better to directly benchmark the extension.)</p>
+<p>Increase penalty for fixed-frequency counters,
+including RDTSC when it is known to be invariant.</p>
+<p>For <code>wrapper</code>,
+use <code>sigjmp_buf</code> instead of <code>jmp_buf</code>.</p>
+<p>Document requirements on
+<code>/sys/devices/cpu*/rdpmc</code> and
+<code>/proc/sys/kernel/perf_user_access</code>.
+Add <code>cpucycles-open</code> abstraction.</p>
+<p>Update <code>configure</code>:
+recognize a few more x86 synonyms;
+<code>--no-</code> instead of <code>--no</code>;
+support <code>configure.log</code>.</p>
+<p>Support <code>$DESTDIR</code> in <code>install</code>.
+Thanks to Robert Clausecker for the suggestion.</p>
+<hr />
+<p><a href="libcpucycles-20250925.tar.gz"><code>libcpucycles-20250925.tar.gz</code></a> <a href="libcpucycles-20250925.html">browse</a></p>
+<p>For <code>perfevent</code>,
+try all combinations of disabling exclude-kernel and disabling exclude-hv,
+to handle platforms where cycle counters cannot handle one or both of those.</p>
+<p>For <code>perfevent</code>,
+do <code>DISABLE</code> and <code>ENABLE</code> around counter read (suggested by Jim Apple)
+to (hopefully) handle Graviton 3.
+But skip this if a setup test seems to work without it.</p>
+<p>Recognize <code>sun4v</code> as <code>sparc64</code>.</p>
+<p>Add support for <code>loong64</code>.</p>
+<p>Eliminate various compiler warnings.</p>
+<p>For <code>cpucycles-info</code>,
+print interquartile mean (iqm) rather than median.</p>
+<p>Say "sometimes" in documentation for enabling cycle counters in ARM via kernel modules.</p>
+<p>Change HTML style, in particular for better usability on phones.</p>
+<hr />
+<p><a href="libcpucycles-20240318.tar.gz"><code>libcpucycles-20240318.tar.gz</code></a> <a href="libcpucycles-20240318.html">browse</a></p>
+<p>Port to MacOS X:
+handle missing <code>-lrt</code>, and handle differences in shared-library naming.</p>
+<p>Include <code>cpucycles-info</code> man page.</p>
+<hr />
+<p><a href="libcpucycles-20240114.tar.gz"><code>libcpucycles-20240114.tar.gz</code></a> <a href="libcpucycles-20240114.html">browse</a></p>
+<p>Add <code>arm32-1176</code> counter.</p>
+<p>Allow slop 0.2 rather than 0.1 for <code>FINDMULTIPLIER</code>.</p>
+<p>Improve platform detection.</p>
+<p>Port to FreeBSD.</p>
+<p>Use blue boldface during compilation for "skipping option that did not compile".</p>
+<p><code>doc/install.md</code>: headings; note manual pages.</p>
+<p>Add <code>doc/license.md</code>.</p>
+<p>Update HTML style for better tt visibility and copy-paste.</p>
+<hr />
+<p><a href="libcpucycles-20230115.tar.gz"><code>libcpucycles-20230115.tar.gz</code></a> <a href="libcpucycles-20230115.html">browse</a></p>
+<p>Update actual <code>cpucycles_version</code> behavior to match documentation.</p>
+<hr />
+<p><a href="libcpucycles-20230110.tar.gz"><code>libcpucycles-20230110.tar.gz</code></a> <a href="libcpucycles-20230110.html">browse</a></p>
+<p><code>doc/api.md</code>: Document <code>cpucycles_version()</code>.</p>
+<p>Add <code>s390x-stckf</code> counter.</p>
+<p><code>cpucycles/default-perfevent.c</code>: Read into <code>int64_t</code> instead of <code>long long</code>.
+Add comment explaining issues with <code>PERF_FORMAT_TOTAL_TIME_RUNNING</code>.</p>
+<p><code>configure</code>: Improve <code>uname</code> handling.</p>
+<p><code>doc/api.md</code>: Update description of default frequency.</p>
+<hr />
+<p><a href="libcpucycles-20230105.tar.gz"><code>libcpucycles-20230105.tar.gz</code></a> <a href="libcpucycles-20230105.html">browse</a></p>
+<p>Initial release.</p><hr><font size=1><b>Version:</b>
+This is version 2026.06.25 of the "Download" web page.
+</font>
+</div>
+</body>
+</html>

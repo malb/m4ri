@@ -103,6 +103,18 @@ else
 fi
 AC_SUBST(M4RI_HAVE_OPENMP)
 
+# The bench/ benchmark suite links against a local copy of libcpucycles
+# (bench/libcpucycles-20260625), whose build system is driven by a python3
+# ./configure script. Benchmarks are not built by default, so a missing
+# python3 only warrants a warning.
+AC_PATH_PROG([PYTHON3], [python3])
+AS_IF([test -z "$PYTHON3"],
+   [AC_MSG_WARN([python3 not found. It is required to build the bench/ benchmark suite.])])
+
+# libcpucycles is linked statically into the benchmarks; on old systems
+# clock_gettime() is only provided by librt.
+AC_CHECK_LIB([rt], [clock_gettime], [M4RI_RT_LIBS="-lrt"], [M4RI_RT_LIBS=""])
+AC_SUBST(M4RI_RT_LIBS)
 
 # Thread-Safety
 M4RI_ENABLE_MZD_CACHE=1

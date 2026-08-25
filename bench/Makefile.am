@@ -11,11 +11,12 @@ AUTOMAKE_OPTIONS = foreign
 TOPSRCDIR = $(srcdir)/..
 TOPBUILDDIR = $(builddir)/..
 DEFINES =
-# include TOPBUILDIR for m4ri_config.h
-AM_CFLAGS = -I$(TOPSRCDIR) -I$(TOPBUILDDIR) -D_XOPEN_SOURCE=600 @CFLAGS@ $(DEFINES) @OPENMP_CFLAGS@ @PAPI_CFLAGS@ @LIBPNG_CFLAGS@
+# include TOPBUILDIR for m4ri_config.h;
+# include $(srcdir)/$(CPUCYCLES_DIR)/cpucycles for cpucycles.h
+AM_CFLAGS = -I$(TOPSRCDIR) -I$(TOPBUILDDIR) -I$(srcdir)/$(CPUCYCLES_DIR)/cpucycles -D_XOPEN_SOURCE=600 @CFLAGS@ $(DEFINES) @OPENMP_CFLAGS@ @PAPI_CFLAGS@ @LIBPNG_CFLAGS@
 
 STAGEDIR := $(realpath -s $(TOPBUILDDIR)/.libs)
-AM_LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) cpucycles.o -lm4ri -lm @PAPI_LDFLAGS@ @PAPI_LIBS@
+AM_LDFLAGS = -L$(STAGEDIR) -Wl,-rpath,$(STAGEDIR) libcpucycles.a -lm4ri -lm @M4RI_RT_LIBS@ @PAPI_LDFLAGS@ @PAPI_LIBS@
 LDFLAGS = -no-install
 
 BENCH = bench_elimination \
@@ -28,12 +29,27 @@ BENCH = bench_elimination \
 	bench_invert \
 	bench_rank
 
-CPUCYCLES_DIR = cpucycles-20060326
+# libcpucycles is a cycle counter library that the benchmarks link against.
+# It is built with its own ./configure (a python3 script) and make, which
+# create build/0/package/lib/libcpucycles.a; the public header is
+# cpucycles/cpucycles.h.
+CPUCYCLES_DIR = libcpucycles-20260625
 
-CPUCYCLES_EXTRA_DIST = $(srcdir)/cpucycles-20060326/*.c \
-                       $(srcdir)/cpucycles-20060326/*.h \
-                       $(srcdir)/cpucycles-20060326/compile \
-                       $(srcdir)/cpucycles-20060326/do 
+PYTHON3 = @PYTHON3@
+
+# Files needed to run libcpucycles' ./configure and make from the
+# distribution tarball.
+CPUCYCLES_EXTRA_DIST = $(srcdir)/$(CPUCYCLES_DIR)/Makefile \
+                       $(srcdir)/$(CPUCYCLES_DIR)/configure \
+                       $(srcdir)/$(CPUCYCLES_DIR)/version \
+                       $(srcdir)/$(CPUCYCLES_DIR)/compilers/default \
+                       $(srcdir)/$(CPUCYCLES_DIR)/cpucycles/options \
+                       $(wildcard $(srcdir)/$(CPUCYCLES_DIR)/cpucycles/*.c) \
+                       $(wildcard $(srcdir)/$(CPUCYCLES_DIR)/cpucycles/*.h) \
+                       $(wildcard $(srcdir)/$(CPUCYCLES_DIR)/command/*) \
+                       $(wildcard $(srcdir)/$(CPUCYCLES_DIR)/scripts-build/*) \
+                       $(wildcard $(srcdir)/$(CPUCYCLES_DIR)/doc/man/*) \
+                       $(wildcard $(srcdir)/$(CPUCYCLES_DIR)/doc/*.md)
 
 EXTRA_DIST = $(CPUCYCLES_EXTRA_DIST)
 
@@ -49,23 +65,31 @@ bench_mzd_SOURCES = bench_mzd.c benchmarking.c benchmarking.h
 bench_invert_SOURCES = bench_invert.c benchmarking.c benchmarking.h
 bench_rank_SOURCES = bench_rank.c benchmarking.c benchmarking.h
 
-BUILT_SOURCES = cpucycles.h
+BUILT_SOURCES = libcpucycles.a
 
-cpucycles.h: cpucycles.o
-
-cpucycles.o:
+libcpucycles.a:
 	 (if [ $(srcdir) != $(builddir) ]; then \
 		cp -r $(srcdir)/$(CPUCYCLES_DIR) $(builddir); \
 	        chmod +w -R $(CPUCYCLES_DIR)/; \
          fi; \
          cd $(CPUCYCLES_DIR); \
-         sh do; \
-         cp cpucycles.o ..; \
-         cp cpucycles.h ..; \
+         if [ -z "$(PYTHON3)" ]; then \
+            echo "error: python3 is required to build $(CPUCYCLES_DIR) but was not found at configure time" 1>&2; \
+            exit 1; \
+         fi; \
+         rm -rf build; \
+         $(PYTHON3) configure; \
+         make; \
+         cp build/0/package/lib/libcpucycles.a ..; \
          cd ..; \
 	 if [ $(srcdir) != $(builddir) ]; then \
 		rm -r $(CPUCYCLES_DIR); \
          fi)
 
 distclean-local:
-	-rm -f cpucycles.h
+	-rm -f libcpucycles.a
+	-if [ "$(srcdir)" != "$(builddir)" ]; then \
+		rm -rf $(CPUCYCLES_DIR); \
+	else \
+		rm -rf $(CPUCYCLES_DIR)/build; \
+	fi
