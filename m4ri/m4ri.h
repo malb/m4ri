@@ -67,6 +67,7 @@ extern "C" {
 #include <m4ri/ple_russian.h>
 #include <m4ri/solve.h>
 #include <m4ri/strassen.h>
+#include <m4ri/transpose.h>
 #include <m4ri/triangular.h>
 #include <m4ri/triangular_russian.h>
 
