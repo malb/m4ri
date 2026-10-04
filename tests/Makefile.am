@@ -32,6 +32,7 @@ TESTS = test_elimination \
 	test_smallops \
 	test_transpose \
 	test_colswap \
+	test_mmc \
 	test_misc \
 	test_invert \
 	test_alignment \
