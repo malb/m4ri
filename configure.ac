@@ -96,6 +96,11 @@ AC_ARG_ENABLE([openmp],
 
 AS_IF([test "x$enable_openmp" = "xyes"], [
    AX_OPENMP()
+   AS_CASE([$OPENMP_CFLAGS], [*"-Xpreprocessor -fopenmp"*], [
+      AS_VERSION_COMPARE([m4_defn([LT_PACKAGE_VERSION])], [2.6.2], [
+         AC_MSG_ERROR([OpenMP with Apple Clang requires GNU Libtool 2.6.2 or later. Regenerate the build machinery with a newer libtool using autoreconf --install --force.])
+      ])
+   ])
 ])
 AC_SUBST(OPENMP_CFLAGS)
 if test -n "$OPENMP_CFLAGS"; then
@@ -288,6 +293,5 @@ AC_SUBST(RELEASE)
 
 AC_PROG_MAKE_SET
 
-AC_CONFIG_FILES([Makefile tests/Makefile bench/Makefile m4ri/m4ri_config.h m4ri.pc build-aux/ltmain.sh])
+AC_CONFIG_FILES([Makefile tests/Makefile bench/Makefile m4ri/m4ri_config.h m4ri.pc])
 AC_OUTPUT
-

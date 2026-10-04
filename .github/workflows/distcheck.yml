@@ -16,14 +16,7 @@ jobs:
       - name: Install prerequisites
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt-get update
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install autoconf automake
-          cd /tmp
-          wget https://ftpmirror.gnu.org/libtool/libtool-2.5.4.tar.gz
-          tar xf libtool-2.5.4.tar.gz
-          cd libtool-2.5.4
-          ./configure
-          make -j $JOBS
-          sudo make install 
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install autoconf automake libtool
       - name: Configure
         run: |
           autoreconf -ivf
@@ -55,7 +48,7 @@ jobs:
         run: |
           export CPATH=$(brew --prefix)/opt/libomp/include
           export LIBRARY_PATH=$(brew --prefix)/opt/libomp/lib
-          make -j $JOBS distcheck
+          make -j $JOBS distcheck DISTCHECK_CONFIGURE_FLAGS=--enable-openmp
   windows:
     runs-on: windows-latest
     defaults:

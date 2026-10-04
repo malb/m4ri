@@ -38,9 +38,14 @@ If you downloaded M4RI by cloning the mainline tree at
 
 https://bitbucket.org/malb/m4ri
 
-you need to first run the following command:
+you need Autoconf 2.71 or later, Automake, and GNU Libtool to generate the
+build machinery. OpenMP with Apple Clang requires GNU Libtool 2.6.2 or
+later, which includes support for `-Xpreprocessor -fopenmp`. First run:
 
     autoreconf --install
+
+Release tarballs include the generated build machinery and do not require
+these tools unless you regenerate it.
 
 Then do the usual
 
