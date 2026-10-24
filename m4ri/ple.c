@@ -28,6 +28,7 @@
 #include "ple_russian.h"
 #include "strassen.h"
 #include "triangular.h"
+#include "interrupt.h"
 #include <stdio.h>
 
 rci_t mzd_ple(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
@@ -60,6 +61,7 @@ rci_t _mzd_pluq(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
 }
 
 rci_t _mzd_ple(mzd_t *A, mzp_t *P, mzp_t *Q, int const cutoff) {
+  m4ri_check_interrupt();
   rci_t ncols = A->ncols;
 
 #if 1

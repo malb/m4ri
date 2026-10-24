@@ -58,6 +58,7 @@ extern "C" {
 #include <m4ri/djb.h>
 #include <m4ri/echelonform.h>
 #include <m4ri/graycode.h>
+#include <m4ri/interrupt.h>
 #include <m4ri/io.h>
 #include <m4ri/mp.h>
 #include <m4ri/mzd.h>

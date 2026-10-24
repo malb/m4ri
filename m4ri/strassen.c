@@ -27,6 +27,7 @@
 #include "graycode.h"
 #include "parity.h"
 #include "strassen.h"
+#include "interrupt.h"
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif
@@ -39,6 +40,7 @@
 static inline int closer(rci_t a, int cutoff) { return 3 * a < 4 * cutoff; }
 
 mzd_t *_mzd_mul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
+  m4ri_check_interrupt();
   rci_t mmm, kkk, nnn;
 
   if (C->nrows == 0 || C->ncols == 0) return C;
@@ -208,6 +210,7 @@ mzd_t *_mzd_mul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
 }
 
 mzd_t *_mzd_sqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
+  m4ri_check_interrupt();
   rci_t m;
 
   m = A->nrows;
@@ -365,6 +368,7 @@ mzd_t *mzd_mul(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
 }
 
 mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
+  m4ri_check_interrupt();
   /**
    * \todo make sure not to overwrite crap after ncols and before width * m4ri_radix
    */
@@ -526,6 +530,7 @@ mzd_t *_mzd_addmul_even(mzd_t *C, mzd_t const *A, mzd_t const *B, int cutoff) {
 }
 
 mzd_t *_mzd_addsqr_even(mzd_t *C, mzd_t const *A, int cutoff) {
+  m4ri_check_interrupt();
   /**
    * \todo make sure not to overwrite crap after ncols and before width * m4ri_radix
    */

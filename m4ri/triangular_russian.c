@@ -7,6 +7,7 @@
 #include "ple_russian.h"
 #include "triangular_russian.h"
 #include "xor.h"
+#include "interrupt.h"
 
 /** the number of tables used in TRSM decomposition **/
 #define __M4RI_TRSM_NTABLES 8
@@ -90,6 +91,7 @@ void _mzd_trsm_upper_left_russian(mzd_t const *U, mzd_t *B, int k) {
 
   rci_t i = 0;
   for (; i < B->nrows - kk; i += kk) {
+    m4ri_check_interrupt();
 
     _mzd_trsm_upper_left_submatrix(U, B, B->nrows - i - kk, kk, mask_end);
 
@@ -244,6 +246,7 @@ void _mzd_trsm_lower_left_russian(mzd_t const *L, mzd_t *B, int k) {
   const word mask = __M4RI_LEFT_BITMASK(k);
   rci_t i         = 0;
   for (; i < B->nrows - kk; i += kk) {
+    m4ri_check_interrupt();
 
     _mzd_trsm_lower_left_submatrix(L, B, i, kk, B->high_bitmask);
 
@@ -408,6 +411,7 @@ mzd_t *mzd_trtri_upper_russian(mzd_t *A, int k) {
 
   rci_t r = 0;
   while (r + kk <= A->nrows) {
+    m4ri_check_interrupt();
 
     /***
      * ----------------------------

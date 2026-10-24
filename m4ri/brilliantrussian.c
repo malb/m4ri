@@ -28,6 +28,7 @@
 #include "graycode.h"
 #include "ple_russian.h"
 #include "xor.h"
+#include "interrupt.h"
 
 /**
  * \brief Perform Gaussian reduction to reduced row echelon form on a
@@ -362,10 +363,11 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   word const kb_bm = __M4RI_LEFT_BITMASK(kb);
 
 #if __M4RI_HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow)                                      \
-    schedule(static, 512)  // MAX((__M4RI_CPU_L1_CACHE >> 3) / wide,
+#pragma omp parallel private(r) shared(startrow, stoprow)
+#pragma omp for schedule(static, 512)  // MAX((__M4RI_CPU_L1_CACHE >> 3) / wide,
 #endif
   for (r = startrow; r < stoprow; ++r) {
+    __M4RI_CANCEL_FOR_IF_INTERRUPTED();
     word bits      = mzd_read_bits(M, r, startcol, k);
     rci_t const x0 = L0[bits & ka_bm];
     bits >>= ka;
@@ -380,6 +382,7 @@ void mzd_process_rows2(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
     _mzd_combine_2(m0, t, wide);
   }
 
+  m4ri_check_interrupt();
   __M4RI_DD_MZD(M);
 }
 
@@ -403,10 +406,11 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   word const kc_bm = __M4RI_LEFT_BITMASK(kc);
 
 #if __M4RI_HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow)                                      \
-    schedule(static, 512)  // if(stoprow-startrow > 128)
+#pragma omp parallel private(r) shared(startrow, stoprow)
+#pragma omp for schedule(static, 512)  // if(stoprow-startrow > 128)
 #endif
   for (r = startrow; r < stoprow; ++r) {
+    __M4RI_CANCEL_FOR_IF_INTERRUPTED();
     word bits      = mzd_read_bits(M, r, startcol, k);
     rci_t const x0 = L0[bits & ka_bm];
     bits >>= ka;
@@ -425,6 +429,7 @@ void mzd_process_rows3(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
     _mzd_combine_3(m0, t, wide);
   }
 
+  m4ri_check_interrupt();
   __M4RI_DD_MZD(M);
 }
 
@@ -450,10 +455,11 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   word const kd_bm = __M4RI_LEFT_BITMASK(kd);
 
 #if __M4RI_HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow)                                      \
-    schedule(static, 512)  // if(stoprow-startrow > 128)
+#pragma omp parallel private(r) shared(startrow, stoprow)
+#pragma omp for schedule(static, 512)  // if(stoprow-startrow > 128)
 #endif
   for (r = startrow; r < stoprow; ++r) {
+    __M4RI_CANCEL_FOR_IF_INTERRUPTED();
     word bits      = mzd_read_bits(M, r, startcol, k);
     rci_t const x0 = L0[bits & ka_bm];
     bits >>= ka;
@@ -475,6 +481,7 @@ void mzd_process_rows4(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
     _mzd_combine_4(m0, t, wide);
   }
 
+  m4ri_check_interrupt();
   __M4RI_DD_MZD(M);
 }
 
@@ -502,10 +509,11 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   word const ke_bm = __M4RI_LEFT_BITMASK(ke);
 
 #if __M4RI_HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow)                                      \
-    schedule(static, 512)  // if(stoprow-startrow > 128)
+#pragma omp parallel private(r) shared(startrow, stoprow)
+#pragma omp for schedule(static, 512)  // if(stoprow-startrow > 128)
 #endif
   for (r = startrow; r < stoprow; ++r) {
+    __M4RI_CANCEL_FOR_IF_INTERRUPTED();
     word bits      = mzd_read_bits(M, r, startcol, k);
     rci_t const x0 = L0[bits & ka_bm];
     bits >>= ka;
@@ -531,6 +539,7 @@ void mzd_process_rows5(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
     _mzd_combine_5(m0, t, wide);
   }
 
+  m4ri_check_interrupt();
   __M4RI_DD_MZD(M);
 }
 
@@ -562,10 +571,11 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
   word const kf_bm = __M4RI_LEFT_BITMASK(kf);
 
 #if __M4RI_HAVE_OPENMP
-#pragma omp parallel for private(r) shared(startrow, stoprow)                                      \
-    schedule(static, 512)  // if(stoprow-startrow > 128)
+#pragma omp parallel private(r) shared(startrow, stoprow)
+#pragma omp for schedule(static, 512)  // if(stoprow-startrow > 128)
 #endif
   for (r = startrow; r < stoprow; ++r) {
+    __M4RI_CANCEL_FOR_IF_INTERRUPTED();
     word bits      = mzd_read_bits(M, r, startcol, k);
     rci_t const x0 = L0[bits & ka_bm];
     bits >>= ka;
@@ -597,6 +607,7 @@ void mzd_process_rows6(mzd_t *M, rci_t startrow, rci_t stoprow, rci_t startcol, 
     _mzd_combine_6(m0, t, wide);
   }
 
+  m4ri_check_interrupt();
   __M4RI_DD_MZD(M);
 }
 
@@ -692,6 +703,7 @@ rci_t _mzd_echelonize_m4ri(mzd_t *A, int const full, int k, int heuristic, doubl
   }
 
   while (c < ncols) {
+    m4ri_check_interrupt();
     if (heuristic && c > (last_check + 256)) {
       last_check = c;
       if (c < ncols && r < A->nrows && _mzd_density(A, 32, r, c) >= threshold) {
@@ -869,6 +881,7 @@ rci_t _mzd_top_echelonize_m4ri(mzd_t *A, int k, rci_t r, rci_t c, rci_t max_r) {
   rci_t *L5 = (rci_t *)m4ri_mm_calloc(__M4RI_TWOPOW(k), sizeof(rci_t));
 
   while (c < ncols) {
+    m4ri_check_interrupt();
     if (c + kk > A->ncols) { kk = ncols - c; }
     kbar = _mzd_gauss_submatrix_full(A, r, c, MIN(A->nrows, r + kk), kk);
 
@@ -1110,6 +1123,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
 
   for (rci_t giantstep = 0; giantstep < a_nr; giantstep += blocksize) {
     for (rci_t i = 0; i < end; ++i) {
+      m4ri_check_interrupt();
 #if __M4RI_HAVE_OPENMP
 #pragma omp parallel for schedule(static, 1)
 #endif
@@ -1119,9 +1133,11 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
 
       const rci_t blockend = MIN(giantstep + blocksize, a_nr);
 #if __M4RI_HAVE_OPENMP
-#pragma omp parallel for schedule(static, 512) private(x, t)
+#pragma omp parallel private(x, t)
+#pragma omp for schedule(static, 512)
 #endif
       for (rci_t j = giantstep; j < blockend; j++) {
+        __M4RI_CANCEL_FOR_IF_INTERRUPTED();
         const word a = mzd_read_bits(A, j, kk * i, kk);
 
         switch (__M4RI_M4RM_NTABLES) {
@@ -1150,6 +1166,7 @@ mzd_t *_mzd_mul_m4rm(mzd_t *C, mzd_t const *A, mzd_t const *B, int k, int clear)
         default: m4ri_die("__M4RI_M4RM_NTABLES must be <= 8 but got %d", __M4RI_M4RM_NTABLES);
         }
       }
+      m4ri_check_interrupt();
     }
   }
 

@@ -9,6 +9,7 @@ lib_LTLIBRARIES = libm4ri.la
 libm4ri_la_SOURCES = \
 	m4ri/brilliantrussian.c \
 	m4ri/misc.c \
+	m4ri/interrupt.c \
 	m4ri/mzd.c \
 	m4ri/graycode.c \
 	m4ri/strassen.c \
@@ -31,6 +32,7 @@ pkgincludesubdir = $(includedir)/m4ri
 pkgincludesub_HEADERS = m4ri/m4ri.h \
 	m4ri/brilliantrussian.h \
 	m4ri/misc.h \
+	m4ri/interrupt.h \
 	m4ri/mzd.h \
 	m4ri/graycode.h \
 	m4ri/strassen.h \
