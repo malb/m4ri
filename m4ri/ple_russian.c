@@ -320,6 +320,7 @@ void mzd_make_table_ple(mzd_t const *A, rci_t r, rci_t writecol, int k, int knar
 
 #define N 8
 #include "ple_russian_template.h"
+#include "interrupt.h"
 #undef N
 
 void _mzd_ple_a10(mzd_t *A, mzp_t const *P, rci_t const start_row, rci_t const start_col,
@@ -425,6 +426,7 @@ rci_t _mzd_ple_russian(mzd_t *A, mzp_t *P, mzp_t *Q, int k) {
    */
 
   while (curr_col < ncols && curr_row < nrows) {
+    m4ri_check_interrupt();
     if (curr_col + kk > ncols) kk = ncols - curr_col;
 
     /**

@@ -35,7 +35,8 @@ TESTS = test_elimination \
 	test_misc \
 	test_invert \
 	test_alignment \
-	test_djb
+	test_djb \
+	test_interrupt
 
 check_PROGRAMS = $(TESTS)
 

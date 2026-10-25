@@ -28,6 +28,7 @@
 #include "strassen.h"
 #include "triangular.h"
 #include "triangular_russian.h"
+#include "interrupt.h"
 
 /*****************
  * UPPER RIGHT
@@ -59,6 +60,7 @@ void _mzd_trsm_upper_right_trtri(mzd_t const *U, mzd_t *B) {
 }
 
 void _mzd_trsm_upper_right(mzd_t const *U, mzd_t *B, const int cutoff) {
+  m4ri_check_interrupt();
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
 
@@ -310,6 +312,7 @@ void mzd_trsm_lower_right(mzd_t const *L, mzd_t *B, const int cutoff) {
 }
 
 void _mzd_trsm_lower_right(mzd_t const *L, mzd_t *B, const int cutoff) {
+  m4ri_check_interrupt();
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
 
@@ -404,6 +407,7 @@ void mzd_trsm_lower_left(mzd_t const *L, mzd_t *B, const int cutoff) {
 }
 
 void _mzd_trsm_lower_left(mzd_t const *L, mzd_t *B, const int cutoff) {
+  m4ri_check_interrupt();
   rci_t const mb   = B->nrows;
   rci_t const nb   = B->ncols;
   int const nbrest = nb % m4ri_radix;
@@ -465,6 +469,7 @@ void mzd_trsm_upper_left(mzd_t const *U, mzd_t *B, const int cutoff) {
 }
 
 void _mzd_trsm_upper_left(mzd_t const *U, mzd_t *B, const int cutoff) {
+  m4ri_check_interrupt();
   rci_t const mb = B->nrows;
   rci_t const nb = B->ncols;
 
